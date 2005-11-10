@@ -46,11 +46,7 @@
 	  <p>Besides these, a number of other web sites carry technical articles about
       Eclipse. You&#39;ll find pointers to these on the <a href="../community/main.html#EclipseInformation">Eclipse
       Community page</a>.)
-      $whitepaper
 
-      
-
- <h3>Articles</h3>
  $articles
  </div>
 EOHTML;
