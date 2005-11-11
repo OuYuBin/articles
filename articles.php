@@ -65,14 +65,23 @@
 			$html .= "<p>$category->description</p>";
 		}
 		
-		if (strcmp($category->id, "recent") == 0) {
-			for ($index=0;$index<2;$index++) {
-				article_to_html($articles[$index], $html);				
+		if (strcmp($category->id, "recent") == 0) {			
+			// If the category has id "recent", then show
+			// only the most recent (i.e. date or update in the last six months)
+			// articles.
+			$base_date = strtotime("-6 month");
+			foreach ($articles as $article) {
+				if (($article->date > $base_date) or ($article->update > $base_date)) {
+					article_to_html($article, $html);
+				}
 			}
-		}
-		foreach ($articles as $article) {
-			if (in_array($category->id, $article->categories)) {
-				article_to_html($article, $html);
+		} else {
+			// Otherwise, show only the articles that fall in
+			// the category.
+			foreach ($articles as $article) {
+				if (in_array($category->id, $article->categories)) {
+					article_to_html($article, $html);
+				}
 			}
 		}
 	}
@@ -82,10 +91,10 @@
 			
 		// Get the collection of authors and render them.
 		authors_to_html($article->authors, $html);
-		$html .= $article->date;
-		if (strlen($article->update) > 0) {
+		$html .= date("F Y", $article->date);
+		if ($article->update) {
 			$html .= " (last updated ";
-			$html .= $article->update;
+			$html .= date("F Y", $article->update);
 			$html .= ")";
 		}
 		$abstract = $article->abstract;
@@ -167,8 +176,11 @@
 			$new_article->title = $article->title;
 			$new_article->link = $article[link];
 			$new_article->abstract = $article->abstract;
-			$new_article->date = $article->date;			
-			$new_article->update = $article->update;
+			$new_article->date = strtotime($article->date);	
+			$update = $article->update;
+			if (strlen($update) > 0) {	
+				$new_article->update = strtotime($article->update);
+			}
 			$new_article->authors = get_article_authors($article);
 			$new_article->categories = get_article_categories($article);
 			
@@ -199,21 +211,4 @@
 		return $categories;
 	}
 	
-	function abstract_to_html($article) {
-			$html .= "<b><a href=\"$article[link]\">$article->title</a></b><br>";
-			
-			// Get the collection of authors and render them.
-			$html .= authors_to_html($article->xpath('./author'));
-			$html .= "<br>";
-			$html .= $article->date;
-			if (strlen($article->update) > 0) {
-				$html .= " (last updated ";
-				$html .= $article->update;
-				$html .= ")";
-			}
-			$abstract = $article->abstract->asXML();
-			$html .= "<blockquote>$abstract</blockquote>";
-			
-			return $html;		
-	}
 ?>

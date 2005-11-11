@@ -29,7 +29,6 @@
 	include('articles.php');
 	$articles=abstracts_to_html('articles.xml');
 	# Paste your HTML content between the EOHTML markers!	
-
 	$html = <<<EOHTML
 	
 <div id="midcolumn">
