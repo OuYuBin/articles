@@ -1,0 +1,662 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<title>ActiveX Support In SWT</title>
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+<body bgcolor="#FFFFFF">
+		<div align="right">
+			<font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2001 Object Technology International, Inc.</font>
+&nbsp;
+
+			<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+				<tr>
+					<td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+Corner Article</font></font></b></td>
+				</tr>
+			</table>
+		</div>
+		<h1><img SRC="Idea.jpg" height=86 width=120 align=CENTER></h1>
+		<center>
+  <h1>ActiveX Support In SWT</h1>
+</center>
+
+<center>
+<h3>How do I include an OLE Document or ActiveX Control in my Eclipse plugin?</h3></center>
+
+<blockquote><b>Summary</b>
+<br>OLE Documents, such as Word, Excel or PowerPoint, and ActiveX Controls such as Internet Explorer
+are COM objects that can be embedded into other applications running on a Microsoft&reg; Windows&reg; 
+platform. This article provides an overview of integrating OLE Documents 
+and ActiveX Controls into an application using SWT.
+
+<p><b>By Veronika Irvine, OTI</b>
+<br>
+  <font size="-1">March 22, 2001</font> </p>
+</blockquote>
+
+<hr WIDTH="100%">
+
+
+
+<h2>Embedding an OLE Object in your SWT Application</h2>
+        <p>OLE Objects can be contained in SWT widgets. From there, they can be
+        activated and deactivated for user interaction, and manipulated by the
+        application according to their specification. For example, edited data
+        and state can be retrieved or saved. If the object is no longer
+        required, it can be disposed.</p>
+<h3>Create the OLE Object</h3>
+An OLE Document or ActiveX Control is added to an application by inserting it into a Container.
+The Container is made up of two parts:
+<ol>
+<li>The <i> OleFrame</i> object handles sizing, menu management and window placement.</li>
+<li>The <i> OleClientSite</i> (for OLE Documents) or <i> OleControlSite</i> (for ActiveX Controls) handles
+interactions with a specific OLE Object.</li>
+</ol>
+
+<p>The first step in embedding an OLE Object is to create the <i>OleFrame</i>:
+<pre>
+	Display display = new Display();
+	Shell shell = new Shell(display);
+	OleFrame frame = new OleFrame(shell, SWT.NONE);
+</pre>
+
+<p>When activated, an OLE Document displays its own menu bar over top of the application's
+menu bar.
+The application can contribute menus to the OLE Document's menu bar through the <i> OleFrame</i> 
+as follows:
+
+<pre>
+	Menu bar = new Menu(shell, SWT.BAR);
+	shell.setMenuBar(bar);
+	
+	MenuItem fileItem1 = new MenuItem(bar, SWT.CASCADE);
+	fileItem1.setText(&quot;&amp;File_Item_1&quot;);
+	MenuItem fileItem2 = new MenuItem(bar, SWT.CASCADE);
+	fileItem2.setText(&quot;&amp;File_Item_2&quot;);
+
+	MenuItem containerItem = new MenuItem(bar, SWT.CASCADE);
+	containerItem.setText(&quot;&amp;Container_Item&quot;);
+
+	MenuItem windowItem1 = new MenuItem(bar, SWT.CASCADE);
+	windowItem1.setText(&quot;&amp;Window_Item_1&quot;);
+	MenuItem windowItem2 = new MenuItem(bar, SWT.CASCADE);
+	windowItem2.setText(&quot;&amp;Window_Item_2&quot;);
+
+	frame.setFileMenus(new MenuItem[] {fileItem1, fileItem2});
+	frame.setContainerMenus(new MenuItem[] {containerItem});
+	frame.setWindowMenus(new MenuItem[] {windowItem1, windowItem2});
+</pre>
+
+<p>The next step is to create an <i> OleClientSite</i> or an <i>OleControlSite</i>.
+Some COM objects can function as both an OLE Document and an ActiveX Control.  
+Embedding an OLE Document is equivalent to embedding the entire application. 
+The OLE Document provides its own toolbar and menu bar for accessing its behavior.  
+An ActiveX Control only provides the content part and the parent application must manage the
+behavior of the content through the API of the ActiveX Control.
+To determine if a COM object supports the OLE Document behavior, look for
+the IOleDocument interface.
+To determine if a COM object supports the ActiveX Control behavior, look for 
+the IOleControl interface. 
+To see which interfaces the OLE Object implements, look at the type library. 
+
+<p>To embed an OLE Document, create an <i> OleClientSite</i> object.
+To embed an ActiveX Control, create an <i> OleControlSite</i> object.
+The parent in either case is the <i>OleFrame</i>. 
+When you create the <i> OleClientSite</i> or the <i>OleControlSite</i>, the associated OLE Document or ActiveX Control 
+will automatically be created and associated with the container site.
+
+<p>There are two ways to create an <i>OleClientSite</i>:
+<ol>
+<li>Create an <i> OleClientSite</i> from a ProgramID. 
+A ProgramID is a string that identifies the application.
+For example, the ProgramID for Word is “Word.Document” and the ProgramID for Excel is
+“Excel.Chart”. The ProgramID for an application can be found in the Windows Registry.
+Using the following constructor, a blank document is created (similar to choosing
+File->New from a standalone application):</li>
+
+<pre>
+	OleClientSite clientSite = new OleClientSite(frame, SWT.NONE, “Word.Document”);
+</pre>
+
+<li>Create an <i> OleClientSite</i> from a Storage file.
+A Storage file is a file with an OLE format that contains information
+about the type of OLE Object that can view it. It also contains a structured
+storage format and will store information such as paragraph formats, dictionaries
+or Author/Title/Description tags.  For example, a “.doc” file created by
+Word is a Storage file. Given a Storage file, OLE will figure
+out which OLE Document to create.</li>
+
+<pre>
+	File file = new File(“C:\\OleDocumentation.doc”);
+	OleClientSite clientSite = new OleClientSite(frame, SWT.NONE, file);
+</pre>
+</ol>
+
+<p>An <i> OleControlSite</i> is created from the ProgramID for the ActiveX Control. 
+For example, the ProgramID for the Internet Explorer is “Shell.Explorer”.  
+The web browser can be embedded in an application as
+follows:
+
+<pre>
+	OleControlSite controlSite = new OleControlSite(frame, SWT.NONE, &quot;Shell.Explorer&quot;);
+</pre>
+
+<h3>Activate the OLE Object</h3>
+
+The final step before an OLE Document or ActiveX control becomes visible inside the
+        application 
+is to activate the OLE Object (often referred to as <i> in-place activation</i>).
+This is done by invoking the “doVerb” action on the <i> OleClientSite</i>
+or <i> OleControlSite</i>. The “doVerb” syntax is as follows:
+<pre>
+	public int doVerb(int verb)
+</pre>
+
+where
+<ul>
+<li>
+<b>verb</b> – an integer value mapping to one of the following pre-defined verb values:
+</li>
+
+<ul>
+<li>OLE.OLEIVERB_PRIMARY - Specifies the action that occurs when an end user double-clicks
+the object in its container. The object, not the container, determines
+this action. If the object supports in-place activation, the primary verb
+usually activates the object in place.</li>
+
+<li>OLE.OLEIVERB_SHOW - Instructs an object to show itself for editing or viewing.
+Called to display newly inserted objects for initial editing and to show
+link sources. Usually an alias for some other object-defined verb.</li>
+
+<li>OLE.OLEIVERB_OPEN - Instructs an object, including one that otherwise supports
+in-place activation, to open itself for editing in a window separate from
+that of its container. If the object does not support in-place activation,
+this verb has the same semantics as OLEIVERB_SHOW.</li>
+
+<li>OLE.OLEIVERB_HIDE - Causes an object to remove its user interface from the
+view. Applies only to objects that are activated in-place.</li>
+
+<li>OLE.OLEIVERB_INPLACEACTIVATE - Activates an object in place without displaying
+tools, such as menus and toolbars, that end users need to change the behavior
+or appearance of the object. Single-clicking such an object causes it to
+negotiate the display of its user-interface tools with its container. If
+the container refuses, the object remains active but without its tools
+displayed.</li>
+
+<li>OLE.OLEIVERB_UIACTIVATE - Activates an object in place, along with its full
+set of user-interface tools, including menus, toolbars, and its name in
+the title bar of the container window.</li>
+
+<li>OLE.OLEIVERB_DISCARDUNDOSTATE - Used to tell objects to discard any undo state
+that they may be maintaining without deactivating the object.</li>
+</ul>
+
+<li>
+<b>return value</b> – OLE.S_OK if the doVerb command was successful.</li>
+</ul>
+
+<b>Further Reading</b> on “doVerb”: MSDN Library: Windows CE
+        Documentation-&gt;Application Development-&gt;API Reference-&gt;Core
+        -&gt;Interfaces-&gt;IOleObject::IUnknown-&gt;IOleObject::DoVerb
+
+<h3>Saving changes to an OLE Document</h3>
+
+The changes made to the OLE Document can be saved to a Storage file or an ordinary file. 
+As described above, a Storage file contains information in the header that is specific
+to OLE. 
+
+<p>Applications like Word save additional information in the Storage file such as
+paragraph formats, Author's name and Company.  If you save a Word Document to an
+ordinary file, only the text will be saved.
+
+<p>Some applications edit resources which are not OLE specific and therefore can not save
+their contents into a Storage file because then other applications will not understand the contents.  
+For example, a bitmap can be edited with Microsoft's Paint application which can be embedded as 
+an OLE Document.  A bitmap, however, has a format that does not include an OLE header.  In this
+case, the contents must be saved to an ordinary file.
+
+<p>Before saving the file, check that a save is necessary using the method <tt>isDirty()</tt> on the
+<i>OleClientSite</i>.
+If a save is required, invoke the method <tt>save(File file, boolean includeOleInfo)</tt> on the
+<i>OleClientSite</i>.  
+The boolean <tt>includeOleInfo</tt> should be set to <b> true</b> to save to a Storage file and
+<b> false</b> to save to an ordinary file.
+<pre>
+	File file = new File(&quot;C:\\OleDocumentation.doc&quot;);
+	OleClientSite clientSite = new OleClientSite(frame, SWT.NONE, file);
+
+	// ... edit the document ...
+
+	if (clientSite.isDirty()) {
+		File tempFile = new File(file.getAbsolutePath() + &quot;.tmp&quot;);
+		file.renameTo(tempFile);
+		if (clientSite.save(file, true)){
+			// save was successful so discard the backup
+			tempFile.delete();
+		} else {
+			// save failed so restore the backup
+			tempFile.renameTo(file);
+		}
+	}
+
+</pre>
+
+<h3>Deactivating the OLE Object</h3>
+
+If several OLE Documents or ActiveX Controls are embedded in an application, 
+it may be preferable to have only one OLE Object "active" at a time.
+The OLE Object that is not currently being used can be deactivated.
+When the OLE Object is deactivated, it is placed in a “Running” state 
+– its contents are visible but the toolbar and menu bar have been removed and the
+content does not respond to mouse or keyboard actions.
+In this state, the object is still alive.  If modifications have been made to the object, when
+the object is returned to the active state, those changes will still be present.
+
+<p>NOTE: In the case of OLE Documents, the order of activating and deactivating is very important – first 
+deactivate the old document and then activate the new document otherwise the menu bar
+will not appear correctly. 
+
+<p>Deactivating an OLE Document or ActiveX Control is done by calling <tt>deactivateInPlaceClient</tt>
+on the <i> OleClientSite</i> or <i>OleControlSite</i>:
+<pre>
+	currentSite.deactivateInPlaceClient();
+</pre>
+
+<h3>Disposing the OLE Object</h3>
+
+Because <i> OleFrame</i>, <i> OleClientSite</i> and <i> OleControlSite</i> are SWT Widgets, when
+the parent is disposed, the children will be disposed automatically.
+To terminate an OLE Document or ActiveX Control while other OLE Objects 
+are still running in the same <i> OleFrame</i>, directly dispose of the object:
+<pre>
+	myClientSite.dispose();
+</pre>
+or
+<pre>
+	myControlSite.dispose();
+</pre>
+
+<p>Note: When an OLE Object is terminated, saving is not performed automatically,
+nor will there be any checking for a “dirty” state (no checking for unsaved
+changes before closing). The application must write this code.
+
+<h2>Using Customized Behavior</h2>
+
+ActiveX Controls and OLE Documents can provide customized behavior. To see
+what kinds of customized behavior are available refer to the type
+library associated with the OLE Object. SWT provides access to several different
+types of customized behavior – the “Exec Command”, the “IDispatch interface”,
+Events and Property Change Notification.
+
+<h3>Exec Command</h3>
+The “exec” command is a generic way of sending a predefined set of commands
+to either an OLE Document or an ActiveX Control. The command syntax is as follows:
+<pre>
+	int OleClientSite.exec(int cmdID, int options, Variant in, Variant out)
+</pre>
+
+where
+<ul>
+<li>
+<b>cmdID</b> – an identifier for the command such as OLE.OLECMDID_OPEN,
+OLE.OLECMDID_NEW, OLE.OLECMDID_SAVE</li>
+
+<li><b>options</b> – the behavior of the command can be modified through the
+use of options such as OLE.OLECMDEXECOPT_DODEFAULT, OLE.OLECMDEXECOPT_PROMPTUSER,
+OLE.OLECMDEXECOPT_DONTPROMPTUSER or OLE.OLECMDEXECOPT_SHOWHELP</li>
+<li><b>in</b> – parameters to be passed into the command</li>
+<li><b>out</b> – values return from the command</li>
+<li><b>return value</b> – the return value will be OLE.S_OK if the action was successful.</li>
+</ul>
+
+<p>In and out parameters are defined using a Variant, which is the OLE mechanism
+for generically passing around any type of data. A Variant may contain
+an integer, a boolean, a string or many other different types of objects.
+
+<p>The OLE Object may or may not recognize the command. Before sending
+a command, you can ask an OLE Object if it recognizes the command using OleClientSite.queryStatus(int
+cmdID). This will return some combination of the following values:
+<ul>
+<li>OLE.OLECMDF_SUPPORTED – The command is supported by this object.</li>
+<li>OLE.OLECMDF_ENABLED – The command is available and enabled.</li>
+<li>OLE.OLECMDF_LATCHED – The command is an on-off toggle and is currently on.</li>
+</ul>
+
+<p>Here is an example of how the Exec command is used:
+<pre>
+	int result = controlSite.queryStatus(OLE.OLECMDID_PRINT);
+	if ((result &amp; OLE.OLECMDF_ENABLED) == OLE.OLECMDF_ENABLED) {
+		controlSite.exec(OLE.OLECMDID_PRINT, OLE.OLECMDEXECOPT_PROMPTUSER, null, null);
+	}
+</pre>
+
+<p><b>Further Reading</b> on “exec”: MSDN Library: Platform SDK->Component
+Services ->COM ->OLE and Data Transfer->Reference ->Interfaces->IOleCommandTarget
+
+<h3>IDispatch or OLE Automation</h3>
+
+An OLE Document or ActiveX Control can also provide a much richer set of commands
+than the generic set defined for the “exec” command. To access these,
+use the IDispatch interface. IDispatch provides access to get and set property
+values and invoke methods. For example, Word provides the entire Word Basic
+interface that gives you access to all sorts of commands and properties
+like cut/copy/paste, print, spell check, select text, change paragraph
+format, etc. In SWT the IDispatch capabilities are accessed using the <i> OleAutomation</i>
+object.
+
+<h4>Creating the Automation object:</h4>
+
+An <i> OleAutomation</i> object can be created from a client or control site or
+it can be obtained as the return value from a method invocation.
+
+<p>A simple case is the Web Browser. It provides commands like navigate,
+back, forward, home which you can access like this:
+<pre>
+	OleControlSite controlSite = new OleControlSite(frame, SWT.NONE, &quot;Shell.Explorer&quot;);
+	OleAutomation automation = new OleAutomation(controlSite );
+</pre>
+
+<h4>Get a Property</h4>
+	A Property is obtained from an OLE Object using the <i> OleAutomation</i> method <tt><b>getProperty</b></tt>:
+<pre>	
+	Variant getProperty(int dispIdMember)
+</pre>
+
+where
+<ul>
+<li><b>dispIDMember</b> - identifies the Property in which you are interested.
+You may already know the value of the dispIDMember from looking in the
+type library or you may just know the string identifier (also available
+in the type library). You can get the integer value from the string identifier
+using <tt>OleAutomation.GetIDsOfNames(String[] names)</tt>. The method getProperty
+returns a Variant – as discussed above, this is the OLE mechanism for being
+able to generically pass around any type of data. You ask the Variant to
+provide the value it contains in the format that you require.</li>
+
+<li><b>return value</b> - this is a Variant containing the value of the property.
+A Variant is a generic way of passing around data. You can ask the Variant
+for the data in the format that you prefer.</li>
+</ul>
+
+For example:
+<pre>
+	OleControlSite controlSite = new OleControlSite(frame, SWT.NONE, &quot;Shell.Explorer&quot;);
+	OleAutomation automation = new OleAutomation(controlSite);
+	int[] rgdispid = automation.getIDsOfNames(new String[]{&quot;LocationName&quot;});
+	int dispIdMember = rgdispid[0];
+	Variant result = automation.getProperty(dispIdMember);
+	System.out.println(&quot;The Web Browser is currently viewing the URL &quot;+result.getString());
+</pre>
+
+Matching type library record:
+<pre>interface IWebBrowser : IDispatch {
+	…
+	[id(0x000000d2), propget, helpstring(&quot;Gets the short (UI-friendly) name of the URL/file currently viewed.&quot;)]
+	HRESULT LocationName([out, retval] BSTR* LocationName);
+	…
+}
+</pre>
+
+<h4>Set a Property</h4>
+
+This is very similar to “Get a Property”. In this case the method is:
+<pre>
+	boolean OleAutomation.setProperty(int dispIdMember, Variant rgvarg).</pre>
+where
+<ul>
+<li><b>dispIdMember</b> – as above</li>
+<li><b>rgvarg</b> - contains the value to which you want the property set.</li>
+<li><b>return value</b> – true if property was set.</li>
+</ul>
+
+For example:
+<pre>
+	// Allow multiple selection in an embedded Calendar Control
+	OleControlSite controlSite = new OleControlSite(frame, SWT.NONE, &quot;MSComCtl2.MonthView&quot;);
+	OleAutomation automation = new OleAutomation(controlSite);
+	int[] rgdispid = automation.getIDsOfNames(new String[]{&quot;MultiSelect&quot;});
+	int dispIdMember = rgdispid[0];
+	Variant multiSelect = new Variant((short)1); // set to true (0 = false)
+	automation.setProperty(dispIdMember, multiSelect);
+
+</pre>
+
+Matching type library record:
+<pre>
+interface IMonthView : IDispatch {
+	…
+	[id(0x000000013), propput, helpstring(&quot;Allow multiple selection.&quot;), helpcontext(0x00030da8)]
+	HRESULT MultiSelect([in] BSTR pbMultiSelect);
+	…
+}
+</pre>
+
+<h4>Invoke a Command</h4>
+
+Invoking a command is a bit more complicated because you can pass in multiple
+parameters and because some of these parameters may be optional, you must
+pass an identifier for the parameter as well as the value of the parameter.
+There are three variants on the OleAutomation.invoke method to accommodate
+this:
+<ul>
+<li><tt>Variant invoke(int dispIdMember)</tt> – Command takes no parameters</li>
+
+<li><tt>Variant invoke(int dispIdMember, Variant[] rgvarg)</tt> – All parameters
+are mandatory and therefore none are named</li>
+
+<li><tt>Variant invoke(int dispIdMember, Variant[] rgvarg, int[]
+  rgdispidNamedArgs)</tt> – Some parameters are optional and therefore all the parameters are named</li>
+</ul>
+
+Where
+<ul>
+<li><b>dispIdMember</b> – the identifier of the command</li>
+
+<li><b>rgvarg</b> – an array of Variants holding the values of the parameters
+you are passing in.</li>
+
+<li><b>rgdispidNamedArgs</b> – an array of the identifiers for the arguments.</li>
+
+<li><b>return value</b> – a Variant containing the result that was passed back
+by the command. Depending on the command, this may be null.</li>
+</ul>
+
+Example 1:
+<p>The “GoForward” command on the Web Browser takes no parameters:
+<pre>
+	OleControlSite webSite = new OleControlSite(frame, SWT.NONE, &quot;Shell.Explorer&quot;);
+	OleAutomation automation = new OleAutomation(webSite);
+	int[] rgdispid = automation.getIDsOfNames(new String[]{&quot;GoForward&quot;});
+	int dispIdMember = rgdispid[0];
+	Variant pVarResult = automation.invoke(dispIdMember);
+</pre>
+
+Note: Call <b> getIDsOfNames</b> to get the ID of the command
+
+<p>Matching type library record:
+<pre>
+interface IWebBrowser : IDispatch {
+	…
+	[id(0x00000065), helpstring(&quot;Navigates to the next item in the history list.&quot;)]
+	HRESULT GoForward();
+	…
+}
+</pre>
+
+Example 2:
+<p>The “Navigate” command of the Web Browser takes several arguments but
+there is only one mandatory parameter and that is the “URL”. In this example
+we are not going to send any of the optional arguments:
+<pre>
+	OleControlSite controlSite = new OleControlSite(frame, SWT.NONE, &quot;Shell.Explorer&quot;);
+	OleAutomation automation = new OleAutomation(controlSite);
+	int[] rgdispid = automation.getIDsOfNames(new String[]{&quot;Navigate&quot;});
+	int dispIdMember = rgdispid[0];
+	Variant[] rgvarg = new Variant[1]; // this is the URL parameter
+	rgvarg[0] = new Variant(&quot;www.ibm.com&quot;);
+	Variant pVarResult = automation.invoke(dispIdMember, rgvarg);
+</pre>
+
+Matching type library record:
+<pre>
+interface IWebBrowser : IDispatch {
+	…
+	[id(0x00000068), helpstring(&quot;Navigates to a URL or file.&quot;)]
+	HRESULT Navigate(
+		[in] BSTR URL,&nbsp;
+		[in, optional] VARIANT* Flags,
+		[in, optional] VARIANT* TargetFrameName,&nbsp;
+		[in, optional] VARIANT* PostData,&nbsp;
+		[in, optional] VARIANT* Headers);
+	…
+}
+</pre>
+
+Example 3:
+<p>The “FormatFont” command in Word Basic takes several optional parameters
+and we are interested in just a few of them:
+<pre>
+	// This is a helper method for getting access to Word's WordBasic IDispatch interface
+	// because it is rather complicated
+	private OleAutomation getWordBasic(OleClientSite clientSite) {
+		// Get generic IDispatch interface
+		OleAutomation dispInterface = new OleAutomation(clientSite);
+	
+		// Get Application
+		int[] appId = dispInterface.getIDsOfNames(new String[]{&quot;Application&quot;}); 
+		if (appId == null) OLE.error(OLE.ERROR_APPLICATION_NOT_FOUND);
+		Variant pVarResult = dispInterface.getProperty(appId[0]);
+		if (pVarResult == null) OLE.error(OLE.ERROR_APPLICATION_NOT_FOUND);
+		OleAutomation application = pVarResult.getAutomation();
+
+		// Get Word Basic
+		int[] wbId = application.getIDsOfNames(new String[]{&quot;WordBasic&quot;});
+		if (wbId == null) OLE.error(OLE.ERROR_APPLICATION_NOT_FOUND);
+		Variant pVarResult2 = application.getProperty(wbId[0]);
+		if (pVarResult2 == null) OLE.error(OLE.ERROR_APPLICATION_NOT_FOUND);
+		return pVarResult2.getAutomation();
+	}
+
+	OleClientSite clientSite = new OleClientSite(frame, SWT.NONE, &quot;Word.Document&quot;);
+	OleAutomation automation = getWordBasic(clientSite);
+	// set the font to 12 point, Italic, Bold - ignore Color and Font name
+	int[] rgdispid = automation.getIDsOfNames(new String[]{&quot;FormatFont&quot;, &quot;Points&quot;, &quot;Color&quot;, &quot;Font&quot;, &quot;Bold&quot;, &quot;Italic&quot;});
+	int dispIdMember = rgdispid[0];
+	Variant[] rgvarg = new Variant[3];
+	int[] rgdispidNamedArgs = new int[3];
+	rgvarg[0] = new Variant(12); // this is the Points parameter
+	rgdispidNamedArgs[0] = rgdispid[1];
+	rgvarg[1] = new Variant(1); // this is the Bold parameter
+	rgdispidNamedArgs[1] = rgdispid[4];
+	rgvarg[2] = new Variant(1); // this is the Italic
+	rgdispidNamedArgs[2] = rgdispid[5];
+	automation.invokeNoReply(dispIdMember, rgvarg, rgdispidNamedArgs);
+</pre>
+
+        <p>Note: Here we have used <b>invokeNoReply</b> instead of <b>invoke</b>. Word was the
+first OLE Document ever written and as such it is written slightly differently
+than other OLE Documents. If a Word command does not return a value, you
+should use the “InvokeNoReply” variations of invoke. For most other OLE
+Objects, you can always use “invoke” even if there is no value returned.
+
+<p><b>Further Reading</b>: MSDN Library: Books-&gt;Inside OLE-&gt;Chapter 14->The Mechanics
+of OLE Automation->The IDispatch Interface
+
+<h3>Events and Property changes in Controls</h3>
+
+<b>addEventListener</b> – allows the user to listen for Events on the Control.
+<p>Example:
+<pre>
+	// Respond to ProgressChange events in the Web Browser by updating the applications Progress bar
+	OleControlSite controlSite = new OleControlSite(frame, SWT.NONE, &quot;Shell.Explorer&quot;);
+	OleAutomation automation = new OleAutomation(controlSite);
+	int ProgressChange = 108; //0x6C - obtained from the type library
+	ProgressBar progressBar = new ProgressBar(shell, SWT.BORDER);
+	controlSite.addEventListener(ProgressChange, new OleListener() {
+		public void handleEvent(OleEvent event) {
+			if (event.detail != ProgressChange) return;
+			Variant progress = event.arguments[0];
+			Variant maxProgress = event.arguments[1];
+			if (progress == null || maxProgress == null) return;
+			
+			progressBar.setMaximum(maxProgress.getInt());
+			progressBar.setSelection(progress.getInt());
+		}
+	});
+</pre>
+
+Note: The application must know the identifier for the event (ProgressChange)
+and what kind of data it is being given in the <tt>event.argument</tt> (In our example 
+<tt>event.arguments[0]</tt> is the current progress value and
+<tt>event.arguments[1]</tt> is the maximum progress value)– You can find this out from the
+        type library:
+
+<pre>
+dispinterface DWebBrowserEvents {
+	…
+
+	[id(0x0000006c), helpstring(&quot;Fired when download progress is updated.&quot;)]
+		void ProgressChange(
+			[in] long Progress,&nbsp;
+			[in] long ProgressMax);
+	…
+}
+</pre>
+
+<b>addPropertyListener</b> – allows the user to be notified before property
+changes occur – with the option to veto the change – and after property
+change has occurred.
+<p>Example:
+<pre>
+	
+	OleControlSite controlSite = new OleControlSite(frame, SWT.NONE, &quot;Shell.Explorer&quot;);
+	OleAutomation automation = new OleAutomation(controlSite);
+	int[] rgdispid = automation.getIDsOfNames(new String[]{&quot;ReadyState&quot;});
+	int READYSTATE = rgdispid[0];
+	
+	// Listen for changes to the ready state and print out the current state
+	controlSite.addPropertyListener(READYSTATE, new OleListener() {
+		public void handleEvent(OleEvent event) {
+			if (event.detail == OLE.PROPERTY_CHANGING) {
+				// Print out the old state
+				Variant state = automation.getProperty(READYSTATE);
+				System.out.println(&quot;Web State changing from &quot; + state.getInt());
+				event.doit = true; // allow property change to happen
+
+			}
+			if (event.detail == OLE.PROPERTY_CHANGED) {
+				Variant state = automation.getProperty(READYSTATE);
+				System.out.println(&quot;Web State changed to &quot; + state.getInt());
+			}
+		}
+	});
+</pre>
+
+<p>You can listen for a change to any property defined in the type library.
+
+<p>The type library also contains enumerations that can be used to interpret
+the property values. For example the “ReadyState” values in the previous
+example are integer values belonging to the following enumeration:
+<pre>
+	typedef enum {
+		READYSTATE_UNINITIALIZED = 0,
+		READYSTATE_LOADING = 1,
+		READYSTATE_LOADED = 2,
+		READYSTATE_INTERACTIVE = 3,
+		READYSTATE_COMPLETE = 4
+	} tagREADYSTATE;
+</pre>
+
+        <h3>Summary</h3>
+        <p>On the Windows platform, adding OLE Objects to your application
+        expands the user experience. SWT makes this easy to do by allowing OLE
+        Objects to be embedded in SWT <i>Container</i> widgets, making the
+        Object's interface available to your application, and therefore to your
+        users.</p>
+
+<p><small>Microsoft, Windows, Windows NT, and the Windows logo are trademarks of Microsoft Corporation in the United States, other countries, or both.</small></p>
+		
+</body>
+</html>

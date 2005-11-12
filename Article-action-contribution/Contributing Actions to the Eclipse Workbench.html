@@ -1,0 +1,781 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="OTI Employee">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
+   <title>Contributing Actions to the Eclipse Workbench</title>
+   <link rel="stylesheet" href="../../default_style.css">
+</head>
+<body>
+
+<center>
+  <div align="right"><font face="Times New Roman, Times, serif" size="2">Copyright 
+    &copy; 2001 Object Technology International, Inc.</font> 
+    <table border=0 cellspacing=0 cellpadding=2 width="100%">
+      <tr> 
+        <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+          Corner Article</font></font></b></td>
+      </tr>
+    </table>
+  </div>
+  <div align="left"> 
+    <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+  </div>
+
+<h1>Contributing Actions to the Eclipse Workbench</h1>
+</center>
+
+<h3>
+Summary</h3>
+The Eclipse Platform is an open and extensible platform. This article explains
+in detail how the Workbench can be extended to add new actions and provides
+guidance to the plug-in developers on how they can design for extensibility.
+<p><b>By Simon Arsenault, OTI</b>
+<br>October 18, 2001
+<p>
+<hr WIDTH="100%">
+<h3>
+Introduction</h3>
+The Eclipse Platform allows a plug-in to extend other plug-ins, allowing
+for a tight integration and therefore a better experience for the end user.
+This article illustrates how to contribute actions to views and editors
+of other plug-ins. Each example explores in detail the different features
+available when contributing actions. Once understood, these features can
+be combined to control the contribution of actions within views and editors.
+<p><img SRC="images/into_where.jpg" height=562 width=474>
+<br>The image above shows the many areas where a plug-in can contribute
+actions:
+<ul>
+<li>
+to the context menu of a view or editor</li>
+
+<li>
+to the local toolbar and pull down menu of a view</li>
+
+<li>
+to the main toolbar and menu bar of the Workbench window</li>
+</ul>
+Each different contribution area is examined in this article, with examples
+showing how to contribute actions to each.
+<p>In order for an Independent Software Vendor (ISV) to contribute actions
+to other views and editors, plug-ins need to make their views and editors
+extensible. This article shows how a plug-in can allow action contributions
+from other plug-ins.
+<p>This article assumes a basic understanding of writing a plug-in. For more information 
+  on how to write a plug-in for the Eclipse Platform, please read the article 
+  from Jim Amsden, "<a href="../Your%20First%20Plug-in.html">Your First Plug-in</a>". 
+<p>To follow along with the examples in this article, refer to the section
+<a href="#Running the examples">running
+the examples</a>.
+<h3>
+Contributing actions to context menus</h3>
+The ability to add actions to the context menu of a view or editor allows
+tight integration between plug-ins. For example, the Version and Configuration
+Management plug-in (VCM) adds a number of new actions to existing views
+such as the Navigator and Packages views, allowing the user to version
+manage resources from existing views.
+<dl>To contribute an action to a context menu, the Workbench plug-in (org.eclipse.ui) 
+  provides the extension point org.eclipse.ui.popupMenus. There are two types 
+  of action contributions. Actions can either be contributed to the context menu 
+  of a specific editor or view, or they can be registered against a specific object 
+  type. The following three examples will look at each in detail. 
+  <h4> Example 1: Adding an action to the default text editor</h4>
+  Let's look at how to add a single action to the context menu of the default 
+  text editor provided by the Workbench plug-in. 
+  <pre>&lt;extension point="org.eclipse.ui.popupMenus">&nbsp;
+<img SRC="images/tag_a.jpg" height=13 width=24>&lt;viewerContribution&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.popup.editor"
+<img SRC="images/tag_b.jpg" height=13 width=24>&nbsp;&nbsp; targetID="#TextEditorContext">&nbsp;
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.action1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Action 1"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+<img SRC="images/tag_d.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="additions"&nbsp;
+<img SRC="images/tag_e.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.EditorAction1Delegate">&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp; &lt;/viewerContribution>&nbsp;
+&lt;/extension></pre>
+  The XML above declares a contribution to the context menu of a specific editor. 
+  These extensions are called viewer extensions (<img SRC="images/tag_a.jpg" height=13 width=24>). 
+  The term viewer is used to represent both views and editors. 
+  <p>The <i>targetID</i> attribute (<img SRC="images/tag_b.jpg" height=13 width=24>) 
+    specifies the context menu identifier for the target view or editor. The documentation 
+    of the plug-in providing the view or editor will list the identifier to use. 
+    If none is specified in the documentation, then the context menu is not registered 
+    by the plug-in for external action contribution. A view or editor may have 
+    more than one context menu. 
+  <p>Unfortunately, the default text editor does not follow the <a href="#Developer:%20Allowing%20action%20contribution%20to%20your">guidelines 
+    for plug-in developers</a>. The context menu identifier is not part of the 
+    default text editor documentation as it should be. Also, the identifier is 
+    not fully qualified as recommended by the plug-in developer guidelines. 
+  <p>The action to be contributed to the context menu is described next in XML 
+    (<img SRC="images/tag_c.jpg" height=13 width=24>). The first step is to assign 
+    an identifier to the action using the <i>id</i> attribute. The label and icon 
+    that will appear in the context menu are given next using the <i>label</i> 
+    and <i>icon</i> attributes. The optional <i>icon</i> attribute is specified 
+    as a path relative to the plug-in directory. 
+  <p>The <i>menubarPath</i> attribute (<img SRC="images/tag_d.jpg" height=13 width=24>) 
+    specifies the path, starting at the root of the context menu, where this action 
+    will be added. In this example, "additions" is the value of the constant org.eclipse.ui.IWorkbenchActionConstants.MB_ADDITIONS. 
+    Plug-ins are expected to provide this group once in their context menus indicating 
+    the default location where action contributions can be placed. Plug-ins may 
+    provide other groups in their context menus where action contributions can 
+    be added. In this case, it is recommended that plug-ins document each group. 
+    If the <i>menubarPath</i> attribute is not specified, the Workbench will first 
+    attempt to add the action in the group "additions". If the group "additions" 
+    does not exist, then the action is added to the end of the context menu. 
+  <p>The <i>class</i> attribute (<img SRC="images/tag_e.jpg" height=13 width=24>) 
+    specifies the Java&trade; class that will perform the action when the menu item is 
+    selected by the user. This class must implement the org.eclipse.ui.IEditorActionDelegate 
+    interface if contributing to an editor's context menu or the org.eclipse.ui.IViewActionDelegate 
+    interface if contributing to a view's context menu. One <b>very important 
+    point</b> to understand about the delegate class is this class is loaded by 
+    the Workbench only when the user selects the menu item for the first time 
+    because plug-ins are loaded lazily. This means that the initial enablement 
+    logic must be described in XML. Once the delegate class has been loaded by 
+    the Workbench, the delegate can control the enabled/disabled state of the 
+    action. 
+  <p>The interface IEditorActionDelegate allows the action delegate to retarget 
+    itself to the active editor. This is important because only one delegate is 
+    created for the action and is shared by all instances of the same editor type. 
+    The action delegate must implement the method setActiveEditor(IAction action, 
+    IEditorPart targetEditor). When the action is invoked via its run() method, 
+    it must act upon the active editor given to the delegate via the last setActiveEditor 
+    method call. 
+  <p>The interface IViewActionDelegate allows the action delegate, during initialization, 
+    to target itself with the view instance it should work with. The action delegate 
+    must implement the method init(IViewPart view). When the action is invoked 
+    via its run() method, it must act upon the view passed to init method. 
+  <p><img SRC="images/example1.jpg" height=462 width=474> 
+  <p>The image above shows the result of <a href="#Running the examples">running 
+    this example</a>. Notice the action added at the end of the editor's context 
+    menu. This is where the “additions” group is located in the default text editor 
+    context menu. 
+  <h4> <a NAME="Example: Adding sub-menu to the Navigator"></a>Example 2: Adding 
+    a sub-menu to the Navigator view</h4>
+  Let's look at how to add one action and a sub-menu with two actions to the Navigator 
+  view. 
+  <pre>&lt;extension point="org.eclipse.ui.popupMenus">&nbsp;
+&nbsp;&nbsp; &lt;viewerContribution&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.popup.navigator"
+<img SRC="images/tag_a.jpg" height=13 width=24>&nbsp;&nbsp; targetID="org.eclipse.ui.views.ResourceNavigator">&nbsp;
+<img SRC="images/tag_b.jpg" height=13 width=24>&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.navigator.action1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="View Action 1"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="additions"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.ViewAction1Delegate"
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enablesFor="!">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>
+
+<img SRC="images/tag_d.jpg" height=13 width=24>&nbsp;&nbsp; &lt;menu
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.navigator.subMenu"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="View Sub Menu"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; path="additions">
+<img SRC="images/tag_e.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;separator name="group1"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/menu>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.navigator.action2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="View Action 2"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+<img SRC="images/tag_f.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="org.eclipse.ui.articles.action.contribution.navigator.subMenu/group1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.ViewAction2Delegate"
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enablesFor="1">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.navigator.action3"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="View Action 3"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+<img SRC="images/tag_f.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="org.eclipse.ui.articles.action.contribution.navigator.subMenu/group1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.ViewAction3Delegate"
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enablesFor="2+">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp; &lt;/viewerContribution>&nbsp;
+&lt;/extension></pre>
+  The XML above declares that a contribution to the context menu of the Navigator 
+  view is requested (<img SRC="images/tag_a.jpg" height=13 width=24>). The first 
+  action contribution (<img SRC="images/tag_b.jpg" height=13 width=24>) is then 
+  defined just like the previous example. The attributes described in the previous 
+  example are skipped to focus on the new attributes and features of this example. 
+  <p>Notice the attribute <i>enablesFor</i> in the action definition (<img SRC="images/tag_c.jpg" height=13 width=24>). 
+    This attribute controls the enabled/disabled state of the action based on 
+    the current selection. The current selection is obtained from the selection 
+    provider given when the <a href="#Developer:%20Allowing%20action%20contribution%20to%20your">context 
+    menu was registered</a> by the plug-in developer. The <i>enablesFor</i> attribute 
+    value is the selection count condition which must be met to enable the action. 
+    If the condition is not met the action is disabled. If the attribute is left 
+    out, the action is enabled for any number of items selected. The following 
+    attribute formats are supported: 
+  <dl>&nbsp; 
+    <table WIDTH="45%" >
+      <tr> 
+        <td><b><u>Formats</u></b></td>
+        <td><b><u>Description</u></b></td>
+      </tr>
+      <tr> 
+        <td><b>!</b></td>
+        <td>0 items selected</td>
+      </tr>
+      <tr> 
+        <td><b>?</b></td>
+        <td>0 or 1 items selected</td>
+      </tr>
+      <tr> 
+        <td><b>+</b></td>
+        <td>1 or more items selected</td>
+      </tr>
+      <tr> 
+        <td><b>multiple, 2+</b></td>
+        <td>2 or more items selected</td>
+      </tr>
+      <tr> 
+        <td><b>n</b></td>
+        <td>a precise number of items selected (e.g. 4)</td>
+      </tr>
+      <tr> 
+        <td><b>*</b></td>
+        <td>any number of items selected</td>
+      </tr>
+    </table>
+  </dl>
+  <p><br>
+    Action enablement is declared in XML because plug-ins are loaded lazily. Until 
+    an action is actually invoked by the user, the plug-in is not loaded and the 
+    Workbench uses the enablement logic declared in XML. Once a plug-in is loaded, 
+    the delegate class is notified of selection changes and can update the enabled/disabled 
+    state of the action. Refer to the org.eclipse.ui.IActionDelegate.selectionChanged(IAction 
+    action, ISelection selection) method documentation for more details. 
+  <p>The <i>menu</i> element (<img SRC="images/tag_d.jpg" height=13 width=24>), 
+    in this example, specifies the sub menu. The <i>label</i> attribute value 
+    is the text displayed in the menu. The <i>path</i> attribute specifies the 
+    path, starting at the root of the context menu. This attribute works like 
+    the <i>menubarPath</i> attribute of the <i>action</i> element which was discussed 
+    in the first example. 
+  <p>Within the <i>menu</i> element (<img SRC="images/tag_d.jpg" height=13 width=24>), 
+    notice that a separator was defined (<img SRC="images/tag_e.jpg" height=13 width=24>). 
+    A separator serves as a group name into which actions can be added. In this 
+    example, the last two actions defined use this separator name in their <i>menubarPath</i> 
+    attribute (<img SRC="images/tag_f.jpg" height=13 width=24>). This is how the 
+    two actions are placed in the sub menu. A menu separator item is added by 
+    the Workbench menu manager above and below the group as needed. 
+  <p><img SRC="images/example2.jpg" height=462 width=474> 
+  <p>The image above shows the result of <a href="#Running the examples">running 
+    this example</a>. Notice the sub menu added to the Navigator's context menu. 
+  <p>The order in which the actions are added to the menu and sub menu is in reverse 
+    order of how they are listed in the plugin.xml file. The current behavior 
+    is unfortunate, but this issue was discovered only after the API was frozen. 
+</dl>
+
+<h4>
+Example 3: Adding an action to an object</h4>
+Let's look at how to add a single action to a .java file in a Java project.
+<pre>&lt;extension point="org.eclipse.ui.popupMenus">&nbsp;
+<img SRC="images/tag_a.jpg" height=13 width=24>&lt;objectContribution&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.popup.object"
+<img SRC="images/tag_b.jpg" height=13 width=24>&nbsp;&nbsp; objectClass="org.eclipse.core.resources.IFile"
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp; nameFilter="*.java">
+<img SRC="images/tag_d.jpg" height=13 width=24>&nbsp;&nbsp; &lt;filter
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name="projectNature"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; value="org.eclipse.jdt.core.javanature">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/filter>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.object.action1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Object Action 1"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="additions"&nbsp;
+<img SRC="images/tag_e.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.ObjectAction1Delegate">&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp; &lt;/objectContribution>&nbsp;
+&lt;/extension></pre>
+The XML above declares a contribution to <b>every</b> context menu (<img SRC="images/tag_a.jpg" height=13 width=24>)
+but only when the selected objects all match the type specified in the
+<i>objectClass</i>
+attribute (<img SRC="images/tag_b.jpg" height=13 width=24>). The attribute
+can be either a fully qualified class or interface name. When the selection
+is heterogeneous, the contribution will be applied if it is registered
+against a common type of the selection. If a direct match is not possible,
+matching against super classes and super interfaces will be attempted.
+The action contribution is dependent on the selection only containing objects
+of the specified type, and is not limited to one view or editor's context
+menu.
+<p>For example, if the file "f1.java" and the project "Java Project" are
+selected in the Navigator when the context menu is shown for that view,
+then the action contribution defined by the XML above would be excluded
+because the object "Java Project" is of type IProject not IFile, and IFile
+is not a super interface of IProject. However, if the <i>objectClass</i>
+attribute value in the XML above was "org.eclipse.core.resources.IResource",
+then the action contribution would be included because IResource is a super
+interface of both IFile ("f1.java") and IProject ("Java Project"), neglecting
+for the moment the <i>nameFilter</i> attribute.
+<p>The <i>nameFilter</i> attribute (<img SRC="images/tag_c.jpg" height=13 width=24>)
+is used to further constrain the selection to which this action will apply.
+In this example, only IFiles that end with the .java extension are considered.
+The value of this attribute is compared to the org.eclipse.ui.model.IWorkbenchAdapter.getLabel()
+method result for each object in the selection . If the object does not
+have an IWorkbenchAdapter, then the object's toString() method is used.
+If this attribute is not specified, then no filtering is done on the object's
+name.
+<p>The <i>filter</i> element (<img SRC="images/tag_d.jpg" height=13 width=24>)
+provides another way of controlling the enablement criteria of an action.
+These are name/value pairs of attributes for the objects in the selection.
+The attributes which apply to the selection are type-specific, so the Workbench
+delegates filtering at this level to the actual selection (see IActionFilter
+javadoc). In this example, the object attribute name, "projectNature",
+is defined on IResourceActionFilter and is applicable to all IResources.
+Therefore, the action contribution will only happen if the IProject of
+each object in the selection has a Java nature. Refer to the documentation
+on IActionFilter and its sub-interfaces for a list and description of other
+named attributes. For more information about project natures, refer to
+the documentation on org.eclipse.core.resources.IProjectNature interface.
+<p>For object contributions, the <i>class</i> attribute (<img SRC="images/tag_e.jpg" height=13 width=24>)
+of the <i>action</i> element is the name of a Java class that implements
+the org.eclipse.ui.IObjectActionDelegate interface. The interface IObjectActionDelegate
+allows the action delegate to retarget itself to the active part. This
+is important because only one delegate is created for the action and is
+shared by all instances of IWorkbenchPart. The action delegate must implement
+the method setActivePart(IAction action, IWorkbenchPart targetPart). When
+the action is invoked via its run() method, it must act upon the active
+part given to the delegate via the last setActivePart method call.
+<p><img SRC="images/example3.jpg" height=462 width=474>
+<p>The image above shows the result of <a href="#Running the examples">running
+this example</a>. Notice the object action contribution is added to the
+Navigator's context menu because a .java file within a Java project is
+selected.
+<h4>
+<a NAME="Developer: Allowing action contribution to your"></a>Developer
+Guideline: Supporting action contributions in your own context menus</h4>
+Within the Workbench, action contributions to a context menu is only possible
+when the menu is made known to the Workbench. This is a voluntary process,
+but plug-ins are encouraged to expose their menus so that ISVs may extend
+them. This increases the overall extensability and integration of the platform.
+<p>Each context menu should be registered with the Workbench. This is accomplished
+by calling either org.eclipse.ui.IWorkbenchPartSite.registerContextMenu(MenuManager
+menuManager, ISelectionProvider selectionProvider) or org.eclipse.ui.IWorkbenchPartSite.registerContextMenu(String
+menuId, MenuManager menuManager, ISelectionProvider selectionProvider).
+If a view or editor has more than one context menu to expose, then each
+one needs to be registered. Once the context menu is registered, the Workbench
+will automatically insert any action contributions which exist into the
+menu.
+<p>As part of the context menu registration, a unique identifier for each
+context menu is required to avoid conflicts in the Workbench global registry
+of context menus. For consistency across all parts, the following strategy
+should be adopted by all plug-ins registering a context menu:
+<ul>
+<li>
+If the view or editor has only one context menu, it should be given the
+same identifier as the view or editor's identifier. For convenience, publishers
+can call registerContextMenu(MenuManager, ISelectionProvider) on IWorkbenchPartSite.</li>
+
+<li>
+If the view or editor has more than one context menu, each should be given
+a unique identifier whose prefix is the identifier of the view or editor.
+For example, an editor, with identifier com.xyz.bestEditor, has two context
+menus. The first context menu identifier would be org.xyz.bestEditor.menu1
+and the second context menu identifier would be com.xyz.bestEditor.menu2.
+Register each context menu by calling registerContextMenu(String, MenuManager,
+ISelectionProvider) on IWorkbenchPartSite.</li>
+</ul>
+All context menu identifiers should be published within the javadoc of
+the view or editor. This makes it easier for ISVs to determine the menu
+identifier for a particular part and define action contributions. These
+identifiers are used as the <i>targetID</i> attribute value in action contributions.
+<p>Publishers of context menus should include the standard insertion point
+identifier IWorkbenchActionConstants.MB_ADDITIONS. This default reference
+point is used for insertion of actions contributed by ISVs. The insertion
+point is defined by adding a GroupMarker to the menu at an appropriate
+location for insertion. Other insertion points can be defined and published
+within the javadoc of the view or editor. This is strongly recommended
+to allow ISVs better control of where the action will be inserted within
+the context menu.
+<p>A plug-in developer of an object that can be part of a selection in
+a context menu can implement the org.eclipse.ui.IActionFilter interface.
+This is a filtering strategy which can perform type-specific filtering
+based on name/value pairs. This permits an ISV to use these name/value
+pairs within the <i>filter</i> element in XML to further restrict which
+objects the action contribution applies to. The Workbench will retrieve
+the filter for the selection by testing to see if it implements IActionFilter.
+If that fails, the Workbench will ask for a filter through the IAdaptable
+mechanism.
+<h3>
+Contributing actions to a view's menu or toolbar</h3>
+A view has a local pull down menu and a toolbar which is initially populated
+by the view itself. Other plug-ins can contribute actions to this menu
+and toolbar by using the org.eclipse.ui.viewActions extension point.
+<h4>
+Example 4: Adding actions to the Navigator view's menu and toolbar</h4>
+Let's look at how to contribute a different action to both the pull down
+menu and toolbar of the Navigator view.
+<pre>&lt;extension point="org.eclipse.ui.viewActions">&nbsp;
+<img SRC="images/tag_a.jpg" height=13 width=24>&lt;viewContribution&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.view"&nbsp;
+<img SRC="images/tag_b.jpg" height=13 width=24>&nbsp;&nbsp; targetID="org.eclipse.ui.views.ResourceNavigator">
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.view.action1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="View Action 1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for View Action 1"
+<img SRC="images/tag_d.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="additions"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.ViewAction1Delegate"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enablesFor="*">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+<img SRC="images/tag_e.jpg" height=13 width=24>&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.view.action2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="View Action 2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for View Action 2"
+<img SRC="images/tag_f.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; toolbarPath="group1"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.ViewAction2Delegate"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enablesFor="*">
+<img SRC="images/tag_g.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;selection
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.core.resources.IFile"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name="*.java">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/selection>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp; &lt;/viewContribution>&nbsp;
+&lt;/extension></pre>
+The above XML informs the Workbench that a plug-in wants to contribute
+to the Navigator's pull down menu and toolbar (<img SRC="images/tag_a.jpg" height=13 width=24>).
+In this example, the <i>targetID</i> attribute (<img SRC="images/tag_b.jpg" height=13 width=24>)
+refers to the Navigator view identifier.
+<p>The first <i>action</i> element (<img SRC="images/tag_c.jpg" height=13 width=24>)
+should look familiar by now, with the same attributes covered in previous
+examples. The value of the <i>menubarPath</i> attribute (<img SRC="images/tag_d.jpg" height=13 width=24>)
+is the same as IWorkbenchActionConstants.MB_ADDITIONS constant, which is
+the default group that contributors add actions to. Though not shown in
+this example, it is possible to add a sub-menu to the view's pull down
+menu simply by defining a <i>menu</i> element. Refer to the previous example
+on <a href="#Example: Adding sub-menu to the Navigator">adding sub-menu
+to a context menu</a> for more details.
+<p>The second <i>action</i> element (<img SRC="images/tag_e.jpg" height=13 width=24>)
+is only slightly different than the first one. Instead of adding the action
+to the pull down menu (using the
+<i>menubarPath</i> attribute), the action
+is added to the view's toolbar (<img SRC="images/tag_f.jpg" height=13 width=24>).
+The value of the
+<i>toolbarPath</i> attribute specifies the group into
+which the action should be added. If the group specified does not exist,
+then it is created at the end of the toolbar and a separator is added if
+required. Views may publish groups to which a plug-in can add actions inside
+the toolbar. In the case of the Navigator view's toolbar, it does not publish
+any groups. Unlike a menu which has the default IWorkbenchActionConstants.MB_ADDITIONS
+group, a toolbar is not required to provide one.
+<p>The <i>selection</i> element (<img SRC="images/tag_g.jpg" height=13 width=24>)
+can further constrain the selection to which this action applies. The <i>class</i>
+attribute specifies the selection object type that must be met for the
+action to be enabled. In this example, the action is only enabled if all
+the objects within the selection implement the IFile interface. The <i>name</i>
+attribute specifies a wildcard match against each object in the selection.
+The value of this attribute is compared to the org.eclipse.ui.model.IWorkbenchAdapter.getLabel()
+method result for each object in the selection. In this example, the action
+is only enabled if all the objects in the selection end with the .java
+extension. The <i>selection</i> element is ignored by the Workbench if
+the <i>enablesFor</i> attribute is not specified.
+<p><img SRC="images/example4.jpg" height=462 width=474>
+<p>The image above shows the result of <a href="#Running the examples">running
+this example</a>. Notice the action added to the Navigator's pull down
+menu. The action added in the toolbar is disabled because the current selection
+does not contain .java files, but instead .txt files.
+<h4>
+Developer Guideline: Supporting action contributions in your own views</h4>
+Developers of a view should include the standard insertion point identifier
+IWorkbenchActionConstants.MB_ADDITIONS in the view's pull down menu. This
+reference point will be used for insertion of actions contributed by ISVs.
+The insertion point is defined by adding a GroupMarker to the menu at an
+appropriate location for insertion. Other insertion points can be defined
+and published within the javadoc of the view. This is strongly recommended
+to allow ISVs better control of where the action will be inserted within
+the pull down menu.
+<h3>
+Contributing actions to an editor's menu or toolbar</h3>
+An editor will contribute its actions to the main menu bar and toolbar
+of the Workbench window. Another plug-in can contribute actions for a particular
+editor by using the org.eclipse.ui.editorActions extension point. Each
+action extension is created and shared by all instances of the same editor
+type.
+<h4>
+Example 5: Adding actions to the default text editor's toolbar</h4>
+Let's look at how to contribute two actions to the toolbar of the default
+text editor.
+<pre>&lt;extension point="org.eclipse.ui.editorActions">&nbsp;
+<img SRC="images/tag_a.jpg" height=13 width=24>&lt;editorContribution&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor"&nbsp;
+<img SRC="images/tag_b.jpg" height=13 width=24>&nbsp;&nbsp; targetID="org.eclipse.ui.DefaultTextEditor">
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.action1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Action 1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Editor Action 1"
+<img SRC="images/tag_d.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; toolbarPath="Normal/additions"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.EditorAction1Delegate">&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+<img SRC="images/tag_e.jpg" height=13 width=24>&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.action2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Action 2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Editor Action 2"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; helpContextId="org.eclipse.ui.articles.action.contribution.editor.action2"&nbsp;
+<img SRC="images/tag_f.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; toolbarPath="Normal/save.ext"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.EditorAction2Delegate">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp; &lt;/editorContribution>&nbsp;
+&lt;/extension></pre>
+As with previous examples, the first few lines instruct the Workbench that
+actions are being contributed to the default text editor (<img SRC="images/tag_a.jpg" height=13 width=24>
+and&nbsp;<img SRC="images/tag_b.jpg" height=13 width=24>). In this example,
+two actions are added to the toolbar of the editor.
+<p>The toolbarPath attribute value (<img SRC="images/tag_d.jpg" height=13 width=24>
+and&nbsp;<img SRC="images/tag_f.jpg" height=13 width=24>) is different
+than previous examples in that the first segment of the path represents
+the toolbar identifier, while the second segment represents the group within
+the toolbar. The toolbar identifier allows the plug-in to determine which
+toolbar the action is added to. Currently in the Workbench, only one toolbar
+is supported and its identifier is "Normal". If the group does not exist,
+then it is <b>not</b> created within the specified toolbar, and the action
+is <b>not</b> added to the specified toolbar. Valid toolbar groups are
+listed in the documentation of the IWorkbenchActionConstants interface
+and the plugin providing the target editor.
+<p>The first action (<img SRC="images/tag_c.jpg" height=13 width=24>) is
+added to the default group called IWorkbenchActionConstants.MB_ADDITIONS
+using the <i>toolbarPath</i> attribute (<img SRC="images/tag_d.jpg" height=13 width=24>).
+The second action (<img SRC="images/tag_e.jpg" height=13 width=24>) is
+being added to the group called IWorkbenchActionConstants.SAVE_EXT using
+the <i>toolbarPath</i> attribute (<img SRC="images/tag_f.jpg" height=13 width=24>).
+Refer to the interface IWorkbenchActionConstants for a list of other groups
+provided by the Workbench window main toolbar.
+<p><img SRC="images/example5.jpg" height=462 width=474>
+<p>The image above shows the result of <a href="#Running the examples">running
+this example</a>. Notice the action next to the save tool items and the
+action added at the end of the toolbar.
+<h4>
+Example 6: Adding actions to the default text editor's menu bar</h4>
+Let's look at how to contribute to the default text editor's menu bar the
+following:
+<ul>
+<li>
+an action to the File menu,</li>
+
+<li>
+a sub-menu with two actions to the Edit menu,</li>
+
+<li>
+a new top level menu with one action.</li>
+</ul>
+
+<pre>&lt;extension point="org.eclipse.ui.editorActions">&nbsp;
+&nbsp;&nbsp; &lt;editorContribution&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor2"&nbsp;
+<img SRC="images/tag_a.jpg" height=13 width=24>&nbsp;&nbsp; targetID="org.eclipse.ui.DefaultTextEditor">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.action1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Action 1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Editor Action 1"
+<img SRC="images/tag_b.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="file/save.ext"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.EditorAction1Delegate">&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp; &lt;menu
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.subMenu"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Sub Menu"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; path="edit/additions">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;separator name="group1"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/menu>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.action2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Action 2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Editor Action 2"
+<img SRC="images/tag_d.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="org.eclipse.ui.articles.action.contribution.editor.subMenu/group1"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.EditorAction2Delegate">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.action3"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Action 3"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Editor Action 3"
+<img SRC="images/tag_e.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="org.eclipse.ui.articles.action.contribution.editor.subMenu/group1"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.EditorAction3Delegate">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img SRC="images/tag_f.jpg" height=13 width=24>&nbsp;&nbsp; &lt;menu
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.topLevelMenu"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="EditorTopLevelMenu"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; path="additions">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;separator name="group1"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/menu>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.editor.action4"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Editor Action 4"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Editor Action 4"
+<img SRC="images/tag_g.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menubarPath="org.eclipse.ui.articles.action.contribution.editor.topLevelMenu/group1"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.EditorAction4Delegate">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp; &lt;/editorContribution>&nbsp;
+&lt;/extension></pre>
+As in previous examples, the <i>targetID</i> attribute value (<img SRC="images/tag_a.jpg" height=13 width=24>)
+lets the Workbench know that the actions are being added to the default
+text editor. The first action declaration specifies a <i>menubarPath</i>
+attribute (<img SRC="images/tag_b.jpg" height=13 width=24>). The value
+comes from IWorkbenchActionConstants.M_FILE and IWorkbenchActionConstants.SAVE_EXT
+constants. This tells the Workbench to add the action to the save group
+of the File menu.
+<p>Next a sub-menu is defined in the Edit menu (<img SRC="images/tag_c.jpg" height=13 width=24>).
+The <i>path</i> attribute of the <i>menu</i> element is made up from the
+IWorkbenchActionConstants.M_EDIT and IWorkbenchActionConstants.MB_ADDITIONS
+constants. The following two action declarations have a <i>menubarPath</i>
+attribute (<img SRC="images/tag_d.jpg" height=13 width=24> and&nbsp;<img SRC="images/tag_e.jpg" height=13 width=24>)
+which specifies the path to the group created for the sub menu (<img SRC="images/tag_c.jpg" height=13 width=24>).
+<p>In the Workbench's main menu bar, there is a problem with contributing
+actions to a contributed sub-menu. These sub-menu items are lost by the
+Workbench, so the sub-menu is empty and therefore is visible but disabled.
+This sub-menu problem is only for editor menu contributions and action
+set contributions. This is why the sub-menu contribution to the Edit menu
+is disabled.
+<p>The last part of the XML is used to define a new top level menu to the
+left of the Window menu (<img SRC="images/tag_f.jpg" height=13 width=24>).
+The <i>path</i> attribute of the <i>menu</i> element comes from the IWorkbenchActionConstants.MB_ADDITIONS
+constant. This is the default group plug-ins use to add top level menus
+to the menu bar. These new menus are always added to the left of the Window
+menu.
+<p>The last <i>action</i> element has a <i>menubarPath</i> attribute (<img SRC="images/tag_g.jpg" height=13 width=24>)
+which specifies the path to the group created for the top level menu (<img SRC="images/tag_f.jpg" height=13 width=24>).
+That is the location where the action is added by the Workbench.
+<p><img SRC="images/example6.jpg" height=462 width=474>
+<p>The image above shows the result of <a href="#Running the examples">running
+this example</a>. Notice the action below the save menu items in the File
+menu and the new top level menu.
+<p>When contributing to the Perspective or Project menu, the path name
+is not the same as the menu name. The constant IWorkbenchActionConstants.M_VIEW
+is used to represent the path to the Perspective menu and the constant
+IWorkbenchActionConstants.M_WORKBENCH is used to represent the path to
+the Project menu. This is for historical reasons; these menus were renamed
+after the constants were defined as API.
+<h4>
+Developer Guideline: Supporting action contributions in your own editors</h4>
+Publishers of an editor should include the standard insertion point identifier
+IWorkbenchActionConstants.MB_ADDITIONS in all top level menus added by
+the editor. This reference point is used for insertion of actions contributed
+by ISVs. The insertion point is defined by adding a GroupMarker to the
+menu at an appropriate location for insertion. Other insertion points can
+be defined and published within the javadoc of the editor. This is strongly
+recommended to allow ISVs better control of where the action is inserted
+within the menu bar.
+<h3>
+Contributing actions via action sets</h3>
+An action set is a mechanism that allows a plug-in to contribute menus,
+menu items, and toolbar items to the main menu bar and toolbar of the Workbench
+window. It is important to understand what action sets are meant to be
+used for. An action set should contribute common actions which are not
+specific to any particular view or editor. Typically, an action set would
+include creation actions, global actions, etc. It is not a mechanism for
+a view to "promote" its actions to the main menu bar and toolbar.
+<p>The user can choose which action sets are visible. The goal is to let
+users customize the Workbench environment to suit their needs and override
+the assumptions made by the plug-in about which actions are appropriate.
+Plug-in developers of views and editors are encouraged to define important
+actions locally within their own menu and toolbar so that they are available
+even when the action set is not visible.
+<p>A plug-in uses the org.eclipse.ui.actionSets extension point to define
+an action set. These actions appear in the Workbench window by user preference.
+See the customize perspective dialog by selecting the menu item Perspective->Customize...
+and then expanding the Other category.
+<h4>
+Example 7: Adding an action set</h4>
+Let's look at how to add an action set which contains two toolbar items.
+<pre>&lt;extension point="org.eclipse.ui.actionSets">
+&nbsp;&nbsp; &lt;actionSet
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.set"
+<img SRC="images/tag_a.jpg" height=13 width=24>&nbsp;&nbsp; label="Action Set 1"
+<img SRC="images/tag_b.jpg" height=13 width=24>&nbsp;&nbsp; visible="false">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.set.action1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Set Action 1"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Set Action 1"
+<img SRC="images/tag_c.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; toolbarPath="Normal/additions"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.SetAction1Delegate">&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;action
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.action.contribution.set.action2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label="Set Action 2"&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="icons/red_dot.gif"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tooltip="Tooltip for Set Action 2"
+<img SRC="images/tag_d.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; toolbarPath="Normal/additions"
+<img SRC="images/tag_e.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pulldown="true"
+<img SRC="images/tag_f.jpg" height=13 width=24>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.action.contribution.SetAction2Delegate">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/action>&nbsp;
+&nbsp;&nbsp; &lt;/actionSet>&nbsp;
+&lt;/extension></pre>
+The attribute <i>label</i> (<img SRC="images/tag_a.jpg" height=13 width=24>)
+specifies the name of the group of actions. This text appears in the customize
+perspective dialog box (Perspective->Customize...) by expanding the "Other"
+tree item.
+<p>The attribute <i>visible</i> (<img SRC="images/tag_b.jpg" height=13 width=24>)
+is optional and specifies whether this action set should be initially made
+visible when any perspective is open. This option will only be honoured
+when the user opens a new perspective which has not been customized. The
+user can override this setting by customizing the perspective. By default,
+the value of this attribute is false. Caution should be taken when enabling
+this attribute so as not to abuse it. If every plug-in enables this attribute,
+then all perspectives will be cluttered with these action sets. A better
+approach is for the plug-in to specify which perspective(s) should show
+its action sets by using the extension point org.eclipse.ui.perspectiveExtensions.
+Please refer to "Extending an Existing Perspective" in Dave Springgay's
+article "<a href="http://www.eclipsecorner.org/articles/using-perspectives/PerspectiveArticle.html">Using
+Perspectives in the Eclipse UI</a>" for more details.
+<p>The definition of each action looks the same as in previous examples.
+However, the <i>toolbarPath</i> attribute (<img SRC="images/tag_c.jpg" height=13 width=24>
+and&nbsp;<img SRC="images/tag_d.jpg" height=13 width=24>) value is different
+in that the first segment of the path represents the toolbar identifier,
+while the second segment represents the group within the toolbar. The toolbar
+identifier allows the plug-in to determine which toolbar the action is
+added to. Currently in the Workbench, only one toolbar is supported and
+its identifier is "Normal". If the group does not exist, then it is created
+within the specified toolbar.
+<p>The second action definition introduces the optional <i>pulldown</i>
+attribute (<img SRC="images/tag_e.jpg" height=13 width=24>). When set to
+true, the tool item has an optional pull down menu. The tool item has the
+same look as the tool item "Open The New Wizard" provided by the Workbench
+window. This attribute is ignored for menu item contributions.
+<p>The <i>class</i> attribute (<img SRC="images/tag_f.jpg" height=13 width=24>)
+specifies the Java class that is loaded to perform the action invoked by
+the user. This class must implement org.eclipse.ui.IWorkbenchWindowActionDelegate
+interface if the <i>pulldown</i> attribute is false, or org.eclipse.ui.IWorkbenchWindowPulldownDelegate
+interface if the <i>pulldown</i> attribute is true. This delegate class
+can control the enabled/disabled state of the action when the selection
+changes, but only once the plug-in is loaded. Until then, the enabled/disabled
+state of the action is controlled by other XML attributes like <i>enablesFor</i>
+and <i>selection</i>.
+<p><img SRC="images/example7.jpg" height=462 width=474>
+<p>The image above shows the result of <a href="#Running the examples">running
+this example</a>. Notice the two actions added at the end of the toolbar,
+with one having a drop down menu option. To show this action set in the
+current perspective, select the menu item Perspective->Customize..., expand
+the Other category, and check the option "Action Set 1".
+<h3>
+Conclusion</h3>
+This article has covered the extension points that a plug-in may use to
+contribute actions to the Workbench. The best way to learn more about action
+contributions is to take the examples and experiment with them. Plug-in
+developers should pay special attention to the recommendations made here
+so that ISVs can contribute actions and achieve a high level of integration.
+More information is available in the Platform Plug-in Developer Guide from
+the Help perspective, and in the org.eclipse.ui extension points documentation
+from the Platform Plug-in Developer Guide, expand Reference->Extension
+Points Reference->Workbench.
+<h3>
+<a NAME="Running the examples"></a>Running the examples</h3>
+The file "<a href="source/action_contribution_examples.zip">action_contribution_examples.zip</a>"
+contains the complete source code for all the examples in this article.
+Extract the content of the ZIP file into the Eclipse "plugins" directory
+to install the action contribution example plug-in. Then edit the plugin.xml
+file to uncomment the example to be run.
+
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+</body>
+</html>

@@ -36,20 +36,43 @@
 	
 	// This function generates HTML based on the article information provided
 	// in the file named $file_name
-	function articles_to_html($file_name) {
+	function articles_as_html() {
+		$file_name = "articles.html";
 		
-		// Load the contents of the file
-		$xml = simplexml_load_file($file_name);
+		// First look to see if the html content has been cached.
+		// If the cache file exists and it is less than the threadshold
+		// (currently 1 month) old, then use it. Otherwise, recompute.
+		if (is_file($file_name)) {
+			if (filemtime($file_name) > strtotime("-1 month")) {
+				$file = fopen($file_name, "r");
+				$html = fread($file, filesize($file_name));
+				fclose($file);
+				
+				return $html;
+			}
+		}
+		
+		return primitive_articles_as_html();
+	}
+	
+	function compute_and_cache_articles_as_html() {
+		$file_name = "articles.html";
+		
+		$html = primitive_articles_as_html();
+	
+		// Write the html content to a file cache.
+		$file = fopen($file_name, "w");
+		fwrite($file, $html);
+		fclose($file);
+		
+	}
+		
+	function primitive_articles_as_html() {
 		$html = '';
-		
-		// Extract Category instances from the XML
-		$categories = get_categories($xml);
-		
-		// Extract Article instances from the XML
-		$articles = get_articles($xml);
-		
+		$categories = get_categories();
+		$articles = get_articles();		
 		articles_to_html($articles, $categories, $html);
-		
+				
 		return $html;
 	}
 	
@@ -157,7 +180,8 @@
 		}
 	}
 	
-	function get_categories($xml) {
+	function get_categories() {
+		$xml = simplexml_load_file("categories.xml");
 		$categories = array();
 		foreach($xml->category as $category) {
 			$new_category = new Category();
@@ -169,27 +193,41 @@
 		return $categories;
 	}
 	
-	function get_articles($xml) {
+	function get_articles() {
 		$articles = array();
-		foreach($xml->article as $article) {
-			$new_article = new Article();
-			$new_article->title = $article->title;
-			$new_article->link = $article[link];
-			$new_article->abstract = $article->abstract;
-			$new_article->date = strtotime($article->date);	
-			$update = $article->update;
-			if (strlen($update) > 0) {	
-				$new_article->update = strtotime($article->update);
-			}
-			$new_article->authors = get_article_authors($article);
-			$new_article->categories = get_article_categories($article);
-			
-			array_push($articles, $new_article);
-		}
+		$dh = opendir(".");
+       	while (($dir = readdir($dh)) !== false) {
+       		if (is_dir($dir)) {
+       			$file = $dir . DIRECTORY_SEPARATOR . "about.xml";
+       			if (is_file($file)) {
+       				$xml = simplexml_load_file($file);
+       				$article = xml_to_article($xml, $dir);
+       				array_push($articles, $article);
+       			}
+       		}
+       	}
+		closedir($dh);
+		
 		return $articles;
 	}
 	
-	function get_article_authors($article) {
+	function xml_to_article(&$xml, &$root) {		
+		$new_article = new Article();
+		$new_article->title = $xml->title;
+		$new_article->link = $root . DIRECTORY_SEPARATOR . $xml[link];
+		$new_article->abstract = $xml->abstract;
+		$new_article->date = strtotime($xml->date);	
+		$update = $xml->update;
+		if (strlen($update) > 0) {	
+			$new_article->update = strtotime($xml->update);
+		}
+		$new_article->authors = get_article_authors($xml);
+		$new_article->categories = get_article_categories($xml);
+		
+		return $new_article;
+	}
+	
+	function get_article_authors(&$article) {
 		$authors = array();
 		foreach($article->author as $author) {
 			$new_author = new Author();
@@ -203,7 +241,7 @@
 		return $authors;
 	}	
 	
-	function get_article_categories($article) {
+	function get_article_categories(&$article) {
 		$categories = array();
 		foreach ($article->category as $category) {
 			array_push($categories, trim($category));

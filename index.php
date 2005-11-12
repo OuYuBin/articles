@@ -26,8 +26,9 @@
 
 	# End: page-specific settings
 	#
-	include('articles.php');
-	$articles=abstracts_to_html('articles.xml');
+	include('articles2.php');
+	$articles=articles_as_html();
+//	$articles=abstracts_to_html('articles.xml');
 	# Paste your HTML content between the EOHTML markers!	
 	$html = <<<EOHTML
 	
