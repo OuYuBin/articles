@@ -1,0 +1,744 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+ 
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=windows-1252">
+  <title>Project Builders and Natures</title>
+  
+  <meta name="Author" content="John Arthorne">
+  <link rel="stylesheet" href="../../default_style.css">
+</head>
+ <body link="#0000ff" vlink="#800080" bgcolor="#ffffff" >
+ 
+<div align="right"><font size="-2">Copyright © 2003, 2004 International Business Machines Corp.</font>    
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+     <tbody>
+    <tr>
+        <td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b><font
+ face="Arial,Helvetica" color="#ffffff"> Eclipse Corner Article</font></b></td>
+     </tr>
+   
+  </tbody>
+</table>
+ </div>
+ 
+<div align="left">    
+<h1><img src="images/Idea.jpg" height="86" width="120" align="middle">
+</h1>
+ </div>
+ 
+<p> </p>
+  
+<h1 align="center">Project Builders and Natures</h1>
+ 
+<blockquote> <b>Summary</b>  <br>
+  This article discusses two central mechanisms that are associated with projects 
+  in an Eclipse workspace. The first of these is incremental project builders, 
+  which create some built state based on the project contents, and then keep that 
+  built state synchronized as the project contents change. The second is project 
+  natures, which define and manage the association between a given project and 
+  a particular plug-in or feature. The purpose and uses of builders and natures 
+  will be described in detail, and working examples will be provided to highlight 
+  the finer details of implementing them for your own plug-in. This article is 
+  intended to supplement, rather than replace, the documentation on builders and 
+  natures found in the Eclipse Platform Plug-in Developer Guide. <br>
+   
+  <p><b> By John Arthorne, IBM OTI Labs</b><br>
+    <font size="-1">January 27, 2003</font><br>
+    <font size="-1">Updated November 23, 2004 for Eclipse 3.0</font></p>
+ </blockquote>
+ 
+<hr width="100%">  <a name="1"> </a>
+<h2><a name="1">Incremental project builders</a></h2>
+ 
+<div align="right"><a name="1"><i>Castles in the air - they are so easy to
+take refuge in. And so easy to build, too.</i> <br>
+– Henrik Ibsen</a></div>
+ 
+<p> <a name="1">All of the key points about incremental project builders
+are captured in their carefully chosen name.   The best way to introduce
+them is to begin by describing each of the terms in this name: </a></p>
+<ul>
+ <li><a name="1"><b>Builder - </b> Builders take raw materials and produce
+some output based on those materials.  In Eclipse, both the raw materials
+and the output of builders are resources in the Eclipse workspace.</a></li>
+ <li><a name="1"><b>Incremental - </b> It would be inefficient if builders
+rebuilt their entire output from scratch every time they were invoked. Instead,
+builders in Eclipse are incremental.  This means that after the first build,
+subsequent builds  should only rebuild based on what has changed since the
+last build.</a></li>
+ <li><a name="1"><b>Project - </b> A builder operates on the resources in
+a single project in the Eclipse workspace. If there are many projects in
+the workspace, builders need to be installed on each one separately.</a></li>
+ 
+</ul>
+ 
+<p> <a name="1">All of the basic information about builders, including how to 
+  define them, and how to install and run them, is found </a><a
+ href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/guide/resAdv_builders.htm" target="_blank"> 
+  here</a> in the Eclipse Platform Plug-in Developer Guide. This article will 
+  dive into all the gory details about implementing builders that aren't found 
+  in the basic documentation. If you haven't already done so, read through that 
+  documentation first, then come back to this article. </p>
+  <a name="1a"> </a>
+<h3><a name="1a">The kinds of builds</a></h3>
+ 
+<p><a name="1a">From a user's point of view, builds in Eclipse come in several
+different flavors.  Under the covers, all of these different varieties are
+implemented by the same builder instance, so your builder will need to be
+able to understand all of them.  Let's take a look at each of the different
+varieties in turn. </a></p>
+ 
+<h4><a name="1a">Incremental build</a></h4>
+ 
+<p> <a name="1a">Incremental building is the variety of most interest in
+Eclipse.  This is what happens when <b>Build Project</b> or <b>Build All</b>
+is selected from the <b>Project</b> menu in the Eclipse workbench. When an 
+incremental build is invoked, the builder is supplied with a <i>resource
+delta</i>.  A resource delta is a hierarchical description of what has changed
+between two discrete points in the lifetime of the Eclipse workspace.  In
+particular, builders are given a delta that describes all changes in that
+project since the last time that builder was called.  The goal of incremental
+building is to analyze this delta,  and then rebuild only the builder output
+that is affected by the change. </a></p>
+ 
+<p> <a name="1a">For a detailed description of the structure of resource
+deltas, and for tips on processing them,  read the article on  </a><a
+ href="http://www.eclipse.org/articles/Article-Resource-deltas/resource-deltas.html"> 
+resource change listeners</a>.  For this article, it is sufficient to point
+out the  differences between the resource deltas given to listeners, and
+the resource deltas given to builders: </p>
+<ul>
+ <li>Builder resource deltas are rooted at a single project.  A builder can
+request deltas for multiple projects, but each resource delta returned by
+    <code>IncrementalProjectBuilder.getDelta</code> has a single project
+    as its root.</li>
+ <li>Some resource change information that is available to resource change
+listeners is omitted  from build deltas.  In particular, changes to resource
+markers (<code>IResourceDelta.MARKERS</code>),  and changes to synchronization
+information (<code>IResourceDelta.SYNC</code>) are not included in builder
+ deltas.  These change types are omitted for performance reasons, since this
+information is not typically of interest to builders. </li>
+ <li>Builder deltas may be null.  If a builder has never been invoked before, 
+any request for deltas will return null.  Also, if a builder is not run for
+a long time, the  platform reserves the right to return a null delta.  This
+is done because keeping track of  resource changes over an extended period
+of time can be very costly, and it's generally  more efficient to just rebuild
+from scratch if the builder hasn't been run in a long time. When a builder
+receives a null delta, it should just discard all existing built state, and 
+resort to doing a full build. </li>
+ 
+</ul>
+ 
+<h4>Auto-build</h4>
+ 
+<p> From the point of view of the builder implementation, auto-build is exactly
+the same as incremental build. The difference with auto-build is that
+it is not triggered by an explicit build request, but as an automatic side
+effect of resources changes in the workspace.  When auto-build is turned
+on, all installed builders will be invoked every time resources are added,
+removed, or modified in the eclipse workspace.  There is no guarantee about
+precisely when auto-build will occur in relation to the operation that modified the
+workspace. The build generally occurs in a background thread a short time after 
+all threads have stopped modifying the workspace. If a thread attempts to modify
+the workspace while the build is running, the build is halted and the thread is allowed
+to proceed with its changes. Auto-build will continue to attempt running until it 
+has sufficient time to complete the entire workspace build. As with resource change
+events, you can avoid frequent auto-builds by wrapping long running operations in
+an <tt>IWorkspaceRunnable</tt> passed to <tt>IWorkspace.run</tt>, or using
+a <tt>WorkspaceJob</tt>.
+<p>
+There is a preference in the Eclipse workbench
+for turning auto-build on or off (Preferences &gt; Workbench &gt; Build automatically). 
+Auto-build can also be turned on or off programatically by setting the auto-build flag 
+in the workspace description, although this is not generally recommended. The 
+following code snippet turns auto-build on: </p>
+<font color="#4444cc">
+<pre>
+   IWorkspace workspace = ResourcesPlugin.getWorkspace();
+   IWorkspaceDescription description = workspace.getDescription();
+   if (!description.isAutoBuilding()) {
+      description.setAutoBuilding(true);
+      workspace.setDescription(description);
+   }
+</pre>
+</font> 
+<h4>Full build</h4>
+ 
+<p> When a full build is invoked, it is a request to discard all existing
+built state and start over from scratch.  There is currently no command
+in the Eclipse workbench that allows a user to directly invoke a full build.
+The first build after invoking clean will cause a full build in the cleaned projects.
+Theoretically, full build should never be needed if your incremental build is 
+clever enough. However, if your builder is for some reason unable to correctly 
+build incrementally, it is useful to have an escape route available to rebuild 
+everything from scratch. 
+</p>
+ 
+<h4>Clean build</h4>
+<p>
+The final variety of build, introduced in Eclipse 3.0, is <i>clean</i>. Clean
+is inspired by the Unix <i>make</i> utility convention of using a target called <tt>clean</tt>
+to discard all artifacts produced by a build.  As with full build, clean should not
+be required if all builders correctly perform their incremental builds. Clean is
+intended largely as a safety blanket for the end user when things seem to go wrong
+with their build process. Builders should implement clean by deleting all output
+files produced by the build, and removing any problem markers associated with
+that builder. Unlike other build types, the clean build is not implemented by the
+<tt>build</tt> method on <tt>IncrementalProjectBuilder</tt>.  For backwards 
+compatibility, there is a new <tt>clean</tt> method with an empty default implementation,
+allowing older builders to continue running without modification.
+
+The following is an example of a <tt>clean</tt>
+implementation that just deletes all markers of a particular type from the project:
+
+<font color="#4444cc">
+<pre>
+   protected void clean(IProgressMonitor monitor) throws CoreException {
+      getProject().deleteMarkers("com.xyz.myproblems", 
+         true, IResource.DEPTH_INFINITE);
+   }
+</pre>
+</font> 
+
+</p>
+
+ <a name="1b"> </a>
+<h3><a name="1b">Gory details about the build process</a></h3>
+ 
+<p> <a name="1b">The target of a build can either be a single project, or
+the entire workspace.  The entire workspace is built on every auto-build,
+and also on the actions <b>Build All</b> and <b>Clean All</b>.  Keep in
+mind that on incremental builds, &quot;building&quot; the entire workspace may actually
+only involve compiling a single file.  So what happens when a workspace
+build is invoked?  Regardless of whether the build is full, incremental, or clean,
+the process is more or less the same, and this section will outline exactly
+what happens. </a></p>
+ 
+<h4><a name="1b">Step 1: computing the workspace build order</a></h4>
+ 
+<p> <a name="1b">First, the platform computes or retrieves the <i>workspace
+build order</i>.  This is simply an ordered list of projects to build.  This
+build order can be explicitly set using the API method <code>IWorkspaceDescription.setBuildOrder</code>.
+ The following example sets the workspace build order to be project "Foo"
+followed by project "Bar":</a></p>
+ <a name="1b"><font color="#4444cc">
+<pre>
+   IWorkspace workspace = ResourcesPlugin.getWorkspace();
+   IWorkspaceDescription description = workspace.getDescription();
+   String[] buildOrder = {"Foo", "Bar"};
+   description.setBuildOrder(buildOrder);
+   workspace.setDescription(description);
+</pre>
+</font> 
+</a>
+<p> <a name="1b">In the Eclipse UI, a user can set the build order from the
+"Build Order" preference page.  Setting the build order manually, either
+via API or on the preference page, is not recommended in most circumstances.
+ You may want to do this if you have a headless application that builds particular
+projects, or if you have complex project inter-dependencies that the default
+build order doesn't handle well.  If no build order is set  manually, the
+workspace computes a default build order based on the <i>project references</i>.
+  To be precise, the default build order is a breadth-first traversal of
+the project reference  graph.  If there are cycles in the project reference
+graph, they are left in the build order,  but the projects involved in the
+cycle will be built in an indeterminate order.  </a></p>
+ 
+<p> <a name="1b">Once the workspace build order is figured out, the build
+process proceeds as follows: </a></p>
+<ol>
+ <li><a name="1b">Build each open project in the build order</a></li>
+ <li><a name="1b">Build each remaining open project in the workspace, in
+no particular order</a></li>
+ 
+</ol>
+ 
+<p></p>
+ 
+<p> <a name="1b">Note: Closed projects are ignored by the build process. </a></p>
+ 
+<h4><a name="1b">Step 2: Build specifications and arguments</a></h4>
+ 
+<p> <a name="1b">Now that we know the order in which projects are built,
+we should take a closer look at what happens when a particular project is
+built.  There can be any number of incremental builders associated with a
+given project.  The set of builders to invoke for a project, and  the ordering
+of those builders, is specified by the project's <i>build spec</i>.  The
+build  spec is found on the <code>IProjectDescription</code>, and is represented
+as an array  of <code>ICommand</code> objects.  Each command is simply the
+name of the builder extension  to run, and an optional table of builder arguments.
+ Builder argument keys and values must be  strings, to allow for easy serialization.
+ Thus, building a single project involves invoking each builder in the build
+spec, one at a time, in the order specified in the build spec. </a></p>
+ 
+<h4><a name="1b">Step 3: Decide if the builder needs to be invoked</a></h4>
+ 
+<p> <a name="1b">There are some circumstances under which a builder might
+be skipped during the build process.  In particular, a builder will be skipped
+if the build is an incremental or auto-build, and no resources have changed
+in the project, or in any of the projects  that the builder is interested
+in.  The return value of a builder's <code>build</code>  method is an array
+of projects.  This list of projects represents the projects that the builder
+requires resource deltas for (this implicitly includes the project that the
+builder is installed on).  If none of these projects have changed since the
+last time the builder was invoked, the builder is skipped (for incremental and auto-build only).  
+Without this step, every builder in the workspace would be invoked after every single
+resource change.  This optimization ensures that only builders that are capable
+of processing the changed resources will be invoked.  On the downside, this
+means builders cannot generally respond to external changes that occur outside
+the workspace, because the builder might be skipped if no resources in the
+workspace have changed.   </a></p>
+ 
+<p> <a name="1b"><img src="images/tip.gif">
+If there are circumstances where your builder must be invoked regardless
+of whether any resources have been changed, there is a way to circumvent
+this behavior.  If the builder invokes the method <code>IncrementalProjectBuilder.forgetLastBuiltState</code>,
+the information required to compute the  resource deltas will be discarded.
+This means that the build mechanism cannot determine what has  changed since
+the last build, so the builder will always be invoked.  The downside is that
+deltas will not be available for such a builder, so the builder must always
+perform a full build. </a></p>
+ 
+<p> <a name="1b">Finally, if there are errors finding or initializing a builder,
+it will be temporarily omitted from the build process.  The builder is automatically
+added back to the build once the problem is fixed.  Error  conditions that
+can cause a builder to be skipped include: </a></p>
+<ul>
+ <li><a name="1b">The plug-in that owns the builder is missing.</a></li>
+ <li><a name="1b">The plug-in that owns the builder has been marked as disabled.
+ This is caused either by an error during activation, or by a missing plug-in
+prerequisite.</a></li>
+ <li><a name="1b">There was an error instantiating the builder. This typically
+means a runtime exception was thrown either by the builder's constructor
+or static initializer code.</a></li>
+ <li><a name="1b">The builder belongs to a particular project nature, and
+that nature is missing or disabled.   This will be discussed in more detail
+in the section on project natures.</a></li>
+ 
+</ul>
+ 
+<p></p>
+  <a name="1c"> </a>
+<h3><a name="1c">Progress, cancelation, and exception handling</a></h3>
+ 
+<div align="right"><a name="1c"><i>Progress is the mother of all problems.
+</i> <br>
+– G. K. Chesterton</a></div>
+ 
+<p> <a name="1c">There are a number of features that are available to builders
+that are not available to simple resource change listeners.  Most importantly,
+builders are entities that the user is intended to be aware of and to interact
+with, so there are a number of mechanisms available for builders to communicate
+back with their caller. </a></p>
+ 
+<h4><a name="1c">Reporting progress</a></h4>
+ 
+<p>The <code>build</code> method on <code>IncrementalProjectBuilder</code>
+takes as parameter an instance of <code>IProgressMonitor</code>.  This object
+should be used for reporting feedback and progress information to the user
+as the build proceeds.  The most important methods on <code>IProgressMonitor</code>
+are <code>beginTask</code>, <code>subTask</code>,  <code>worked</code>, and
+<code>done</code>.  The important concepts to remember about reporting progress
+are:</p>
+<ul>
+ <li><code>beginTask</a></code><a name="1c"> and <code>done</code>
+must be called exactly once each.</a></li>
+ <li><a name="1c">The increments passed to the <code>worked</code> method
+should eventually add up to the amount specified in <code>beginTask</code>.
+ If the code branches, you need to ensure every branch reports the same progress.</a></li>
+ <li><a name="1c">If you need to call API from another component during the
+build, you should create a new <code>SubProgressMonitor</code> and pass that
+to the API method.  Never pass your own progress monitor across an API boundary,
+because you have already called <code>beginTask</code>, which can only be
+called once for a given progress monitor.</a></li>
+ <li><a name="1c">Some form of progress (either worked increments or a new
+sub-task message), should be visible every few seconds.  The purpose is to
+reassure the user that something is actually happening.</a></li>
+ <li><a name="1c">The sub-task messages just need to give a general idea
+of what is happening.  You don't need to report exactly what is happening
+at a low level in the code.  Progress messages should be in a  vocabulary
+that the user will understand.</a></li>
+ <li>The user won't know or care if you are lying through your teeth.</li>
+</ul>
+ 
+<p></p>
+ 
+<p> <a name="1c">Here is the recommended basic pattern for using progress
+monitors: </a></p>
+ <a name="1c"><font color="#4444cc">
+<pre>
+   final int TOTAL_WORK = 100;
+   try {
+      monitor.beginTask("Name of task", TOTAL_WORK);
+      for (int i = 0; i &lt; TOTAL_WORK; i++) {
+         monitor.subTask("Name of sub task");
+         //do some work
+         monitor.worked(1);
+      }
+   } finally {
+      monitor.done();
+   }
+</pre>
+</font> </a>
+<p><a name="1c">In some circumstances, it may be too expensive or even impossible
+to compute the exact amount of work units before the operation starts.  For
+example, when loading files from a server, you may not know exactly how many
+files will be loaded or the size of the files until they have already arrived.
+ In these cases, it is necessary to "fake" the progress numbers a bit.  For
+example, you can start with a best estimate, and then revise the number of
+work units as you approach the total work.  If you don't even have an initial
+estimate, you can use (warning: practical application of Calculus!) an infinite
+series  that converges at the total work.  The goal is to keep the progress
+bar moving, and only reach the end of the bar when the work is almost complete,
+not always an easy task! </a></p>
+ 
+<h4><a name="1c">Handling cancelation</a></h4>
+ 
+<p> <a name="1c">Progress monitoring in Eclipse is always tied to the mechanism
+for cancelation. Builder implementors are encouraged to check for cancelation
+as often as possible.  The important thing to keep in mind when adding cancelation
+support, is that you are the one in control of cancelation.  When the caller
+attempts to cancel, this is really a cancelation request, not a demand. 
+If the request cannot be granted without leaving a corrupt or invalid state
+behind,  then it's ok to defer the cancelation until you are in a consistent
+state.  If the operation is almost finished and is not reversible, it is
+sometimes better to ignore the cancelation request completely. When you decide
+that safe cancelation is possible, the recommended approach is to throw a
+new  <code>OperationCanceledException</code> back from the builder's <code>build</code>
+method.   This special runtime exception will then be caught and handled
+by the platform.  The pattern for  checking and responding to cancelation
+is as follows: </a></p>
+<a name="1c">
+<font color="#4444cc">
+<pre>
+   do some work
+   checkCancel(monitor);
+   //do some work
+   checkCancel(monitor);
+   //... etc ...
+   
+   protected void checkCancel(IProgressMonitor monitor) {
+      if (monitor.isCanceled()) {
+         forgetLastBuiltState();//not always necessary
+         throw new OperationCanceledException();
+      }
+   }
+</pre>
+</font> </a>
+<p> <a name="1c">It is sometimes necessary to call <code>IncrementalProjectBuilder.forgetLastBuiltState()</code>
+in order to correctly recover from the cancelation the next time your builder
+is called.  If you don't call this method, the next build will be supplied
+with the usual resource delta describing the changes since the last build.
+ Since the last build was canceled part way through, it might not be possible
+to incrementally update your built state.  Calling this method will 
+force the next incremental or auto-build to be a full build. An alternative is to extract the 
+information you need from the resource delta, and continue the incremental 
+build the next time one is requested.  
+</a></p>
+
+<h4><a name="1c">Handling interruption</a></h4>
+<p>
+In Eclipse 3.0, auto-build was moved into a background thread. In a GUI environment,
+this allows the user to continue working as the build progresses. However, if
+the user attempts to make further resources changes while the build is running, 
+auto-build needs to interrupt itself. The workspace checks for this kind of interruption
+immediately before calling each individual builder. If the contention occurs while
+a builder is running, the user's activity will typically be blocked until the currently
+executing builder completes. While this is fine for relatively quick builders, it can
+become frustrating for users when a single builder takes a very long time to complete.
+To alleviate this, long running builders can check for interruption periodically during
+their execution. The method <tt>isInterrupted</tt> on <tt>IncrementalProjectBuilder</tt>
+will return <tt>true</tt> if another thread is waiting to modify the workspace. When
+this happens, a builder can chose to abort the build and allow the other operation to 
+proceed.  Note that interruption should not always be treated the same as cancelation, 
+since it occurs implicitly, rather than based on an explicit cancelation request by the 
+user. It is acceptable to respond to cancelation by discarding build state and resorting 
+to a full build on the next builder invocation, but this is too drastic for interruption.
+Interruption should not cause significant additional overhead for subsequent builds.
+Builders that cannot gracefully handle interruption should not respond to it at all.
+
+
+<h4><a name="1c">Handling exceptions and reporting problems</a></h4>
+ 
+<p> <a name="1c">There are two categories of problems that a builder will
+typically need to address.  First, there may be internal errors in the code
+of your builder, or errors thrown back by API that is called by the builder.
+ If it is not possible to recover from these errors, your <code>build</code>
+method can throw a <code>CoreException</code> that includes a description,
+severity, and optional nested exception.  The text of this exception will
+be reported directly to the user, and the remainder of the build for that
+project will be aborted.  Builds of other projects will proceed as normal. 
+</a></p>
+ 
+<p> <a name="1c">The second category of problems are against the resources
+being built.  For example, this includes compilation errors in the user code,
+or incorrect configuration information required by the user.  These types
+of problems are generally reported by creating <i>problem markers</i> that are
+attached to the most specific resource that is relevant to that problem.
+ If no particular resource is relevant, you can attach the marker to the project
+itself.  You are encouraged to create your own custom marker type for your 
+builder problems, but the type you define should generally be a subtype of
+the generic problem type, <code>IMarker.PROBLEM</code>. This ensures that
+your problem type will appear in the task list of the Eclipse workbench.
+ See the article </a><a
+ href="http://www.eclipse.org/articles/Article-Mark%20My%20Words/Mark%20My%20Words.html"> 
+Mark my Words</a> for more information on defining and using markers. </p>
+
+<h3><a name="2b">Interacting with background auto-build</a></h3>
+<p>
+The fact that auto-build occurs in a background thread can sometimes introduce 
+challenges for code that relies on builder output.  In a headless batch environment, 
+you cannot simply modify resources and assume auto-build will occur 
+immediately. Headless tools that previously made this assumption might exit from 
+their main thread of execution while the background build is still running. The best 
+solution in this situation is to simply turn off auto-build, and maintain complete control 
+over when builds occur by explicitly invoking <tt>IWorkspace.build</tt> if and when 
+required.  There are other situations where a plug-in wants to allow auto-build to run, 
+but needs to wait until it completes before proceeding. For example, when the user 
+attempts to launch a Java program they have just created or modified, the launch 
+needs to wait until auto-build completes to ensure that the correct class files are 
+used. In this situation, the background build job can be joined using the following code:
+<font color="#4444cc">
+<pre>
+   Platform.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
+</pre>
+</font>
+The <tt>join</tt> invocation will block until the auto-build job completes, or until
+the join is interrupted or canceled.  You can report progress while waiting by passing
+a progress monitor to the <tt>join</tt> method. Manual incremental build jobs can be joined
+in a similar manner using the <tt>ResourcesPlugin.FAMILY_MANUAL_BUILD</tt> job family.
+</p>
+
+<table border="1" cellpadding="4" width="90%" bgcolor="FFFFCC"><tr>
+    <td bgcolor="0080c0"><font size="+1" color="FFFFCC"><b>Sidebar: the Java builder</b></font> </td>
+  </tr>
+<tr><td>
+<p>
+The concept of automatic incremental compilation is not familiar to many developers.
+A very frequent question from Eclipse beginners is, &quot;where is the compile button?&quot;
+The answer is that an IDE with automatic compilation doesn't need a compile button.  Every 
+time you make a change to a file, or a group of files, the incremental builder immediately rebuilds
+every source file that was affected by the change.  In this environment, the idea of compilation
+as a task the user is involved in disappears -- the world is just always in a compiled state.
+</p>
+<p>
+So what magic goes on behind the scenes to make this happen?  How does the Java&trade;  builder
+know which files need to be recompiled when a given source file changes?  This is no easy task, 
+but in broad brush strokes, this is what the Eclipse Java builder does:
+<ul>
+<li>The builder maintains a <b>built state</b> that includes a list of all types (classes or
+interfaces) that are referenced by each type in the workspace.  This information is returned
+by the compiler each time a source file is compiled.  This state is computed from scratch
+on a full build, and updated incrementally on each subsequent build.</li>
+<li>Whenever files are modified, the builder receives a resource delta that describes
+which files were added, removed, or changed.</li>
+<li>For deleted Java source files, the corresponding class files are deleted.  Added and changed 
+source files are added to a queue of files that need to be compiled.</li>
+<li>The builder then processes this queue as follows:
+	<ol>
+		<li>Remove a file from the queue, and compile it.</li>
+		<li>Compare the resulting type to the old class file, and see if the
+			type has <b>structural changes</b>.  Structural changes are changes that can affect
+			the compilation of a referencing type: added or removed methods, fields or types, or changed method
+			signatures.</li>
+		<li>If the type has structural changes, find all types in the project that reference the changed type,
+			and add them to the queue.</li>
+		<li>If the type has changed at all, write it to disk in the builder's output folder.</li>
+		<li>Update the built state with the new reference information for the compiled type.</li>
+  		<li>Repeat until the queue is empty.</li>
+  	</ol>
+</li>
+<li>As a final step, the builder generates problem markers for each compiled type that had
+compilation problems.</li>
+</ul>
+</p>
+<p> The critical feature of the Java builder is that it is very fast 95% of the 
+        time. Most times you edit a Java file, you don't make any structural changes. 
+        This means the builder just has to compile that single file, and it's 
+        done. When a type does have structural changes, all types that reference 
+        it will be recompiled. However, those secondary types will almost never 
+        have structural changes themselves, so the builder loop finishes with 
+        at most a couple of iterations. On rare occasions, there will be significant 
+        structure changes that cause many files to be recompiled. There is a lesson 
+        here that you can apply when writing your own incremental builder. If 
+        you can make your builder extremely fast for the most common cases, users 
+        will generally tolerate a longer delay for those rare corner cases when 
+        they come along. </p>
+</td></tr></table>
+  
+<hr width="100%"> <a name="2"> </a>
+<h2><a name="2">Project natures</a></h2>
+ 
+<div align="right"><a name="2"><i>What nature delivers to us is never stale.
+Because what nature creates has eternity in it.</i> <br>
+– Isaac Bashevis Singer</a></div>
+ 
+<p> <a name="2">The main purpose of project natures is to create an association
+between a project and a given tool, plug-in, or feature set.  By adding a
+nature to a project, you indicate that your plug-in is configured to use
+that project.  For example, when the Java nature is added to a project, it
+indicates that the Java Development Tool (JDT) plug-ins are aware of that project, and have
+configured a classpath and a Java builder to work on that project. </a></p>
+ 
+<p> <a name="2">In addition to defining the association between a tool and
+a project, natures also provide a way of handling the lifecycle of a tool's
+interaction with a project.  When a nature is added to a project, the project
+nature's <code>configure</code> method is called.  This gives the tool an
+opportunity to initialize its state for that project, and install any incremental 
+project builders that are needed for that project.  Similarly, when a nature
+is removed from a project, the nature's <code>deconfigure</code> method is
+called.  This gives the tool an opportunity to remove or clean up any meta-data
+it has created for that project, and to remove any listeners and builders 
+associated with that tool. </a></p>
+ 
+<p> <a name="2">Project natures also have significance in the eclipse UI. For 
+  example, the icon for a project in the resource navigator is based on the installed 
+  nature (using the org.eclipse.ui.projectNatureImages extension point). Actions 
+  in the various menus can also be filtered to be visible only for resources that 
+  belong to projects with a given nature. Refer to the </a>
+  <a
+ href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/reference/extension-points/index.html#workbench" target="_blank"> 
+  UI extension point documentation</a> for more details on action filtering. </p>
+  <a name="2a"> </a>
+<h3><a name="2a">Nature constraints</a></h3>
+ 
+<div align="right"><a name="2a"><i>The laws of nature are but the mathematical
+thoughts of God.</i> <br>
+– Euclid</a></div>
+ 
+<p><a name="2a">Natures can be defined so that they are only enabled under
+certain conditions.  The two types of constraints that can currently be set
+are <i>one-of</i> constraints and <i>requires</i> constraints.  The one-of
+constraint ensures that if two or more natures exist on a project that belong
+to the same set, then all such natures will be disabled.  The "set" in this
+case is just an arbitrary string.  As a fictitious example, say there are
+several different plug-ins that can provide a project nature for managing
+XML files in a project.  However, since these plug-ins provide conflicting
+services, it is not possible to have two of these XML natures installed on
+any single project.  These natures could specify membership in a common  "xml-natures"
+nature set.  Then the platform would ensure that only one nature belonging
+to that set could be installed on a project at any given time. </a></p>
+ 
+<p> <a name="2a">The <i>requires</i> constraint ensures that a nature is
+only enabled on a project if the nature(s) it  requires are also enabled
+on that project.  For example, if your tools are only applicable for projects
+managed by JDT, you can add a requires constraint on the Java nature.</a></p>
+ 
+<p> <a name="2a">The platform will attempt to enforce these constraints whenever
+possible.  For example if an attempt to add or remove a nature from a project
+would cause a constraint to be violated, the operation will fail.  Also,
+when several natures are added or removed at once, they will be serially
+configured or deconfigured by the platform in an order that maintains the
+validity of the constraints.  For example, if your nature requires the JDT
+nature, the platform will ensure that the JDT nature is configured before
+your nature, and deconfigured after your nature. </a></p>
+ 
+<p> <a name="2a">In some circumstances, the platform may not be able to ensure
+the constraints are satisfied. For example, a nature may go missing or have
+its definition changed between invocations of the platform.  A more common
+case is when two users are sharing a project in a repository, but have different
+tools available, and hence different natures installed on the project. In
+these circumstances, the natures whose constraints are not satisfied are
+considered to be <i>disabled</i>.  Disabled natures are tolerated by the
+platform -- there will be no error messages and the nature will remain in
+the project description.  You can find out if a nature is enabled by calling
+<code>IProject.isNatureEnabled()</code> on a project. </a></p>
+ <a name="2b"> </a>
+<h3><a name="2b">Associating natures with builders</a></h3>
+ 
+<p> <a name="2b">Incremental project builders and project natures often go
+together.  The nature life cycle methods provide a convenient place for adding
+and removing builders from the project build spec, and the builder's association
+with the project is often linked with other tools that benefit from the nature-based
+presentation in the UI.  Also, the ordering created by the nature "requires"
+constraint makes it easy to correctly order the build spec. For example,
+if you have a builder that must be run <b>after</b> the JDT builder, you
+simply make your nature require the JDT nature, thus ensuring that your nature
+will be configured after the JDT builder has already been installed.  Then
+if you add your nature to the end of the build spec, you are guaranteed that
+your builder is run after the JDT builder (assuming nobody else reorders
+the build spec). </a></p>
+ 
+<p> <a name="2b">The relationship between a nature and a builder can be made
+concrete by adding extra markup in the extension definitions.  In the nature
+definition, the builder can be specified by adding a builder attribute to
+the nature definition.  In the builder definition, you just need to add an
+attribute specifying that the builder belongs to some nature. </a></p>
+ 
+<p> <a name="2b"><img src="images/tryit.gif">
+ The following is an example of a builder and a nature that are explicitly
+related.  In this example, the id of the plug-in is "com.xyz.myplugin". </a></p>
+ <a name="2b"><font color="#4444cc">
+<pre>   &lt;extension <br>   	id="mynature" <br>   	name="My Nature" <br>   	point="org.eclipse.core.resources.natures"&gt; <br>      &lt;runtime&gt; <br>         &lt;run class="com.xyz.natures.MyNature"/&gt; <br>      &lt;/runtime&gt; <br>      &lt;builder id="com.xyz.myplugin.mybuilder"/&gt; <br>   &lt;/extension&gt; <br>   &lt;extension <br>   	id="mybuilder" <br>   	name="My Builder" <br>   	point="org.eclipse.core.resources.builders"&gt; <br>      &lt;builder hasNature="true"&gt; <br>         &lt;run class="com.xyz.builders.MyBuilder"/&gt;<br>      &lt;/builder&gt; <br>   &lt;/extension&gt; <br></pre>
+</font> </a>
+<p> <a name="2b">There are some benefits to be gained by explicitly associating
+a nature with a builder. Primarily, this ensures that builders are automatically
+omitted from the build spec when their corresponding nature is missing or
+disabled.  This gives builders the guarantee that, when they are run, they
+can be sure that the builders of their prerequisite natures will also be run.
+ This also ensures smooth operation in the case where two users are sharing 
+a project, but only one has the plug-ins required for a particular nature.
+ All builders that belong to that nature, or that belong to natures that
+require that nature, will be silently omitted from the build spec for the
+user who does not have the necessary plug-ins. </a></p>
+  <a name="2c"> </a>
+<h3><a name="2c">More on nature life cycle</a></h3>
+ 
+<div align="right"><a name="2c"><i>Man masters nature not by force but by
+understanding.</i> <br>
+– Jacob Brownowski</a></div>
+ 
+<p> <a name="2c">Since natures are intended to provide support for a project
+life cycle, it is important to understand exactly when natures are configured
+and deconfigured.  Natures are only configured or deconfigured when a nature
+is added or removed from the project description,  and then committed using
+<code>IProject.setDescription</code>.  This is the only API method that will
+cause natures to be configured or deconfigured.  A nature is only  ever configured
+<b>once</b> for a given project, even if that project is shared using a repository
+with multiple team members.  The life cycle of a project nature on a shared
+project goes like this: </a></p>
+<ul>
+ <li><a name="2c">User 1 creates the project, and releases to the repository</a></li>
+ <li><a name="2c">Other users load this project from the repository into
+their workspace</a></li>
+ <li><a name="2c">User 1 now adds nature X to the project.  <code>configure()</code>
+on nature X is called now.</a></li>
+ <li><a name="2c">User 1 releases this change to the repository</a></li>
+ <li><a name="2c">Other users load this change, and the nature is added to
+their local project description.   The <code>configure()</code> method for Nature X 
+is <b>not</b> called again for these other users.</a></li>
+ 
+</ul>
+ 
+<p></p>
+ 
+<p> <a name="2c">The <code>configure()</code> method is also <b>not</b> called again when
+a project is copied or moved, or when a project is created using <code>IProject.create(IProjectDescription,
+IProgressMonitor)</code>. </a></p>
+ <a name="2c"><br>
+ </a><a name="3"> </a>
+<h2><a name="3">Summary</a></h2>
+ 
+<p> <a name="3">Incremental project builders provide a mechanism for processing
+resources  in a project and producing some build output.  The builder framework
+makes it easier to incrementally maintain that built state as the input resources
+change.  This article described implementation details about writing your 
+own builder, such as reporting problems, progress indication, and cancelation
+support.  Project natures create a concrete connection between a tool and
+a project in the eclipse workspace, and they provide support for persisting,
+sharing, and managing the relationship of the tool with the project. Natures
+and builders are often used together, as this provides a way to install and
+remove builders at appropriate times, and allows for builder ordering based
+on nature dependencies. </a></p>
+ 
+<p> <a name="3">For more information about builders and natures, consult the </a><a href="http://help.eclipse.org/help30/" target="_blank"> 
+  Eclipse Platform Plug-in Developer Guide</a>. The API Javadoc for the <a
+ href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/core/resources/package-summary.html" target="_blank"> 
+  <code>org.eclipse.core.resources</code></a> package is also an important source 
+  of information on these concepts. </p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+</body>
+</html>

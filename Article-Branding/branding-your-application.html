@@ -1,0 +1,446 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+
+<head>
+<title>Branding your application</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta name="Author" content="Andrew Eidsness and Pascal Rapicault">
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+
+<div align="right">
+  <font face="Times New Roman, Times, serif" size="2">Copyright © 2004
+  International Business Machines Corporation. All rights reserved</font>
+  <table border="0" cellspacing="0" cellpadding="2" width="100%">
+    <tr>
+      <td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b><font face="Arial,Helvetica"><font color="#ffffff">Eclipse
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left">
+  <h1><img src="images/idea.jpg" align="center" width="120" height="86"></h1>
+</div>
+<center>
+  <h1>Branding Your Application</h1>
+</center>
+<blockquote>
+  <b>Summary</b><br>
+  In this article we look at how to create branding for your Eclipse-based
+  application. Branding is how you change the high level visual elements of your
+  product. This includes items such as the splash screen, the about dialog, and
+  the program executable.
+  <p><b>By Andrew Eidsness and Pascal Rapicault, IBM OTI Labs</b><br>
+  <font size="-1">September 16, 2004</font></p>
+</blockquote>
+<hr width="100%">
+<h2>Intended Audience</h2>
+<p>You have completed the functionality of your RCP based application but are
+unhappy because it still looks too much like a default Eclipse application. It
+is time to &quot;brand your product,&quot; which consists of changing aspects
+such as the icon used by the launcher, the splash screen, the window image, and
+more. This article will help you to accomplish these tasks and will point you to
+other documents of interest.</p>
+<h2>Reading this article</h2>
+<p>This article has been separated into three main sections:</p>
+<ul>
+  <li><a href="#product_branding">Product branding</a></li>
+  <li><a href="#launcher_branding">Branding the launcher</a></li>
+  <li><a href="#optional_branding">Optional branding</a></li>
+</ul>
+<p>As you work through the steps you may notice the occasional <img src="images/TryIt.gif" width="61" height="13">
+image. These indicate points at which you may want to test out the work you have
+done thus far.</p>
+<p>The steps in this document assume that you have access to the SDK build but
+all of the changes we described can be applied to any RCP based application. In
+the remaining sections we assume that you have a working knowledge of Eclipse
+based development. In particular we assume that you know how to provide
+translatable strings for your plug-in (see <a href="http://help.eclipse.org/help30/index.jsp?topic=/org.eclipse.platform.doc.isv/guide/product_def_nl.htm">Locale
+specific files</a>).</p>
+<p>Make sure that you have installed the <a href="http://www.eclipse.org/downloads/index.php">RCP
+Runtime Binary</a> before continuing. You should not consider branding or
+productization unless you are also including your own plug-ins. In this article
+we use the RCP Browser Example as the target product. To help follow along with
+examples, you should download this plug-in from the <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.ui.examples.rcp.browser/">Eclipse
+repository</a>.</p>
+<p>NOTE: This article is intended to be a guide to help you produce a release.
+You need to ensure that you comply with any terms and conditions of the license
+under which you received the platform runtime.</p>
+<h2><a name="product_branding">Product branding</a></h2>
+<p>The branding changes we'll described are those aspects related to the
+appearance of your running application. These branding elements are supplied
+with the <a href="http://help.eclipse.org/help30/index.jsp?topic=/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_core_runtime_products.html"><code>org.eclipse.core.runtime.product</code></a>
+extension point. This controls (among other things) the application's title bar,
+the window image, and the default application. We will describe parts of this
+extension point here and will return to it in the <a href="#optional_branding">optional
+branding</a> section.</p>
+<h3>The product's title bar</h3>
+<p><img name="Window's title bar" src="images/title.png" / width="400" height="52"></p>
+<p>The product's title bar is controlled by the <code>name</code> attribute of
+the product extension. Changing the browser's <code>plugin.xml</code> file as
+highlighted below will replace the initial window title bar with your own
+string.</p>
+<blockquote>
+  <pre>&lt;extension
+      point=&quot;org.eclipse.core.runtime.products&quot;
+      id=&quot;product&quot;&gt;
+   &lt;product
+         name=<font style="background-color: yellow" color="#0000FF">&quot;Branded RCP Browser Example&quot;</font>
+         application=&quot;org.eclipse.ui.examples.rcp.browser.app&quot;&gt;
+      &lt;property ...  </pre>
+</blockquote>
+<h3><b>The image the window system associates with the product</b></h3>
+<p><img name="Window's title" src="images/windowImage.png" / width="400" height="52"></p>
+<p>SWT allows a set of images to be associated with a shell with the expectation
+that all images in the set will have the same appearance but be rendered at
+different sizes. These images are provided to the SWT shell which is then able
+to select the most appropriate one for each specific use. For example, on
+Windows® the smaller image (16x16) will be used for the title and task bars
+while the larger image (32x32) will appear in the Alt-Tab application switcher.</p>
+<p>The comma-separated list that is set in the <i>windowImages</i> property
+should have at least one image.</p>
+Making the highlighted change to the <code>plugin.xml</code> file will change
+the icons used by the product.
+<blockquote>
+  <pre>&lt;extension ...
+   &lt;product ...
+      &lt;property
+          name=&quot;windowImages&quot; 
+          value=<font style="background-color: yellow" color="#0000ff">&quot;icons/alt16.gif,icons/alt32.gif&quot;</font>/&gt;
+      &lt;property ...  </pre>
+</blockquote>
+<h3><b>The name the window system associates with the product</b></h3>
+<p>SWT allows an internal name to be associated with a shell. This name is
+different from the one that appears in the shell's title bar -- its exact use
+varies depending on the window system. For example, on X-Window based systems
+such as motif this value is used to refer to the application in the .XDefaults
+file.</p>
+<p>The value of the <i>appName</i> property should be set to something that
+clearly identifies your product. Its also a good idea to test your branding on a
+platform (e.g., motif) that is known to use this value.</p>
+<blockquote>
+  <pre>&lt;extension ...
+   &lt;product ...
+      &lt;property
+          name=&quot;appName&quot; 
+          value=<font style="background-color: yellow" color="#0000ff">&quot;BrandedRCPBrowserExample&quot;</font>/&gt;
+      &lt;property ...  </pre>
+</blockquote>
+<h3>Setting the&nbsp;product's default&nbsp;application</h3>
+<p>The products extension is used to apply branding to your application but you
+must also provide an <a href="http://help.eclipse.org/help30/index.jsp?topic=/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_core_runtime_applications.html">applications</a>
+extension point. Among other thing this supplies the &quot;main&quot; to be run.
+For example the Eclipse SDK has one brand but contains several applications
+(e.g., the IDE, the ant runner, etc.) and for this specific case the IDE is the
+default application.</p>
+<p>You must designate a specific application as the default application to be
+run when some branding is selected. This is accomplished by the <code>application</code>
+attribute in your products extension.
+<blockquote>
+  <pre>&lt;extension
+      point=&quot;org.eclipse.core.runtime.products&quot;
+      id=&quot;product&quot;&gt;
+   &lt;product
+      <font style="background-color: yellow" color="#0000ff">application=&quot;org.eclipse.ui.examples.rcp.browser.app&quot;</font>
+      ...</pre>
+</blockquote>
+<h3><img src="images/TryIt.gif" width="61" height="13">&nbsp;Testing the
+branding while self-hosting</h3>
+<p>In the Eclipse IDE create a new runtime-workbench launch configuration,
+choose the &quot;Run a product&quot; option, and select <code>org.eclipse.ui.examples.rcp.browser.product</code>
+from the dropdown.
+<p>By default the launch configuration loads all workspace and enabled external
+plug-ins which may cause problems when running your application (since several
+unneeded plug-ins will be included). Create a minimal set of plug-ins by
+choosing the &quot;Plug-ins&quot; tab and selecting &quot;Choose plug-ins and
+fragments to launch from the list&quot;. Click on &quot;Deselect All&quot; and
+then choose the <code>org.eclipse.ui.examples.rcp.browser</code> plug-in.
+Finally click on &quot;Add Required Plug-ins&quot; to compute the minimal set of
+plug-ins required for your application.</p>
+<p>The images referenced in this example are already in the <code>icons/</code>
+directory of the browser plug-in so after making the changes described in this
+section you are ready to click on &quot;Run&quot; to launch your application.
+Look for the new window images and title.</p>
+<h2><a name="launcher_branding">Branding the launcher</a></h2>
+<p>The next step in developing your overall product brand is to change the
+elements that appear while launching your application. This includes aspects
+such as using your own splash screen and changing the icon used by the Eclipse
+launcher.</p>
+<p>These changes apply to the Eclipse launcher, which is not used in
+self-hosting mode. That means that in order to observe these changes you will
+need to have your RCP application installed on your system so that you can start
+it directly. It also means that we will be changing your RCP application's <code>config.ini</code>
+file (in the configuration area (<code>eclipse/configuration</code>)) rather
+than any of its extension points.</p>
+<h3>Make your product active</h3>
+<p>If you haven't already done so then now is the time to edit the <code>config.ini</code>
+file so that your branding is selected when your application is launched. This
+is accomplished by changing the value of the <code>eclipse.product</code>
+property as shown here.</p>
+<blockquote>
+  <pre>eclipse.product = <font style="background-color: yellow" color="#0000ff">org.eclipse.ui.examples.rcp.browser.product</font>  </pre>
+</blockquote>
+<p>As described in <a href="#product_branding">Product branding</a> your <code>products</code>
+extension point should point to your <code>applications</code> extension point.
+Setting the value of this property will select your branding as well as your
+application.
+<h3>Replacing the splash screen</h3>
+<p>The splash screen (shown while the program starts) is contained in one file
+that is usually found in the plug-in declaring the product. It must be called <b>splash.bmp</b>
+and must be a .BMP file. There are no constraints regarding the size but for
+reference the standard Eclipse splash screen image is 500x330 pixels.</p>
+<p>The splash screen is selected based on the value of the <code>osgi.splashPath</code>
+property as shown here.
+<blockquote>
+  <pre>osgi.splashPath = <font style="background-color: yellow" color="#0000ff">platform:/base/plugins/org.eclipse.ui.examples.rcp.browser</font>  </pre>
+</blockquote>
+<p>When using <code>platform:</code> style URLs make sure that the plug-in
+referenced is in the plug-ins folder and that it is a sibling of the startup.jar.</p>
+<p>To use NL'ed splash screens the locale specific images should be placed in a <code>nl</code>
+directory within the plug-in's directory. For example, a splash screen for the <code>fr_FR</code>
+locale would be placed within the plug-in's directory as <code>nl/fr/FR</code>,
+e.g.,
+<blockquote>
+  <pre>org.eclipse.ui.examples.rcp.browser/
+  nl/
+    fr/
+      FR/
+        splash.bmp    </pre>
+</blockquote>
+<h3>Replacing the launcher's icon</h3>
+<p>Changing the icon associated with the launcher requires modification to the
+executable. We will also need to convert the icons into a resource that can be
+used by the executable.</p>
+<p>This process varies by platform, the following sections explain the procedure
+for the Windows and Linux platforms. In both cases you should start by
+extracting the file <code>eclipse/plugins/org.eclipse.platform.source_3.0.0/src/org.eclipse.platform_3.0.0/launchersrc.zip</code>
+found in the SDK. In the following sections, we will work with the <code>library/</code>
+directory and once we are finished we will copy the resulting executable back to
+the Browser application.</p>
+<h4>Creating the graphic resources for our executable</h4>
+<p><img src="images/win_only.gif" width="51" height="13">&nbsp;Windows
+executable programs can have an associated icon(s). To create our icon we first
+need to replace several .BMP graphics located in the <code>library</code>
+directory. These graphics represent 16x16, 32x32 and 48x48 pixel versions of
+both low color and high color graphics. In the <code>library/</code> directory
+replace the following files:</p>
+<ul>
+  <li>icon16_basic.bmp</li>
+  <li>icon16_full.bmp</li>
+  <li>icon32_basic.bmp</li>
+  <li>icon32_full.bmp</li>
+  <li>icon48_basic.bmp</li>
+  <li>icon48_full.bmp</li>
+</ul>
+<p>Using an appropriate graphics tool (e.g. ICONPRO provided in the MSDN),
+combine these graphics into a single .ICO (icon) file called <code>eclipse.ico</code>
+and replace <code>library/win32/eclipse.ico</code> with your new eclipse.ico
+file. The <code>eclipse.ico</code> is referenced by the file <code>library/win32/eclipse.rc</code>
+which is automatically used when the build script is run. Once the build script
+has finished we will have a new program executable with an associated icon.</p>
+<p><img src="images/linux_only.gif" width="51" height="13">&nbsp;Linux does not
+directly associate an icon with an executable program however we can include an
+icon that users can use when associating a shortcut with the program. Use your
+favorite graphics editor to create an xpm graphic representing your program icon
+and place it into <code>library/icon.xpm</code>. Once we have built the
+executable we will copy both the executable and the <code>.xpm</code> file to
+the <code>eclipse/</code> root directory of the platform runtime build.</p>
+<h4>Building the executable</h4>
+<p>Executable icon in hand, it's time to make the executable. We will continue
+to work with the <code>library/</code> directory and once we have created our
+executable we will copy it to the <code>eclipse/</code> root directory of the
+runtime platform build. The process for creating the program executable is
+different and a build script is provided in each subfolder to help make the
+process easier.</p>
+<h4>Preparing the build script</h4>
+<p><img src="images/win_only.gif" width="51" height="13">&nbsp;In the <code>library/win32</code>
+directory you will find the build script <code>build.bat</code>. We will need to
+edit this build file to point it to the location of your C compiler. To do this,
+simply uncomment the following lines (by removing <code>rem</code>) and modify <code>MSVC_HOME</code>
+to point to the root directory of your compiler installation.</p>
+<blockquote>
+  <pre>rem IF NOT &quot;%MSVC_HOME%&quot;==&quot;&quot; GOTO MAKE
+rem set MSVC_HOME=k:\dev\products\msvc60\vc98
+rem call %MSVC_HOME%\bin\vcvars32.bat  </pre>
+</blockquote>
+<p>This script has been tested with Microsoft® Visual C/C++ Compiler 6.0
+however it is possible that you may need to make additional modifications for
+your compiler.</p>
+<p><img src="images/linux_only.gif" width="51" height="13">&nbsp;The Linux build
+script (<code>build.csh)</code> has been tested against GNU C and C++ Compiler.
+You typically should not need to make any changes to the Linux build script.</p>
+<h4>Running the build script</h4>
+<p>The build script takes two arguments, the filename of the executable file to
+create (output) and the title (name) of your program. If the program name has
+spaces in it (as in the example below) you will need to put double-quotes around
+it.</p>
+<p>In the example below the program name <i>RCP Browser</i> will be shown in the
+task bar while the program is starting.</p>
+<p><img src="images/win_only.gif" width="51" height="13">&nbsp;On Windows you
+can run the build script (<code>build.bat</code>) as shown below. Prior to
+running the build script you should run once using the <code>clean</code> target
+to remove any artifacts from previous builds. This example will create an
+executable file named <code>rcp browser.exe</code> with the icon we created
+above.</p>
+<blockquote>
+  <pre>build -output &quot;rcp browser.exe&quot; -name &quot;RCP Browser&quot;  </pre>
+</blockquote>
+<p><img src="images/linux_only.gif" width="51" height="13">&nbsp;On Linux you
+can run the build script (<code>build.csh)</code> as shown below. This example
+will create an executable file named <i>rcp browser</i>. On Linux an icon is not
+automatically associated with the executable.</p>
+<blockquote>
+  <pre>csh build.csh -output &quot;rcp browser&quot; -name &quot;RCP Browser&quot;  </pre>
+</blockquote>
+<h4>Replacing the existing executable</h4>
+<p>Now that you have your own executable, you can copy it to the
+code&gt;eclipse/ root directory of the browser example. It is a good idea to
+remove the previous executable so that the user won't be confused on which to
+run.</p>
+<p><img src="images/linux_only.gif" width="51" height="13">&nbsp;On Linux we
+also need to copy the <code>icon.xpm </code>(we created above) to the <code>eclipse/
+</code>root replacing the one already found there.</p>
+<p><img src="images/TryIt.gif" width="61" height="13">&nbsp;Start your
+application by running the executable you just built. Confirm that it starts
+properly and that your icons, splash screen, and program name are shown during
+the application launch process.
+<h2><a name="optional_branding">Optional branding</a></h2>
+<p>Previous sections have discussed changes that all applications will want to
+make in order to present a customized brand. In this section we discuss some
+optional aspects of branding such as customizing the about dialog, applying your
+own default preferences, and selecting a special presentation.</p>
+<h3><b>The about dialog</b></h3>
+<p>Both the image and the text in the main about dialog are subject to product
+level branding.</p>
+<p><img name="About dialog" src="images/about.png" width="479" height="281">
+<p>These values are set from properties in your <code>products</code> extension
+point as shown here</p>
+<blockquote>
+  <pre>&lt;extension ...
+   &lt;product ...
+      &lt;property
+          name=&quot;aboutImage&quot; 
+          value=<font style="background-color: yellow" color="#0000ff">&quot;icons/alt_about.gif&quot;</font>/&gt;
+      &lt;property
+          name=&quot;aboutText&quot; 
+          value=<font style="background-color: yellow" color="#0000ff">&quot;The about dialog text can contain links such as http://www.eclipse.org.&quot;</font>/&gt;
+      &lt;property ...  </pre>
+</blockquote>
+<p>The absolute maximum size for an the about image is 500x330 pixels. However,
+the value of the about text property will only be displayed if the about image
+is no larger than 250x300 pixels.</p>
+<h3>Special preferences settings used by the product</h3>
+<p>Although not shown in this example it is also possible to specify a set of
+defaults that should be used with the product. For example, the preference
+settings might be used to specify an alternate presentation factory. The
+preferences should be stored in a file which is pointed to by the <i>preferenceCustomization</i>
+property. See <a href="http://dev.eclipse.org/viewcvs/index.cgi/~checkout~/platform-ui-home/rcp/index.html#rcp_and_r21">Eclipse
+Rich Client Platform</a> for an example.</p>
+<h3>The <code>.eclipseproduct</code> marker file</h3>
+<p>The branding of the application would not be complete without updating <code>eclipse/.eclipseproduct</code>.
+This marker file is a <code>java.io.Properties</code> format file that indicates
+the name, id, and version of the product. It also controls things like the
+default configuration area inside the user home folder, which ensure a
+separation of the configuration information among products.</p>
+<p>Ensure the file exists in you <code>eclipse/</code> directory and contains:</p>
+<blockquote>
+  <pre>name=<font style="background-color: yellow" color="#0000ff">Branded RCP Browser Example</font>
+id=<font style="background-color: yellow" color="#0000ff">org.eclipse.ui.examples.rcp.browser.product</font>
+version=<font style="background-color: yellow" color="#0000ff">3.0.0</font>  </pre>
+</blockquote>
+<h3>Presentations</h3>
+<p>A very powerful way to supply branding to your application is to create your
+own presentation. Supplying your own <a href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_ui_presentationFactories.html">presentationFactory</a>
+allows you to change all aspects of your application's UI. You can find an
+example of using the R21 presentation on the <a href="http://dev.eclipse.org/viewcvs/index.cgi/~checkout~/platform-ui-home/rcp/index.html#rcp_and_r21">Eclipse
+RCP page</a>.
+<h3>Intro page</h3>
+<p>Eclipse allows you to supply an extension point to provide a customized intro
+experience to users of your application. Explore the Eclipse help system for
+more information on how to use the <a href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_ui_intro.html">org.eclipse.ui.intro</a>
+extension.
+<h2><a name="troubleshooting">Troubleshooting</a></h2>
+<h4><a name="osgi_bundles"></a><b>Application &quot;...&quot; could not be found
+in the registry. The applications available are: &lt;NONE&gt;</b></h4>
+<p>Use the error log to check that all pre-requisite plug-ins were successfully
+resolved. The <code>osgi.bundles</code> property lists the plug-ins that eclipse
+installs and runs.</p>
+<p>Typically only <code>org.eclipse.core.runtime</code> and <code>org.eclipse.update.configurator</code>
+are listed. The update configurator will discover and install all plug-ins in
+the <code>plugins</code> directory. If you aren't using <code>org.eclipse.update.configurator</code>
+then list all necessary plug-ins in the <code>osgi.bundles</code> property.</p>
+<p>A typical RCP list might look like:</p>
+<pre>osgi.bundles = org.eclipse.core.runtime@2:start, org.eclipse.core.expressions, \
+               org.eclipse.help, org.eclipse.jface, org.eclipse.osgi.services, \
+               org.eclipse.osgi, org.eclipse.swt, org.eclipse.ui.workbench, \
+               org.eclipse.ui, org.eclipse.swt.win32, org.eclipse.swt.gtk, \
+               org.eclipse.swt.gtk64, org.eclipse.swt.carbon, \
+               org.eclipse.swt.motif</pre>
+<h4><a name="no_app_id"></a><b>No application id has been found.</b></h4>
+<p>This happens when eclipse cannot find the application to run. This could
+happen if the product cannot be found or the default application specified in
+the product extension is not found. Check for typos in both these ids.</p>
+<h4><a name="app_id_typo"></a><b>Application &quot;...&quot; could not be found
+in the registry. The applications available are: ...</b></h4>
+<p>This is most likely caused by a typo in the application id. If you are using
+your product's default application then check the <i>application</i> attribute
+in the product extension. Otherwise check the <code>eclipse.application</code>
+property in the <code>config.ini</code> file. The value must match the id
+defined in some application extension.</p>
+<h4><a name="product_id_typo"></a><b>No branding in application</b></h4>
+<p>This happens when the product cannot be found check the <code>config.ini</code>
+file for typos in the value of <code>eclipse.product</code>.</p>
+<h4><a name="clean"></a><b>Changes ignored</b></h4>
+<p>If changes to <code>plugin.xml</code> or <code>plugin.properties</code> are
+not recognized then try running once with the <code>-clean</code> command line
+option. This will remove stale cache files to ensure they are regenerated from
+the newest information. This option is only required during development when the
+plug-in manifest is changing it will not be needed when your product is
+deployed.</p>
+<h2>Conclusion</h2>
+<p>We have shown how to replace the basic units of branding to make your product
+look like your own. This included such items as the splash screen, about dialog
+and the icon and name associated with the launcher.</p>
+<h2>Other Resources</h2>
+<ul>
+  <li><a href="http://dev.eclipse.org/viewcvs/index.cgi/~checkout~/platform-ui-home/rcp/index.html">The
+    Eclipse Rich Client Platform</a> page</li>
+  <li><u>The Java Developers Guide to Eclipse</u> by Jim D'Anjou (Addison
+    Wesley, 2003)</li>
+</ul>
+<h3>From the Eclipse Help System</h3>
+<ul>
+  <li><a href="http://help.eclipse.org/help30/index.jsp?topic=/org.eclipse.platform.doc.isv/guide/product_def_nl.htm">Locale
+    specific files</a></li>
+  <li>The <a href="http://help.eclipse.org/help30/index.jsp?topic=/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_core_runtime_applications.html"><code>org.eclipse.core.runtime.applications</code></a>
+    extension.</li>
+  <li>The <a href="http://help.eclipse.org/help30/index.jsp?topic=/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_core_runtime_products.html"><code>org.eclipse.core.runtime.products</code></a>
+    extension.</li>
+  <li>The <a href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_ui_intro.html"><code>org.eclipse.ui.intro</code></a>
+    extension.</li>
+  <li>The <a href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_ui_presentationFactories.html"><code>org.eclipse.ui.presentationFactory</code></a>
+    extension.</li>
+</ul>
+<h3>From the &quot;<a href="http://www.eclipsefaq.org" target="_blank">Official 
+  Eclipse FAQs</a>&quot; book</h3>
+<ul>
+  <li><a href="http://www.eclipsefaq.org/chris/faq/html/faq241.html" target="_blank">FAQ 
+    241 -- What is an Eclipse application?</a></li>
+  <li><a href="http://www.eclipsefaq.org/chris/faq/html/faq250.html" target="_blank">FAQ 
+    250 -- What is an Eclipse product?</a></li>
+  <li><a href="http://www.eclipsefaq.org/chris/faq/html/faq251.html" target="_blank">FAQ 
+    251 -- What is the difference between a product and an application?</a></li>
+  </ul>
+  <p><small>Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. 
+  in the United States, other countries, or both.</small></p>
+  
+<p><small>Microsoft and Windows are trademarks of Microsoft Corporation in the United 
+  States, other countries, or both.</small></p>
+
+</body>
+
+</html>

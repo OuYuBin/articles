@@ -1,0 +1,466 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Branching with Eclipse and CVS</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right"> &copy; Copyright IBM Corp. 2003 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Branching with Eclipse and CVS</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  This article presents a brief branch and merge scenario designed
+  to quickly illustrate some branch and merge features of Eclipse's
+  CVS integration.  I assume the reader already appreciates the value
+  of branching and merging in a source control environment.  Little
+  is said to justify it here.  Rather, a step-by-step scenario 
+  illustrates the common branch and merge operations using 
+  Eclipse-based IDEs with CVS as the source control mechanism.
+  <p><b> By Paul Glezen, IBM</b> <br>
+    <font size="-1">July 3, 2003</font> </p>
+</blockquote>
+
+<hr width="100%">
+
+<h2>Introduction</h2>
+
+In any source control management (SCM) environment, branching is a powerful mechanism 
+for controlled isolation. Despite being a simple concept, it is sometimes avoided 
+because of its implementation complexities. This brief article demonstrates how 
+to perform branching with Eclipse's CVS plug-in. The intended audience is software 
+development professionals with an appreciation for the roles of branch and merge 
+techniques in SCM. 
+<p>
+The IBM&reg; redbook, <i>WebSphere&reg; Studio Application Developer Programming
+Guide</i>, contains a section entitled <i>Streams in CVS</i>.  It
+addresses branching and merging using CVS with Eclipse.  But many of
+the menu choices have changed since its publication.  The Eclipse online
+documentation is accurate, but does not provide an end-to-end scenario.
+The intent of this article is to fill this gap.  The version of Eclipse
+used for this article is 2.1.
+<p>
+The scenario is that of two programmers, Paul and Wing, working on
+separate branches of the same project.  Paul will branch off main and
+modify some files while Wing continues to work on the main branch,
+also modifying files.  Paul will then merge his branch back to the
+main branch.  In doing so, Paul will address the resulting merge conflicts.
+<p><center>
+<img src="images/intro.jpg" alt="Elementary Branch Concept"/>
+</center><p>
+
+<h2>Setup</h2>
+
+The sample will use a few text files inside a simple project.  In order
+to carry out the sample, you should already have a working connection to
+a CVS repository in your Eclipse workspace.
+<p><ol type="a">
+<li>Create a new simple project called <b>brtest</b>.<p>
+<li>Add a new file called <code>f1.txt</code>.  Add the following contents.
+<p><table border="1">
+<tr><td>
+<pre>This file will only be edited
+by Paul
+
+This line will be changed later.
+
+The rest of this file will
+remain the same.
+</pre></table><p>
+
+<li>Add a file called <code>f2.txt</code> with the following contents.
+<p><table border="1">
+<tr><td>
+<pre>This file will only be edited
+by Wing. 
+
+This line will be changed later.
+
+The rest of this file will
+remain the same.</pre>
+</table><p>
+
+<li>Add a file called <code>f3trivial.txt</code> with the following
+contents.
+<p><table border="1">
+<tr><td>
+<pre>This file will be edited by
+Paul and Wing.
+
+This line will be changed
+by Paul only.
+
+This line will be left alone.
+
+This line will be changed
+by Wing only.
+
+The rest of this file will
+remain the same.</pre>
+</table><p>
+
+<li>Add a file called <code>f4conflict.txt</code> with the
+following contents.
+<p><table border="1">
+<tr><td>
+<pre>This file will be edited by
+Paul and Wing.
+
+This line will be changed by
+by both Paul and Wing.
+
+The rest of this file will
+remain the same.</pre>
+</table><p>
+After adding the above files, your workspace should look something
+like the screen shot below.
+<p>
+<img src="images/filelist.jpg" alt="Starting list of files in resource view"/>
+<p>
+
+<li>Add the project to CVS.  Right-click on the project folder
+   and select <b>Team --&gt; Share Project</b>.  Select CVS as
+   the project type and click <b>Next</b>.  Choose a suitable
+   respository and click <b>Next</b>.  This creates an empty CVS
+   project called <b>brtest</b>.  We still need to add the
+   files to source control and commit them.<p>
+
+<li>In the <b>Synchronize - Outgoing Mode</b> view, right-click
+   the <i>brtest</i> folder and select <b>Add to Version Control</b>.
+   Once again, right-click on the <i>brtest</i> folder and select
+   <b>Commit ...</b> .  Provide an initial comment such as
+   "Initial Version."<p>
+</ol>
+
+This sets up the environment for Paul.  Wing will work
+in her own workspace by retrieving the files from source control.
+For steps on setting up a new project from source control, see the
+following section in the Eclipse documentation: <b>Workbench User's
+Guide --&gt; Tasks --&gt; Working in the team environment --&gt;
+Checking out a project from a CVS repository</b>.
+
+<h2>Branch Method</h2>
+
+When branching off a development stream, it is often advisable to
+rebase before merging the branch back to the main branch.  To
+<b>rebase</b> means to merge the contents of the main branch to
+the subbranch.  If any conflicts are to be resolved, they are done
+on the subbranch rather than the main branch.  If the merge goes
+well, the subbranch is merged to the main branch.  After having
+previously resolved all merge conflicts, this last merge would be
+a trivial one.  The advantage of taking the extra rebase step is
+that it avoids having conflicts on the main branch.
+<p>
+For this simple example, Paul will simply merge his changes directly
+into the main branch.  From the prospective of implementation details,
+the only difference is the merge target.  Since this article is
+principally concerned with implementation details of the Eclipse
+branch support using CVS, the simplest branch method is sufficient.
+
+<h2>Creating the Branch</h2>
+
+At this point, Paul and Wing have the same version of all files.  It
+is now time for Paul to create an independent branch on which to work.
+<p><ol>
+<li>Right-click on the <i>brtest</i> project and select <b>Team --&gt; 
+   Branch ...</b>.  A <i>Create Branch</i> dialog box is displayed.
+   Enter a branch name like "p1test."  Leave the check box checked for
+   <b>Start working in the branch</b>.  Notice that a version name is
+   automatically filled in for you called "Root_p1test."  You may
+   choose a different name (so long as it doesn't conflict with an
+   existing CVS tag).  This will mark where the branch was created.
+   It will be used later by the merge editor to determine what has
+   changed since branch creation.  Click <b>OK</b>.
+   <p> <img src="images/makebranch.jpg" 
+            alt="Dialog for creating a new branch"/>
+   <p>
+   You should be able to see the result of your branch in two ways.  By
+   right-clicking the project and selecting <b>Properties</b> and then
+   <b>CVS</b>, you should see the <i>p1test</i> in the tag field.  If
+   you have the CVS label decorations enabled, you'll see the branch
+   tag in the navigator view (see below).
+   <p><img src="images/branchlist.jpg"
+           alt="CVS labels indicating new branch"/>
+   <p><table><tr><td>
+	   <img src="images/tip.gif" width="62" height="13">
+		<td>To enable CVS label decorations, go to <b>Window --&gt; 
+		Preferences</b> and navigate to <b>Workbench --&gt; Label 
+		Decorations</b>.  Check the CVS box.
+	</table><p>
+
+	<li>Paul will modify the first file using the <i>p1test</i> branch.
+	Open the editor for <code>f1.txt</code>.  Change line 4 from "This line
+	will be changed later" to "This line has been changed."  Save the
+	change.<p>
+
+	<li>Open the editor for <code>f3trivial.txt</code>.  Change line 4 and
+	5 from "This line will be changed by Paul only" to "This line has
+	been changed by Paul."  Save the change.<p>
+   <li>Open the editor for <code>f4conflict.txt</code>.  Change lines 4 and
+	5 from "This line will be changed by both Paul and Wing" to "This
+	line has been changed by Paul."  Save the change.<p>
+
+	<li>Right-click on the <i>brtest</i> project and select <b>Team
+	--&gt; Synchronize with Repository</b>.  In the <b>Outgoing Mode</b>
+	view, right-click the <i>brtest</i> project folder and select
+	<b>commit</b>.  Enter a comment such as "Changes made by Paul."  Note
+	that for files that have changed, the revision numbers are four digits.
+	This is a CVS convention for branched revisions.
+	<p><img src="images/p1commit.jpg"
+	        alt="Paul's CVS label decorations after commit"/>
+	<p>
+
+	<li>Now it is Wing's turn.  She will make her changes on the main
+	branch.  Since she already had the main branch loaded into her
+	workspace, she doesn't need to perform a branch change.  As Wing,
+	begin editing <code>f2.txt</code>.  Change "This line will be changed
+	later" to "This line has been changed."  Save the change.<p>
+
+	<li>Edit <code>f3trivial.txt</code> in Wing's workspace.  Change lines
+	9 and 10 from "This line will be changed by Wing only" to "This
+	line has been changed by Wing."  Save the change.<p>
+
+	<li>Edit <code>f4conflict.txt</code> in Wing's workspace.  Change lines
+	4 and 5 from "This line will be changed by Paul and Wing" to "This
+	line was changed by Wing."  Save the change.<p>
+
+	<li>Commit Wing's changes.  Notice her revisions numbers are all two
+	digits.  That's because her new revisions occur on the main branch.<p>
+
+</ol>
+<br>
+
+<h2>The Merge</h2>
+
+Now it is time for Paul to merge his changes into the main branch
+where Wing's work resides.
+
+<p><ol start="10"/>
+<li>The first step of the merge is to point
+	the workspace to the target branch.  In our case, the target
+	of the merge is the main branch.  To switch the project contents
+	to that of the main branch, right-click on the <i>brtest</i> 
+	project in the Navigator view and select <b>Replace with --&gt; 
+	Branch or Version ...</b>.  You should see a branch selection
+	similar to the one below.
+	<p><img src="images/branchswitch.jpg"
+	        alt="Dialog for selecting new branch or version"/>
+	<p>
+
+<li>The <i>p1test</i> branch is the one Paul was working on. To
+	switch back to the main branch, select <b>HEAD</b>.  This is
+	the CVS name for the main branch.  Make sure <b>Recurse into
+	sub-folders</b> is checked so that all the files in the project
+	are replaced with the main branch contents.  Then click <b>OK</b>.
+	<p>
+	The resource view should look like the one below.  Notice the
+	version numbers correspond to what Wing committed.  All the 
+	version numbers are two digits.  The branch name is gone which
+	implies the <i>HEAD</i> branch (or main).
+	<p><img src="images/afterswitch.jpg"
+	        alt="Resource view after switching back to main branch"/>
+	<p>
+
+	<li>Right-click on the <i>brtest</i> project and select <b>Team --&gt;
+	Merge ...</b>.  This displays a panel allowing you to choose a "start
+	point."  For this example, the only start point available is
+	<b>Root_p1test</b>, the one
+	Paul made by creating the branch.  Select it and click <b>Next</b>.
+	<p><img src="images/mergestartpoint.jpg"
+	        alt="Dialog for choosing a merge start point"/>
+	<p>
+
+	<li>Next we specify from which branch to pull the changes.  Expand
+	the <b>Branches</b> node and select <b>p1test</b>.  Click
+	<b>Finish</b>.<p>
+	<p><img src="images/mergewhat.jpg"
+	        alt="Dialog for selecting choosing a branch to merge"/>
+	<p>
+
+	<li>This is where the fun begins.  You will be presented with the
+	Merge Editor's Structure Compare view with the following merge
+	results.
+	<p><img src="images/conflict1.jpg"
+	        alt="Merge tasks."/>
+	<p>
+	<code>f1.txt</code> was not changed by Wing, so it will come in without
+	a problem.  But <code>f3trivial.txt</code> and <code>f4conflict.txt</code>
+	were each modified by both Paul and Wing.  These will require special
+	attention during the merge.<p>
+
+	<li>Right-click on the <i>brtest</i> folder and select <b>Update
+	from Repository</b>.  This action only operates on non-conflicting
+	resources (those with no red marks) in the <i>Structure Compare</i>
+	view.  In our example, it pulls in the changes to <code>f1.txt</code>.
+	This should leave your <i>Structure Compare</i> view with only two
+	conflicts.<p>
+
+	<li>Right-click <code>f3trivial.txt</code> in the Structure Compare view
+	and select <b>Merge changes into Local Copy</b>.  Since
+	<code>f3trivial.txt</code> was a trivial merge, the merge editor
+	automatically copies the changes from the <i>p1test</i> branch into
+	our local copy of the main branch.  Inspection of <code>f3trivial.txt</code> 
+	will reveal the changes made by both Paul and Wing.
+	<p><table><tr>
+	<td><b>Note</b>
+	<td>We haven't merged into main yet.  That doesn't happen until we
+	commit.  For now we've just merged into our local copy; hence the
+	name of the menu option.
+	</table><p>
+	You should see an additional file, <code>.#f3trivial.txt</code>, in the
+	resource view that isn't under source control.  It contains a copy
+	of the pre-merge contents for restoration purposes.<p>
+
+	<li>Double-click <code>f4conflict.txt</code> to open the <i>Structure
+	Compare</i> view of the merge tool.  The left side of the <i>Text
+	Compare</i> panel is the local copy of the main branch contents.
+	The left side is the <i>brtest</i> branch contents.  Since this is
+	not a trivial merge, the color red is used to delineate the scope
+	of each merge conflict.  Blue would be used to denote trivial
+	merges.
+	<p><img src="images/conflict7.jpg"
+	        alt="Resolving conflicts with merge editor"/>
+	<p>
+	We can't resolve this conflict by simply using one side or the
+	other.  For this case, we edit the text in the left side to say
+	"This line has been changed by Paul and Wing."  Right-click in
+	this same text window and select <b>Save</b>.<p>
+
+	<li>Since we have finished manually merging <code>f4conflict.txt</code>,
+	we no longer need to retain it in the <i>Structure Compare</i> view.
+	Right-click <code>f4conflict.txt</code> in the <i>Structure Compare</i>
+	view and select <b>Remove From View</b>.  This only removes it from
+	the view, not from the project.<p>
+
+	<li>At this point, the merged copy only exists in our workspace.
+	We still need to save it to the CVS respository.  Select the
+	<i>brtets</i> project in the <i>Navigator</i> view and select
+	<b>Team --&gt; Synchronize with Repository</b>.  These changes
+	should not present any conflicts.  Right-click on the <i>brtest</i>
+	folder in the <i>Synchronize</i> view and select <b>Commit</b>.
+	A suitable comment would be "Merged prtest branch to main."<p>
+
+	
+<li>A successful merge is often an occasion for a release. In CVS, this amounts 
+  to tagging all the files with a given tag. In this case, we'll tag it with "p12merge." 
+  Right-click the <i>brtest</i> project in the <i>Navigator</i> view and select 
+  <b>Team --&gt; Tag as version ...</b> from its context menu. Enter the name 
+  "p12merge" for the tag name. Click <b>Finish</b>.
+  <p> </ol> <br>
+  <h2>Summary</h2>
+  In this brief tutorial we illustrated the implementation steps for a simple 
+  branch and merge scenario. Several files were used to demonstrate different 
+  types of conflicts that arise during merge activity. In cases where two developers 
+  edited the same file, we saw the action taken by the <b>Merge changes with Local 
+  Copy</b> on a file with only trivial conflicts. We saw how to use the merge 
+  editor to manually resolve non-trivial conflicts. The appendix contains a re-run 
+  of steps 17 and 18 that use <b>Merge changes with Local Copy</b> on <code>f4conflict.txt</code>. 
+  <p> After the merge task was complete, we tagged the results to create a release. 
+    Others can then refer to this release using the name "p12merge." A summary 
+    of our actions for a single file is obtained by right-clicking on the file 
+    in the <i>Navigator</i> view and selecting <b>Team --&gt; Show in resource 
+    history</b>. The resource history for <code>f4conflict.txt</code> is show 
+    below. 
+  <p><img src="images/f4history.jpg"
+        alt="f4conflict.txt revision history"/> 
+  <p> We can barely see the <i>Root_p1test</i> tag assigned to revision 1.1, the 
+    initial version. We see that Paul made changes that were committed to a branch 
+    while Wing made changes that were committed to main. Finally, the merge resulted 
+    in revision 1.3, which was tagged for posterity with the label "p12merge." 
+  <p> For a software developer, the task of merging ranks among status-reports 
+    and schedule-estimation in terms of loathing. It's not difficult to image 
+    how the seductively simple "trivial merge" can lead to subtle non-trivial 
+    problems in code. Eclipse's CVS integration strives to ease this burden by 
+    putting a friendlier face on branch and merge support. 
+  <h2>Appendix</h2>
+  In steps 17 and 18, we chose to employ the manual merge facilities for the non-trivial 
+  merge. This appendix describes an alternative to these steps using the automated 
+  <b>Merge Changes into Local Copy</b> option. Upon encountering a non-trivial 
+  conflict, this option will insert merge markers in the file. The resource view 
+  will signify the merge conflict with a special icon marker. 
+  <p> This alternative works great for simple text files. For source code it can 
+    result in unexpected compilation behavior if incremental builds are enabled. 
+    For this reason, the manual merge step was chosen for steps 17 and 18 above. 
+    These steps are re-worked here using the automated approach for readers that 
+    prefer this method. 
+  <p>
+  <table>
+    <tr> 
+      <td><img src="images/tip.gif"/> 
+      <td>It is recommended that <i>incremental compilation</i> be disabled when 
+        using this method on source code files. This is done from the <b>Windows 
+        --&gt; Preferences</b> dialog by selecting <b>Workbench</b> on the left 
+        side and unchecking <b>Perform build automatically on resource modification</b>. 
+  </table>
+  <p> 
+  <ol start="17">
+    <li>Right-click <code>f4conflict.txt</code> and select <b>Merge changes into 
+      Local Copy</b>. Since this is not a trivial merge, the result will contain 
+      merge markers that indictate where the conflict occurred. Markers in the 
+      resource view indicate which files were marged non-trivially. 
+      <p><img src="images/conflict6.jpg"
+	        alt="A merge conflict marker"/> 
+      <p> In the figure above, the non-trivial merge marker appears on <code>f4conflict.txt</code>. 
+      <p> Note the presence of two additional files not under source control. 
+        <code>.#f3trivial.txt</code> and <code>.#f4conflict.txt</code> files contain 
+        copies of the pre-merge contents for restoration purposes.
+      <p> 
+    <li>We now want to resolve the merge conflict for <code>f4conflict.txt</code> 
+      indicated in the resource view above. Open the <code>f4conflict.txt</code> 
+      in an editor. 
+      <p><img src="images/conflict5.jpg"
+	        alt="Merge markers in a file."/> 
+      <p> Note the manner in which the merge editor calls attention to different 
+        versions of the same line. It is up to us to resolve the conflict and 
+        remove the markers. In this case, we replace the lines between "<code>&gt;&gt;&gt; 
+        f4conflict.txt</code>" and "<code>&lt;&lt;&lt; 1.1.4.1</code>", inclusive, 
+        to contain "This line has been changed by Paul and Wing." Then save the 
+        result. 
+      <p> Notice that saving the result will change the merge conflict marker. 
+        The assumption is that the save action resolves the conflict.
+      <p> 
+  </ol>
+  <br>
+  <h2>References</h2>
+  Listed below are some references to which one can refer in addition to the Eclipse 
+  documentation.
+  <p> 
+  <ul>
+    <li><i>WebSphere Studio Application Developer Programming Guide</i>, <a href="http://www.redbooks.ibm.com/">http://www.redbooks.ibm.com</a>, 
+      SG24-6585-00. This reference applies to version 4 of WSAD. The underlying 
+      Eclipse version is 1.0. Its section on branching and merging provided the 
+      motivation for writing this article.
+      <p> 
+    <li><i>WebSphere Studio Application Developer Version 5 Programming Guide</i>, 
+      <a href="http://www.redbooks.ibm.com/"> http://www.redbooks.ibm.com</a>, 
+      SG24-6957-00. This reference was still in draft stage at the time of this 
+      writing. It contains a section on branch and merging. The underlying Eclipse 
+      version is 2.0.
+      <p> 
+    <li><i>Version Management with CVS</i>, Per Cederqvist et al. <a href="http://www.cvshome.org/docs/manual"> 
+      http://www.cvshome.org/docs/manual</a>. This manual is the standard CVS 
+      reference. 
+  </ul>
+  <p>
+  <hr>
+  <p><small> <font size="-2">IBM and WebSphere are registered trademarks of IBM 
+    Corp. in the United States, other countries, or both. </font></small> 
+  <p> 
+</body>
+</html>
