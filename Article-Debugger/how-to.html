@@ -1,0 +1,1044 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>How to Write an Eclipse Debugger</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">&copy; 
+  Copyright International Business Machines Corporation, 2004. All rights reserved</font> 
+  <br>
+  <font face="Times New Roman, Times, serif" size="2">&copy; Copyright Bjorn Freeman-Benson, 
+  2004. All rights reserved</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" align=CENTER width="120" height="86"></h1>
+</div>
+<h1 ALIGN="CENTER"><br>
+  How to write an Eclipse debugger</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  One of the major tasks of adding a new language to an Eclipse-based IDE is debugging 
+  support. A debugger needs to start and stop the program being debugged, suspend 
+  and resume, single-step, manage breakpoints and watch points, and so on. This 
+  article explains the Eclipse Platform debug framework and steps through a simple, 
+  yet illustrative, example of adding debug support for a new language. 
+  <p><b> By Darin Wright, IBM Rational Software Group<br>
+    Bjorn Freeman-Benson, Predictable Software</b><br>
+    <font size="-1">August 27, 2004</font> </p>
+</blockquote>
+
+<hr width="100%">
+<h2>Language support</h2>
+<p>No matter how simple we want to make the topic, there is no getting around 
+the fact that adding a new language to an Eclipse IDE is not a trivial task. 
+This paper, together with its two companion papers, focuses on the 
+launching-running-debugging side of the process. Other aspects of adding new 
+language support include: editors, code assist, refactorings, new views, 
+builders, and other tools. These features are outside the scope of these papers.</p>
+<p>The first paper in this series, <i><a href="../Article-Launch-Framework/launch.html">We 
+  Have Lift-off: The Launching Framework in Eclipse</a></i>, describes the launching 
+  framework through an applet launcher example. In this paper, we describe the 
+  basic debugging framework using a small assembly language example. And in our 
+  third paper (not yet published), <i>Enhancing the Eclipse Debugger</i>, we describe 
+  how to enhance the UI for our assembly language debugger by adding all the little 
+  bells and whistles that one expects in modern IDEs.</p>
+<p>The Eclipse SDK provides a framework for building and integrating debuggers, 
+  collectively known as the debug platform. The debug platform defines a set of 
+  Java&#153; interfaces modeling a set of artifacts and actions common to many 
+  debuggers, known as the debug model. For example, some common debug artifacts 
+  are threads, stack frames, variables, and breakpoints; and some common actions 
+  are suspending, stepping, resuming, and terminating. The platform does not provide 
+  an implementation of a debugger – that is the job of language tool developers. 
+  However, the platform does provide a basic debugger user interface (that is, 
+  the debug perspective) that can be enhanced with features specific to a particular 
+  debugger. The base user interface operates against the debug model interfaces, 
+  providing views for a program’s call stack, variables, breakpoints, watch items, 
+  and console I/O, and allows a user to step through source code. The debug platform 
+  also provides a framework for launching applications from within the Eclipse 
+  IDE, and a framework to perform source lookup.</p>
+<p>In order to keep this paper to the stated goal of “how to write a debugger,” 
+and away from the larger problem of “how to add a support for a new language,” 
+we make the following assumptions:</p>
+<ul>
+  <li>The new language has an existing execution engine or interface or VM. This 
+    paper does not describe how to write an interpreter, virtual machine, or compiler 
+    run-time. For our example, the interpreter is implemented as a Perl program 
+    (pdavm/pda.pl in the example code). The language and the debugger interface 
+    are described in the next section. </li>
+  <li>An Eclipse launcher and launch configuration already exists for the new 
+    language. At this point, the launcher needs to create a “run” configuration 
+    – this paper will describe how to add a “debug” configuration. (For completeness, 
+    here are the parts that comprise the example launcher support: 
+    <ul>
+      <li>org.eclipse.debug.examples.core contributes an org.eclipse.debug.core.launchConfigurationTypes 
+        named org.eclipse.debug.examples.core.launchConfigurationType.pda, as 
+        well as the two class implementation of the launch configuration (IPDAConstants 
+        and PDALaunchDelegate)</li>
+      <li>org.eclipse.debug.examples.core contributes an org.eclipse.core.variables.valueVariables 
+        that points to the Perl executable</li>
+      <li>org.eclipse.debug.examples.ui contributes an org.eclipse.debug.ui.launchConfigurationTabGroups 
+        for that launch configuration type, as well as the two-class implementation 
+        of the tab groups (PDATabGroup and PDAMainTab).</li>
+    </ul>
+  </li>
+  <li>The source for the new language is text files that are displayed in a text 
+    editor. The text editor might be a specialized editor with code coloring, 
+    formatting, extra menu items, etc., or it might be just the standard Eclipse 
+    text editor.</li>
+</ul>
+<h2>Our language and its interpreter</h2>
+<p>To demonstrate how to write a debugger for Eclipse, we need a language and 
+  a run time to debug. For this example, we chose an enhanced push down automata 
+  (PDA) assembly language and a simple interpreter implemented in Perl. Each line 
+  contains a single operation and any number of arguments. Our language differs 
+  from a standard PDA in two major ways:</p>
+<ul>
+  <li>Our language has a control stack and thus has call-return subroutines.</li>
+  <li>Our language allows data to be stored either on the data stack or in named 
+    variables on the control stack.</li>
+</ul>
+<blockquote>In order to actually run this example, you will need a Perl interpreter. 
+  Linux&reg;&#153; comes with Perl. For Microsoft&reg; Windows&reg;, we use either 
+  ActivePerl (<a href="http://www.activeperl.com/">http://www.activeperl.com/</a>) 
+  or Indigo Perl (<a href="http://www.indigostar.com/">http://www.indigostar.com/</a>). 
+  You also have to set the string substitution variable named “perlExecutable” 
+  to the complete path to your Perl interpreter. (For example, ours was C:\perl\bin\perl.exe) 
+  To set a string substitution variable, use the Windows &gt; Preferences &gt; 
+  Run/Debug &gt; String Substitution preferences page.</blockquote>
+<p>Here is an annotated example of the Fibonacci computation (note that the 
+annotations themselves are not valid syntax in this language – in this language, 
+all comments must start at column 1 and be the entire line):</p>
+<pre>push 6
+call Fibonacci      <i>function call with one argument on the data stack</i>
+output              <i>print result to stdout</i>
+halt
+#
+# f(n) = f(n-1) + f(n-2)
+# f(0) = 1
+# f(1) = 1
+#
+:fibonacci
+var n               <i>define variable n on control stack</i>
+pop $n              <i>get n from data stack</i>
+push $n
+branch_not_zero gt0
+push 1              <i>f(0) = 1</i>
+return              <i>return with one value on data stack</i>
+:gt0 
+push $n
+dec
+branch_not_zero gt1
+push 1              <i>f(1) = 1</i>
+return              <i>return with one value on data stack</i>
+:gt1
+push $n             <i>stack: n</i>
+dec                 <i>stack: n-1</i>
+call fibonacci      <i>stack: f(n-1)</i>
+push $n             <i>stack: f(n-1) n</i>
+dec                 <i>stack: f(n-1) n-1</i>
+dec                 <i>stack: f(n-1) n-2</i>
+call Fibonacci      <i>stack: f(n-1) f(n-2)</i>
+add                 <i>stack: f(n-1)+f(n-2)</i>
+return              <i>return with one value on data stack</i></pre>
+<h3><a name="Interpreter Debug Interface">Interpreter debug interface</a></h3>
+<p>Our PDA assembly language interpreter can be started in either run mode or 
+debug mode. When started in debug mode, the interpreter listens for debug 
+commands on a specified local TCP socket and sends debug events to a separate 
+local TCP socket. The commands include:</p>
+<ul>
+  <li><samp>clear N</samp> – clear the breakpoint on line N</li>
+  <li><samp>data</samp> – return the contents of the data stack; the data is 
+  returned from oldest to newest as a single string “value|value|value|…|value|”</li>
+  <li><samp>exit</samp> – end the interpreter</li>
+  <li><samp>resume</samp> – resume full speed execution of the program</li>
+  <li><samp>set N</samp> – set a breakpoint on line N</li>
+  <li><samp>stack</samp> – return the contents of the control stack (program 
+  counters, function and variable names); the stack is returned from oldest to 
+  newest as a single string “frame#frame#frame#…#frame”. Each frame is a string 
+  “filename|pc|function name|variable name|variable name| …|variable name”</li>
+  <li><samp>step</samp> – single step forward</li>
+  <li><samp>suspend</samp> – end full speed execution and listen for debug 
+  commands</li>
+  <li><samp>var N M</samp> – return the contents of a variable M from the 
+  control stack frame N (stack frames are indexed from 0).</li>
+</ul>
+<p>The debug events that are reported asynchronously to the second socket 
+include:</p>
+<ul>
+  <li><samp>started</samp> – the interpreter has started (guaranteed to be the 
+    first event sent)</li>
+  <li><samp>terminated</samp> – the interpreter has terminated (guaranteed to 
+    be the last event sent)</li>
+  <li><samp>suspended X</samp> – the interpreter has suspended and entered debug 
+    mode; X is the cause of the suspension, either step or client or breakpoint 
+    N</li>
+  <li><samp>resumed X</samp> – the interpreter has resumed execution in run mode; 
+    X is the cause of the resume, either step or client</li>
+  <li><samp>unimplemented instruction X</samp> – an unimplemented instruction 
+    was encountered</li>
+  <li><samp>no such label X</samp> – a branch or call to an unknown label was 
+    encountered </li>
+</ul>
+<h2>Adding debugger support to the launch delegate</h2>
+<blockquote><i>First Notation Note: </i>The class and object diagrams in this article use a 
+mostly UML syntax. It is only mostly UML because, unfortunately, UML does not 
+provide a way to model extension points and extensions. Therefore, we decided to 
+use a dashed box to indicate an extension in the plugin.xml file. We also use a 
+few non-standard, but labeled, lines with arrows to indicate certain semantics.<p>
+  <i>Second Notation Note:</i> The Eclipse design guidelines include separating the 
+code for the model from the code for the user interface. We abide by that design 
+principle in our example code resulting in two plug-ins. The extensions and code 
+discussed in this article come from both plug-ins.</p>
+<p><i>Third Notation Note:</i> Each code and plugin.xml fragment in this article 
+includes a header describing the plug-in, package, class, and other details of 
+its location in the complete example code. In order to fit all this on one line, 
+the header abbreviates the org.eclipse.debug.examples.pda.core plug-in as 
+“core,” the org.eclipse.debug.examples.core.pda.model package as “pda.model,” 
+etc.</blockquote>
+<p>Using the previous assumptions, we already have a launch configuration type 
+  (org.eclipse.debug.examples.core.launchConfigurationType.pda) and a launch configuration 
+  delegate (PDALaunchDelegate). To add debugger support, we modify the delegate 
+  by adding code for DEBUG_MODE that performs the following actions:</p>
+<ul>
+  <li> <img src="images/tag_1.gif" align=CENTER width="24" height="13"> Modifies 
+    the process command line to include the debug parameters. For details on what 
+    the debug parameters for our interpreter are, see the previous section.</li>
+  <li> <img src="images/tag_2.gif" align=CENTER width="24" height="13"> Creates 
+    and registers the PDADebugTarget object for this launch. For details on where 
+    the debug target fits into the model, see the next section.</li>
+</ul>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue">pda.launching</font>, <font size="-1">Class:</font> <font color="blue">PDALaunchDelegate</font>, 
+  <font size="-1">Method:</font> <font color="blue">launch</font></u>
+<pre>     commandList.add(file.getLocation().toOSString()); 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13">  int requestPort = -1;
+ <font color="#0000FF">.</font>   int eventPort = -1;
+ <font color="#0000FF">.</font>   if<b> </b>(mode.equals(ILaunchManager.DEBUG_MODE)) {
+ <font color="#0000FF">.</font>      requestPort = findFreePort();
+ <font color="#0000FF">.</font>      eventPort = findFreePort();
+ <font color="#0000FF">.</font>      if (requestPort == -1 || eventPort == -1) {
+ <font color="#0000FF">.</font>         abort(&quot;Unable to find free port&quot;, null);
+ <font color="#0000FF">.</font>      }
+ <font color="#0000FF">.</font>      commandList.add(&quot;-debug&quot;);
+ <font color="#0000FF">.</font>      commandList.add(&quot;&quot; + requestPort );
+ <font color="#0000FF">.</font>      commandList.add(&quot;&quot; + eventPort );
+ <font color="#0000FF">.</font>   } 
+     String[] commandLine = (String[]) 
+     commandList.toArray(new String[commandList.size()]);
+     Process process = DebugPlugin.exec(commandLine, null);
+     IProcess p = DebugPlugin.newProcess(launch, process, path);
+<img src="images/tag_2.gif" align=CENTER width="24" height="13">  if (mode.equals(ILaunchManager.DEBUG_MODE)) {
+ <font color="#0000FF">.</font>      IDebugTarget target = new PDADebugTarget(launch,p,requestPort,eventPort );
+ <font color="#0000FF">.</font>      launch.addDebugTarget(target);
+ <font color="#0000FF">.</font>   }</pre>
+<h2>The debug model</h2>
+<p>The Eclipse debug model is documented in the <i><cite>Platform Plug-in Developer 
+  Guide</cite></i> under <b>Programmer’s Guide &gt; Program debug and launch support&gt; 
+  Debugging a Program&gt; Platform debug model</b>. Being more visually oriented, 
+  we prefer to look at pictures, so here is a mostly UML diagram of the Eclipse 
+  platform debug model:</p>
+<p align="center">
+<img border="0" src="images/debug_model.gif" width="408" height="608"></p>
+<p>To implement our debugger (the PDA debugger), we have to provide an 
+implementation of each of these debug model interfaces. Most of the 
+implementations are very straightforward except, perhaps, these small items:</p>
+<ul>
+  <li>The PDADebugElement class includes fireEvent, fireCreationEvent, fireSuspendEvent, 
+    and other methods as a convenience to avoid code duplication in the subclasses.</li>
+  <li>The PDADebugTarget is the object that communicates with our interpreter 
+    and is complex enough that we describe it in a following section of its own.</li>
+  <li>There is only one thread in a PDA program, so the PDAThread class delegates 
+    all its operations (suspend, resume, isSuspended, getStackFrames, and so on) 
+    to the debug target. This allows us to encapsulate all communication with 
+    the interpreter in our single PDADebugTarget object.</li>
+  <li>The only thing the PDAStackFrame does that is mildly interesting is to parse 
+    and cache the stack frame reply message from the interpreter (the string described 
+    in the previous section). Other than that, the implementation of getLineNumber 
+    returns the previously cached line number; the implementation of stepOver 
+    delegates to the thread; and so on.</li>
+  <li>PDAVariable is just a wrapper for the variable name; it delegates the 
+  fetching of the value to the debug target.</li>
+  <li>PDAValue is even simpler because the PDA language has only one type: a 
+  value. Strings and numbers are stored identically in the interpreter and thus 
+  the only thing the PDAValue object does is display the value.</li>
+  <li>The PDALineBreakpoint class is the second most complex class in our model 
+    (behind the debug target class), but the Eclipse debug framework provides 
+    an excellent abstract implementation of line-oriented breakpoints named LineBreakpoint. 
+    Thus PDALineBreakpoint subclasses LineBreakpoint and adds its model identifier 
+    and its own constructor. The constructor creates and associates a marker with 
+    the breakpoint so that they show up in the annotation ruler. (See <a href="#Breakpoints">section 
+    below</a> on breakpoints for more details about this code and the marker ID.)</li>
+</ul>
+<pre>  public PDALineBreakpoint(IResource resource, int lineNumber) throws CoreException {
+     IMarker marker = resource.createMarker(
+         &quot;org.eclipse.debug.examples.core.pda.lineBreakpoint.marker&quot;);
+     setMarker(marker);
+     setEnabled(true);
+     ensureMarker().setAttribute(IMarker.LINE_NUMBER, lineNumber);
+     ensureMarker().setAttribute(IBreakpoint.ID, IPDAConstants.ID_PDA_DEBUG_MODEL);
+  }</pre>
+<p>There are two main issues to keep in mind when implementing the debug model 
+classes:</p>
+<ul>
+  <li>The Eclipse platform is inherently multi-threaded so it is important that 
+    all the classes are thread safe, including those that must be single threaded. 
+    For example, the debug socket channel to our PDA interpreter is single threaded: 
+    the interpreter can only receive one command or request at a time. Thus the 
+    methods in our model that communicate with the interpreter must be synchronized 
+    to prevent overlapping requests.</li>
+  <li>The user interface actions, for example the step command, are issued from 
+    Eclipse’s user interface thread. Thus these actions must be non-blocking. 
+    We use step as the example here, because it might seem that step should block, 
+    that it should send the step debug command and wait for the interpreter to 
+    do the step, but that behavior would be wrong. As we will see below, the interpreter 
+    communicates with the debug model by firing events rather than returning result 
+    codes from commands.</li>
+</ul>
+<p><a name="Blocking commands">The incorrect blocking command</a> would block the entire Eclipse 
+user interface 
+until the interpreter had finished stepping. In the case of infinite loops and 
+other client program defects, the worst case is that the interpreter might never 
+return thus leaving the Eclipse user interface completely frozen.</p>
+<p align="center">
+<img border="0" src="images/incorrect.gif" width="327" height="336"></p>
+<p>By sending the step command asynchronously, the Eclipse user interface 
+remains responsive while the interpreter performs the command. (For those 
+readers who are not 100% familiar with UML, notice the difference in the arrows: 
+a synchronous call has a full arrow head and an asynchronous message has a half 
+arrow head.)</p>
+<p align="center"> <img border="0" src="images/correct.gif" width="327" height="334"></p>
+<h3>Code highlights of our debug target</h3>
+<p>In our debug model, the PDADebugTarget is where most of the action happens 
+because the debug target is where we centralize the communication with the PDA 
+interpreter. For example, when the variable view asks a variable for its value, 
+the variable asks the debug target to ask the interpreter for the value.</p>
+<p align="center">
+<img border="0" src="images/get_variable_value.gif" width="451" height="180"></p>
+<h4>Constructor and initialization</h4>
+<p>As described <a href="#Interpreter Debug Interface">above</a>, the debug 
+interface to our interpreter consists of two sockets: one for debug commands and 
+one for debug events. Thus when we create our debug target,  
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> first we initialize some instance 
+variables (our launch, our process, our one thread, etc), then
+<img src="images/tag_2.gif" align=CENTER width="24" height="13"> we open two debug sockets with readers 
+and writers, then <img src="images/tag_3.gif" align=CENTER width="24" height="13"> we start a thread to 
+listen on the event socket (we are using the Eclipse background process 
+mechanism), and lastly 
+  <img src="images/tag_4.gif" align=CENTER width="24" height="13"> we register to listen for breakpoint 
+changes in order to send the “set” and “clear” commands to the interpreter.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.</font><font color="#0000FF">model</font>, <font size="-1">Class:</font> 
+  <font color="#0000FF">PDADebugTarget</font></u>
+<pre>  public PDADebugTarget(ILaunch launch, IProcess process, 
+     int requestPort, int eventPort) throws CoreException {
+     super(null);
+<img src="images/tag_1.gif" align=CENTER width="24" height="13">  fLaunch = launch;
+ <font color="#0000FF">.</font>   fTarget = this;
+ <font color="#0000FF">.</font>   fProcess = process;
+ <font color="#0000FF">.</font>   fThread = new PDAThread(this);
+ <font color="#0000FF">.</font>   fThreads = new IThread[] {fThread};
+<img src="images/tag_2.gif" align=CENTER width="24" height="13">  try {
+ <font color="#0000FF">.</font>      fRequestSocket = new Socket(&quot;localhost&quot;, requestPort);
+ <font color="#0000FF">.</font>      fRequestWriter = new PrintWriter(fRequestSocket.getOutputStream());
+ <font color="#0000FF">.</font>      fRequestReader = new BufferedReader(new InputStreamReader(
+ <font color="#0000FF">.</font>                              fRequestSocket.getInputStream()));
+ <font color="#0000FF">.</font>      fEventSocket = new Socket(&quot;localhost&quot;, eventPort);
+ <font color="#0000FF">.</font>      fEventReader = new BufferedReader(new InputStreamReader(
+ <font color="#0000FF">.</font>                              fEventSocket.getInputStream())); 
+ <font color="#0000FF">.</font>   } catch (UnknownHostException e) {
+ <font color="#0000FF">.</font>      abort(&quot;Unable to connect to PDA VM&quot;, e);
+ <font color="#0000FF">.</font>   } catch (IOException e) {
+ <font color="#0000FF">.</font>      abort(&quot;Unable to connect to PDA VM&quot;, e);
+ <font color="#0000FF">.</font>   }
+<img src="images/tag_3.gif" align=CENTER width="24" height="13">  fEventDispatch = new EventDispatchJob();
+ <font color="#0000FF">.</font>   fEventDispatch.schedule();
+<img src="images/tag_4.gif" align=CENTER width="24" height="13">  DebugPlugin.getDefault().getBreakpointManager().addBreakpointListener(this);
+  }</pre>
+<h4>Communicate with interpreter</h4>
+<p>Now that communications with the debug sockets on the interpreter are 
+initialized, the debug target methods can send the appropriate commands. For 
+example, step and getVariableValue:</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.</font><font color="#0000FF">model</font>, <font size="-1">Class:</font> 
+  <font color="#0000FF">PDADebugTarget</font></u>
+<pre>  public void step() throws DebugException {
+     sendRequest(&quot;step&quot;);
+  }
+  private void sendRequest(String request) throws DebugException {
+    synchronized (fRequestSocket) {
+      fRequestWriter.println(request);
+      fRequestWriter.flush();
+      try {
+        // wait for &quot;ok&quot;
+        String response = fRequestReader.readLine();
+      } catch (IOException e) {
+        abort(&quot;Request failed: &quot; + request, e);
+      }
+    } 
+  }
+
+  protected IValue getVariableValue(PDAVariable variable) throws DebugException {
+     synchronized (fRequestSocket) {
+        fRequestWriter.println(&quot;var &quot; 
+           + variable.getStackFrame().getIdentifier() 
+           + &quot; &quot; + variable.getName());
+        fRequestWriter.flush();
+        try {
+           String value = fRequestReader.readLine();
+           return new PDAValue(this, value);
+        } catch (IOException e) {
+           abort(MessageFormat.format(&quot;Unable to retrieve value for variable {0}&quot;, 
+                   new String[]{variable.getName()}), e);
+        }
+     }
+     return null;
+  }</pre>
+<p>There are many more &quot;communicate with the interpreter&quot; methods. Notice 
+  that all communication with the interpreter is serialized using synchronized 
+  blocks – as mentioned previously, this is necessary because the Eclipse platform 
+  is inherently multi-threaded but our PDA interpreter is not.</p>
+<p>Note that our getVariableValue method is synchronous which goes against our 
+  <a href="#Blocking commands">earlier caveat</a> to avoid using blocking communication 
+  with the target due to the risk of freezing the Eclipse user interface. We chose 
+  the synchronous &quot;send the request and wait for reply&quot; rather than 
+  an asychronous &quot;send command and later receive the response in an event&quot; 
+  for its simplicity in explaining the essential concepts of communication.</p>
+<h4>Breakpoints are slightly more interesting</h4>
+<p>The add-a-breakpoint method is a little more interesting because it has to 
+check if 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> the breakpoint is valid and 
+  <img src="images/tag_2.gif" align=CENTER width="24" height="13"> active, but otherwise it has the 
+same “communicate with the interpreter” style. The key to determining if the 
+breakpoint is valid is realizing that breakpoint listeners (like this one) get 
+notified of all breakpoint changes, thus we filter for breakpoints 
+<img src="images/tag_3.gif" align=CENTER width="24" height="13"> supported by our debug model and for 
+  <img src="images/tag_4.gif" align=CENTER width="24" height="13"> our PDA program:</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.</font><font color="#0000FF">model</font>, <font size="-1">Class:</font> 
+  <font color="#0000FF">PDADebugTarget</font></u>
+<pre>   public void breakpointAdded(IBreakpoint breakpoint) {
+<img src="images/tag_1.gif" align=CENTER width="24" height="13">   if (supportsBreakpoint(breakpoint)) {
+         try {
+<img src="images/tag_2.gif" align=CENTER width="24" height="13">         if (breakpoint.isEnabled()) {
+               synchronized (fRequestSocket) {
+                  try {
+                     sendRequest(&quot;set &quot; 
+                       + (((ILineBreakpoint)breakpoint).getLineNumber() - 1));
+                  } catch (CoreException e) {
+                  }
+               }
+            }
+         } catch (CoreException e) {
+         }
+      }
+   }
+   public boolean supportsBreakpoint(IBreakpoint breakpoint) {
+<img src="images/tag_3.gif" align=CENTER width="24" height="13">   if (breakpoint.getModelIdentifier().equals(IPDAConstants.ID_PDA_DEBUG_MODEL)) {
+         try {
+            String program = getLaunch().getLaunchConfiguration()
+                  .getAttribute(IPDAConstants.ATTR_PDA_PROGRAM, 
+                        (String)null);
+            if (program != null) {
+               IMarker marker = breakpoint.getMarker();
+               if (marker != null) {
+                  IPath p = new Path(program);
+<img src="images/tag_4.gif" align=CENTER width="24" height="13">               return marker.getResource().getFullPath().equals(p);
+               }
+            }
+         } catch (CoreException e) {
+         } 
+      }
+      return false;
+   }</pre>
+<h4>Synchronizing with the interpreter at startup</h4>
+<p>The other interesting piece of our debug target is the startup code. When the 
+interpreter starts up, it has no breakpoints. Users, having set breakpoints in 
+the code using the Eclipse user interface, expect those breakpoints to work. 
+Thus, after the interpreter starts up, but before it processes any instructions, 
+the debug target has to reach in and set the initial breakpoints. These initial 
+breakpoints are known as <i>deferred breakpoints</i>.</p>
+<p>The standard way this initial setup is accomplished is by having the 
+interpreter suspend on startup, <img src="images/tag_2.gif" align=CENTER width="24" height="13"> wait 
+for the debug target to set all the breakpoints, and then 
+<img src="images/tag_3.gif" align=CENTER width="24" height="13"> have the debug target resume the 
+interpreter. (Our apologies to the reader here, but we’ve gotten a little out of 
+order in describing things. The 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> started method is called by our debug 
+event handler right after the interpreter starts. But at this point in the 
+paper, we have not described events, so you’ll just have to trust us on this 
+one.)</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue">pda.launching</font>, <font size="-1">Class:</font> <font color="#0000FF">PDADebugTarget</font></u>
+<pre><img src="images/tag_1.gif" align=CENTER width="24" height="13"> private void started() {
+       fireCreationEvent();
+<img src="images/tag_2.gif" align=CENTER width="24" height="13">    installDeferredBreakpoints();
+       try {
+<img src="images/tag_3.gif" align=CENTER width="24" height="13">       resume();
+       } catch( DebugException x ) {
+       }
+    }
+    private void installDeferredBreakpoints() {
+ <font color="#0000FF"> </font>     IBreakpoint[] breakpoints = DebugPlugin.getDefault().getBreakpointManager()
+ <font color="#0000FF"> </font>           .getBreakpoints(IPDAConstants.ID_PDA_DEBUG_MODEL);
+ <font color="#0000FF"> </font>     for (int i = 0; i &lt; breakpoints.length; i++) {
+ <font color="#0000FF"> </font>        breakpointAdded(breakpoints[i]);
+ <font color="#0000FF"> </font>     }
+ <font color="#0000FF"> </font>  }</pre>
+<p>Here’s a sequence diagram showing how the debug target, the interpreter, and 
+the events interact:</p>
+<p align="center"><img border="0" src="images/synchronize_w_interpreter.gif" width="432" height="390"></p>
+<p>Note that because the interpreter events are delivered over a TCP socket to 
+  the PDADebugTarget, even if the interpreter starts up and sends the &quot;started&quot; 
+  event before the PDATarget is instantiated, the &quot;started&quot; event will 
+  be queued in the socket. The potential race condition between the interpreter 
+  and debug target is eliminated by having the interpreter suspend on startup.</p>
+<h2>The debug events</h2>
+<p>The Eclipse debug model uses debug events (DebugEvent) to describe events that 
+  occur as a program is being debugged. Each element in the debug model has a 
+  specific set of events that is supports – all of this is documented in the Javadoc 
+  of DebugEvent and in the <i><cite>Platform Plug-in Developer Guide</cite></i>.</p>
+<h3>Code highlights of our debug events</h3>
+<p>As described <a href="#Interpreter Debug Interface">previously</a>, our example 
+  PDA interpreter uses two sockets to communicate with its debugger: a command 
+  channel and an event channel. Our debugger uses synchronous RPC over the command 
+  channel (send command, block, receive reply), but the events can arrive asynchronously 
+  so the debugger must use a separate thread to listen on the event channel.</p>
+<p>We create the separate event listener thread when we create the debug target 
+  (see previous). The main routine of the thread is a dispatch loop that reads 
+  from the event channel and dispatches to the appropriate event behavior:</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class:</font> <font color="#0000FF">PDADebugTarget.EventDispatchJob</font></u>
+<pre> <font color="#0000FF"> </font>  protected IStatus run(IProgressMonitor monitor) {
+    <font color="#0000FF"> </font>  String event = &quot;&quot;;
+    <font color="#0000FF"> </font>  while (!isTerminated() &amp;&amp; event != null) {
+       <font color="#0000FF"> </font>  try {
+          <font color="#0000FF"> </font>  event = fEventReader.readLine();
+          <font color="#0000FF"> </font>  if (event != null) {
+             <font color="#0000FF"> </font>  fThread.setBreakpoints(null);
+             <font color="#0000FF"> </font>  fThread.setStepping(false);
+             <font color="#0000FF"> </font>  …dispatch to the event behavior method…
+          <font color="#0000FF"> </font>  }
+       <font color="#0000FF"> </font>  } catch (IOException e) {
+          <font color="#0000FF"> </font>  terminated();
+    <font color="#0000FF"> </font>     }
+ <font color="#0000FF"> </font>     }
+    <font color="#0000FF"> </font>  return Status.OK_STATUS;
+ <font color="#0000FF"> </font>  }</pre>
+<p>Our interpreter sends six kinds of events (see <a href="#Interpreter Debug Interface">previous</a>), 
+  but we only handle four kinds with five subtypes. We simply (and safely) ignore 
+  the events that we do not yet handle.</p>
+<pre>    if (event.equals(&quot;started&quot;)) {
+       started();
+    } else if (event.equals(&quot;terminated&quot;)) {
+       terminated();
+    } else if (event.startsWith(&quot;resumed&quot;)) {
+       if (event.endsWith(&quot;step&quot;)) {
+          fThread.setStepping(true);
+          resumed(DebugEvent.STEP_OVER);
+       } else if (event.endsWith(&quot;client&quot;)) {
+          resumed(DebugEvent.CLIENT_REQUEST);
+       }
+    } else if (event.startsWith(&quot;suspended&quot;)) {
+       if (event.endsWith(&quot;client&quot;)) {
+          suspended(DebugEvent.CLIENT_REQUEST);
+       } else if (event.endsWith(&quot;step&quot;)) {
+          suspended(DebugEvent.STEP_END);
+       } else if (event.indexOf(&quot;breakpoint&quot;) &gt;= 0) {
+          breakpointHit(event);
+       }
+    }</pre>
+<p>The event handlers are also simple: they turn around and fire the appropriate 
+DebugEvent to all the listeners. As implementers of the debug model, we don’t 
+have to know who those listeners are, but curiosity gets the better of us and we 
+want to know. The answer is “the debug views”. The debug views listen for events 
+and use those events to update the user interface to show the current state of 
+the debugged program.</p>
+<p>In the debug target and the debug element:</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class:</font> <font color="#0000FF">PDADebugTarget</font></u>
+<pre> <font color="#0000FF"> </font>  private void resumed(int detail) {
+ <font color="#0000FF"> </font>     fSuspended = false;
+    <font color="#0000FF"> </font>  fThread.fireResumeEvent(detail);
+ <font color="#0000FF"> </font>  }</pre>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class:</font> <font color="#0000FF">PDADebugElement</font></u>
+<pre>    public void fireResumeEvent(int detail) {
+       fireEvent(new DebugEvent(this, DebugEvent.RESUME, detail));
+    }</pre>
+<p>Handling the suspended-due-to-breakpoint event in the debug target is a 
+little more involved because the IThread object keeps track of which breakpoint 
+was hit. The IThread object keeps track of the breakpoint that caused the 
+suspension in case the user interface wants to use that information in labels or 
+icons or some other view. To gather this information, we 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> extract the breakpoint number from the 
+PDA interpreter event message, 
+  <img src="images/tag_2.gif" align=CENTER width="24" height="13"> find the corresponding breakpoint 
+object, and then 
+<img src="images/tag_3.gif" align=CENTER width="24" height="13"> annotate the current thread object 
+with that breakpoint.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class:</font> <font color="#0000FF">PDADebugTarget</font></u>
+<pre>    private void breakpointHit(String event) {
+       int lastSpace = event.lastIndexOf(' ');
+       if (lastSpace &gt; 0) {
+          String line = event.substring(lastSpace + 1);
+<img src="images/tag_1.gif" align=CENTER width="24" height="13">       int lineNumber = Integer.parseInt(line);
+<img src="images/tag_2.gif" align=CENTER width="24" height="13">       IBreakpoint[] breakpoints = DebugPlugin.getDefault().getBreakpointManager()
+ <font color="#0000FF">.</font>              .getBreakpoints(IPDAConstants.ID_PDA_DEBUG_MODEL);
+ <font color="#0000FF">.</font>        for (int i = 0; i &lt; breakpoints.length; i++) {
+ <font color="#0000FF">.</font>           IBreakpoint breakpoint = breakpoints[i];
+ <font color="#0000FF">.</font>           if (supportsBreakpoint(breakpoint)) {
+ <font color="#0000FF">.</font>              if (breakpoint instanceof ILineBreakpoint) {
+ <font color="#0000FF">.</font>                 ILineBreakpoint lineBreakpoint = (ILineBreakpoint) breakpoint;
+ <font color="#0000FF">.</font>                 try {
+ <font color="#0000FF">.</font>                    if (lineBreakpoint.getLineNumber() == lineNumber) {
+<img src="images/tag_3.gif" align=CENTER width="24" height="13">                      fThread.setBreakpoints(new IBreakpoint[]{breakpoint});
+                         break;
+                      }
+                   } catch (CoreException e) {
+                   }
+                }
+             }
+          }
+       }
+       suspended(DebugEvent.BREAKPOINT);
+    }</pre>
+<h3>Pretty pictures of how our debug events work</h3>
+<p>Here are two sequences showing how the events arrive asynchronously and are 
+  processed by the Eclipse debug framework. First, here is how a step action from 
+  the user interface gets sent to the interpreter as a “step” command on the command 
+  channel. The interpreter operates asynchronously, sending events (“resume” and 
+  then “suspend”) back to the debugger by way of the event channel.</p>
+<p align="center"><img border="0" src="images/single_step.gif" width="444" height="435"></p>
+<p>Very similarly, here is the sequence for a resume action, followed by the 
+interpreter running for a while and then hitting a breakpoint:</p>
+<p align="center"><img border="0" src="images/run_until_breakpoint.gif" width="467" height="435"></p>
+<p>The astute reader will notice that the sequence diagram is exactly the same 
+  (except for the slightly different command and different subevents). This regularity 
+  to the structure and behavior is a deliberate design decision in the Eclipse 
+  debug framework.</p>
+<h2>Source lookup</h2>
+<p>Once our debug model and event handler are in place, the Eclipse debugger 
+will work with our interpreter, but its user interface will be quite generic and 
+uninteresting. For example, the generic debugger does not show or highlight 
+source code. </p>
+<p>Highlighting the current source code line or statement is de rigueur in 
+modern debuggers, so our next step is to enable what is known as “source code 
+lookup” in our debugger. To do so, we add three new pieces:</p>
+<ol>
+  <li>Our launch object needs a source locator.</li>
+  <li>The source locator object translates stack frames into source elements. In 
+  our case, the source elements are IFile objects.</li>
+  <li>Finally, our debug model presentation object maps the source elements (IFiles) 
+    to editor ids and inputs. Our example uses the default Eclipse text editor.</li>
+</ol>
+<p>To see how this works, let’s start by examining the Eclipse framework for 
+displaying source code of stack frames.</p>
+<h3>The most general case</h3>
+<p>In the most general case, the launch object has a source locator object. When 
+  the source code for a stack frame needs to be displayed, the stack frame is 
+  passed to the source locator method to retrieve the source element. The stack 
+  frame’s model identifier is used to find the debug model presentation object 
+  (by way of the corresponding extension). The debug model presentation maps the 
+  source element to an editor id and editor input, which are then used by the 
+  workbench to open an editor to display the source code.</p>
+<p align="center"><img border="0" src="images/scl_most_general_case.gif" width="620" height="283"></p>
+<h3>Extension defined source locator</h3>
+<p>If the launch object does not have a source locator object (that is, a source 
+  locator is not assigned by the launch delegate), the debug framework uses the 
+  sourceLocatorId attribute of the launchConfigurationType extension to instantiate 
+  an ISourceLocator object and store it in the launch object. Thereafter, the 
+  rest of the code works as previously described.</p>
+<p align="center"><img border="0" src="images/scl_extension_defined.gif" width="576" height="67"></p>
+<h3>Standard kind of source locator</h3>
+<p>If your source lookup mechanism is standard, that is, files in directories, 
+  you can use the Eclipse debug framework’s standard source lookup. The ISourceLookupDirector 
+  mechanism looks up source files in directories (and zips and jars) along a path 
+  (known as the source lookup path). The framework has three pieces:</p>
+<ul>
+  <li>participants (ISourceLookupParticipant) – objects that map an IStackFrame 
+    into a filename</li>
+  <li>containers (ISourceContainer) – objects that find files by filename in directories, 
+    zips, jars, etc.</li>
+  <li>source lookup tab (SourceContainerLookupTab) – an ILaunchConfigurationTab 
+    that provides a user interface for configuring and modifying a source lookup 
+    path.</li>
+</ul>
+<p>The ISourceLookupDirector is an ISourceLocator, so once you have implemented 
+an ISourceLookupDirector, you place the class name in the sourceLocator 
+extension.</p>
+<p align="center"><img border="0" src="images/scl_standard_kind.gif" width="599" height="259"></p>
+<h3>Standard implementation of standard kind of source locator</h3>
+<p>Although ISourceLookupDirector is available as an interface for 
+reimplementation, most debuggers use the default implementation provided by the 
+Eclipse debug framework. The AbstractSourceLookupDirector provides the algorithm 
+for looking source files up along a source path. The only unimplemented method 
+is initializeParticipants, which creates the collection of 
+ISourceLookupParticipants for mapping the stack frames to filenames.</p>
+<p align="center"><img border="0" src="images/scl_standard_implementation.gif" width="352" height="352">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+<h3>Default source path in the standard implementation</h3>
+<p>The AbstractSourceLookupDirector has one more trick up its sleeve: if the user 
+  has not specified the source path (that is, the source containers) either programmatically 
+  or by way of the SourceContainerLookupTab, the AbstractSourceLookupDirector 
+  will compute the default source path. Here’s how it works:</p>
+<p>When initialized, the AbstractSourceLookupDirector has a default source path 
+of a single container: a DefaultSourceContainer. The DefaultSourceContainer uses 
+an ISourcePathComputer (which in turn uses an ISourcePathComputerDelegate) to 
+compute the source path. The source path computer is reused to recompute the 
+default source path until such time as the source containers in the source 
+lookup director are explicitly set to something other than the default.</p>
+<p>The source path computer is defined for each launch configuration type using 
+the sourcePathComputer extension. The source path computer delegate has one 
+method: computeSourceContainers.</p>
+<p align="center"><img border="0" src="images/scl_default_source_path.gif" width="477" height="277"></p>
+<h3>Code highlights of our simple solution to source code lookup</h3>
+<p>The simplest solution to source code lookup is to reuse that wonderful 
+framework the Eclipse debug framework provides. Being good developers, we seek 
+to reuse rather than reinvent, so our example uses an 
+AbstractSourceLookupDirector to lookup source files, and a source path computer 
+to compute the default source lookup path. </p>
+<blockquote><i>Notation note: </i> 
+The six steps below are strongly interconnected and thus the code references 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> 
+  <img src="images/tag_2.gif" align=CENTER width="24" height="13"> 
+<img src="images/tag_3.gif" align=CENTER width="24" height="13"> 
+  <img src="images/tag_4.gif" align=CENTER width="24" height="13"> 
+<img src="images/tag_5.gif" align=CENTER width="24" height="13"> ... are uniform across the six 
+steps. In other words, the 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> in step 1 is the same as the 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> in step 3.</blockquote>
+<h4>Step 1. source locator</h4>
+<p>For additional simplicity, we chose to use the “extension defined source 
+locator” described above rather than having our launch delegate create and 
+assign the source locator to the launch object. Thus we start by adding
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> a source locator id to our launch 
+configuration type. Then we added an extension for our source locator id pointing to 
+  <img src="images/tag_2.gif" align=CENTER width="24" height="13"> our source lookup director class.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1"> 
+  Extension:</font> <font color="blue"> org.eclipse.debug.core.launchConfigurationTypes</font></u>
+<pre>    &lt;launchConfigurationType
+       …other attributes…
+<img src="images/tag_1.gif" align=CENTER width="24" height="13">    sourceLocatorId=&quot;org.eclipse.debug.examples.core.sourceLookupDirector.pda&quot;
+    &lt;/launchConfigurationType&gt;</pre>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1"> 
+  Extension: </font></u><img src="images/tag_1.gif" align=center width="24" height="13"><u> 
+  <font color="blue">org.eclipse.debug.core.sourceLocators</font></u>
+<pre>    &lt;sourceLocator
+       name=&quot;PDA Source Lookup Director&quot;
+<img src="images/tag_2.gif" align=CENTER width="24" height="13">    class=&quot;org.eclipse.debug.examples.core.pda.launching.PDASourceLookupDirector&quot;
+<img src="images/tag_1.gif" align=center width="24" height="13">    id=&quot;org.eclipse.debug.examples.core.sourceLookupDirector.pda&quot;&gt;
+    &lt;/sourceLocator&gt;</pre>
+<h4>Step 2. source lookup director</h4>
+<p>The abstract class does most of the work, but our PDASourceLocatorDirector 
+subclass of AbstractSourceLookupDirector still has to initialize 
+<img src="images/tag_3.gif" align=CENTER width="24" height="13"> the set of participants. In our case, 
+the set of participants is the singleton PDASourceLookupParticipant. Our 
+participant is trivial because in our debug model, 
+  <img src="images/tag_4.gif" align=CENTER width="24" height="13"> the stack frames keep track of their 
+source filenames.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.launching</font>, <font size="-1">Class: </font></u> 
+  <img src="images/tag_2.gif" align=center width="24" height="13"><u> <font color="#0000FF">PDASourceLocatorDirector</font></u>
+<pre>    public void initializeParticipants() {
+<img src="images/tag_3.gif" align=CENTER width="24" height="13">    addParticipants(new ISourceLookupParticipant[]{new PDASourceLookupParticipant()});
+    }</pre>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.launching</font>, <font size="-1">Class: </font></u> 
+  <img src="images/tag_3.gif" align=center width="24" height="13"><u> <font color="#0000FF">PDASourceLocatorParticipant</font></u>
+<pre>    public String getSourceName(Object object) throws CoreException {
+       if (object instanceof PDAStackFrame) {
+<img src="images/tag_4.gif" align=CENTER width="24" height="13">       return ((PDAStackFrame)object).getSourceName();
+       }
+       return null;
+    }</pre>
+<p>And that’s all it takes to configure, instantiate, and use the framework’s 
+source path lookup director.</p>
+<h4>Step 3. source path computer extension</h4>
+<p>Next we have to deal with the default source lookup path issue. Again, being 
+efficient, we use the framework provided source path computer extension as 
+explained above. We again 
+<img src="images/tag_5.gif" align=CENTER width="24" height="13"> add to our launch configuration 
+followed by augmenting the corresponding extension to point to our source path 
+computer class.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1"> 
+  Extension:</font> <font color="blue"> org.eclipse.debug.core.launchConfigurationTypes</font></u>
+<pre>    &lt;launchConfigurationType
+       …other attributes…
+<img src="images/tag_1.gif" align=CENTER width="24" height="13">    sourceLocatorId=&quot;org.eclipse.debug.examples.core.sourceLookupDirector.pda&quot;
+<img src="images/tag_5.gif" align=CENTER width="24" height="13">    sourcePathComputerId=&quot;org.eclipse.debug.examples.core.sourcePathComputer.pda&quot;
+    &lt;/launchConfigurationType&gt;</pre>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1"> 
+  Extension: </font></u> <img src="images/tag_5.gif" align=center width="24" height="13"><u> 
+  <font color="blue">org.eclipse.debug.core.sourcePathComputers</font></u>
+<pre>    &lt;sourcePathComputer
+<img src="images/tag_6.gif" align=CENTER width="24" height="13">    class=&quot;org.eclipse.debug.examples.core.pda.launching.PDASourcePathComputerDelegate&quot;
+<img src="images/tag_5.gif" align=center width="24" height="13">    id=&quot;org.eclipse.debug.examples.core.sourcePathComputer.pda&quot;&gt;
+    &lt;/sourcePathComputer&gt;</pre>
+<h4>Step 4. source path computer implementation</h4>
+<p>Our source path computer returns a one-element source path where the one 
+element is the ISourceContainer that contains the source file. This is the 
+longest method we have to write to get source lookup to work.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.launching</font>, <font size="-1">Class: </font></u> 
+  <img src="images/tag_6.gif" align=center width="24" height="13"><u> <font color="#0000FF">PDASourcePathComputerDelegate</font></u>
+<pre>    public ISourceContainer[] computeSourceContainers(
+          ILaunchConfiguration configuration, 
+          IProgressMonitor monitor) throws CoreException {
+       String path = configuration.getAttribute(
+             IPDAConstants.ATTR_PDA_PROGRAM, (String)null);
+       ISourceContainer sourceContainer = null;
+       if (path != null) {
+          IResource resource = ResourcesPlugin.getWorkspace().getRoot()
+                .findMember(new Path(path));
+          if (resource != null) {
+             IContainer container = resource.getParent();
+             if (container.getType() == IResource.PROJECT) {
+                sourceContainer = new ProjectSourceContainer(
+                      (IProject)container, false);
+             } else if (container.getType() == IResource.FOLDER) {
+                sourceContainer = new FolderSourceContainer(
+                      container, false);
+             }
+          }
+       }
+       if (sourceContainer == null) {
+          sourceContainer = new WorkspaceSourceContainer();
+       }
+       return new ISourceContainer[]{sourceContainer};
+    }</pre>
+<h4>Step 5. debug model presentation</h4>
+<p>As a penultimate step, we add the debugModelPresentation extension that will 
+map our source element (an IFile) to an editor for the workbench to display.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">ui</font>, <font size="-1"> 
+  Extension:</font> <font color="blue"> org.eclipse.debug.ui.debugModelPresentations</font></u>
+<pre>    &lt;debugModelPresentation
+<img src="images/tag_7.gif" align=CENTER width="24" height="13">    class=&quot;org.eclipse.debug.examples.ui.pda.launching.PDAModelPresentation&quot;
+<img src="images/tag_8.gif" align=center width="24" height="13">    id=&quot;org.eclipse.debug.examples.pda&quot;&gt;
+    &lt;/debugModelPresentation&gt;</pre>
+<p>The debug model is linked to the debug model presentation in the usual way 
+that Eclipse user interfaces are linked to Eclipse models: through the extension 
+id. For the debugger, the IDebugElement knows which debug model it is a part of.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="blue">core</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class:</font> <font color="#0000FF"> 
+  PDADebugElement</font></u>
+<pre>    public String getModelIdentifier() {
+<img src="images/tag_8.gif" align=center width="24" height="13">    return IPDAConstants.ID_PDA_DEBUG_MODEL;
+    }</pre>
+<p>The model presentation class has many methods, but for now the only two 
+interesting methods are those that translate source elements into editor ids and 
+inputs.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">ui</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class: </font></u> <img src="images/tag_7.gif" align=center width="24" height="13"><u> 
+  <font color="#0000FF">PDAModelPresentation</font></u>
+<pre>    public IEditorInput getEditorInput(Object element) {
+       if (element instanceof IFile)
+          return new FileEditorInput((IFile)element);
+       if (element instanceof ILineBreakpoint)
+          return new FileEditorInput((IFile)((ILineBreakpoint)element).getMarker().getResource());
+       return null;
+    }
+    public String getEditorId(IEditorInput input, Object element) {
+       if (element instanceof IFile || element instanceof ILineBreakpoint)
+          return &quot;org.eclipse.ui.DefaultTextEditor&quot;;
+       return null;
+    }</pre>
+<h4>Step 6. source path tab</h4>
+<p>The final step is to add the source path tab to our launch configuration dialog 
+  box. This is <img src="images/tag_9.gif" align=center width="24" height="13"> 
+  a simple one-line addition to our existing tab group class (you will recall 
+  that we had created the tab group class as part of our original launching code 
+  back when we read the first article of this series)</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">ui</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.launching</font>, <font size="-1">Class: </font><font color="#0000FF"> 
+  PDATabGroup</font></u>
+<pre>    public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
+       setTabs(new ILaunchConfigurationTab[] {
+          new PDAMainTab(),
+<img src="images/tag_9.gif" align=center width="24" height="13">       new SourceContainerLookupTab(),
+          new CommonTab()
+       });
+    }</pre>
+<h2><a name="Breakpoints">Breakpoints</a></h2>
+<p>Breakpoints are the final major component of a modern debugger that our debugger 
+  is still missing. The Eclipse debug framework support for breakpoints is documented 
+  in the <cite><i>Platform Plug-in Developer Guide</i></cite> under <b>Programmer’s 
+  Guide &gt; Program debug and launch support&gt; Debugging a program&gt; Breakpoints</b>. 
+  Our implementation follows that design.</p>
+<p>Because our assembly language is line-oriented, our breakpoints are line-oriented, 
+  that is, breakpoints are associated with lines and there can be at most one 
+  breakpoint per line. Other more complex languages have statement or expression-oriented 
+  breakpoints and multiple statements or expressions on a single line. We have 
+  left discussion of those to the third paper of this series <i> Enhancing the 
+  Eclipse Debugger</i>.</p>
+<blockquote><i>Notation note: </i> We use the same &quot;code references are uniform 
+  across the three steps&quot; in this section that we used in the previous section.</blockquote>
+<h4>Step 1. breakpoint objects</h4>
+<p>The first step to implementing our line-oriented breakpoints is to define our 
+breakpoint data structure using the breakpoint and the resource marker. As 
+described in the Platform Plug-in Developer Guide, the resource marker is the 
+mechanism by which the breakpoint is persisted between Eclipse sessions. We 
+conveniently reuse code by 
+<img src="images/tag_1.gif" align=CENTER width="24" height="13"> creating the marker for our line-oriented breakpoints 
+as a subtype of the Eclipse framework line-oriented breakpoint marker. Our 
+marker inherits all the attributes of the Eclipse marker and we do not need, 
+thus we do not define, any additional attributes.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">core</font>, <font size="-1"> 
+  Extension:</font> <font color="blue"> org.eclipse.debug.core.breakpoints</font></u>
+<pre>    &lt;breakpoint
+<img src="images/tag_1.gif" align=center width="24" height="13">    markerType=&quot;org.eclipse.debug.examples.core.pda.lineBreakpoint.marker&quot;
+<img src="images/tag_2.gif" align=CENTER width="24" height="13">    class=&quot;org.eclipse.debug.examples.core.pda.model.PDALineBreakpoint&quot;
+       id=&quot;org.eclipse.debug.examples.core.pda.lineBreakpoint&quot;&gt;
+    &lt;/breakpoint&gt;</pre>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">core</font></u>
+<pre>    &lt;extension
+<img src="images/tag_1.gif" align=CENTER width="24" height="13">    id=&quot;pda.lineBreakpoint.marker&quot;
+       point=&quot;org.eclipse.core.resources.markers&quot;&gt;
+       &lt;super type=&quot;org.eclipse.debug.core.lineBreakpointMarker&quot;/&gt;
+       &lt;persistent value=&quot;true&quot;/&gt;
+    &lt;/extension&gt;</pre>
+<p>Note that the org.eclipse.core.resources.markers extension id is &quot;pda.lineBreakpoint.marker&quot; 
+rather than &quot;org.eclipse.debug.examples.core.pda.lineBreakpoint.marker&quot; because 
+the id is automatically prefixed with plug-in id, i.e., &quot;org.eclipse.debug.examples.core&quot;.</p>
+<h4>Step 2. toggle breakpoint menu item</h4>
+<p>The toggle breakpoint menu item in the Eclipse debug perspective uses a re-targetable 
+  action provided by the debug platform to toggle the breakpoints using the appropriate 
+  debug model. The retargetable action asks the active part (editor, view, and 
+  so on), for its toggle breakpoint adapter. When available, the adapter is used 
+  as a delegate to toggle breakpoints. We use plugin.xml to register the factory 
+  for the particular editor we are using, then we define <img src="images/tag_3.gif" align=CENTER width="24" height="13"> 
+  the factory and <img src="images/tag_4.gif" align=center width="24" height="13"> 
+  the adapter. The adapter has to be an IToggleBreakpointsTarget, but other than 
+  that, this is standard Eclipse platform code.</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">ui</font>, <font size="-1"> 
+  Extension:</font> <font color="blue"> org.eclipse.core.runtime.adapters</font></u>
+<pre>    &lt;factory
+<img src="images/tag_3.gif" align=CENTER width="24" height="13">    class=&quot;org.eclipse.debug.examples.ui.pda.model.PDABreakpointAdapterFactory&quot;
+       adaptableType=&quot;org.eclipse.ui.texteditor.ITextEditor&quot;&gt;
+       &lt;adapter type=&quot;org.eclipse.debug.ui.actions.IToggleBreakpointsTarget&quot;/&gt;
+    &lt;/factory&gt;</pre>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">ui</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class: </font></u> <img src="images/tag_3.gif" align=center width="24" height="13"><u><font size="-1"> 
+  </font><font color="#0000FF"> PDABreakpointAdapterFactory</font></u>
+<pre>    public Object getAdapter(Object adaptableObject, Class adapterType) {
+       if (adaptableObject instanceof ITextEditor) {
+          ITextEditor editorPart = (ITextEditor) adaptableObject;
+          IResource resource = (IResource) editorPart.getEditorInput().getAdapter(IResource.class);
+          if (resource != null) {
+             String extension = resource.getFileExtension();
+             if (extension != null &amp;&amp; extension.equals(&quot;pda&quot;)) {
+<img src="images/tag_4.gif" align=center width="24" height="13">             return new PDALineBreakpointAdapter();
+             }
+          } 
+       }
+       return null;
+    }</pre>
+<p>Note that we use the plugin.xml to register the adapter rather than 
+programmatically registering the adapter. Using plugin.xml allows our adapter 
+(and thus our toggle breakpoints) to be active before our lazily loaded plug-in 
+ 
+is active.</p>
+<p>Also note that this isn’t a completely elegant solution because we are 
+registering an adapter factory for the text editor. Which means that if other 
+plug-ins  register a toggle breakpoints adapter for the text editor, one of the 
+plug-ins will work and the others will not, but there is no way to know which 
+one will be &quot;the winner&quot;. What we, 
+as language IDE developers, should really do is supply our own source code 
+editor and then adapt that editor rather than the generic text editor. However, 
+source code editing is out of the scope of this article and thus we use the 
+simple text editor for demonstrative purposes.</p>
+<h4>Step 3. toggle breakpoint action</h4>
+<p>Toggling a breakpoint is as expected: look for an existing breakpoint on the 
+line; 
+<img src="images/tag_5.gif" align=center width="24" height="13"> if there is a breakpoint, remove it; 
+<img src="images/tag_6.gif" align=center width="24" height="13"> if there is not a breakpoint, create 
+one (of the class we
+<img src="images/tag_2.gif" align=CENTER width="24" height="13"> registered in plugin.xml).</p>
+<p><u> <font size="-1">Plug-in:</font> <font color="#0000FF">ui</font>, <font size="-1">Package:</font> 
+  <font color="blue"> pda.model</font>, <font size="-1">Class: </font></u> <img src="images/tag_4.gif" align=center width="24" height="13"><u><font size="-1"> 
+  </font><font color="#0000FF"> PDALineBreakpointAdapter</font></u>
+<pre>    public void toggleLineBreakpoints(IWorkbenchPart part, ISelection selection) 
+             throws CoreException {
+       ITextEditor textEditor = getEditor(part);
+       if (textEditor != null) {
+          IResource resource = (IResource) textEditor.getEditorInput()
+                                              .getAdapter(IResource.class);
+          ITextSelection textSelection = (ITextSelection) selection;
+          int lineNumber = textSelection.getStartLine();
+          IBreakpoint[] breakpoints = DebugPlugin.getDefault().getBreakpointManager()
+                         .getBreakpoints(IPDAConstants.ID_PDA_DEBUG_MODEL);
+          for (int i = 0; i &lt; breakpoints.length; i++) {
+             IBreakpoint breakpoint = breakpoints[i];
+             if (resource.equals(breakpoint.getMarker().getResource())) {
+                if (((ILineBreakpoint)breakpoint).getLineNumber() == (lineNumber + 1)) {
+<img src="images/tag_5.gif" align=center width="24" height="13">                breakpoint.delete();
+                   return;
+                }
+             }
+          }
+<img src="images/tag_2.gif" align=CENTER width="24" height="13"><img src="images/tag_6.gif" align=center width="24" height="13">    PDALineBreakpoint lineBreakpoint = new PDALineBreakpoint(resource, lineNumber + 1);
+          DebugPlugin.getDefault().getBreakpointManager().addBreakpoint(lineBreakpoint);
+       }
+    }</pre>
+<p>The only mildly interesting twist in our code is that our breakpoints store 
+the user view of line numbers (the first line of a file is line 1) rather than 
+the implementation view of line numbers (the first line of the file is line 0). 
+But you, our dear reader, have vast experience dealing with off-by-one errors 
+and have already figured this out.</p>
+<p>The generic Eclipse text editor does not support double clicking in the ruler 
+  to create breakpoints the way the more specialized source code editors do, but 
+  again that is a feature of the way we chose to implement (or not implement) 
+  our source code editor rather than a feature of the Eclipse debug framework’s 
+  support for breakpoints.</p>
+<h2>Summary and further information</h2>
+<p>The Eclipse platform provides a very powerful framework that enables developers 
+  to add support for a new language quickly and easily. Having read this far, 
+  you now realize that adding debug support for a new language is a relatively 
+  simple task. There are a small number of classes to implement (eighteen in our 
+  example), and an even smaller number of extensions to specify (ten in our example). 
+  For more details on any aspect of the framework, we refer you to the API documentation 
+  of the Debug Platform and, for a very complete example, of the Java Debugger.</p>
+<p>Our journey, however, is not ended yet. The launch and debug facilities we 
+  have described and implemented in these first two papers are useful, but like 
+  a light read, will ultimately not be satisfying to most language implementers. 
+  We have described launching, debug target control (step/resume/suspend), basic 
+  debug element display, source lookup, and breakpoints. Most language implementers 
+  will also want watch points, more descriptive labels, informative icons, custom 
+  views and language specific actions. For details on these enhancements to the 
+  debug support, we refer you to the third paper of this trilogy, <i>Enhancing 
+  the Eclipse Debugger</i>, which is still under construction.</p>
+<h2>Acknowledgements</h2>
+<p>Thanks to Darin Swanson and Cameron Stevens for their careful reviews and 
+critiques that have improved this paper.</p>
+<h2>Source code</h2>
+<p><img src="images/tryit.gif" width="61" height="13"> To examine the entire source 
+  code, or to run the example, download the <a href="pda-plugins.zip">zip file</a> 
+  and unzip it into your Eclipse directory. Both plug-ins come with complete source 
+  code, although you will need your own installation of Perl to run the PDA interpreter. 
+  This article describes, and the included code requires, features that are available 
+  in Eclipse 3.0 or a later version.</p>
+<p><b>Trademarks</b></p>
+<p>IBM and Rational are registered trademarks of International Business Machines 
+  Corporation in the United States, other countries, or both.</p>
+<p>Linux is a trademark of Linus Torvalds in the United States, other countries, 
+  or both.</p>
+<p>Microsoft and Windows are trademarks of Microsoft Corporation in the United 
+  States, other countries, or both.</p>
+<p>Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. 
+  in the United States, other countries, or both.</p>
+<p>Other company, product, and service names may be trademarks or service marks 
+  of others.</p>
+<p></p>
+</body>
+</html>

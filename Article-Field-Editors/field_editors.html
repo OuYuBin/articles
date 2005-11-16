@@ -1,0 +1,554 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Simplifying Preference Pages with Field Editors</title>
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right"><font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2002 Object Technology International, Inc.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Simplifying Preference Pages with Field Editors</h1>
+
+<blockquote>
+  <b>Summary</b><br>
+  Even though preference pages can be simple to program, you can spend a 
+  lot of time getting them "just right." Field editors make this task faster and easier by providing the behavior
+  for storing, loading, and validating preferences. Field editors also define some of the behavior for grouping
+  and laying out widgets on a preference page.
+  <p>
+    <b> By Ryan Cooper, OTI</b> <br>
+    August 21, 2002</p>
+</blockquote>
+
+<hr width="100%">
+<h2>Introduction</h2>
+<p>
+  A field editor is an object that presents the user with the value of a preference from a preference store. 
+  It implements the loading, storing, and validating of its associated value. Instances of <tt>FieldEditor</tt> are most often
+  used in conjunction with a <tt>FieldEditorPreferencePage</tt>, which provides automatic validation handling and displays messages 
+  received from its field editors. We will discuss when field 
+  editors are most (and least) effective and briefly describe the available types of field editors. We will then explain how to use
+  them in both a <tt>FieldEditorPreferencePage</tt> and a regular <tt>PreferencePage</tt> using two example pages containing
+  some of the most commonly used field editor types. We will finish up with a discussion about writing your own field editors. 
+  This article will assume some knowledge of preference pages and preference stores.
+  If you aren't familiar with the way they work, check out Tod Creasey's article 
+  <a href="http://www.eclipse.org/articles/Article-Preferences/preferences.htm">Preferences in 
+  the Eclipse Workbench UI</a> before continuing with this article.
+</p>
+
+<h2>When to use field editors (and when not to)</h2>
+<p>
+  Most of the field editor types supplied by JFace were created to handle simple preference types. For example, there are no field editors 
+  to handle tree selections. Therefore, the simpler your preference page, the more useful field editors will be to you. If 
+  your page uses only simple widgets such as buttons, check boxes, and text fields, it's probably a good idea to use a 
+  <tt>FieldEditorPreferencePage</tt>. Doing so will prevent you from having to write any code to store, retrieve, or validate values.
+</p>
+<p>
+  If your preference page contains one or more complex widgets such as a <tt>List</tt> or <tt>Tree</tt>, a regular preference page can be
+  a better solution. Even so, you can use field editors for any simple preferences on the page. In this case, you can
+  call the appropriate methods of <tt>FieldEditor</tt> to store, retrieve, and validate values, instead of writing SWT level code yourself. 
+  Another option (discussed in the 
+  <a href="#writing">Writing your own field editors</a> section) is to write any new field editors that you will need.
+</p>
+<p>
+  Although <tt>FieldEditorPreferencePage</tt> is very convenient for creating preference pages with
+  simple layouts, it does not allow you the control over the layout that a regular <tt>PreferencePage</tt> does.
+  If you want to fine-tune the layout of a preference page, you should use a regular <tt>PreferencePage</tt> instead of a 
+  <tt>FieldEditorPreferencePage</tt>.
+</p>
+<p>
+  Sometimes field editors do not provide the access to widgets that you need. For example, you may need to set a selection listener on a 
+  widget contained in a field editor. However, the field editor may not provide access to its widget. In cases 
+  such as this one, it may be simpler not to use a field editor. As a rule of thumb, use field editors whenever possible, but only use a 
+  <tt>FieldEditorPreferencePage</tt> if all of the preference types on a page are supported by field editors or you are willing to 
+  write new field editors to support them. <tt>FieldEditorPreferencePage</tt> assumes that all preferences on the page are represented in 
+  field editors.
+  Any preference not represented by a <tt>FieldEditor</tt> will be ignored by many of the methods of <tt>FieldEditorPreferencePage</tt>.
+  For example, the value of such a preference will not be saved in the preference store when <tt>performOk()</tt> is called.
+</p>
+
+
+<h2>Types of field editors</h2>
+<p>
+  JFace provides nine concrete subclasses of <tt>FieldEditor</tt>. Each corresponds to a common widget grouping used to
+  present a preference. To illustrate some of these field editors, a screenshot of a preference page
+  for an imaginary HTML editor has been included. The available concrete field editors are:
+</p>
+<ul>
+  <li>
+    <b><tt>BooleanFieldEditor</tt></b> - This field editor takes the form of a checkbox with a label. It is used for presenting
+    boolean preferences.
+  </li>
+  <li>
+    <b><tt>IntegerFieldEditor</tt></b> - This field editor takes the form of a label and a text field. It is intended for presenting
+    integers, so any non-integer input is considered invalid. You can further refine the field validation by specifying a valid range for
+    the integer using <tt>setValidRange(int, int)</tt>.
+  </li>
+  <li>
+    <b><tt>StringFieldEditor</tt></b> - This field editor is very similar to <tt>IntegerFieldEditor</tt>. <tt>StringFieldEditor</tt>
+    is a more general-purpose field editor with simpler validation rules. Normally, any string is valid. However, you can
+    specify whether an empty string is valid or not by calling <tt>setEmptyStringAllowed(boolean)</tt>.
+  </li>
+  <li>
+    <b><tt>RadioGroupFieldEditor</tt></b> - This field editor takes the form of a group label and a set of radio buttons, each with a 
+    label of its own. It is used to present a set of mutually exclusive choices. A <tt>RadioGroupFieldEditor</tt> may
+    be optionally contained by a <tt>Group</tt> control which adds an etched border around the field editor.
+  </li>
+  <li>
+    <b><tt>ColorFieldEditor</tt></b> - This field editor is used to present color preferences. It consists of a label and a button
+    which displays the currently selected color. Clicking on the button opens a <tt>ColorDialog</tt>, allowing the user to choose
+    another color.
+  </li>
+  <li>
+    <b><tt>FontFieldEditor</tt></b> - This field editor is used to select font preferences. It consists of a label for the preference, 
+    a read-only text field containing the name, style, and size of the font, and a button with the label "Change...".
+    When the button is clicked, a <tt>FontDialog</tt> opens, allowing the user to choose a new font, change the font's style, and
+    change it's size. 
+  </li>
+  <li>
+    <b><tt>DirectoryFieldEditor</tt></b> - This field editor is used to display a directory path in the file system. It
+    consists of a label, a text field containing the directory path, and a button with the label "Browse...". Clicking on this
+    button allows the user to browse the file system and choose a new directory. 
+  </li>
+  <li>
+    <b><tt>FileFieldEditor</tt></b> - This field editor is similar to a <tt>DirectoryFieldEditor</tt>, but it allows the user
+    to select a file instead of a directory.
+  </li>
+  <li>
+    <b><tt>PathEditor</tt></b> - This field editor is the most complex concrete field editor supplied by JFace. It consists of a
+    title label, a list of directory paths, and a button bank to the left of the list with four buttons: "New...", "Remove", 
+    "Up", and "Down". The "New..." button allows the user to browse the file system and add a new path to the list. The "Remove" button 
+    removes the current selection from the list. The "Up" and "Down" buttons allow the user to change the order of the list items by
+    moving the selected item up or down. This field editor is not often used, but it is approprite when a preference keeps track of 
+    several paths such as the class paths for a compiler.
+  </li>
+</ul>
+<p align="center"><img src="field_editor_types.jpg"></p>
+<p align="center">Different types of field editors</p>
+
+<h2>How to use field editors</h2>
+<p>
+  This section will describe two example preference pages which make use of field editors. The two pages store the preferences for
+  a simple HTML editor. The editor has the ability to auto-format HTML (indenting nested tags a number of spaces
+  specified on the preference page), display text in different colors based on context, open a web browser for visually
+  checking HTML files, and perform some minimal error checking. The preference pages for the editor allow the user to configure
+  the preferences for these features.
+</p>
+
+<h3>Using field editors with a FieldEditorPreferencePage</h3>
+<p>
+  The main preference page for the HTML editor is a subclass of <tt>FieldEditorPreferencePage</tt>, since all of the preferences on 
+  the page are of types supported by field editors. 
+</p>
+<pre>
+class HTMLPreferencePage 
+	extends FieldEditorPreferencePage 
+	implements IWorkbenchPreferencePage {
+		// ...
+}
+</pre>
+<p>A subclass of <tt>FieldEditorPreferencePage</tt> only requires a few methods to
+  be implemented. Subclasses must instantiate and set a preference store for the preference page, as shown below:
+</p>
+<pre>
+public HTMLPreferencePage() {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	super(FieldEditorPreferencePage.GRID);
+		
+	// Set the preference store for the preference page.
+	IPreferenceStore store =
+		HTMLEditorPlugin.getDefault().getPreferenceStore();
+	setPreferenceStore(store);
+}
+</pre>
+<p>
+  The constructors for <tt>FieldEditorPreferencePage</tt> each take as an argument an <tt>int</tt> representing the layout style of the
+  page. In the above constructor, we use the constant 
+  <tt>FieldEditorPreferencePage.GRID</tt> (see <img src="images/tag_1.gif" height=13 width=24 align=CENTER>). This constant indicates 
+  that the controls of the field editors will be placed into a single grid
+  layout. The alternative constant is <tt>FieldEditorPreferencePage.FLAT</tt>, which indicates that each field editor is handled 
+  separately. <tt>GRID</tt> generally results in more visually appealing preference pages, so it is
+  the layout style constant you should usually use.
+</p>
+<p align="center"><img src="HTML_pref_page.jpg"></p>
+<p align="center">The HTML Editor Preference Page</p>
+<p>
+  Subclasses must also implement <tt>FieldEditorPreferencePage.createFieldEditors()</tt>. In this method, we instantiate all of the field 
+  editors on the page, and then add them to the page by calling
+  <tt>FieldEditorPreferencePage.addField(FieldEditor)</tt>. If field editors are instantiated but not added to the preference page, their
+  values will not be saved in the preference store, and will therefore have no effect. The following is the <tt>createFieldEditors()</tt>
+  method from our <tt>HTMLPreferencePage</tt>:
+</p>
+<pre>
+protected void createFieldEditors() {
+	// Initialize all field editors.
+	BooleanFieldEditor formatOnSave = new BooleanFieldEditor(
+		IPreferenceConstants.FORMAT_PREFERENCE, 
+		"&Format before saving", 
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(formatOnSave);
+	
+	SpacerFieldEditor spacer1 = new SpacerFieldEditor(
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(spacer1);
+	
+	IntegerFieldEditor indentSpaces = new IntegerFieldEditor(
+		IPreferenceConstants.INDENT_PREFERENCE,
+		"&Number of spaces to indent:",
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	indentSpaces.setValidRange(0, 10);
+	addField(indentSpaces);	
+	
+	SpacerFieldEditor spacer2 = new SpacerFieldEditor(
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(spacer2);
+
+	ColorFieldEditor commentColor = new ColorFieldEditor(
+		IPreferenceConstants.COMMENT_COLOR_PREFERENCE,
+		"C&omments:",
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(commentColor);
+	ColorFieldEditor errorColor = new ColorFieldEditor(
+		IPreferenceConstants.ERROR_COLOR_PREFERENCE,
+		"&Errors:",
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(errorColor);
+	ColorFieldEditor validColor = new ColorFieldEditor(
+		IPreferenceConstants.VALID_COLOR_PREFERENCE,
+		"&Valid text:",
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(validColor);
+			
+	FontFieldEditor font = new FontFieldEditor(
+		IPreferenceConstants.FONT_PREFERENCE,
+		"Edito&r font:",
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(font);
+			
+	SpacerFieldEditor spacer3 = new SpacerFieldEditor(
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(spacer3);
+	
+	FileFieldEditor webBrowser = new FileFieldEditor(
+		IPreferenceConstants.BROWSER_PREFERENCE,
+		"&Web browser:",
+		true,
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> 		getFieldEditorParent());
+	addField(webBrowser);	
+}
+</pre>
+<p>
+  In the above code (see <img src="images/tag_1.gif" height=13 width=24 align=CENTER>), a separate call is made to 
+  <tt>getFieldEditorParent()</tt> for each field editor. Your first instinct may be to cache this
+  method's return value in a local variable, and replace all the method calls with references to that variable. However, it is important
+  not to do so. According to the method's documentation, a new parent may be created each time the method is called. Caching the value
+  disobey's the method's contract.
+</p>
+<p> You may have noticed the use of <tt>SpacerFieldEditor</tt> in the above code. 
+  This is a new <tt>FieldEditor</tt> subclass implemented in the example. It is 
+  included in the zip file referred to in the <a href="#conclusion">Conclusion</a> 
+  section. It is used to add space to a preference page to make it look less cluttered. 
+  Unfortunately, JFace does not provide the ability to add space to a <tt>FieldEditorPreferencePage</tt>. 
+  This is a known deficiency in the JFace framework. Different developers have 
+  attempted several workarounds, but none have been entirely satisfactory. </p>
+<p>
+  Since a
+  <tt>SpacerFieldEditor</tt> doesn't represent a preference, you might not think it's necessary to add it to the 
+  page after instantiating it.
+  Since <tt>FieldEditorPreferencePage</tt> also controls the layout of the page, the page layout may become jumbled 
+  if there are any field editors that 
+  aren't added. Always call <tt>addField(FieldEditor)</tt> for each field editor on a 
+  <tt>FieldEditorPreferencePage</tt>.
+</p>
+
+<h3>Using field editors with a regular PreferencePage</h3>
+<p>
+  The HTML editor has a secondary preference page for controlling its error detecting facilities. There are currently two 
+  options: "Don't show errors" and "Show error if a closing tag is missing." We would like this to be an easily
+  expandable preference, so we will use a radio button group instead of a checkbox. <tt>RadioGroupFieldEditor</tt> is
+  suited for this preference. However, the page also contains a list (a list of HTML tags for which a closing tag
+  is not required), for which there is no suitable field editor, so we will subclass <tt>PreferencePage</tt> rather than
+  <tt>FieldEditorPreferencePage</tt>.
+</p>
+<pre>
+class ErrorPreferencePage 
+	extends PreferencePage 
+	implements IWorkbenchPreferencePage {
+		// ...
+}
+</pre>
+<p align="center"><img src="errors_pref_page.jpg"></p>
+<p align="center">The Errors Preference Page</p>
+<p>
+  You must write a little more code to manage your field editors when not using a <tt>FieldEditorPreferencePage</tt>. In addition to 
+  creating the preference store and instantiating field editors, you must write code to load preferences, store preferences,
+  and restore defaults. Without a <tt>FieldEditorPreferencePage</tt>, you can still take advantage of a field editor's 
+  self-validation via the <tt>FieldEditor.isValid()</tt> method, but you must write the code that calls this method.
+</p>
+<p>
+  When using field editors with a regular preference page, you should instantiate them in the <tt>createContents(Composite)</tt> method, 
+  just like
+  you would instantiate other items in the page layout. For example, here is
+  <tt>ErrorsPreferencePage.createContents(Composite)</tt>:
+</p>
+<pre>
+protected Control createContents(Composite parent) {
+	Composite top = new Composite(parent, SWT.LEFT);
+
+	// Sets the layout data for the top composite's 
+	// place in its parent's layout.
+	top.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+	// Sets the layout for the top composite's 
+	// children to populate.
+	top.setLayout(new GridLayout());
+			
+	errors = new RadioGroupFieldEditor(
+		IPreferenceConstants.ERRORS_PREFERENCE,
+		"Error conditions",
+		1,
+		new String[][] {
+			{"Don't show errors", 
+			 IPreferenceConstants.NO_ERRORS
+			},
+			{"Show error if a closing tag is missing", 
+			 IPreferenceConstants.ERROR_FOR_MISSING_CLOSING_TAG
+			}
+		},
+		top,
+		true);
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	errors.setPreferencePage(this);
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	errors.setPreferenceStore(getPreferenceStore());
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	errors.load();
+			
+	Label listLabel = new Label(top, SWT.NONE);
+	listLabel.setText("Tags which do not require closing tags:");
+	
+	exemptTagsList = new List(top, SWT.BORDER);
+	exemptTagsList.setItems(
+		HTMLEditorPlugin.getDefault().getExemptTagsPreference());
+
+	// ...
+	// The remainder of the code has been omitted for brevity.
+	// Download the zip file that accompanies this article 
+	// for the complete code.
+	// ...
+
+	return top;
+}
+</pre>
+<p>
+  There are a few extra lines of code that must be included when using a field editor with a regular preference page instead of a
+  <tt>FieldEditorPreferencePage</tt>. After instantiating the field editor, you must ensure that the field editor
+  knows its preference page and preference store (see <img src="images/tag_1.gif" height=13 width=24 align=CENTER> 
+  and <img src="images/tag_2.gif" height=13 width=24 align=CENTER>). Otherwise, you can not take advantage of the field
+  editor's built-in methods for storing and loading the preference. You must also load the preference (see
+  <img src="images/tag_3.gif" height=13 width=24 align=CENTER>) so the current value will be displayed when the page is opened.</p>
+<p>
+  Much of the <tt>createContents()</tt> method has been omitted from this example because it is quite long. The rest of the method 
+  lays out the list, 
+  buttons, and text field on the page. Using
+  <tt>FieldEditor</tt>s and <tt>FieldEditorPreferencePage</tt> whenever possible makes your preference page code cleaner and much
+  shorter. If you would like to compare the complete implementations of <tt>HTMLEditorPreferencePage</tt> and 
+  <tt>ErrorsPreferencePage</tt>, please download the zip file referred to in the <a href="#conclusion">Conclusion</a> section.
+</p>
+<p>
+  Since we are using a regular preference page, we must also override <tt>performOk()</tt> and <tt>performDefaults()</tt>. Here we
+  take advantage of some of <tt>FieldEditor</tt>'s methods to make our code a little cleaner. Here are the methods from
+  <tt>ErrorsPreferencePage</tt>:
+</p>
+<pre>
+protected void performDefaults() {
+	errors.loadDefault();
+	exemptTagsList.setItems(
+		HTMLEditorPlugin.getDefault().
+			getDefaultExemptTagsPreference());
+	// getDefaultExemptTagsPreference() is a convenience
+	// method which retrieves the default preference from
+	// the preference store.
+	super.performDefaults();
+}
+
+public boolean performOk() {
+	errors.store();
+	HTMLEditorPlugin.getDefault().
+		setExemptTagsPreference(exemptTagsList.getItems());
+
+	return super.performOk();
+}
+</pre>
+<p>
+  Subclassing <tt>PreferencePage</tt> instead of <tt>FieldEditorPreferencePage</tt> requires more coding, but it allows you to mix 
+  field editors with other controls necessary to display all the preferences.
+  If you would like to use a <tt>FieldEditorPreferencePage</tt> but there are no suitable field editors for the types of preferences
+  your page needs to show, you can always write your own field editors.
+</p>
+
+<h2 id="writing"><a name="writing"></a>Writing your own field editors</h2>
+<p>
+  If none of the concrete <tt>FieldEditor</tt> subclasses provided by JFace are suitable for your needs, you can always write 
+  your own type of field editor.
+  If you need a field editor just slightly different from an existing field editor subtype, you can subclass that type. In addition
+  to the concrete subclasses already discussed in this article, there are two abstract field editors which may be useful:
+</p>
+<ul>
+  <li>
+    <b><tt>StringButtonFieldEditor</tt></b> - This field editor can be subclassed to produce field editors that consist of a label,
+    a text field, and a button that performs some action. Both <tt>DirectoryFieldEditor</tt> and <tt>FileFieldEditor</tt> are
+    subclasses of this class.
+  </li>
+  <li>
+    <b><tt>ListEditor</tt></b> - This field editor can be subclassed to produce field editors that consist of a list of items and
+    a button bank. Three of the buttons ("Up", "Down", and "Remove") affect the selection of the list. The other button ("Add")
+    performs an action defined by subclasses to generate a new item for the list. <tt>PathEditor</tt> is a subclass of this class.
+  </li>
+</ul>
+<p>
+  If the field editor you need is not very similar to the subclasses provided by JFace, just subclass <tt>FieldEditor</tt>. 
+</p>
+<p>
+  For example, we can implement a field editor to replace the list, buttons, and text field in <code>ErrorsPreferencePage</code>. 
+  By doing so, 
+  we can subclass 
+  <tt>FieldEditorPreferencePage</tt> instead of <tt>PreferencePage</tt>. Let's write such a field editor and
+  re-implement <tt>ErrorsPreferencePage</tt> using it. 
+</p>
+<p>
+  When subclassing <tt>FieldEditor</tt>, there are six abstract methods that must be implemented. You may override other
+  methods of <tt>FieldEditor</tt>, but this is usually not necessary.
+  First of all, you must implement <tt>doStore()</tt>, <tt>doLoad()</tt>, and <tt>doLoadDefault()</tt>. These are the methods
+  which translate a preference in a preference store to what the user sees, and back again. These methods are usually fairly easy to
+  implement. For example, here are the methods from <tt>AddRemoveListFieldEditor</tt>:
+</p>
+<pre>
+protected void doLoad() {
+	String items = getPreferenceStore().getString(getPreferenceName());
+	setList(items);
+}
+
+protected void doLoadDefault() {
+	String items = getPreferenceStore().getDefaultString(getPreferenceName());
+	setList(items);
+}
+		
+protected void doStore() {
+	String s = createListString(list.getItems());
+	if (s != null)
+		getPreferenceStore().setValue(getPreferenceName(), s);
+}
+</pre>
+<p>
+  The above methods make use of two helper methods:
+</p>
+<ul>
+  <li> <tt>setList(String)</tt> parses a string representation of the list into 
+    an array and sets the items in the list to be the elements of that array. 
+  </li>
+  <li>
+    <tt>createListString(String[])</tt>
+    converts an array of list items into a single string
+    representation of the list. 
+  </li>
+</ul>
+
+ If you would like to see these helper methods or the full implementation
+  of the class, please download the zip file referred to in the <a href="#conclusion">Conclusion</a> section.
+</p>
+<p>
+  The other methods which need to be implemented involve the layout of the field editor. <tt>getNumberOfControls()</tt> is simple;
+  it just returns the highest number of controls that appear on one line in the field editor's parent composite.
+  For example, <tt>ListEditor</tt> contains two controls on one line (the list and the composite containing the buttons), so its 
+  <tt>getNumberOfControls</tt> method returns 2. <tt>adjustForNumColumns(int)</tt> must ensure that the field editor is displayed 
+  correctly if the number of columns in the parent <tt>Composite</tt> changes after this field editor has been laid out. 
+  <tt>doFillIntoGrid(Composite, int)</tt> initially lays out the field editor in the given parent <tt>Composite</tt>. Here are 
+  these methods from <tt>AddRemoveListFieldEditor</tt>:
+</p>
+<pre>
+public int getNumberOfControls() {
+	// The button composite and the text field.
+	return 2;
+}
+
+protected void adjustForNumColumns(int numColumns) {
+	((GridData)top.getLayoutData()).horizontalSpan = numColumns;
+}
+
+protected void doFillIntoGrid(Composite parent, int numColumns) {
+
+	top = parent;
+
+	GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+	gd.horizontalSpan = numColumns;
+	top.setLayoutData(gd);
+
+	Label label = getLabelControl(top);
+	GridData labelData = new GridData();
+	labelData.horizontalSpan = numColumns;
+	label.setLayoutData(labelData);
+
+	list = new List(top, SWT.BORDER);
+
+	// Create a grid data that takes up the extra 
+	// space in the dialog and spans both columns.
+	GridData listData = new GridData(GridData.FILL_HORIZONTAL);
+	listData.heightHint = 
+		convertVerticalDLUsToPixels(list, LIST_HEIGHT_IN_DLUS);
+	listData.horizontalSpan = numColumns;
+	
+	list.setLayoutData(listData);
+	list.addSelectionListener(new SelectionAdapter() {
+		public void widgetSelected(SelectionEvent e) {
+			selectionChanged();
+		}
+	});
+	
+	// Create a composite for the add and remove 
+	// buttons and the input text field.
+	Composite addRemoveGroup = new Composite(top, SWT.NONE);
+
+	GridData addRemoveData = new GridData(GridData.FILL_HORIZONTAL);
+	addRemoveData.horizontalSpan = numColumns;
+	addRemoveGroup.setLayoutData(addRemoveData);
+	
+	// ...
+}
+</pre>
+<p>
+  The <tt>doFillIntoGrid(Composite, int)</tt> method is quite long, so most of it has been omitted above. To view the full method,
+  download the zip file referred to in the <a href="#conclusion">Conclusion</a> section.
+</p>
+<p>
+  Now that we have a field editor that stores a list of strings and allows the user to add items and remove them,
+  the implementation of our error preference page becomes trivial. Since we have already learned how to subclass
+ <tt>FieldEditorPreferencePage</tt>, 
+  the new implementation isn't shown here.  It can be found in the file 
+  <tt>ErrorPreferencePage2.java</tt> in the zip file referred to in the <a href="#conclusion">Conclusion</a> section.
+</p>
+<h2 id="conclusion"><a name="conclusion"></a>Conclusion</h2>
+<p>
+  This article has familiarized you with the different types of field editors and demonstrated their use. It has explained
+  how field editors work so you can safely write your own. We encourage the use of
+  field editors, and hope the knowledge provided by this article will help you easily implement cleaner preference
+  pages for your plugins.
+</p>
+<p>
+  To run the example or view the source code for this article unzip <a href="field_editors.zip">field_editors.zip</a> 
+  into your <i>plugins/ </i>subdirectory.
+</p>
+
+</body>
+</html>
+

@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<link rel="stylesheet" href="../default_style.css">
+
+<title>EMF goes RCP</title>
+</head>
+
+<body link="#0000ff" vlink="#800080" lang="EN-US" xml:lang="EN-US">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright &copy; 2004 International Business Machines Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<h1 ALIGN="CENTER">EMF goes RCP</h1>
+<blockquote>
+<b>Summary</b>
+
+<br>
+  This article explains how you can use EMF to generate RCP applications. It assumes 
+  that you have already used EMF, or have at least read the articles and references 
+  available on the documentation section of the EMF web site.
+<p><b> By Marcelo Paternostro, IBM Toronto Lab</b> <br>
+    <font size="-1">October 12, 2004</font></p>
+</blockquote>
+
+<hr width="100%">
+
+<h2><a name="introduction">Introduction</a></h2>
+<p> One of the greatest new features of Eclipse 3.0 is the support for Rich Client 
+  Platform (RCP) applications. Using Ed Burnette's words from his <a href="../Article-RCP-1/tutorial1.html">Rich 
+  Client Tutorial Part 1</a>, &quot;RCP is basically a refactoring of the fundamental 
+  parts of Eclipse's UI, allowing it to be used for non-IDE applications.&quot; 
+</p>
+<p>
+For both Eclipse and EMF, adding support for RCP applications was not trivial.  Every class had to be inspected and any call to base plug-ins, such as <code>org.eclipse.core.resources</code> and <code>org.eclipse.ui.ide</code>, had to be carefully redesigned.  Without these changes, any RCP application would crash due to multiple <i>ClassNotFound</i> exceptions -- probably not the desired behavior for the application.
+</p>
+<p> In addition to carefully rewriting pieces of the code to make sure that calls 
+  to some platform plug-ins were guarded by conditional checks to verify whether 
+  a plug-in was loaded or not, the RCP work on EMF has also included the generation 
+  of a complete RCP application. After performing the steps described in this 
+  article, you will have an RCP application that is able to manipulate instances 
+  of your EMF model -- exactly as with ordinary EMF generated editors. </p>
+<p>
+This article was written using the EMF 2.0 and XSD 2.0 release builds, which require Eclipse 3.0.  You can download them <a href="http://download.eclipse.org/tools/emf/scripts/downloads-viewer.php?s=2.0/R200406280827">here</a>.
+</p>
+<h2><a name="generatingRCP">Generating an RCP application for the library example</a></h2>
+<h3>Creating the EMF project</h3>
+<p>
+Usually, the first step to create an application using EMF is to define the model that describes the instances that will be manipulated by the application.  This tutorial uses the <a target="code" href="http://dev.eclipse.org/viewcvs/indextools.cgi/%7Echeckout%7E/org.eclipse.emf/doc/org.eclipse.emf.doc/tutorials/xlibmod/library.xsd">library</a> XML schema to create the ecore model for which code will be generated.  If you need help performing any task below, consult the <a href="http://download.eclipse.org/tools/emf/scripts/docs.php?doc=tutorials/xlibmod/xlibmod.html">Generating an EMF Model using XML Schema (XSD)</a> tutorial.
+</p>
+<p>
+This is what you need to do:
+</p>
+<ol>
+<li>Start the Eclipse instance that contains the EMF and XSD features and plug-ins.</li>
+<li>Open the <b>File/New/Project...</b> dialog.</li>
+<li>Expand <b>Eclipse Modeling Framework</b> and select <b>EMF Project</b>. Click <b>Next</b>.</li>
+<li>Give the project a name, say, <i>library</i>. Then, click <b>Next</b>.</li>
+<li>Select <b>Load from an XML Schema</b> and then click <b>Next</b>.</li>
+<li>Click <b>Browse</b> and locate the library schema file, or enter the Web address if you do not have a local copy of the file.</li>
+<li>The schema will be examined and a default generator model name will be suggested. Click <b>Next</b>.</li>
+<li>Select the package <i>library</i> and click <b>Finish</b>.</li>
+</ol>
+<p>
+If nothing went wrong, you are now looking at the Generator Model Editor for the library.genmodel file.
+</p>
+<h3>One click away from RCP</h3>
+<p>
+For EMF users everything has been pretty much the same until now. The first difference is here: in order to tell EMF that you want to create an RCP application, you need to set the Rich Client Platform property under the Editor category to <i>true</i>. 
+</p>
+<p>
+<img src="images/show_properties.gif" alt="Opening the properties view"/>
+</p>
+<p>
+<img src="images/set_property.gif" alt="Setting the Rich Client Platform property to true"/>
+</p>
+<p>
+What you have done is set EMF to generate a full RCP application instead of generating only the editors and wizards to manipulate the instances of the ecore model. As indicated by the layout of the properties, the UI code -- usually located in the Editor plug-in -- is the only one affected when you choose RCP. This means that you will not have to change any lines in the Model and Edit code of your existing projects if you choose to deploy them as RCP applications.
+</p>
+<p>
+Back to the normal EMF routine: you should now generate the code for your model, edit and editors. Make sure that you save the changes on the <i>genmodel</i> editor.
+</p>
+<h2><a name="inspecting">Inspecting the generated code</a></h2>
+<p>
+Because you told EMF to create an RCP application, some special elements were introduced in the Editor plug-in. Two of them are quite important. The first one is the definition of an Eclipse Application in the manifest file (plugin.xml), which is used to launch the generated RCP application.
+</p>
+<pre class="code">
+  &lt;extension
+    point=&quot;org.eclipse.core.runtime.applications&quot;
+    id=&quot;LibraryEditorAdvisorApplication&quot;&gt;
+    &lt;application&gt;
+      &lt;run
+        class=&quot;org.eclipse.example.library.presentation.LibraryEditorAdvisor$Application&quot;&gt;
+      &lt;/run&gt;
+    &lt;/application&gt;
+  &lt;/extension&gt;
+</pre>
+<p>
+The best definition of this extension point is provided by its documentation:
+</p>
+<center>
+<table cellspacing="0" width="80%" cellpadding="3">
+  <tbody>
+    <tr>
+      <td align="left"> 
+        <p>
+        Platform runtime supports plug-ins which would like to declare main entry points. That is, programs which would like to run using the platform runtime but yet control all aspects of execution can declare themselves as an application. Declared applications can be run directly from the main platform launcher by specifying the -application argument where the parameter is the ID of an extension supplied to the applications extension point described here. This application is instantiated and run by the platform. Platform clients can also use the platform to look up and run multiple applications.
+        </p>
+      </td>
+    </tr>
+  </tbody> 
+</table>
+</center>
+<p>
+There are a couple of other platform extension points in the manifest file that are only generated for RCP applications, such as the definition of a perspective and some menu actions. Since you have probably already used these extension points, I won't explain them here.
+</p>
+<p> The second element worth mentioning is the class <code>org.eclipse.example.library.presentation.LibraryEditorAdvisor</code>. 
+  Besides being responsible for defining the appearance of the RCP application 
+  (features such as menus, status bar, and initial size), this class contains 
+  the following inner classes:</p>
+<table border="1" cellpadding="3" cellspacing="0">
+  <tr>
+    <td valign="top"><code>Application</code></td>
+    <td>This class implements the run method required by the <code>org.eclipse.core.runtime.IPlatformRunnable</code> interface, which is the first method executed when the RCP application is executed.</td>
+  </tr>
+  <tr>
+    <td valign="top"><code>Perspective</code></td>
+    <td>The perspective defines the initial layout of the application. EMF's default setting is to present the Outline and Property views to the right of the editor area.</td>
+  </tr>
+  <tr>
+    <td valign="top">Menu actions</td>
+    <td>Each menu action defined in this class is an extension of <code>org.eclipse.emf.common.ui.WorkbenchWindowActionDelegate</code> created to perform a specific task such as opening a saved resource or creating a new one.</td>
+  </tr>
+</table>
+<p>
+Finally, it is worth highlighting one issue related to the usage of editors in RCP applications. As mentioned before, an RCP application should not use the Eclipse resources and IDE facilities; otherwise, it would be a full Eclipse application. That rules out using <code>org.eclipse.ui.part.FileEditorInput</code> as the input of an editor. Looking at the editor's generated code, you see that the expected input is an instance of <code>org.eclipse.emf.common.ui.URIEditorInput</code>, which is a simple wrapper for any <code>org.eclipse.emf.common.util.URI</code> that is used to locate an EMF resource.
+</p>
+<h2><a name="testing">Testing the application</a></h2>
+<p>
+Using Eclipse to launch an RCP application, you are basically launching a Run-time Workbench. Some extra steps are required to specify that you want to use the generated application instead of the default one (<code>org.eclipse.ui.ide.workbench</code>) and to make sure that only the appropriate plug-ins are loaded into the runtime.
+</p>
+<p>
+The steps below will guide you through the process of creating the Run configuration:
+</p>
+<ol>
+  <li>In the Java perspective, click the <b>Run...</b> menu.<p>
+    <img src="images/run_menu.gif" alt="Preparing to run the application"/></p> </li>
+  <li>Create a new <b>Run-time Workbench</b> configuration to be tailored for 
+    the RCP application. 
+    <p><img src="images/configuration_new.gif" alt="Creating a new configuration"/> 
+    </p>
+  </li>
+  <li>The configuration settings are: 
+    <ul>
+      <li>Name: <b>RCP</b></li>
+      <li>Run an application: <b>library.editor.LibraryEditorAdvisorApplication</b>
+	</ul>
+        <p>You should also select the <b>Clear workspace data before launching</b> 
+          check box. An RCP application's workspace is usually only used to store 
+          application settings such as location and menu information. </p>
+        <p>As shown in the picture below, you can also define: 
+        <ul>
+          <li>the JVM property <code>java.endorsed.dirs</code> to avoid the Crimson 
+            DOM problem described almost everywhere in the EMF <a href="http://www.eclipse.org/emf">site</a>.</li>
+          <li>the program argument <code>-consoleLog</code> that tells Eclipse 
+            to output any error or warning to the Console view besides registering 
+            it on the <i>.metadata</i> log file. 
+          </li>
+        </ul>
+            <p><img src="images/configuration_tab1.gif" alt="Setting the application to be executed"/> 
+            </p>
+      </li>
+  </li>
+  <li>On the second tab, you should define the plug-ins that will be available 
+    when running the application. 
+    <ol STYLE="list-style-type: lower-alpha">
+      <li>Select the <b>Choose plug-ins and fragments to launch from the list</b> 
+        option.</li>
+      <li>Click <b>Deselect All</b>.</li>
+      <li>Select the editor plug-in (<code>library.editor</code>) from the list.</li>
+      <li>Click <b>Add Required Plug-ins</b>.</li>
+    </ol>
+    <p> <img src="images/configuration_tab2_add_required.gif" alt="Adding the required plug-ins"/> 
+    </p>
+    <p>When Eclipse looks for the required plug-ins to run <code>library.editor</code>, 
+      it also selects the optional dependencies declared by all the used plug-ins. 
+      To ensure that the test will use only the minimum number of plug-ins, you 
+      should uncheck: 
+    <ul>
+      <li>org.eclipse.core.resources</li>
+      <li>org.eclipse.core.runtime.compatibility</li>
+      <li>org.eclipse.ui.ide</li>
+      <li>org.eclipse.update.ui</li>
+    </ul>
+    <p>You need to update this list every time you add a plug-in to the runtime. 
+    </p>
+  </li>
+  <li>To avoid annoying and time-consuming problems related to plug-in activation, 
+    I suggest that you clean the configuration before launching the RCP application. 
+    This is handy during development when it is common to change the plug-in dependencies. 
+    <p> <img src="images/configuration_tab4.gif" alt="Cleaning the configuration"/> 
+    </p>
+  </li>
+  <li>After clicking <b>Run</b>, this is what you should see: 
+    <p><img src="images/library_app.gif" alt="The RCP application"/> </p>
+    <p>Although it looks like a regular Eclipse application, this is an RCP application. 
+      It is able to manipulate instances of your model, serializing them in the 
+      file system without using Eclipse's repository.</p>
+  </li>
+  <li>Now that your application is running, you can, for example, create a new 
+    instance of the Library model. 
+    <p><img src="images/library_app_file_new.gif" alt="Creating a new resource"/> 
+    </p>
+  </li>
+  <li>You will need to specify where the resource will be saved. 
+    <p>
+      <img src="images/library_app_new_wizard.gif" alt="New library wizard"/> 
+    </p>
+    <p> If you forget to type the file extension, the application won't be able 
+      to locate the appropriate editor to manipulate your object and will display 
+      an error message. </p>
+  </li>
+  <li>After creating the resource, its editor will be presented and you can change 
+    it as you would in a full Eclipse application. 
+    <p>
+      <img src="images/library_app_editor.gif" alt="The EMF editor"/> </p>
+  </li>
+</ol>
+<h2><a name="conclusion">Conclusion</a></h2>
+<p> This tutorial has shown how EMF can be used to create an RCP application to 
+  manipulate instances of your models and how you can configure Eclipse to test 
+  it. I recommend reading the articles mentioned below if you are considering 
+  going deeper into RCP and EMF. They cover many details that I have omitted. 
+</p>
+<h2><a name="references">References</a></h2>
+<p> <a href="../Article-RCP-1/tutorial1.html">RCP Tutorial Part 1</a> <br />
+  <a href="../Article-RCP-2/tutorial2.html">RCP Tutorial Part 2</a> <br />
+  <a href="../Article-RCP-3/tutorial3.html">RCP Tutorial Part 3</a> </p>
+<p>
+<a href="http://download.eclipse.org/tools/emf/scripts/docs.php?doc=references/overview/EMF.html">The Eclipse Modeling Framework Overview</a>
+<br /><a href="http://download.eclipse.org/tools/emf/scripts/docs.php?doc=tutorials/xlibmod/xlibmod.html">Generating an EMF Model using XML Schema (XSD)</a>
+</p>
+<p>
+<small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States, other countries, or both.</small><br>
+<small>Microsoft and Windows are trademarks of Microsoft Corporation in the United States, other countries, or both.</small><br>
+<small>Linux is a trademark of Linus Torvalds in the United States, other countries, or both.</small><br>
+<small>Other company, product, and service names may be trademarks or service marks of others.</small>
+</p>
+</body>
+</html>
