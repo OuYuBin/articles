@@ -46,7 +46,7 @@
           an article? See <a href="contributing.html">how
           to contribute an article</a>.</p>
 	  <p>Besides these, a number of other web sites carry technical articles about
-      Eclipse. You cand find pointers to these on the <a href="../community/main.html#EclipseInformation">Eclipse
+      Eclipse. You can find pointers to these on the <a href="../community/main.html#EclipseInformation">Eclipse
       Community page</a>.
 
  $articles
