@@ -418,7 +418,9 @@ class UpdateHandler {
 	function & get_next($name, $attributes) {
 		if (strcasecmp($name, "author") == 0) {
 			return new AuthorHandler($this->update);
-		} else {
+		} else if (strcasecmp($name, "reason") == 0) {
+			return new SimplePropertyHandler($this->update, "reason");
+		} else{
 			return new DoNothingHandler();
 		}
 	}

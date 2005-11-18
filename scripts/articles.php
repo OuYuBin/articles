@@ -31,7 +31,7 @@ class ArticleListing {
 		}
 
 		$this->add_recent_article($article);
-		$this->categories["general"]->add_article($article);
+		$this->categories["all"]->add_article($article);
 	}
 
 	function add_recent_article(& $article) {
