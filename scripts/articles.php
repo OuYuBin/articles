@@ -25,13 +25,13 @@ class ArticleListing {
 		foreach ($article->categories as $category_id) {
 			$category = $this->categories[$category_id];
 			if ($category) {
-				$category->add_article($article);
+				// TODO Yucky work-around. For some reason =& isn't working... investigate
+				$this->categories[$category_id]->add_article($article);
 			}
 		}
 
 		$this->add_recent_article($article);
-		$category = $this->categories["general"];
-		$category->add_article($article);
+		$this->categories["general"]->add_article($article);
 	}
 
 	function add_recent_article(& $article) {
