@@ -363,7 +363,6 @@ class ArticleCategoryHandler extends SimpleTextHandler {
 	}
 
 	function end($name) {
-		echo $this->article->title . " category: " . $this->text . "<br>";
 		array_push($this->article->categories, $this->text);
 	}
 }
