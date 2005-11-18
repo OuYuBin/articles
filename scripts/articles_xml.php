@@ -1,5 +1,6 @@
 <?php
 
+
 #*****************************************************************************
 #
 # news.php
@@ -15,39 +16,10 @@
 // This function generates HTML based on the article information provided
 // in the file named $file_name
 function articles_as_html() {
-	$file_name = "articles.html";
-
-	// First look to see if the html content has been cached.
-	// If the cache file exists and it is less than the threadshold
-	// (currently 3 months) old, then use it. Otherwise, recompute.
-	if (is_file($file_name)) {
-		if (filemtime($file_name) > strtotime("-3 month")) {
-			$file = fopen($file_name, "r");
-			$html = fread($file, filesize($file_name));
-			fclose($file);
-
-			return $html;
-		}
-	}
-
 	$html = "";
 	$listing = xml_to_ArticleListing();
 	$listing->to_html(& $html);
 	return $html;
-}
-
-function compute_and_cache_articles_as_html() {
-	$file_name = "articles.html";
-
-	$html = "";
-	$listing = xml_to_ArticleListing();
-	$listing->to_html(& $html);
-
-	// Write the html content to a file cache.
-	$file = fopen($file_name, "w");
-	fwrite($file, $html);
-	fclose($file);
-
 }
 
 function xml_to_ArticleListing() {
@@ -57,7 +29,7 @@ function xml_to_ArticleListing() {
 	return $listing;
 }
 
-function & get_categories(& $listing) {
+function get_categories(& $listing) {
 	global $handler;
 	$handler = new CategoryXmlHandler($listing);
 
@@ -70,7 +42,10 @@ function get_articles(& $listing) {
 		if (is_dir($dir)) {
 			$file_name = $dir.DIRECTORY_SEPARATOR."about.xml";
 			if (is_file($file_name)) {
-				$listing->add_article(get_article($file_name));
+				echo "Found $file_name<br>";
+				$article = get_article($file_name);
+				echo "Article: $article->title<br>";
+				$listing->add_article($article);
 			}
 		}
 	}
@@ -293,13 +268,15 @@ class CategoryHandler {
 	}
 
 	function end($name) {
+		$title = $this->category->title;
+		echo "Adding category: $title<br>";
 		$this->listing->add_category($this->category);
 	}
 }
 
 class ArticleXmlHandler extends XmlHandler {
 	var $article;
-	
+
 	function ArticleXmlHandler() {
 		parent :: XmlHandler();
 		$this->article = new Article();
@@ -342,11 +319,11 @@ class ArticleHandler {
 	var $article;
 
 	function ArticleHandler(& $article, & $attributes) {
-		$this->article =& $article;
+		$this->article = & $article;
 		$this->article->link = $attributes['LINK'];
-		$this->article->categories = array();
-		$this->article->updates = array();
-		$this->article->authors = array();
+		$this->article->categories = array ();
+		$this->article->updates = array ();
+		$this->article->authors = array ();
 	}
 
 	function data($data) {
@@ -359,20 +336,20 @@ class ArticleHandler {
 			if (strcasecmp($name, "date") == 0) {
 				return new SimplePropertyHandler($this->article, "date");
 			} else
-			if (strcasecmp($name, "abstract") == 0) {
-				return new SimplePropertyHandler($this->article, "abstract");
-			} else
-			if (strcasecmp($name, "category") == 0) {
-				return new ArticleCategoryHandler($this->article);
-			} else
-			if (strcasecmp($name, "author") == 0) {
-				return new AuthorHandler($this->article);
-			} else
-			if (strcasecmp($name, "update") == 0) {
-				return new UpdateHandler($this->article, $attributes);
-			} else {
-				return new DoNothingHandler();
-			}
+				if (strcasecmp($name, "abstract") == 0) {
+					return new SimplePropertyHandler($this->article, "abstract");
+				} else
+					if (strcasecmp($name, "category") == 0) {
+						return new ArticleCategoryHandler($this->article);
+					} else
+						if (strcasecmp($name, "author") == 0) {
+							return new AuthorHandler($this->article);
+						} else
+							if (strcasecmp($name, "update") == 0) {
+								return new UpdateHandler($this->article, $attributes);
+							} else {
+								return new DoNothingHandler();
+							}
 	}
 
 	function end($name) {
@@ -383,11 +360,11 @@ class ArticleHandler {
 
 class ArticleCategoryHandler extends SimpleTextHandler {
 	var $article;
-	
-	function ArticleCategoryHandler(&$article) {
-		$this->article =& $article;
+
+	function ArticleCategoryHandler(& $article) {
+		$this->article = & $article;
 	}
-	
+
 	function end($name) {
 		array_push($this->article->categories, $this->text);
 	}
@@ -398,7 +375,7 @@ class AuthorHandler {
 	var $author;
 
 	function AuthorHandler(& $owner) {
-		$this->owner =& $owner;
+		$this->owner = & $owner;
 		$this->author = new Author();
 	}
 
@@ -412,14 +389,14 @@ class AuthorHandler {
 			if (strcasecmp($name, "company") == 0) {
 				return new SimplePropertyHandler($this->author, "company");
 			} else
-			if (strcasecmp($name, "email") == 0) {
-				return new SimplePropertyHandler($this->author, "email");
-			} else
-			if (strcasecmp($name, "link") == 0) {
-				return new SimplePropertyHandler($this->author, "link");
-			} else {
-				return new DoNothingHandler();
-			}
+				if (strcasecmp($name, "email") == 0) {
+					return new SimplePropertyHandler($this->author, "email");
+				} else
+					if (strcasecmp($name, "link") == 0) {
+						return new SimplePropertyHandler($this->author, "link");
+					} else {
+						return new DoNothingHandler();
+					}
 	}
 
 	function end($name) {
@@ -431,11 +408,11 @@ class UpdateHandler {
 	var $owner;
 	var $update;
 
-	function UpdateHandler(& $owner, &$attributes) {
-		$this->owner =& $owner;
+	function UpdateHandler(& $owner, & $attributes) {
+		$this->owner = & $owner;
 		$this->update = new Update();
 		$this->update->date = strtotime($attributes['DATE']);
-		$this->update->authors = array();
+		$this->update->authors = array ();
 	}
 
 	function data($data) {
@@ -443,10 +420,10 @@ class UpdateHandler {
 
 	function & get_next($name, $attributes) {
 		if (strcasecmp($name, "author") == 0) {
-				return new AuthorHandler($this->update);
-			} else {
-				return new DoNothingHandler();
-			}
+			return new AuthorHandler($this->update);
+		} else {
+			return new DoNothingHandler();
+		}
 	}
 
 	function end($name) {
@@ -587,4 +564,5 @@ function & array_last(& $array) {
 //	}
 //	
 ?>
+
 
