@@ -22,10 +22,8 @@ class ArticleListing {
 	}
 
 	function add_article(& $article) {
-		echo "<br>";
 		foreach ($article->categories as $category_id) {
-			echo $category_id;
-			$category = $this->categories[$category_id];
+			$category = & $this->categories[$category_id];
 			if (is_object($category)) {
 				$category->add_article($article);
 			}

@@ -18,7 +18,7 @@
 function articles_as_html() {
 	$html = "";
 	$listing = xml_to_ArticleListing();
-	$listing->to_html(& $html);
+	$listing->to_html($html);
 	return $html;
 }
 
@@ -85,7 +85,7 @@ function parse_xml_file($file_name) {
  * The $handler variable is global. It manages all the call backs
  * that come (indirectly) from the SAX parser.
  */
-$handler;
+$handler = null;
 
 /*
  * SAX parser callback method to handle the start of an element.
