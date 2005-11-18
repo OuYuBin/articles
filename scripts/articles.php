@@ -23,14 +23,15 @@ class ArticleListing {
 
 	function add_article(& $article) {
 		foreach ($article->categories as $category_id) {
-			$category = & $this->categories[$category_id];
-			if (is_object($category)) {
+			$category = $this->categories[$category_id];
+			if ($category) {
 				$category->add_article($article);
 			}
 		}
 
 		$this->add_recent_article($article);
-		$this->categories["general"]->add_article($article);
+		$category = $this->categories["general"];
+		$category->add_article($article);
 	}
 
 	function add_recent_article(& $article) {
