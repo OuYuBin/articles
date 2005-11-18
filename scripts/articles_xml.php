@@ -42,9 +42,7 @@ function get_articles(& $listing) {
 		if (is_dir($dir)) {
 			$file_name = $dir.DIRECTORY_SEPARATOR."about.xml";
 			if (is_file($file_name)) {
-				echo "Found $file_name<br>";
 				$article = get_article($file_name);
-				echo "Article: $article->title<br>";
 				$listing->add_article($article);
 			}
 		}
@@ -269,7 +267,6 @@ class CategoryHandler {
 
 	function end($name) {
 		$title = $this->category->title;
-		echo "Adding category: $title<br>";
 		$this->listing->add_category($this->category);
 	}
 }
@@ -366,6 +363,7 @@ class ArticleCategoryHandler extends SimpleTextHandler {
 	}
 
 	function end($name) {
+		echo $this->article->title . " category: " . $this->text . "<br>";
 		array_push($this->article->categories, $this->text);
 	}
 }
