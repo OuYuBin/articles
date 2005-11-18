@@ -32,7 +32,7 @@ class ArticleListing {
 		$this->add_recent_article($article);
 	}
 
-	private function add_recent_article(& $article) {
+	function add_recent_article(& $article) {
 		// If there is no "recent" category, bail out.
 		$category = $this->categories["recent"];
 		if (!is_object(category))
