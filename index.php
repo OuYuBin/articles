@@ -26,7 +26,7 @@
 
 	# End: page-specific settings
 	#
-	include("scripts/articles_from_xml.php");
+	include("scripts/articles.php");
 	$articles = articles_as_html();
 //	include('articles2.php');
 //	$articles=articles_as_html();

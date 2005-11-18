@@ -31,7 +31,8 @@ function articles_as_html() {
 	}
 
 	$html = "";
-	xml_to_ArticleListing()->to_html(& $html);
+	$listing = xml_to_ArticleListing();
+	$listing->to_html(& $html);
 	return $html;
 }
 
@@ -39,7 +40,8 @@ function compute_and_cache_articles_as_html() {
 	$file_name = "articles.html";
 
 	$html = "";
-	xml_to_ArticleListing()->to_html(& $html);
+	$listing = xml_to_ArticleListing();
+	$listing->to_html(& $html);
 
 	// Write the html content to a file cache.
 	$file = fopen($file_name, "w");

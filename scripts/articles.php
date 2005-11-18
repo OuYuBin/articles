@@ -126,7 +126,7 @@ class Article {
 	}
 
 	// Render the article's authors to html.
-	private function authors_to_html($authors) {
+	function authors_to_html($authors) {
 		$count = count($authors);
 
 		if ($count == 0)
@@ -206,7 +206,7 @@ class Update {
 	}
 
 	// Render the article's authors to html.
-	private function authors_to_html($authors, & $html) {
+	function authors_to_html($authors, & $html) {
 		$count = count($authors);
 
 		// If there is at least one author, print their information
