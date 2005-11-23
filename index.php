@@ -27,30 +27,42 @@
 	# End: page-specific settings
 	#
 	include("scripts/articles.php");
-	$articles = articles_as_html();
+	$filter = $_GET['filter'];
+	if (!$filter) $filter = 'all';
+	$categories = get_categories_for_filtering_as_html('/articles/index.php', $filter);
+	$articles = get_articles_as_html($filter);
 //	include('articles2.php');
 //	$articles=articles_as_html();
 //	$articles=abstracts_to_html('articles.xml');
 	# Paste your HTML content between the EOHTML markers!	
 	$html = <<<EOHTML
-	
-<div id="midcolumn">
-	<h1>$pageTitle</h1>
-	<h2>Open Source Community</h2>
+<div id="maincontent">
+	<div id="midcolumn">
+		<h1>$pageTitle</h1>
+			<img src="images/articles.gif" align="right">
+			<p>The following articles have been written by members of the 
+			development team and other members of the eclipse community. 
+			You too can contribute! Eclipse Corner depends on contributions 
+			from people like you.</p>
+      
+      		<p>Interested in writing an article? See <a href="contributing.html">how
+          	to contribute an article</a>.</p>
+          	
+          	<p>Besides these, a number of other web sites carry technical articles about
+			Eclipse. You can find pointers to these on the 
+			<a href="../community/main.html#EclipseInformation">Eclipse Community page</a>.
 
-      <p>The following articles
-        have been written by members of the development team and other members
-        of the eclipse community. You too can contribute! Eclipse Corner depends
-        on contributions from people like you.</p>
-      <p>Interested in writing
-          an article? See <a href="contributing.html">how
-          to contribute an article</a>.</p>
-	  <p>Besides these, a number of other web sites carry technical articles about
-      Eclipse. You can find pointers to these on the <a href="../community/main.html#EclipseInformation">Eclipse
-      Community page</a>.
-
- $articles
- </div>
+		$articles
+	</div>
+		<div id="rightcolumn">
+		<div class="sideitem">
+			<h6>Filter</h6>
+			<ul>
+			$categories
+			</ul>
+		</div>
+	</div>
+</div>
 EOHTML;
 
 	# Generate the web page
