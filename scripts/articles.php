@@ -1,5 +1,6 @@
 <?php
 
+
 #*****************************************************************************
 #
 # Article.php
@@ -13,12 +14,81 @@
 #****************************************************************************
 include ("articles_xml.php");
 
+/*
+ * Provided with the id of a category (if not specified, 'all' is used), 
+ * this method generates the html to render information about the articles
+ * in that category.
+ */
+function get_articles_as_html($category_id = 'all') {
+	$html = "";
+	$listing = get_listing();
+	$category = $listing->categories[$category_id]; 
+	if (!$category)
+		$category = $listing->categories['all'];
+	$category->to_html($html);
+	return $html;
+}
+
+/*
+ * This method generates an html list of all categories. The intent is to
+ * let users click an entry from this list to filter the set of articles
+ * displayed. Each item in the generated list contains a link back to the
+ * articles page (specified using the $base_url parameter); the link is
+ * parameterized with the id of the category to filter on. No link is 
+ * included on the category with id $category_id as this category is
+ * assumed to be displayed currently.
+ */
+function get_categories_for_filtering_as_html($base_url, $category_id) {
+	$html = "";
+	$categories = get_categories();
+	foreach ($categories as $category) {
+		$html .= "<li>";
+		if ($category_id != $category->id)
+			$html .= "<a href=\"$base_url?filter=$category->id\">";
+		$html .="$category->title";
+		if ($category_id != $category->id)
+			$html .= "</a>";
+		$html .= "</li>";
+	}
+	return $html;
+}
+
+/*
+ * This function returns a list of Category instances representing the
+ * categories under consideration.
+ */
+function & get_categories() {
+	$listing = new ArticleListing();
+	load_categories($listing);
+	return $listing->categories;
+}
+
+/*
+ * This function runs an instance of ArticleListing containing all the
+ * information we know about articles.
+ */
+function get_listing() {
+	$listing = new ArticleListing();
+	load_categories($listing);
+	load_articles($listing);
+	return $listing;
+}
+
+/*
+ * The ArticleListing class represents all the categories and articles
+ * that our current universe knows about (restricted to Eclipse Corner,
+ * of course).
+ */
 class ArticleListing {
 	var $categories = array ();
 
 	function add_category(& $category) {
 		$id = $category->id;
 		$this->categories = array_merge($this->categories, array ($id => $category));
+	}
+
+	function get_category($category_id) {
+		return $categories[$category_id];
 	}
 
 	function add_article(& $article) {
@@ -48,19 +118,19 @@ class ArticleListing {
 		}
 	}
 
-	function to_html(& $html) {
-		$html .= "<h3>Contents</h3>";
-		$html .= "<ul class=\"midlist\">";
-		foreach ($this->categories as $category) {
-			if ($category->has_articles()) {
-				$html .= "<li><a href=\"#$category->id\">$category->title</a></li>";
-			}
-		}
-		$html .= "</ul>";
-		foreach ($this->categories as $category) {
-			$category->to_html($html);
-		}
-	}
+//	function to_html(& $html) {
+//		$html .= "<h3>Contents</h3>";
+//		$html .= "<ul class=\"midlist\">";
+//		foreach ($this->categories as $category) {
+//			if ($category->has_articles()) {
+//				$html .= "<li><a href=\"#$category->id\">$category->title</a></li>";
+//			}
+//		}
+//		$html .= "</ul>";
+//		foreach ($this->categories as $category) {
+//			$category->to_html($html);
+//		}
+//	}
 }
 
 class Category {
@@ -71,18 +141,27 @@ class Category {
 
 	// Render this category in html format.
 	function to_html(& $html) {
-		if (!$this->has_articles())
-			return;
+		$this->sort_articles();
 		$html .= "<div class=\"homeitem3col\">";
 		$html .= "<h3><a name=\"$this->id\">$this->title</a></h3>";
 		if ($this->description) {
 			$html .= "<p>$this->description</p>";
 		}
-
-		foreach ($this->articles as $article) {
-			$article->to_html($html);
+		if ($this->has_articles()) {
+			$html .= "<ul class=\"midlist\">";
+			foreach ($this->articles as $article) {
+				$article->to_html($html);
+			}
+			$html .= "</ul>";
+		} else {
+			$html .= 'This category has no articles.';
 		}
 		$html .= "</div>";
+	}
+
+	function sort_articles() {
+		usort($this->articles, 'sort_articles_cmp');
+
 	}
 
 	// Add an article to the category.
@@ -96,8 +175,26 @@ class Category {
 	}
 }
 
+function sort_articles_cmp($a, $b) {
+	$a_date = get_last_update_date($a);	
+	$b_date = get_last_update_date($b);
+	if ($a_date == $b_date)
+		return 0;
+	return $a_date < $b_date ? 1 : -1;
+}
+
+function get_last_update_date($article) {
+	$updates = $article->updates;
+	if (count($updates) > 0) {
+		$update = $updates[count($updates) - 1];
+		return $update->date;
+	}
+	return $article->date;
+}
+
 class Article {
 	var $title;
+	var $root;
 	var $link;
 	var $abstract;
 	var $authors;
@@ -107,7 +204,7 @@ class Article {
 
 	// Render the article as html.
 	function to_html(& $html) {
-		$html .= "<b><a href=\"$this->link\">$this->title</a></b>";
+		$html .= "<li><b><a href=\"$this->root/$this->link\">$this->title</a></b>";
 
 		// Get the collection of authors and render them.
 		$authors = $this->authors_to_html($this->authors);
@@ -123,7 +220,7 @@ class Article {
 			$html .= "<br>";
 			$update->to_html($html);
 		}
-		$abstract = $this->abstract;
+		$abstract = $this-> abstract;
 		$html .= "<blockquote>$abstract</blockquote>";
 	}
 
@@ -238,4 +335,5 @@ class Update {
 	}
 }
 ?>
+
 

@@ -10,5 +10,6 @@
 	$Nav->addNavSeparator("Project Home", "downloads.php");
 	$Nav->addCustomNav("Main", "index.php", "_self", 2);
 	$Nav->addCustomNav("Contributing", "contributing.php", "_self", 2);
+	$Nav->addCustomNav("Contact the editor", "mailto:articles_editor@eclipse.org", "_self", 2);
 
 ?>

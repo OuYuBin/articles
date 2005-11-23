@@ -12,37 +12,43 @@
 # equivalent of the provided RSS file. 
 #
 #****************************************************************************
+include('xml.php');
 
-// This function generates HTML based on the article information provided
-// in the file named $file_name
-function articles_as_html() {
-	$html = "";
-	$listing = xml_to_ArticleListing();
-	$listing->to_html($html);
-	return $html;
+/*
+ * This global variable defines the location of the 'articles' root directory.
+ * The metadata for the articles is located in this directory. All articles
+ * also hang off this directory.
+ */
+$articles_root = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "articles" . DIRECTORY_SEPARATOR;
+/*
+ * This function loads categories into the provided ArticleListing instance.
+ * Category information is found in "$articles_root/categories.xml" in XML
+ * format.
+ */
+function load_categories(& $listing) {
+	$categories_file = $GLOBALS['articles_root'] . "categories.xml";
+	$handler = new CategoryFileHandler($listing);
+	parse_xml_file($categories_file, $handler);
 }
 
-function xml_to_ArticleListing() {
-	$listing = new ArticleListing();
-	get_categories($listing);
-	get_articles($listing);
-	return $listing;
-}
-
-function get_categories(& $listing) {
-	global $handler;
-	$handler = new CategoryXmlHandler($listing);
-
-	parse_xml_file("categories.xml");
-}
-
-function get_articles(& $listing) {
-	$dh = opendir(".");
+/*
+ * This function loads all the accessible articles into the provided
+ * ArticleListing instance. All articles are assumed to be in directories
+ * hanging off $article_root and the directory must contain an about.xml
+ * file. Only those directories with an about.xml file are considered; all
+ * others are ignored.
+ * 
+ * Each of the about.xml files are loaded and information about the article
+ * is parsed out into instances of the Article class, and placed into the
+ * given ArticleListing instance.
+ */
+function load_articles(& $listing) {
+	$dh = opendir($GLOBALS['articles_root']);
 	while (($dir = readdir($dh)) !== false) {
 		if (is_dir($dir)) {
 			$file_name = $dir.DIRECTORY_SEPARATOR."about.xml";
 			if (is_file($file_name)) {
-				$article = get_article($file_name);
+				$article = get_article($dir, $file_name);
 				$listing->add_article($article);
 			}
 		}
@@ -50,131 +56,52 @@ function get_articles(& $listing) {
 	closedir($dh);
 }
 
-function get_article($file_name) {
-	global $handler;
-	$handler = new ArticleXmlHandler();
-
-	parse_xml_file($file_name);
+/*
+ * This function answers an instance of Article containing the
+ * information represented in $file_name. $file_name is assumed to
+ * be a file name with a complete path to an XML file conforming
+ * to the about.xml structure. $root is the directory that contains
+ * the actual content of the article (generally this is the same
+ * as the path for $file_name).
+ */
+function & get_article($root, $file_name) {
+	$handler = new ArticleFileHandler($root);
+	parse_xml_file($file_name, $handler);
 	return $handler->article;
 }
 
 /*
- * This function does the actual work of parsing the RSS
- * file into an object representation. We use a SAX parser
- * to do this.
- * 
- * Note that this function is intended to be used with relatively
- * short files (the entire file contents are loaded into memory).
- * If the RSS files start to get too large, this method will need
- * to be updated.
+ * This class is used by the SAX parser to start parsing
+ * a category file.
  */
-function parse_xml_file($file_name) {
-	// Read the entire file contents in to memory.
-	// If file sizes get too large, we'll have to be smarter here.
-	$file = fopen($file_name, "r");
-	$xml = fread($file, filesize($file_name));
-	fclose($file);
-
-	$parser = xml_parser_create();
-	xml_set_element_handler($parser, 'startHandler', 'endHandler');
-	xml_set_character_data_handler($parser, 'dataHandler');
-	xml_parse($parser, $xml);
-}
-
-/*
- * The $handler variable is global. It manages all the call backs
- * that come (indirectly) from the SAX parser.
- */
-$handler = null;
-
-/*
- * SAX parser callback method to handle the start of an element.
- * This method just defers to the global handler to do the actual
- * work.
- */
-function startHandler($parser, $name, $attributes) {
-	global $handler;
-	$handler->start($name, $attributes);
-}
-
-/*
- * SAX parser callback method to handle the text for an element.
- * This method just defers to the global handler to do the actual
- * work.
- */
-function dataHandler($parser, $data) {
-	global $handler;
-	$handler->data($data);
-}
-
-/*
- * SAX parser callback method to handle the end of an element.
- * This method just defers to the global handler to do the actual
- * work.
- */
-function endHandler($parser, $name) {
-	global $handler;
-	$handler->end($name);
-}
-
-/*
- * The XmlHandler class is the focal point of the SAX parser callbacks.
- * It keeps track of a stack of element handlers. The element handlers
- * are used to handle whatever elements come in.
- */
-class XmlHandler {
-	var $stack;
-
-	function XmlHandler() {
-		$this->stack = array ();
-	}
-
-	/*
-	 * Handle the start callback. Here, we get the current element handler
-	 * from the top of the stack and ask it what to do. The element handler
-	 * is asked to provide a new handler to handle the new element. That new
-	 * handler is put on the top of the stack and will handle all future
-	 * callbacks until it is removed (by the end method).
-	 */
-	function start($name, $attributes) {
-		$handler = & array_last($this->stack);
-		$next = & $handler->get_next($name, $attributes);
-		array_push($this->stack, $next);
-	}
-
-	/*
-	 * Data has been encountered, send the data to the current element handler
-	 * to sort out what needs to be done.
-	 */
-	function data($data) {
-		$handler = & array_last($this->stack);
-		$handler->data($data);
-	}
-
-	/*
-	 * The end of an element has occurred. Pop the current element handler
-	 * from the top of the stack and tell it that it's work is done.
-	 */
-	function end($name) {
-		$handler = & array_pop($this->stack);
-		$handler->end($name);
-	}
-}
-
-class CategoryXmlHandler extends XmlHandler {
+class CategoryFileHandler extends XmlFileHandler {
 	var $listing;
 
-	function CategoryXmlHandler(& $listing) {
-		parent :: XmlHandler();
+	function CategoryFileHandler(& $listing) {
+		parent :: XmlFileHandler();
 		$this->listing = & $listing;
-		array_push($this->stack, new CategoryRootHandler($this->listing));
 	}
+
+	/*
+	 * This method returns the root handler for a category file
+	 * The root handler essentially represents the file itself
+	 * rather than any actual element in the file. The returned
+	 * element handler will deal with any elements that may occur
+	 * in the root of the XML file.
+	 */
+	function get_root_element_handler() {
+		return new CategoryRootHandler($this->listing);
+	}	
 }
 
 /*
- * The FeedHandler class takes care of the root element in the file.
+ * The CategoryRootHandler class takes care of the root element 
+ * in the file. This handler doesn't correspond to any particular
+ * element that may occur in the XML file. It represents the file
+ * itself and must deal with any elements that occur at the root
+ * level in that file.
  */
-class CategoryRootHandler {
+class CategoryRootHandler extends XmlElementHandler {
 	var $listing;
 
 	function CategoryRootHandler(& $listing) {
@@ -182,34 +109,25 @@ class CategoryRootHandler {
 	}
 
 	/*
-	 * Return an appropriate handler to deal with an element named $name.
-	 * At this point, we only expect to see an <rss> element.
+	 * This method handles the <categories>...</categories> element.
 	 */
-	function & get_next($name, $attributes) {
-		if (strcasecmp($name, "categories") == 0) {
-			return new CategoriesHandler($this->listing);
-		} else {
-			return new DoNothingHandler();
-		}
-	}
-
-	/*
-	 * Ignore data for this element.
-	 */
-	function data($data) {
-	}
-
-	/*
-	 * Ignore data for this element.
-	 */
-	function end($name) {
+	function & get_categories_handler($attributes) {
+		return new CategoriesHandler($this->listing);
 	}
 }
 
 /*
- * The FeedHandler class takes care of the root element in the file.
+ * The CategoriesHandler takes care of the <categories> element. This
+ * element is the root element in the file and is used to contain
+ * all the categories.
+ * 
+ * <categories>
+ * 		<category>...</category>
+ * 		<category>...</category>
+ * 		<category>...</category>
+ * </categories>
  */
-class CategoriesHandler {
+class CategoriesHandler extends XmlElementHandler {
 	var $listing;
 
 	function CategoriesHandler(& $listing) {
@@ -217,102 +135,91 @@ class CategoriesHandler {
 	}
 
 	/*
-	 * Return an appropriate handler to deal with an element named $name.
-	 * At this point, we only expect to see an <rss> element.
+	 * This method handles the <category>...</category> element.
 	 */
-	function & get_next($name, & $attributes) {
-		if (strcasecmp($name, "category") == 0) {
-			return new CategoryHandler($this->listing, $attributes);
-		} else {
-			return new DoNothingHandler();
-		}
-	}
-
-	/*
-	 * Ignore data for this element.
-	 */
-	function data($data) {
-	}
-
-	/*
-	 * Ignore data for this element.
-	 */
-	function end($name) {
+	function & get_category_handler(& $attributes) {
+		return new CategoryHandler($this->listing, $attributes);
 	}
 }
-
-class CategoryHandler {
+/*
+ * The CategoryHandler takes care of the <category> element. This
+ * element may occur multiple times inside the <categories> tag.
+ * 
+ * <categories>
+ * 		<category id="...">
+ * 			<title>...</title>
+ * 			<description>...</description>
+ * 		</category>
+ * 		<category>...</categories>
+ * 		<category>...</categories>
+ * </categories>
+ */
+class CategoryHandler extends XmlElementHandler {
 	var $listing;
 	var $category;
 
 	function CategoryHandler(& $listing, & $attributes) {
 		$this->category = new Category();
+		// The id is represented in an attribute.
 		$this->category->id = $attributes['ID'];
 		$this->listing = & $listing;
 	}
-
-	function data($data) {
+	
+	/*
+	 * This method handles the <title>...</title> element.
+	 */
+	function & get_title_handler($attributes) {
+		return new SimplePropertyHandler($this->category, "title");
+	}
+	
+	/*
+	 * This method handles the <description>...</description> element.
+	 */
+	function & get_description_handler($attributes) {
+		return new SimplePropertyHandler($this->category, "description");
 	}
 
-	function & get_next($name, $attributes) {
-		if (strcasecmp($name, "title") == 0) {
-			return new SimplePropertyHandler($this->category, "title");
-		} else
-			if (strcasecmp($name, "description") == 0) {
-				return new SimplePropertyHandler($this->category, "description");
-			} else {
-				return new DoNothingHandler();
-			}
-	}
-
+	/*
+	 * When we're done with this element, stuff the category into
+	 * the listing.
+	 */
 	function end($name) {
-		$title = $this->category->title;
 		$this->listing->add_category($this->category);
 	}
 }
 
-class ArticleXmlHandler extends XmlHandler {
+class ArticleFileHandler extends XmlFileHandler {
 	var $article;
 
-	function ArticleXmlHandler() {
-		parent :: XmlHandler();
+	function ArticleFileHandler($root) {
+		parent :: XmlFileHandler();
 		$this->article = new Article();
-		array_push($this->stack, new ArticleRootHandler($this->article));
+		$this->article->root = $root;
 	}
+	
+
+	function get_root_element_handler() {
+		return new ArticleRootHandler($this->article);
+	}	
 }
 
 /*
  * The FeedHandler class takes care of the root element in the file.
  */
-class ArticleRootHandler {
+class ArticleRootHandler extends XmlElementHandler {
 	var $article;
+	var $root;
 
 	function ArticleRootHandler(& $article) {
 		$this->article = & $article;
 	}
 
-	function & get_next($name, $attributes) {
-		if (strcasecmp($name, "article") == 0) {
-			return new ArticleHandler($this->article, $attributes);
-		} else {
-			return new DoNothingHandler();
-		}
-	}
-
-	/*
-	 * Ignore data for this element.
-	 */
-	function data($data) {
-	}
-
-	/*
-	 * Ignore data for this element.
-	 */
-	function end($name) {
+	function & get_article_handler($attributes) {
+		return new ArticleHandler($this->article, $attributes);
 	}
 }
 
-class ArticleHandler {
+class ArticleHandler extends XmlElementHandler {
 	var $article;
 
 	function ArticleHandler(& $article, & $attributes) {
@@ -323,30 +230,28 @@ class ArticleHandler {
 		$this->article->authors = array ();
 	}
 
-	function data($data) {
+	function & get_title_handler($attributes) {
+		return new SimplePropertyHandler($this->article, "title");
 	}
-
-	function & get_next($name, $attributes) {
-		if (strcasecmp($name, "title") == 0) {
-			return new SimplePropertyHandler($this->article, "title");
-		} else
-			if (strcasecmp($name, "date") == 0) {
-				return new SimplePropertyHandler($this->article, "date");
-			} else
-				if (strcasecmp($name, "abstract") == 0) {
-					return new SimplePropertyHandler($this->article, "abstract");
-				} else
-					if (strcasecmp($name, "category") == 0) {
-						return new ArticleCategoryHandler($this->article);
-					} else
-						if (strcasecmp($name, "author") == 0) {
-							return new AuthorHandler($this->article);
-						} else
-							if (strcasecmp($name, "update") == 0) {
-								return new UpdateHandler($this->article, $attributes);
-							} else {
-								return new DoNothingHandler();
-							}
+	
+	function & get_date_handler($attributes) {
+		return new SimplePropertyHandler($this->article, "date");
+	}
+	
+	function & get_abstract_handler($attributes) {
+		return new SimplePropertyHandler($this->article, "abstract");
+	}
+	
+	function & get_category_handler($attributes) {
+		return new ArticleCategoryHandler($this->article);
+	}
+	
+	function &get_author_handler($attributes) {
+		return new AuthorHandler($this->article);
+	}
+	
+	function & get_update_handler($attributes) {
+		return new UpdateHandler($this->article, $attributes);
 	}
 
 	function end($name) {
@@ -367,7 +272,7 @@ class ArticleCategoryHandler extends SimpleTextHandler {
 	}
 }
 
-class AuthorHandler {
+class AuthorHandler extends XmlElementHandler {
 	var $owner;
 	var $author;
 
@@ -376,24 +281,20 @@ class AuthorHandler {
 		$this->author = new Author();
 	}
 
-	function data($data) {
+	function & get_name_handler($attributes) {
+		return new SimplePropertyHandler($this->author, "name");
 	}
-
-	function & get_next($name, $attributes) {
-		if (strcasecmp($name, "name") == 0) {
-			return new SimplePropertyHandler($this->author, "name");
-		} else
-			if (strcasecmp($name, "company") == 0) {
-				return new SimplePropertyHandler($this->author, "company");
-			} else
-				if (strcasecmp($name, "email") == 0) {
-					return new SimplePropertyHandler($this->author, "email");
-				} else
-					if (strcasecmp($name, "link") == 0) {
-						return new SimplePropertyHandler($this->author, "link");
-					} else {
-						return new DoNothingHandler();
-					}
+	
+	function & get_company_handler($attributes) {
+		return new SimplePropertyHandler($this->author, "company");
+	}
+	
+	function & get_email_handler($attributes) {
+		return new SimplePropertyHandler($this->author, "email");
+	}
+	
+	function & get_link_handler($attributes) {
+		return new SimplePropertyHandler($this->author, "link");
 	}
 
 	function end($name) {
@@ -401,7 +302,7 @@ class AuthorHandler {
 	}
 }
 
-class UpdateHandler {
+class UpdateHandler extends XmlElementHandler{
 	var $owner;
 	var $update;
 
@@ -412,77 +313,17 @@ class UpdateHandler {
 		$this->update->authors = array ();
 	}
 
-	function data($data) {
+	function & get_author_handler($attributes) {
+		return new AuthorHandler($this->update);
 	}
-
-	function & get_next($name, $attributes) {
-		if (strcasecmp($name, "author") == 0) {
-			return new AuthorHandler($this->update);
-		} else if (strcasecmp($name, "reason") == 0) {
-			return new SimplePropertyHandler($this->update, "reason");
-		} else{
-			return new DoNothingHandler();
-		}
+	
+	function & get_reason_handler($attributes) {
+		return new SimplePropertyHandler($this->update, "reason");
 	}
 
 	function end($name) {
 		array_push($this->owner->updates, $this->update);
 	}
-}
-
-class SimpleTextHandler {
-	var $text;
-
-	function & get_next($name, $attributes) {
-		return new DoNothingHandler();
-	}
-
-	function data($data) {
-		$this->text .= $data;
-	}
-
-	function end($name) {
-	}
-}
-
-class SimplePropertyHandler extends SimpleTextHandler {
-	var $owner;
-	var $property;
-
-	function SimplePropertyHandler(& $owner, $property) {
-
-		$this->owner = & $owner;
-		$this->property = $property;
-	}
-
-	function end($name) {
-		$this->set_property_value($this->text);
-	}
-
-	function set_property_value(& $value) {
-		$property = $this->property;
-		$this->owner-> $property = $value;
-	}
-}
-
-class DoNothingHandler {
-
-	function DoNothingHandler() {
-	}
-
-	function data($data) {
-	}
-
-	function end($name) {
-	}
-
-	function & get_next($name, $attributes) {
-		return $this;
-	}
-}
-
-function & array_last(& $array) {
-	return $array[count($array) - 1];
 }
 
 // PHP 5 Code...
@@ -517,7 +358,6 @@ function & array_last(& $array) {
 //	function xml_to_article(&$xml, &$root) {		
 //		$new_article = new Article();
 //		$new_article->title = $xml->title;
-//		$new_article->link = $root . "/" . $xml[link];
 //		$new_article->abstract = $xml->abstract;
 //		if (strlen($xml->date) > 0) $new_article->date = strtotime($xml->date);	
 //		$new_article->updates = get_article_updates($xml);

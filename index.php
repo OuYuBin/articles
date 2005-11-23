@@ -45,7 +45,7 @@
 			You too can contribute! Eclipse Corner depends on contributions 
 			from people like you.</p>
       
-      		<p>Interested in writing an article? See <a href="contributing.html">how
+      		<p>Interested in writing an article? See <a href="contributing.php">how
           	to contribute an article</a>.</p>
           	
           	<p>Besides these, a number of other web sites carry technical articles about
