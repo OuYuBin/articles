@@ -12,7 +12,7 @@
 # equivalent of the provided RSS file. 
 #
 #****************************************************************************
-include('xml.php');
+include($_SERVER['DOCUMENT_ROOT'] . "/eclipse.org-common/system/xml_sax_parsing.php");
 
 /*
  * This global variable defines the location of the 'articles' root directory.

@@ -40,6 +40,12 @@
 	<div id="midcolumn">
 		<h1>$pageTitle</h1>
 			<img src="images/articles.gif" align="right">
+			<p>
+				Please note that not all articles have been migrated over
+				to the new site. For a complete listing, please see
+				<a href="http://eclipse.org/articles">Eclipse Articles</a>.
+			<p>
+			
 			<p>The following articles have been written by members of the 
 			development team and other members of the eclipse community. 
 			You too can contribute! Eclipse Corner depends on contributions 
