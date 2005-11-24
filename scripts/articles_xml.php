@@ -12,7 +12,7 @@
 # equivalent of the provided RSS file. 
 #
 #****************************************************************************
-include($_SERVER['DOCUMENT_ROOT'] . "/eclipse.org-common/system/xml_sax_parsing.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/eclipse.org-common/system/xml_sax_parsing.php");
 
 /*
  * This global variable defines the location of the 'articles' root directory.
@@ -43,12 +43,14 @@ function load_categories(& $listing) {
  * given ArticleListing instance.
  */
 function load_articles(& $listing) {
-	$dh = opendir($GLOBALS['articles_root']);
+	$root = $GLOBALS['articles_root'];
+	$dh = opendir($root);
 	while (($dir = readdir($dh)) !== false) {
-		if (is_dir($dir)) {
-			$file_name = $dir.DIRECTORY_SEPARATOR."about.xml";
+		$file_path = $root.$dir;
+		if (is_dir($file_path)) {
+			$file_name = $file_path.DIRECTORY_SEPARATOR."about.xml";
 			if (is_file($file_name)) {
-				$article = get_article($dir, $file_name);
+				$article = get_article($file_path, $file_name);
 				$listing->add_article($article);
 			}
 		}

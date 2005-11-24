@@ -12,7 +12,7 @@
 # and render as html, articles.
 #
 #****************************************************************************
-include ("articles_xml.php");
+require_once("articles_xml.php");
 
 /*
  * Provided with the id of a category (if not specified, 'all' is used), 
@@ -26,6 +26,20 @@ function get_articles_as_html($category_id = 'all') {
 	if (!$category)
 		$category = $listing->categories['all'];
 	$category->to_html($html);
+	return $html;
+}
+
+function get_recent_articles_summary($count) {
+	$listing = get_listing();
+	$category = $listing->categories['all'];
+	$category->sort_articles();
+	$html = "";
+	foreach($category->articles as $article) {
+		if ($count <= 0) break;		
+		$authors = $article->authors_to_html();
+		$html .= "<li><a href=\"$article->root/$article->link\">$article->title</a><br>$authors</li>";
+		$count--;
+	}
 	return $html;
 }
 
@@ -142,12 +156,12 @@ class Category {
 	// Render this category in html format.
 	function to_html(& $html) {
 		$this->sort_articles();
-		$html .= "<div class=\"homeitem3col\">";
 		$html .= "<h3><a name=\"$this->id\">$this->title</a></h3>";
-		if ($this->description) {
-			$html .= "<p>$this->description</p>";
-		}
+
 		if ($this->has_articles()) {
+			if ($this->description) {
+				$html .= "<p>$this->description</p>";
+			}
 			$html .= "<ul class=\"midlist\">";
 			foreach ($this->articles as $article) {
 				$article->to_html($html);
@@ -156,7 +170,6 @@ class Category {
 		} else {
 			$html .= 'This category has no articles.';
 		}
-		$html .= "</div>";
 	}
 
 	function sort_articles() {
@@ -224,7 +237,7 @@ class Article {
 		$html .= "<li><b><a href=\"$this->root/$this->link\">$this->title</a></b>";
 
 		// Get the collection of authors and render them.
-		$authors = $this->authors_to_html($this->authors);
+		$authors = $this->authors_to_html();
 		if ($authors) {
 			$html .= "<br>";
 			$html .= $authors;
@@ -242,7 +255,8 @@ class Article {
 	}
 
 	// Render the article's authors to html.
-	function authors_to_html($authors) {
+	function authors_to_html() {
+		$authors = $this->authors;
 		$count = count($authors);
 
 		if ($count == 0)
