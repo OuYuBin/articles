@@ -140,6 +140,14 @@ class CategoriesHandler extends XmlElementHandler {
 	function & get_category_handler(& $attributes) {
 		return new CategoryHandler($this->listing, $attributes);
 	}
+	
+	/*
+	 * When the category handler is done gathering information about
+	 * the category, add the category to the listing.
+	 */
+	function end_category_handler(& $handler) {
+		$this->listing->add_category($handler->category);
+	}
 }
 /*
  * The CategoryHandler takes care of the <category> element. This
@@ -155,14 +163,12 @@ class CategoriesHandler extends XmlElementHandler {
  * </categories>
  */
 class CategoryHandler extends XmlElementHandler {
-	var $listing;
 	var $category;
 
 	function CategoryHandler(& $listing, & $attributes) {
 		$this->category = new Category();
 		// The id is represented in an attribute.
 		$this->category->id = $attributes['ID'];
-		$this->listing = & $listing;
 	}
 	
 	/*
@@ -177,14 +183,6 @@ class CategoryHandler extends XmlElementHandler {
 	 */
 	function & get_description_handler($attributes) {
 		return new SimplePropertyHandler($this->category, "description");
-	}
-
-	/*
-	 * When we're done with this element, stuff the category into
-	 * the listing.
-	 */
-	function end($name) {
-		$this->listing->add_category($this->category);
 	}
 }
 
@@ -225,9 +223,6 @@ class ArticleHandler extends XmlElementHandler {
 	function ArticleHandler(& $article, & $attributes) {
 		$this->article = & $article;
 		$this->article->link = $attributes['LINK'];
-		$this->article->categories = array ();
-		$this->article->updates = array ();
-		$this->article->authors = array ();
 	}
 
 	function & get_title_handler($attributes) {
@@ -250,8 +245,16 @@ class ArticleHandler extends XmlElementHandler {
 		return new AuthorHandler($this->article);
 	}
 	
+	function end_author_handler($handler) {
+		$this->article->add_author($handler->author);
+	}
+	
 	function & get_update_handler($attributes) {
-		return new UpdateHandler($this->article, $attributes);
+		return new UpdateHandler($attributes);
+	}
+	
+	function end_update_handler(&$handler) {
+		$this->article->add_update($handler->update);
 	}
 
 	function end($name) {
@@ -297,32 +300,29 @@ class AuthorHandler extends XmlElementHandler {
 		return new SimplePropertyHandler($this->author, "link");
 	}
 
-	function end($name) {
-		array_push($this->owner->authors, $this->author);
-	}
+//	function end($name) {
+//		array_push($this->owner->authors, $this->author);
+//	}
 }
 
 class UpdateHandler extends XmlElementHandler{
-	var $owner;
 	var $update;
 
-	function UpdateHandler(& $owner, & $attributes) {
-		$this->owner = & $owner;
+	function UpdateHandler(& $attributes) {
 		$this->update = new Update();
 		$this->update->date = strtotime($attributes['DATE']);
-		$this->update->authors = array ();
 	}
 
 	function & get_author_handler($attributes) {
 		return new AuthorHandler($this->update);
 	}
 	
+	function end_author_handler($handler) {
+		$this->update->add_author($handler->author);
+	}
+	
 	function & get_reason_handler($attributes) {
 		return new SimplePropertyHandler($this->update, "reason");
-	}
-
-	function end($name) {
-		array_push($this->owner->updates, $this->update);
 	}
 }
 

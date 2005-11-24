@@ -106,31 +106,31 @@ class ArticleListing {
 
 	function add_recent_article(& $article) {
 		// If there is no "recent" category, bail out.
-		$category = $this->categories["recent"];
-		if (!is_object(category))
+		$category = & $this->categories["recent"];
+		if (!is_object($category))
 			return;
-
-		// I consider recent to mean changed within the
-		// last six months...
-		$base_date = strtotime("-6 month");
-		if (($article->date > $base_date) or ($article->update > $base_date)) {
-			$this->categories["recent"]->add_article($article);
+			
+		// I consider recent to mean created or changed within the
+		// last year...
+		$base_date = strtotime("-1 year");
+		if ($article->is_more_recent_than($base_date)) {
+			$category->add_article($article);
 		}
 	}
 
-//	function to_html(& $html) {
-//		$html .= "<h3>Contents</h3>";
-//		$html .= "<ul class=\"midlist\">";
-//		foreach ($this->categories as $category) {
-//			if ($category->has_articles()) {
-//				$html .= "<li><a href=\"#$category->id\">$category->title</a></li>";
-//			}
-//		}
-//		$html .= "</ul>";
-//		foreach ($this->categories as $category) {
-//			$category->to_html($html);
-//		}
-//	}
+	function to_html(& $html) {
+		$html .= "<h3>Contents</h3>";
+		$html .= "<ul class=\"midlist\">";
+		foreach ($this->categories as $category) {
+			if ($category->has_articles()) {
+				$html .= "<li><a href=\"#$category->id\">$category->title</a></li>";
+			}
+		}
+		$html .= "</ul>";
+		foreach ($this->categories as $category) {
+			$category->to_html($html);
+		}
+	}
 }
 
 class Category {
@@ -197,11 +197,28 @@ class Article {
 	var $root;
 	var $link;
 	var $abstract;
-	var $authors;
-	var $categories;
+	var $authors = array();
+	var $categories = array();
 	var $date;
-	var $updates;
+	var $updates = array();
 
+
+	function add_author(&$author) {
+		array_push($this->authors, $author);
+	}
+	
+	function add_update(&$update) {
+		array_push($this->updates, $update);
+	}
+
+	function is_more_recent_than($date) {
+		if ($this->date > $date) return true;
+		foreach ($this->updates as $update) {
+			if ($update->date > $date) return true;
+		}
+		return false;
+	}
+	
 	// Render the article as html.
 	function to_html(& $html) {
 		$html .= "<li><b><a href=\"$this->root/$this->link\">$this->title</a></b>";
@@ -290,9 +307,13 @@ class Author {
 }
 class Update {
 	var $date;
-	var $authors;
+	var $authors = array();
 	var $reason;
 
+	function add_author(&$author) {
+		array_push($this->authors, $author);
+	}
+	
 	// Render the article as html.
 	function to_html(& $html) {
 		$html .= "Updated ";
