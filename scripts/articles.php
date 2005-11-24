@@ -37,7 +37,10 @@ function get_recent_articles_summary($count) {
 	foreach($category->articles as $article) {
 		if ($count <= 0) break;		
 		$authors = $article->authors_to_html();
-		$html .= "<li><a href=\"$article->root/$article->link\">$article->title</a><br>$authors</li>";
+		$html .= "<li>";
+		$html .= "<a href=\"$article->root/$article->link\">$article->title</a> $authors";
+		$html .= "<blockquote>$article->abstract</blockquote>";
+		$html .= "</li>";
 		$count--;
 	}
 	return $html;
