@@ -42,7 +42,7 @@ function get_recent_articles_summary($count) {
 		
 		$html .= "<li>";
 		$html .= "<a href=\"$article->root/$article->link\">$article->title</a> $authors";
-		$html .= "<blockquote>$short_abstract</blockquote>";
+		$html .= "<br>$short_abstract";
 		$html .= "</li>";
 		$count--;
 	}
