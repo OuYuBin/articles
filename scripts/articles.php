@@ -237,7 +237,7 @@ class Article {
 	
 	// Render the article as html.
 	function to_html(& $html) {
-		$html .= "<li><b><a href=\"$this->root/$this->link\">$this->title</a></b>";
+		$html .= "<li><a href=\"$this->root/$this->link\">$this->title</a>";
 
 		// Get the collection of authors and render them.
 		$authors = $this->authors_to_html();

@@ -34,7 +34,7 @@
 
 	# Paste your HTML content between the EOHTML markers!	
 	$html = <<<EOHTML
-<div id="maincontent">
+<!--<div id="maincontent">-->
 	<div id="midcolumn">
 		<h1>$pageTitle</h1>
 			<img src="images/articles.gif" align="right">
@@ -68,7 +68,7 @@
 			</ul>
 		</div>
 	</div>
-</div>
+<!--</div>-->
 EOHTML;
 
 	# Generate the web page
