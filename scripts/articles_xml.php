@@ -50,7 +50,7 @@ function load_articles(& $listing) {
 		if (is_dir($file_path)) {
 			$file_name = $file_path.DIRECTORY_SEPARATOR."about.xml";
 			if (is_file($file_name)) {
-				$article = get_article($file_path, $file_name);
+				$article = get_article('/articles/'.$dir, $file_name);
 				$listing->add_article($article);
 			}
 		}
