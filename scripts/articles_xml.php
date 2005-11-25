@@ -235,8 +235,8 @@ class ArticleHandler extends XmlElementHandler {
 		return new SimplePropertyHandler($this->article, "date");
 	}
 	
-	function & get_abstract_handler($attributes) {
-		return new SimplePropertyHandler($this->article, "abstract");
+	function & get_description_handler($attributes) {
+		return new SimplePropertyHandler($this->article, "description");
 	}
 	
 	function & get_category_handler($attributes) {

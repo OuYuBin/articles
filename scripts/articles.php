@@ -38,11 +38,11 @@ function get_recent_articles_summary($count) {
 		if ($count <= 0) break;		
 		$authors = $article->authors_to_html();
 
-		$short_abstract = full_word_substr($article->abstract);
+		$short_description = full_word_substr($article->description);
 		
 		$html .= "<li>";
 		$html .= "<a href=\"$article->root/$article->link\">$article->title</a> $authors";
-		$html .= "<br>$short_abstract";
+		$html .= "<br>$short_description";
 		$html .= "</li>";
 		$count--;
 	}
@@ -55,7 +55,7 @@ function get_recent_articles_summary($count) {
  * That is, the break will occur on whitespace.
  */
 function full_word_substr($text, $max=80) {
-	while (substr($text, $max, 1) != ' ') $max--;
+	while ($max > 0 && substr($text, $max, 1) != ' ') $max--;
 	return substr($text, 0, $max) . '...';
 }
 
@@ -225,7 +225,7 @@ class Article {
 	var $title;
 	var $root;
 	var $link;
-	var $abstract;
+	var $description;
 	var $authors = array();
 	var $categories = array();
 	var $date;
@@ -266,8 +266,8 @@ class Article {
 			$html .= "<br>";
 			$update->to_html($html);
 		}
-		$abstract = $this-> abstract;
-		$html .= "<blockquote>$abstract</blockquote>";
+		$description = $this->description;
+		$html .= "<blockquote>$description</blockquote>";
 	}
 
 	// Render the article's authors to html.
