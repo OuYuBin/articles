@@ -1,7 +1,5 @@
 <?php  																														require_once($_SERVER['DOCUMENT_ROOT'] . "/eclipse.org-common/system/app.class.php");	require_once($_SERVER['DOCUMENT_ROOT'] . "/eclipse.org-common/system/nav.class.php"); 	require_once($_SERVER['DOCUMENT_ROOT'] . "/eclipse.org-common/system/menu.class.php"); 	$App 	= new App();	$Nav	= new Nav();	$Menu 	= new Menu();		include($App->getProjectCommon());    # All on the same line to unclutter the user's desktop'
 
-echo $_ENV['OS'];
-
 	#*****************************************************************************
 	#
 	# template.php
@@ -33,9 +31,7 @@ echo $_ENV['OS'];
 	if (!$filter) $filter = 'all';
 	$categories = get_categories_for_filtering_as_html('/articles/index.php', $filter);
 	$articles = get_articles_as_html($filter);
-//	include('articles2.php');
-//	$articles=articles_as_html();
-//	$articles=abstracts_to_html('articles.xml');
+
 	# Paste your HTML content between the EOHTML markers!	
 	$html = <<<EOHTML
 <div id="maincontent">
