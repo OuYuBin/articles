@@ -37,13 +37,26 @@ function get_recent_articles_summary($count) {
 	foreach($category->articles as $article) {
 		if ($count <= 0) break;		
 		$authors = $article->authors_to_html();
+
+		$short_abstract = full_word_substr($article->abstract);
+		
 		$html .= "<li>";
 		$html .= "<a href=\"$article->root/$article->link\">$article->title</a> $authors";
-		$html .= "<blockquote>$article->abstract</blockquote>";
+		$html .= "<blockquote>$short_abstract</blockquote>";
 		$html .= "</li>";
 		$count--;
 	}
 	return $html;
+}
+
+/*
+ * This function returns a substring of the contents of $text that
+ * is at most $max characters in length containing only full words.
+ * That is, the break will occur on whitespace.
+ */
+function full_word_substr($text, $max=80) {
+	while (substr($text, $max, 1) != ' ') $max--;
+	return substr($text, 0, $max) . '...';
 }
 
 /*
