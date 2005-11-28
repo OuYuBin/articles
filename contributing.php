@@ -129,17 +129,12 @@
 	        the article will be posted on the site and the bugzilla entry marked as closed.
 	        Stand back and watch as the masses come running to read it.
 	    </p>
-	 
-		<div class="homeitem3col">
-	  		<h3>Legal</h3>
-			<ul>
-				<li>
-					Articles submitted to Eclipse Corner are accepted for posting under the
-	        		&quot;<a href="http://www.eclipse.org/legal/termsofuse.html">Terms of
-	        		Use</a>&quot;.
-	        	</li>
-	        </ul>
-		</div>
+	 		
+		<small>
+			Articles submitted to Eclipse Corner are accepted for posting under the
+       		&quot;<a href="http://www.eclipse.org/legal/termsofuse.html">Terms of
+       		Use</a>&quot;.
+		</small>
 	 </div>
 </div>
 EOHTML;
