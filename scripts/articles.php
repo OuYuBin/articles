@@ -42,7 +42,7 @@ function get_recent_articles_summary($count) {
 		
 		$html .= "<li>";
 		$html .= "<a href=\"$article->root/$article->link\">$article->title</a> $authors";
-		$html .= "<br>$short_description";
+		$html .= "<br />$short_description";
 		$html .= "</li>";
 		$count--;
 	}
@@ -259,7 +259,7 @@ class Article {
 			$html .= $authors;
 		}
 		if ($this->date) {
-			$html .= "<br>";
+			$html .= "<br />";
 			$html .= date("F Y", $this->date);
 		}
 		foreach ($this->updates as $update) {
