@@ -40,8 +40,8 @@
 			<img src="images/articles.gif" align="right">
 			<p>
 				Please note that not all articles have been migrated over
-				to the new site. For a complete listing, please see
-				<a href="http://eclipse.org/articles">Eclipse Articles</a>.
+				to the new site. This process is ongoing and should be completed
+				soon.
 			<p>
 			
 			<p>The following articles have been written by members of the 
