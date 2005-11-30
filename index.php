@@ -15,7 +15,7 @@
 	#
 	# Begin: page-specific settings.  Change these. 
 	$pageTitle 		= "Eclipse Corner Articles";
-	$pageKeywords	= "Type, page, keywords, here";
+	$pageKeywords	= "article, articles, tutorial, tutorials, how-to, howto, whitepaper, whitepapers, white, paper";
 	$pageAuthor		= "Type your name here";
 	
 	# Add page-specific Nav bars here
