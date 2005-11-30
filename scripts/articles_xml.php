@@ -323,6 +323,14 @@ class UpdateHandler extends XmlElementHandler{
 		$this->update->add_author($handler->author);
 	}
 	
+	function & get_date_handler($attributes) {
+		return new SimplePropertyHandler($this->update, "date");
+	}
+	
+	function end_date_handler($handler) {
+		$this->update->date = strtotime($this->update->date);
+	}
+	
 	function & get_reason_handler($attributes) {
 		return new SimplePropertyHandler($this->update, "reason");
 	}
