@@ -1,0 +1,191 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Viewing HTML pages with SWT Browser widget</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2004 International Business Machines Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<h1 ALIGN="CENTER">Viewing HTML pages with SWT Browser widget</h1>
+<blockquote>
+<b>Summary</b>
+
+<br>
+  This article explains how to add HTML viewing capability to an SWT application. The Browser widget provides an easy way to integrate rich HTML content into your application.
+  <p><b> By Christophe Cornu, IBM OTI Labs </b> <br>
+    <font size="-1">August 26, 2004</font></p>
+</blockquote>
+
+<hr width="100%">
+<h2>Ubiquitous HTML </h2>
+<p>HTML has evolved considerably since 1990. Web designers and artists take advantage 
+  of some of the sophisticated extensions supported by today's popular browsers. 
+  Cascading Style Sheet (CSS) in particular is unleashing even further the flexibility 
+  of HTML. User documentation and contextual help are prime candidates to leverage 
+  the hyperlink navigation metaphor and rich HTML rendering. The SWT Browser widget 
+  embeds a platform's popular HTML rendering engine: Internet Explorer on a Microsoft&reg; Windows&reg; platform, 
+  Mozilla on Linux&reg;, Safari on the Mac. It provides the capability to integrate 
+  HTML rendering into a Java&trade; application. This widget is part of SWT starting 
+  with the 3.0 release.</p>
+<p>Let's get started. We will implement an application that lists all the HTML documents present in a folder selected by the user. Selecting an entry in this list will cause the document to be displayed in the Browser widget (Figure 1).</p>
+<h2>Sample application - HTML page viewer </h2>
+<p>The following sample  HTML documentation viewer allows the user to select a topic from the table of content. The corresponding documentation is displayed.</p>
+<p align="center"><img src="images/help_browser.png" width="632" height="302"></p>
+<p align="center">Figure 1 - Documentation Browser sample application </p>
+<p align="left">The user selects the directory containing HTML documents by clicking  the Browse button at the top. The list on the left is populated with the titles of the HTML documents. Clicking an item  in the list displays the corresponding document in the Browser widget on the right.</p>
+<p align="left"> The first task is to create an instance of the Browser widget. </p>
+<h3>Instantiate a Browser widget </h3>
+<p>The Browser widget binds to a suitable native HTML rendering engine for the platform it is running on (Internet Explorer on Windows, Mozilla on Linux, Safari on the Mac;  the <a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/faq.html#browserplatforms">Eclipse SWT FAQ page</a> lists the prerequisites for running the Browser widget on a particular platform). The constructor of the Browser widget throws an <code>SWTError</code> if a suitable native HTML rendering engine is not available. An application could trap this exception and degrade gracefully by disabling features that require the Browser widget.</p>
+<pre>      import org.eclipse.swt.browser.*;
+      ...
+      Browser browser;
+      try {
+         browser = new Browser(shell, SWT.NONE);
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>   } catch (SWTError e) {
+         MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR | SWT.OK);
+         messageBox.setMessage(&quot;Browser cannot be initialized.&quot;);
+         messageBox.setText(&quot;Exit&quot;);
+         messageBox.open();
+         System.exit(-1);
+      }</pre>
+<p>In this snippet, the application detects if the constructor of the Browser widget throws an <code>SWTError</code><img src="images/tag_1.gif" height=13 width=24 align=CENTER> the first time it is instantiated. It warns the user the application cannot be initialized and exits. If no <code>SWTError</code> has been thrown, the Browser widget is ready to display HTML content. The next step is to set the content of the Browser every time an item is selected in the <code>List</code>. </p>
+<h3>Display an HTML document</h3>
+<p>The Browser displays the HTML document related to the entry the user selected in the <code>List</code>. The method <code>Browser.setUrl</code> is used to navigate to a specific URL. It takes a <code>java.lang.String</code> argument that defines the new URL to navigate to.</p>
+<pre>      String[] urls;
+      int index;
+      Browser browser;
+      ...
+      List list = new List(parent, SWT.SIMPLE);
+      list.addListener(SWT.Selection, new Listener() {
+         public void handleEvent(Event e) {
+            int index = list.getSelectionIndex();
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>         browser.setUrl(urls[index]);
+         }
+      });</pre>
+<p><code>Browser.setUrl</code><img src="images/tag_1.gif" height=13 width=24 align=CENTER> posts a request to change the location. Location loading and the actual rendering (drawing) are handled asynchronously by the underlying native engine. An application registers specific Browser listeners to track - and act upon - the different stages of a request. </p>
+<p> <img src="images/tip.gif" width="62" height="13"> It is also possible to render HTML from an in-memory string with the method <code>Browser.setText</code>. <code>Browser.setText</code> takes a Java String containing HTML tags. The encoding is implicitly Unicode since a Java String is itself in Unicode. The example below does not specify the HTML meta tag charset as a result. </p>
+<pre>browser.setText(&quot;&lt;html&gt;&lt;body&gt;This is Unicode HTML content from memory&lt;/body&gt;&lt;/html&gt;); </pre>
+<p>The Browser widget provides listeners to monitor when a location is actually changed, when a page is completely loaded, and what title needs to be displayed for the current document. Before we take a deeper look at these listeners, we will explore the history navigation. </p>
+<h3>Add history navigation</h3>
+<p>The user can navigate back and forth between locations already visited. The user interface of the documentation viewer defines two buttons Back and Forward, for this purpose. The snippet below describes how to provide tool items to navigate  the location history of the Browser.</p>
+<pre>      final ToolItem back = new ToolItem(navBar, SWT.PUSH);
+      back.setText(&quot;back&quot;);
+      back.setEnabled(false);
+      final ToolItem forward = new ToolItem(navBar, SWT.PUSH);
+      forward.setText(&quot;forward&quot;);
+      forward.setEnabled(false);
+
+      back.addListener(SWT.Selection, new Listener() {
+         public void handleEvent(Event event) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>         browser.back();
+         }
+      });
+      forward.addListener(SWT.Selection, new Listener() {
+         public void handleEvent(Event event) {
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>         browser.forward();
+         }
+      });</pre>
+<p>
+The excerpt above creates two tool items. The Browser widget provides the methods <code>Browser.back</code><img src="images/tag_1.gif" height=13 width=24 align=CENTER> and <code>Browser.forward</code><img src="images/tag_2.gif" height=13 width=24 align=CENTER> to navigate, respectively, back and forward in its navigation history. Each tool item activates a back or forward method when it is selected by the user. Since there is no navigation history when the Browser is created, the two tool items are initially disabled. Their state is updated with the code below. </p>
+<pre>      LocationListener locationListener = new LocationListener() {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>      public void changed(LocationEvent event) {
+            Browser browser = (Browser)event.widget;
+            back.setEnabled(browser.isBackEnabled());
+            forward.setEnabled(browser.isForwardEnabled());
+         }
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>      public void changing(LocationEvent event) {
+         }
+      };
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>   browser.addLocationListener(locationListener);</pre>
+<p>When the Browser has navigated to a new location, the navigation history stores the previous location.  The state of the back and forward buttons can change every time the Browser has moved to a different location. Tracking location changes is done by implementing the <code>org.eclipse.swt.browser.LocationListener</code> interface. The method <code>LocationListener.changed</code><img src="images/tag_1.gif" height=13 width=24 align=CENTER> is invoked by the Browser widget every time it has moved to a different location, such as when the user activates a hyperlink or when the application requests that the Browser navigate to a different location. The methods <code>Browser.isBackEnabled</code> and <code>Browser.isForwardEnabled</code> return the  actual state of the navigation history. The <code>LocationListener</code> must be registered with the Browser<img src="images/tag_3.gif" height=13 width=24 align=CENTER>.</p>
+<p> <img src="images/tip.gif" width="62" height="13"> It is possible to filter and block a document that is about to be navigated to. <code>LocationListener</code> defines another method: <code>changing</code><img src="images/tag_2.gif" height=13 width=24 align=CENTER>. This notification is sent before the target location defined in the <code>LocationEvent</code> begins loading. The argument <code>LocationEvent</code> in the method <code>changing</code> contains a <code>doit</code> flag. Setting this flag to false prevents the <code>LocationEvent.location</code> target from being loaded.</p>
+<p>The navigation history is now taken care of. There is just one more piece left to implement in order to have a working HTML document viewer. The next section deals with the initialization of the table of contents used to access the actual documentation.
+</p>
+<h3>Build a table of contents </h3>
+<p>The table of contents provides entry points to major aspects of a document. It is often generated along with the documentation and stored in a variety of formats (XML, plain text, etc.). The following snippet generates a table of contents dynamically by storing the URL and the title of the HTML files found in a particular folder. This naive approach suits the needs of our simple HTML doc browser example. </p>
+<pre>      static String[] urls;
+      static String[] titles;
+      static int index;
+      ...
+
+      TitleListener tocTitleListener = new TitleListener() {
+         public void changed(TitleEvent event) {
+            titles[index] = event.title;
+         }
+      };</pre>
+<p>The application implements a TitleListener to obtain the title of the document that is currently displayed by the Browser. This title corresponds to the string typically displayed in the decoration of a Browser application and is usually related to the title tag found in the HTML document. Certain Browser applications may send a default value before the title tag has been parsed, such as the filename, or fire a new title event every time  the value of the title tag is modified, such as when a JavaScript is executed that changes the title node. Our sample application will store the value of the title as it was reported by the Browser when the document was completely loaded. The application implements a ProgressListener in order to be notified when the current document is completely loaded.</p>
+<pre>      ProgressListener tocProgressListener = new ProgressListener() {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>      public void changed(ProgressEvent event) {
+         }
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>      public void completed(ProgressEvent event) {
+            Browser browser = (Browser)event.widget;
+            index++;
+            boolean tocCompleted = index &gt;= titles.length;
+            if (tocCompleted) {
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>            browser.dispose();
+               ...
+               return;
+            }
+            shell.setText(&quot;Building index &quot;+index+&quot;/&quot;+urls.length);
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>         browser.setUrl(urls[index]);
+         }
+      };</pre>
+<p>The <code>ProgressListener</code> provides two methods. The method <code>changed</code><img src="images/tag_1.gif" height=13 width=24 align=CENTER> is often called multiple times to report progress as the document and some of the content it references get loaded (images for example). It is meant to be used to animate the  progress bar found in a browser application. The method <code>completed</code><img src="images/tag_2.gif" height=13 width=24 align=CENTER> is invoked when the current document has been completely loaded.</p>
+<p>The following sequence occurs when building the table of contents. The first document is loading. The title is retrieved through the <code>TitleListener</code> notification. When the document has been loaded<img src="images/tag_2.gif" height=13 width=24 align=CENTER>, it is time to move on to the next document with a call to <code>Browser.setUrl</code><img src="images/tag_4.gif" height=13 width=24 align=CENTER>. The table of content is completed when all documents have been loaded and their titles retrieved. The Browser is disposed<img src="images/tag_3.gif" height=13 width=24 align=CENTER>. The application can initialize the user interface displaying the table of contents and create the Browser to render the document selected by the user. </p>
+<p>Figure 1 shows an example using a <code>List</code> widget for the TOC on the left side, separated by a <code>Sash</code> from a Browser instance on the right. <br>
+    <br>
+    The <code>TitleListener</code> and <code>ProgressListener</code> still need to be registered. This is done after the user selects a folder containing HTML files as implemented in the code below. </p>
+<pre>      DirectoryDialog dialog = new DirectoryDialog(shell);
+      String folder = dialog.open();
+      if (folder == null) return;
+      File file = new File(folder);
+      File[] files = file.listFiles(new FilenameFilter() {
+         public boolean accept(File dir, String name) {
+            return name.endsWith(&quot;.html&quot;);
+         }
+      });</pre>
+<p>The final touch: </p>
+<pre>      urls = new String[files.length];
+      titles = new String[files.length];
+      index = 0;
+      for (int i = 0; i &lt; files.length; i++) {
+         try {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>         String url = files[i].toURL().toString();
+            urls[i] = url;
+         } catch (MalformedURLException ex) {}
+      }
+      shell.setText(&quot;Building index&quot;);
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>   browser.addTitleListener(tocTitleListener);
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>   browser.addProgressListener(tocProgressListener);
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>   browser.setUrl(urls[0]);</pre>
+<p>Each <code>File</code> instance is converted into a <code>String</code> representing its URL<img src="images/tag_1.gif" height=13 width=24 align=CENTER>. The process of building the table of contents requires registering the <code>TitleListener</code> <img src="images/tag_2.gif" height=13 width=24 align=CENTER> and <code>ProgressListener</code> <img src="images/tag_3.gif" height=13 width=24 align=CENTER> implemented above. The first document is opened with the call <code>Browser.setUrl</code><img src="images/tag_4.gif" height=13 width=24 align=CENTER>.</p>
+<p>The full source code for DocumentationViewer.java is <a href="DocumentationViewer.java">here</a>. </p>
+<h2>Summary</h2>
+<p>Documentation and contextual help benefit from the powerful HTML capabilities of today's popular browsers such as Internet Explorer, Mozilla and Safari. The Browser widget allows you to leverage the latest HTML standards and to integrate rich HTML content into your application.</p>
+<h2>References</h2>
+<p><a href="http://www.w3.org/People/Berners-Lee/WorldWideWeb.html">The WorldWideWeb Browser - Tim Berners-Lee</a> Where it all started, not so long ago.</p>
+<p><a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/faq.html#whatisbrowser">SWT Browser FAQ</a> Platform requirements for the Browser widget. </p>
+<p><a href="http://www.eclipse.org/downloads/index.php">BrowserExample (included with the Eclipse Example Plug-ins)</a> An Eclipse plugin browser based on the Browser widget.</p>
+<p> <a href="news://news.eclipse.org/eclipse.platform.swt">news://news.eclipse.org/eclipse.platform.swt</a> The SWT newsgroup is a good place to ask and discuss about the Browser widget. </p>
+<p><a href="http://www.csszengarden.com/">Zen Garden - The Beauty of CSS Design</a> A visual proof of the extraordinary versatility of CSS - same HTML content rendered with different CSS scripts.</p>
+<h2>Acknowledgements</h2>
+<p> Thanks to John Arthorne from the Eclipse Platform Core team and Jim des Rivi&egrave;res at OTI Labs for proof reading and providing feedback for this article. </p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States, other countries, or both.</small><br>
+<small>Microsoft and Windows are trademarks of Microsoft Corporation in the United States, other countries, or both.</small><br>
+<small>Linux is a trademark of Linus Torvalds in the United States, other countries, or both.</small><br>
+<small>Other company, product, and service names may be trademarks or service marks of others.</small></p>
+</body>
+</html>

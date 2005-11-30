@@ -1,0 +1,493 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<META name="GENERATOR" content="IBM WebSphere Studio Homepage Builder V6.0.2 for Windows">
+<META http-equiv="Content-Style-Type" content="text/css">
+<title>How to Test your Internationalized Eclipse Plug-In</title>
+<LINK rel="stylesheet" href="../../default_style.css">
+</head>
+<BODY>
+<div align="right"> <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2002 International Business Machines Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><IMG src="images/Idea.jpg" height="86" width="120" align="CENTER"></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">How to Test Your<BR>
+Internationalized Eclipse Plug-In</h1>
+<BLOCKQUOTE>
+<b>Summary</b>
+<br>This article shows you how to validate your internationalized product and prepares you for the types of common problems you can expect during translation testing. It includes an Eclipse plug-in that defines a <i>Properties File Compare</i> view that can help your translation testers find errors more quickly.
+<P><B>By Dan Kehn</b><br>
+IBM Eclipse ISV Enablement
+(Jumpstart) Team</P>
+  <P>August 23, 2002</P>
+  <P>Editor's note: This article reflects Eclipse release 2.0.</P>
+</blockquote>
+<H3><a name="tvt">Translation verification testing</a></H3>
+<p>You followed the internationalization steps outlined in the first article
+of this series, <A href="http://eclipse.org/articles/Article-Internationalization/how2I18n.html">How to Internationalize your Eclipse Plug-in</A>, then sent your national language (NL) resources (*.properties files,
+HTML files, icons, etc.) to a translation center. The items are returned
+and you reintegrated them into your product, but now what? To make all
+that investment in time and money worthwhile, you must verify that your
+product works correctly with the translations and that they are semantically
+correct in the context of actual product usage. This process is known as
+<i>Translation Verification Testing (TVT)</i>.</p>
+<p>TVT can be viewed from two aspects: process and technique. The <i>process</i> that you adopt will likely resemble the one that you have already put in place for your product's functional validation. But the particular <i>techniques</i> that you will employ are quite specific and these choices also impact
+the quality and efficiency of the testing process. This article will outline
+translation verification techniques and classic errors and will provide
+a tool that you can <a href="#tool">download</a> to help your translation testers work more efficiently and effectively.</p>
+<p>Ideally, the national language version (NLV) and domestic version of a product are developed and shipped at the same time, with the translation being tested before the domestic version is shipped. This is more likely the case for the second and subsequent release of an NL-enabled product. However, in the case of the first release, the domestic version may be released with the code already NL-enabled, but before the translations are available. This is often unavoidable since the language translation may take weeks or months, depending on the amount of NL material, during which it serves little purpose to delay the release of the domestic version.</p>
+<p>Subsequent releases can reduce the delay between domestic and international releases since the bulk of the translation and testing carries forward from the prior release. When planning your validation test cycle, weigh the amount of time and personnel that you expect to invest in proportion to the amount of material that was affected by translations. In general, minor changes in the translation materials are usually isolated risks, unlike functional modifications where one bad line of code can disrupt the stability of the entire system. This allows you to scale down the &quot;version two&quot; and subsequent translation efforts considerably, on the order of two-thirds to one-half your version 1.0 investment.</p>
+<H3><a name="basic_tvt">What constitutes a basic translation verification test?</a></H3>
+<p>For best results, your product should be tested in all translated languages using the operating system NL version and representative hardware for the target region. But if you must choose a subset, here are some guidelines on what and how to test your product's NL enablement:</p>
+<ul>
+<li>For single-byte character set testing (SBCS):
+  use the German language, as this language
+  is lengthy compared to English. Besides verifying
+  the proper replacement of the original language,
+  you can check for buffer overflow, message
+  truncation at display time, non-Latin-1 character
+  data entry (for example, &#233;, &#225;, &#228;, etc.), and page layout problems.<br />
+<br />
+</li>
+<li>For double-byte character set testing (DBCS): use the Japanese language,
+  as this language covers a broad range of the DBCS testing problems you
+  might find.<br />
+<br />
+</li>
+<li>For bi-directional character set testing (BIDI): use the Hebrew or Arabic languages. They are representative of the BIDI languages.</li>
+</ul>
+<p>TVT concentrates on detecting:</p>
+<ul>
+<li>Failure to use locale-sensitive functions</li>
+<li>New code problems introduced by the translation</li>
+<li>Hardcoded strings</li>
+<li>Text expansion problems</li>
+<li>Inadvertently translated strings</li>
+<li>Font changes, encoding/codepage problems</li>
+<li>Out-of-context translation errors</li>
+</ul>
+<p>Note that the scope of this article does not permit the treatment of each of these points in depth, but will cover in detail those that are less apparent.</p>
+<H4>A few words of wisdom from the TVT trenches</H4>
+<p>It is very tempting to concentrate all testing efforts on the NL-enabled version of the product in order to get it shipped with  the minimum delay. But corrections introduced into the NL version could impact the domestic version. When deciding whether or not to apply a code correction, determine how crucial it is to the finished product. Your translation testers are aware of the relative negative impact of a translation defect in the context of their culture; use them to help prioritize reported problems. Do not push for a correction that could destabilize the domestic edition, however, do not postpone those that make part of the translated product unusable. Trust your judgment and come up with an "absolutely must fix" list of problems.</p>
+<H3><a name="common_problems">Testing for common problems</a></H3>
+<p>All professional function testers have their favorite problem areas on
+which they concentrate, such as bounds testing, stress testing, and common
+path testing. This is also the case for the translation test professional,
+who has mastered the language for which they test and developed a mental
+list of common problem areas. Most of these apply to all target language
+translations, but others are specific to a given language, culture, or
+country. Let's focus on the former, since these points can be addressed
+without first mastering the target language. They can also be applied early
+in the verification test phase, that is, before your translation test experts
+arrive and time and money start to slip away.</p>
+<p><IMG src="images/tip.gif" width="62" height="13" border="0"> <B>Entering accented characters</B><BR clear="">
+Windows support for the US-International Keyboard Layout is helpful for
+entering accented characters on a QWERTY keyboard (go to <B>Control Panel &gt; Keyboard &gt; Input Locales</B>). It enables so-called &quot;dead key&quot; input of accented characters. For example, typing the single quote + the letter you want to accent will result in that letter with the acute accent ('+e = &eacute;, '+a = &aacute;, etc.). Similarly, the caret (^) will add the circumflex (&acirc;), the left grave accent modifier (`) will add the grave accent (&agrave;), and the double-quote (&quot;) will add the dieresis (&auml;).<p>However, while this enables QWERTY keyboard users to enter accented characters,
+it does not assure that the equivalent accented key on a &quot;native&quot;
+keyboard will work. This is true simply because the key scan code sequences
+will be different in the two cases, permitting the possibility that an
+input error is not detected on a non-native keyboard. Input errors for
+double-byte characters are equally problematic. And while Windows does
+support double-byte character input on a non-DBCS machine, the setup is
+more intrusive than simply toggling keyboard layouts -- it involves installing
+DBCS fonts and using multi-stroke key entry.</p>
+<H4>Testing for failure to use locale-sensitive functions</H4>
+<p>This type of problem centers around the locale-specific
+display of data, covered in detail in <A href="http://eclipse.org/articles/Article-Internationalization/how2I18n.html">How to Internationalize your Eclipse Plug-in</A> and the <A href="http://java.sun.com/docs/books/tutorial/i18n/intro/index.html">Java Tutorial: Internationalization</A> trail. Developers can test this in advance by changing their regional
+settings for numbers, currency, time, and dates, then validating that these
+fields are indeed displayed using the current locale and that input is
+accepted as expected. Verify that sorted lists are correct, even if they
+include accented characters. The precise collation order may not be obvious
+to a non-native and thus will have to wait for native translation testers,
+but generally you can expect that unaccented characters and their accented
+counterparts should sort near each other. That is, a failure to use the
+<A href="http://java.sun.com/j2se/1.3/docs/api/java/text/Collator.html">Collator</A> class or its equivalent for sorting is evident
+because a binary compare will typically result
+in the accented equivalent appearing quite
+far from its counterpart (for example, a = \u0061,
+&#225; = \u00e8).</p>
+<p>The good news is that failures to use Java's locale-sensitive classes are
+less common than those problems that are listed further on in this article,
+owing perhaps to the fact that locale-dependent fields are in the minority.
+Programmers also tend to have a more intuitive appreciation for the nature
+of NL problems solved by these classes, as opposed to those introduced
+by the translation process itself. Before moving on to the more subtle
+testing concerns below, remember to consider input field entry. Verify
+that you can enter accented characters and that they are not corrupted
+by codepage transformations (or lack thereof) when re-read from permanent
+storage. Verify that double-byte characters are not corrupted (split) by
+non-Unicode aware manipulations.</p>
+<H4>Testing for new code problems introduced by the translation</H4>
+<p>It is difficult to generalize about the characteristics of this type of problem, but common threads point to the erroneous assumption that the form of NL data adheres to the programmer's native language, or that the data is not NL sensitive at all. Examples include parsing text under the assumption that the separator will be a period or space, or inadvertently using NL data to define or modify character set-sensitive data like database column names without coding appropriate user entry field validation.</p>
+<H4>Testing for hardcoded strings</H4>
+<p>Hardcoding a string is surely the &quot;granddaddy&quot; of all TVT errors, outnumbering all others by far. There are two basic approaches to ferreting them out: the black-box approach and the white-box approach. The <i>white-box approach</i> relies on scanning the Java source code, XML, and HTML looking for hardcoded strings. The <b>External Strings</b> wizard of the Eclipse Workbench Java Development Tooling (JDT) automates the Java source code scanning process.</p>
+<p>The <i>black-box approach</i> is manually intensive, as it relies on executing testcase scenarios that display all the product's user interface elements (views, menus, dialogs, etc.) on a non-US English workstation to a tester who validates all text is translated.</p>
+<p>There is, however, a <i>gray-box approach</i> that falls somewhere in between. It involves translating all the text into an easily recognizable benign string of the same number of characters and words. For example, the information message below:
+</p>
+<blockquote>
+        Import resources from the local file system
+</blockquote>
+<p>becomes</p>
+<blockquote>****** ********* **** *** ***** **** ******</blockquote>
+<p>If your product test team was wise enough to use an automated test tool, their scripts can be modified to detect the cases where strings are hardcoded and were not detected by the black-box approach. These omissions could be because of untranslated third-party products that your product uses, composed strings, etc. If you don't have the benefit of automated testing, this approach will still simplify manual hardcoded string detection.  Furthermore, it has the advantage of requiring no specific language skills. Some testers prefer the "Pig Latin" approach. Our example above would then be:</p>
+<blockquote>
+        Importway esourcesray omfray ethay ocallay ilefay ystemsay
+</blockquote>
+<p>This has the advantage of retaining some level of readability while making it equally clear what text has not been translated.</p>
+<H4>Testing for inadvertently translated strings</H4>
+<p>The gray-box approach is perhaps the most rigorous method to validate that all strings have been translated. But it also is helpful in detecting that there are not any inadvertent translations. Consider, for example, an extract of the properties file <code>org.eclipse.jdt.internal.formatter\options.properties</code> below:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code>style.reuseExistingLayout.number=8
+style.reuseExistingLayout.category=Style
+style.reuseExistingLayout.name=&amp;Reuse existing layout 
+style.reuseExistingLayout.possibleValues=2|Reuse|Do not reuse 
+style.reuseExistingLayout.description=If the user formatted code a certain way, ...</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>Translating all the apparent user text to asterisks would include the key and value below:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code>style.reuseExistingLayout.possibleValues=2|*****|** *** *****</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>While this may not cause a run-time bug per se, it is not evident that these values actually represent the key used to persist the user's preference (in other words, "Reuse|Do not reuse" are never displayed to the end user). If the translator unknowingly translated two terms that are different in English into the same word in their target language, it is possible that changing one preference would overwrite an unrelated preference.</p>
+<p>That is the risk of mixing the use of properties files for translatable text and run-time parameterization. This is certainly a valid programming technique, but it requires that the translator be aware of it, at a minimum by adding comments to the properties files itself. Better still, use values that are clearly programmatic. Returning to our example:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code>style.reuseExistingLayout.possibleValues=2|REUSE_LAYOUT_YES|REUSE_LAYOUT_NO</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>Here it is obvious to both the translator and their translation tools that the values after the equal sign should not be modified.</p>
+<H4>Testing for text expansion problems</H4>
+<p>The average text expansion of English to several European languages is around 40%. Consider these examples. First, one English word translated to two German words:</p>
+<blockquote>
+        Restart -&gt; Neu starten
+</blockquote>
+<p>Not a problem, an expansion of seven characters to eleven. But here's a surprise. Two English words translated to one (long) German word:</p>
+<blockquote>
+        Counter Logs -&gt; Leistungsindikatorenprotokolle
+</blockquote>
+<p>Ouch, an expansion of 12 characters to 30!
+While the German language is well recognized
+for text expansion relative to English, it
+is not the only one. Consider the Acadamie
+Fran&#231;aise's official French language
+equivalent of "air bag": <i>coussin gonflable de s&#233;curit&#233;</i>. To address this in development before a
+translation is available, you can modify
+the text of your properties files to double
+their lengths. To make it obvious that this
+is a testcase, a simple script can double
+each word. Taking our example from above
+once again:</p>
+<blockquote>
+        Import import resources resources from from the the local local file file system system
+</blockquote>
+<p>Now rerun your application and verify that the page layouts are still appropriate, that text is not truncated, etc. If a page is resizable, resize it from each of the four corners. Recognize that even this test has a weakness, since it assumes that phrases will include spaces and can word wrap; this is not true for some non-Latin character based languages.</p>
+<p>For those cases where the layout demands that the translated text be minimal, document the limit in the original language file. For example, adding a comment:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code># translation note: Text below is limited to approximately 60 
+# characters, see testcase 1.13 to validate</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>Here the translator is alerted to the fact that verbosity is not allowed. The testcase reference will allow the translation tester to validate that the text is not truncated, because the choice of letters affects the final text width in proportional fonts. Translators may also need the ability to specify layout constraints, such as a column width in a table, especially those that are not resizable:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code># translation note: Width in pixels of the &quot;Completed&quot; 
+# column. The text is a 'C' in US English, it should 
+# be as short as possible in the translation.
+taskList.completedHeading=C 
+taskList.completedHeadingWidth=10</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>Here the translator or translation tester can provide an optimal size without resorting to unnaturally terse translations, while taking into consideration the default fonts associated with the language and operating system.</p>
+<p>
+<b>Note:</b> Text truncation implies the inability to access the complete text, even employing alternative user interface mechanisms like scrolling, displaying another dialog, or providing a "More &gt;&gt;" button. Clearly text truncation with no means to visualize it is more serious than simply requiring that the user scroll the viewing area. For these reasons and for reasons of accessibility, avoid creating text areas that cannot scroll or wrap.</p>
+<H4>Testing for font size changes</H4>
+<p>Font pixel size for different operating systems and languages can change in both height and width. The majority of these cases are handled by the base widgets; for example, a text field will resize automatically to accommodate a larger font, or autoscroll if necessary. But if you draw your own graphics and text, the appropriate system metrics must be queried in order to avoid arbitrary text truncation.</p>
+<p>This is especially true for double-byte language
+fonts, where the minimum height is generally
+larger than that of single-byte language
+fonts. As an aside, handling font size changes
+is <i>not required</i> for <A href="http://www.section508.gov">Section 508</A> accessibility compliance, but it is surely
+appreciated by those that wish to choose
+a larger font because of a visual impairment.
+You can perform a quick test on Windows by
+increasing the size of the default font and
+restarting your machine (<b>Display &gt; Settings &gt; Advanced &gt;
+General &gt; Font Size &gt; Large Fonts</b>). You will be surprised how many of the
+applications you use everyday fail this simple
+test. Don't follow their example!</p>
+<H4>Testing for out-of-context translation errors</H4>
+<p>One aspect that directly impacts the quality of these translations is the clarity of the context. This is readily apparent when translating property files:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code>eojMessage = {0} at {1}</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>This example is fictitious, but it demonstrates the point. What is the context in which this message is displayed? The first parameter could be the date and the second the time. But maybe the first is a resource and the second is the URL of the server where it was stored. Without a comment to indicate, the translator will simply translate it literally to the most likely choice.</p>
+<p>Here is an actual example from the Eclipse Workbench:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code>WorkbenchPreference.autobuild = 
+    Perform build automatically on resource modification</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>In this context, "on" means "when a resource is modified." This may be clear to a Workbench user, but the first translation is done by a central organization without specific product knowledge. Since "resource modification" means little to them, "on" could be interpreted literally, as in, "on top of," or quite narrowly in a programmatic sense, as in, "as a super task."</p>
+<p>Consider adding notes to the property files so translators will know the context of a given message. It is especially important in those cases where the subject is implied, since many languages must explicitly know the subject in order to choose the appropriate adjective and verb forms. Here are a few messages from the JDT that are displayed as markers within the Java source code editor, augmented with example translator-friendly comments:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code># Note: The error messages below are displayed in the Java source 
+#          editor with an &quot;X&quot; next to the offending line.  They are also 
+#          displayed in the Task List with a reference back to the file.  
+#          Double-clicking the error in the Task List will open the editor 
+#          and scroll to the corresponding line number.
+
+# The subject is a method, i.e., &quot;Method must return a result of type 'x'&quot;
+108 = Must return a result of type {0} 
+
+# &quot;Variable (or field) must provide either dimension expressions...
+159 = Must provide either dimension expressions or an array initializer 
+
+# &quot;Class must implement the inherited abstract method 'x'&quot;
+400 = Must implement the inherited abstract method {0} 
+
+# &quot;This class overrides deprecated method from 'its superclass'&quot;
+412 = Overrides deprecated method from {0}</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>Nobody expects a developer writing such a message to be aware of the subtle interpretations of a phrase. The examples above demonstrate that even given the developer's best efforts, there is no substitute for translation testing.</p>
+<H4>Testing for missed translations</H4>
+<p>In addition to performing the TVT on the running version of the translated product, you can use the <i>Property Files Compare</i> view to speed up the testing cycle and detect common errors, resulting in a higher quality NL version of your product.</p>
+<p>Briefly, the objectives of the tool are two-fold:</p>
+<ul>
+<li>Allow a speedy verification of the translation by displaying the content of the translated file side-by-side with its corresponding original language file. This is an "out of context" verification, but gives the testers a chance to rapidly review the translation and guarantee that 100% of the files are translated and converted to the correct codepage.</li>
+<li>Ensure your NL product, once released, will not throw an exception due to missing keywords from the translated files.</li>
+</ul>
+<p>Remember there is a gap of time between the moment the original source language files were sent for translation and the time TVT started. It is during this period that the code -- as well as some of the original source language files -- could have changed. New keywords may have been added to them that are not in the translation, resulting in a run-time error.</p>
+<p>To resolve this situation, use this view to compare side-by-side the source language files against their corresponding translated files. The tool flags missing keywords and gives you a chance to correct the files.</p>
+<H3><a name="summary">Summary</a></H3>
+<p>It is both costly and time-consuming to enable
+your product to the world market. But if
+worldwide software sales are any indicator,
+ignoring this requirement carries its own
+costs. With the how-to presented in the <A href="http://eclipse.org/articles/Article-Internationalization/how2I18n.html">first
+article of this series</A> and the testing hints
+and tools in this one, you should be on your
+way to <i>pr&#233;senter votre produit en n'importe
+quelle langue comme si c'&#233;tait sa
+langue maternelle</i> (presenting your product in any language
+as if it were its native language)!</p>
+<H3><a name="tool">Appendix A: Tool for comparing property files side-by-side</a></H3>
+<p>Translation verification testing involves a language expert actually executing the product in order to correct the previously discussed translation errors. This process is time consuming, sometimes tedious, and error prone. As a means to alleviate some of these costs, improve productivity, and increase the quality of the final result, I wrote a simple view that displays two property files side-by-side, using run-time formatting and parameter substitution. This enables the language expert to quickly validate the initial translation and see the messages formatted in the same fashion as in the running product itself. <A href="eclipse_tvt.zip">Download the code</A> for this tool.</p>
+<p>More precisely, here are the problems that the <i>Property Files Compare</i> tool addresses:</p>
+<ul>
+  <li>Enables the language expert to quickly validate the initial translation. 
+    Remember, the first translation is generally done "in bulk" by translators 
+    who have no product experience. They employ translation tools that help assure 
+    the consistency of the translation, but this is no substitute for on-site 
+    verification. Translation verification testers are aware of the product metaphors 
+    and are capable of quickly reviewing translations in a side-by-side fashion 
+    in order to catch obvious gaffes.<br />
+    <br />
+  </li>
+  <li>Visualizes the messages formatted in the same fashion as in the running
+  product itself, including parameter substitution. This helps detect common
+  errors like missing or extraneous quotes, missing closing braces, etc.
+  While most of these errors will show up in the source language, others
+  are introduced during translation. Extraneous or missing single quotes
+  are a notorious example, even in English (for example, &quot;The process
+  didnt complete&quot; has a missing apostrophe, &quot;The process didn''t
+  complete&quot; has an extra apostrophe). See <a href="#appendix_b">One 
+    or two quotes?</a> below for more details.<br />
+    <br />
+  </li>
+  <li>Assures that the messages are displayable. As simple as this might sound, 
+    encoding/conversion errors are not uncommon (refer to <A href="http://eclipse.org/articles/Article-Internationalization/how2I18n.html">How 
+    to Internationalize your Eclipse plug-in</A> for details). A quick display 
+    of a properties file in the actual run-time environment is a good "sanity" 
+    check.<br />
+    <br />
+  </li>
+  <li>Assures that all the keys defined in the source language exist in the target 
+    language property file, and visa-versa. Mismatches occur when keys from source 
+    language are added or deleted and the appropriate correction is not propagated 
+    to the target language files, as well as when keys are inadvertently deleted 
+    from the target language files.<br />
+    <br />
+  </li>
+  <li>Flags untranslated text.</li>
+</ul>
+<p>Once its plug-in is installed, open it by selecting <b>Perspectives &gt; Show View &gt; Java &gt; Properties Files Compare</b>. Then enter the name of the directories
+containing your source and target languages;
+pressing Enter while the <i>Source Language Directory</i> or <i>Target Language Directory</i> field has the focus will start a search
+for all *.properties files. Selecting one
+of the property files on the left will attempt
+to auto-select its corresponding target on
+the right by matching the same partial file
+specification, starting at the last occurrence
+of "eclipse" in the directory path.</p>
+<p>
+<b>Figure 1. Properties file comparison view</b><br />
+<IMG src="images/tool.jpg" width="681" height="524" alt="Properties file comparison view"></p>
+<p>For example, if the Eclipse Workbench is installed in <code>x:\eclipse2.0</code>, the Eclipse install root is a subdirectory directly beneath it called, unsurprisingly, <code>eclipse</code>. The view assumes that you (a) maintain native language property files in separate subdirectory trees by language, or that (b) the original language (source) files have no country suffix and the target files have a suffix based on the country code returned by the operating system.  For example:
+</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code>(a) Languages separated by directory
+x:\english\eclipse\plugins\org.eclipse.core.jdt\plugin.properties
+x:\french\eclipse\plugins\org.eclipse.core.jdt\plugin.properties
+x:\german\eclipse\plugins\org.eclipse.core.jdt\plugin.properties
+
+(b) Languages separated by country-specific file suffix
+x:\eclipse\plugins\org.eclipse.core.jdt\plugin.properties
+x:\eclipse\plugins\org.eclipse.core.jdt\plugin_fr.properties
+x:\eclipse\plugins\org.eclipse.core.jdt\plugin_de.properties</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>So entering <code>x:\english</code> in the first directory field and pressing
+Enter will initiate a search starting from
+the English subdirectory. Entering <code>x:\french</code> in the second directory field will initiate a search starting from the French subdirectory. Selecting a properties file found in the list of <i>Source Language</i> list will automatically select the corresponding file in the <i>Target Language</i> list, and display their contents sorted by key.</p>
+
+<p>
+<b>Note:</b> Another tool, called <A href="http://www.alphaworks.ibm.com/tech/rbmanager">RBManager</A>, is available on <A href="http://www.alphaworks.ibm.com/">IBM's alphaWorks site</A>. According to the description there, &quot;<i>RBManager</i> (Resource Bundle Manager) is a tool that automates many of the tedious tasks associated
+with creating, updating, and managing resource
+bundle files; it also prevents most common
+mistakes from being propagated across bundles.
+This tool is helpful for development teams
+working on internationalized applications
+and Web-based services."</p>
+<p>RBManager doesn't include a side-by-side property files view (yet?), however 
+  it definitely helps manage the many resource files that are typically involved 
+  in a translation. RBManager includes good documentation and a tutorial.</p>
+<H3><A name="appendix_b">Appendix B: One or two quotes?</A></H3>
+<p>How you plan to format your property file messages has an impact on the way that single quotes should be entered, that is, are they doubled or entered only once. To illustrate the problem, consider the code below:</p>
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td>
+      <pre><code>package com.ibm.jumpstart.messageformattest;
+import java.text.MessageFormat;
+
+public class MessageFormatTest {
+  public static void main(String[] args) {
+    String msg1 = &quot;This is a ''{0}'' program and it''s not ready for production.&quot;;
+    String msg2 = &quot;This is a beta program and it's not ready for production.&quot;;
+    String msg3 = &quot;This is a beta program and it's not ready for {0}.&quot;;
+
+    System.out.println(MessageFormat.format(msg1, new String[] {&quot;beta&quot;}));
+    System.out.println(MessageFormat.format(msg2, new String[0]));
+    System.out.println(msg2);
+
+    System.out.println(MessageFormat.format(msg3, new String[] {&quot;production&quot;}));
+    System.out.println(msg3);
+  }
+}</code></pre>
+      </td>
+    </tr>
+
+</table>
+<p>
+The output is below:
+<table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+
+    <tr>
+      <td><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is a 'beta' program and it's not ready for production.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is a beta program and its not ready for production.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is a beta program and it's not ready for production.<br>
+<IMG src="images/tag_4.gif" height="13" width="24" align="CENTER">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is a beta program and its not ready for {0}.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is a beta program and it's not ready for {0}.
+</code>
+      </td>
+    </tr>
+
+</table>
+<p>The fourth line (<IMG src="images/tag_4.gif" width="24" height="13">) is particularly 
+  troubling, because not only is the apostrophe missing, but so is the substitution 
+  parameter! These differences stem from the fact that <A href="http://java.sun.com/j2se/1.3/docs/api/java/text/MessageFormat.html">MessageFormat</A> 
+  expects a quote to be entered twice if it is to be included in the result. No 
+  problem, but what if some programmers use MessageFormat, some write their own 
+  version for parameter substitution, and others don't use it at all unless there 
+  are substitution parameters? The translator obviously does not know what code 
+  will manipulate the translated text, so they must know how to enter required 
+  single quotes / apostrophes.</p>
+<p>Here are the conventions that were adopted for required quotes during the Eclipse Workbench version 1.0 TVT:</p>
+<ul>
+<li>If there are no substitution parameters, enter only one quote </li>
+<li>If there are any substitution parameters (like {0}), enter two quotes</li>
+</ul>
+<p>This is in acceptance of the observation that practically all programmers used MessageFormat only for those cases where there were substitution parameters. To avoid this programming inconsistency, version 2.0 of the Eclipse JDT includes an <B>Externalize Strings</B> wizard to help centralize message retrieval and parameter substitution. Consider adopting this strategy, or systematically using MessageFormat so your translators will only have one rule for required quotes.</p>
+<DL>
+  <DT>This potential stumbling block is noted in the <A href="http://java.sun.com/j2se/1.3/docs/api/java/text/MessageFormat.html">MessageFormat</A> 
+    documentation:
+</DL>
+<DL>
+  <DD>&quot;The rules for using quotes within message format patterns unfortunately have shown to be somewhat confusing. In particular, it isn't always obvious to localizers whether single quotes need to be doubled or not. Make sure to inform localizers about the rules, and tell them (for example, by using comments in resource bundle source files) which strings will be processed by MessageFormat. Note that localizers may need to use single quotes in translated strings where the original version doesn't have them.&quot;</DD>
+</DL>
+<h3><A name="author">About the author</A><BR>
+</H3>
+<P><B>Dan Kehn</B> is a Senior Software Engineer at IBM in Research Triangle Park, North
+Carolina. His interests in object-oriented programming go back to 1985,
+long before it enjoyed the acceptance it has today. He has a broad range
+of software experience, having worked on development tools like VisualAge
+for Smalltalk, operating system performance and memory analysis, and user
+interface design. Dan worked as a consultant for object-oriented development
+projects throughout the U.S. as well as four years in Europe. His recent
+interests include object-oriented analysis/design, programming tools, and
+Web programming with the WebSphere Application Server. Last year he joined
+the Eclipse Jumpstart team, whose primary goal is to help ISVs to create
+commercial offerings based on the Eclipse Platform. In another life, Dan
+authored several articles about diverse Smalltalk topics like meta-programming,
+team development, and memory analysis. You can find them on <A href="http://www.ibm.com/software/ad/smalltalk/discussion/index.html">Eye on SmallTalk</A>.
+
+</BODY>
+</html>

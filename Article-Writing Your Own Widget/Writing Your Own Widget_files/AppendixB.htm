@@ -1,0 +1,198 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta name="Author" content="Carolyn MacLeod">
+<title>Appendix B: SpinnerTest and Spinner</title>
+</head>
+
+<body>
+<h2>Appendix B: SpinnerTest and Spinner</h2>
+This appendix contains the source code for the <i>SpinnerTest</i> and <i>Spinner</i> classes. The <i>Spinner</i> class loads and calls the native 
+code listed in either <A href="AppendixC.htm">Appendix C: Spinner For Windows</A>, or <A 
+href="AppendixD.htm">Appendix D: Spinner for Motif</A>.
+<p>
+<h3><strong>SpinnerTest.java</strong></h3>
+<pre>
+<font color="#7F0055">package</font> spinner;
+<font color="maroon">
+/*
+ * (c) Copyright IBM Corp. 2000, 2001.
+ * All Rights Reserved.
+ */
+</font>
+<font color="#7F0055">import</font> org.eclipse.swt.*;
+<font color="#7F0055">import</font> org.eclipse.swt.widgets.*;
+<font color="#7F0055">import</font> org.eclipse.swt.events.*;
+<font color="#7F0055">import</font> org.eclipse.swt.layout.*;
+<font color="#7F0055">import</font> org.eclipse.swt.graphics.*;
+ 
+<font color="#7F0055">public class</font> SpinnerTest {
+      
+<font color="#7F0055">public static void</font> main (String [] args) {
+    Display display = <font color="#7F0055">new</font> Display ();
+    Shell shell = <font color="#7F0055">new</font> Shell (display);
+    shell.setLayout (<font color="#7F0055">new</font> RowLayout ());
+ 
+    <font color="#7F0055">final</font> Spinner spinner = <font color="#7F0055">new</font> Spinner (shell, 0);
+    spinner.setMaximum (999);
+    System.out.println (<font color="blue">&quot;max set to &quot;</font> + spinner.getMaximum ());
+    spinner.setSelection (500);
+    System.out.println (<font color="blue">&quot;selection set to &quot;</font> + spinner.getSelection ());
+    spinner.setMinimum (100);
+    System.out.println (<font color="blue">&quot;min set to &quot;</font> + spinner.getMinimum ());
+    Font font = <font color="#7F0055">new</font> Font (display, &quot;Courier&quot;, 20, SWT.NORMAL);
+    spinner.setFont (font);
+    spinner.addSelectionListener (<font color="#7F0055">new</font> SelectionAdapter () {
+        <font color="#7F0055">public void</font> widgetSelected (SelectionEvent e) {
+            System.out.println (spinner.getSelection ());
+        }
+    });
+    shell.pack ();
+    shell.open ();          
+    <font color="#7F0055">while</font> (!shell.isDisposed ()){
+        <font color="#7F0055">if</font> (!display.readAndDispatch ()) display.sleep ();
+    }
+    font.dispose ();
+}
+}
+</pre>
+<p>
+<h3><strong>Spinner.java</strong></h3>
+<pre>
+<font color="#7F0055">package</font> spinner;
+<font color="maroon">
+/*
+ * (c) Copyright IBM Corp. 2000, 2001.
+ * All Rights Reserved.
+ */
+</font>
+<font color="#7F0055">import</font> java.util.*;
+<font color="#7F0055">import</font> org.eclipse.swt.*;
+<font color="#7F0055">import</font> org.eclipse.swt.graphics.*;
+<font color="#7F0055">import</font> org.eclipse.swt.widgets.*;
+<font color="#7F0055">import</font> org.eclipse.swt.events.*;
+ 
+<font color="#7F0055">public class</font> Spinner <font color="#7F0055">extends</font> Composite {
+    <font color="#7F0055">int</font> handleSpinner;
+    <font color="#7F0055">static</font> Hashtable table = <font color="#7F0055">new</font> Hashtable ();
+    <font color="#7F0055">static</font> {
+        System.loadLibrary (<font color="blue">&quot;spinner&quot;</font>);     
+    }
+  
+    <font color="#7F0055">public</font> Spinner (Composite parent, <font color="#7F0055">int</font> style) {
+        <font color="#7F0055">super</font> (parent, style);
+        <font color="#7F0055">int</font> handleParent = handle;
+        handleSpinner = createControl (handleParent);
+        <font color="#7F0055">if</font> (handleSpinner == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+        table.put (<font color="#7F0055">new</font> Integer (handleSpinner), <font color="#7F0055">this</font>);
+        addDisposeListener (<font color="#7F0055">new</font> DisposeListener () {
+            <font color="#7F0055">public void</font> widgetDisposed (DisposeEvent e) {
+                Spinner.<font color="#7F0055">this</font>.widgetDisposed (e);
+            }
+        });
+        addControlListener (<font color="#7F0055">new</font> ControlAdapter () {
+            <font color="#7F0055">public void</font> controlResized (ControlEvent e) {
+                Spinner.<font color="#7F0055">this</font>.controlResized (e);                
+            }
+        });
+        addFocusListener (<font color="#7F0055">new</font> FocusAdapter () {
+            <font color="#7F0055">public void</font> focusGained (FocusEvent e) {
+                Spinner.<font color="#7F0055">this</font>.focusGained (e);             
+            }
+        });
+        Font font = getFont ();
+        setFont (handleSpinner, font.handle);
+    }
+  
+    <font color="#7F0055">public void</font> setFont (Font font) {
+        <font color="#7F0055">super</font>.setFont (font);
+        <font color="#7F0055">int</font> hFont = 0;
+        <font color="#7F0055">if</font> (font != <font color="#7F0055">null</font>) hFont = font.handle;
+        setFont (handleSpinner, hFont);
+    }
+  
+    <font color="#7F0055">public int</font> getSelection () {
+        checkWidget ();
+        <font color="#7F0055">return</font> getPosition (handleSpinner);
+    }
+  
+    <font color="#7F0055">public void</font> setSelection (<font color="#7F0055">int</font> selection) {
+        checkWidget ();
+        setPosition (handleSpinner, selection);
+    }
+
+    <font color="#7F0055">public void</font> setMaximum (<font color="#7F0055">int</font> maximum) {
+        checkWidget ();
+        setMaximum (handleSpinner, maximum);
+    }
+
+    <font color="#7F0055">public int</font> getMaximum () {
+        checkWidget ();
+        <font color="#7F0055">return</font> getMaximum (handleSpinner);
+    }
+
+    <font color="#7F0055">public void</font> setMinimum (<font color="#7F0055">int</font> minimum) {
+        checkWidget ();
+        setMinimum (handleSpinner, minimum);
+    }
+
+    <font color="#7F0055">public int</font> getMinimum () {
+        checkWidget ();
+        <font color="#7F0055">return</font> getMinimum (handleSpinner);
+    }
+ 
+    <font color="#7F0055">public void</font> widgetDisposed (DisposeEvent e) {
+        table.remove (<font color="#7F0055">new</font> Integer (handleSpinner));
+        handleSpinner = 0;
+    }
+  
+    <font color="#7F0055">public void</font> controlResized (ControlEvent e) {
+        Rectangle rect = getClientArea ();
+        resizeControl (handleSpinner, rect.x, rect.y, rect.width, rect.height);       
+    }
+
+    <font color="#7F0055">public void</font> focusGained (FocusEvent e) {
+        setFocus (handleSpinner);
+    }
+ 
+    <font color="#7F0055">public</font> Point computeSize (<font color="#7F0055">int</font> wHint, <font color="#7F0055">int</font> hHint, <font color="#7F0055">boolean</font> changed) {
+        checkWidget ();
+        <font color="#7F0055">int</font> [] result = <font color="#7F0055">new int</font> [2];
+        computeSize (handleSpinner, result);
+        <font color="#7F0055">if</font> (wHint != SWT.DEFAULT) result [0] = wHint;
+        <font color="#7F0055">if</font> (hHint != SWT.DEFAULT) result [1] = hHint;
+        <font color="#7F0055">int</font> border = getBorderWidth ();
+        <font color="#7F0055">return</font> new Point (result [0] + border * 2, result [1] + border * 2);
+    }
+  
+    <font color="#7F0055">public void</font> addSelectionListener (SelectionListener listener) {
+        <font color="#7F0055">if</font> (listener == <font color="#7F0055">null</font>) <font color="#7F0055">throw new</font> SWTError (SWT.ERROR_NULL_ARGUMENT);
+        addListener (SWT.Selection, <font color="#7F0055">new</font> TypedListener (listener));
+    }
+
+    <font color="#7F0055">static void</font> widgetSelected (<font color="#7F0055">int</font> handle) {
+        Spinner spinner = (Spinner) table.get (<font color="#7F0055">new</font> Integer (handle));
+        <font color="#7F0055">if</font> (spinner == <font color="#7F0055">null</font>) <font color="#7F0055">return</font>;
+        spinner.notifyListeners (SWT.Selection, <font color="#7F0055">new</font> Event ());
+    }
+  
+    <font color="#3F7F5F">/*********** JAVA NATIVES ************/</font>
+
+    <font color="#7F0055">static final native int</font> createControl (<font color="#7F0055">int</font> handle);
+    <font color="#7F0055">static final native void</font> computeSize (<font color="#7F0055">int</font> handle, <font color="#7F0055">int</font> [] result);
+    <font color="#7F0055">static final native void</font> resizeControl (<font color="#7F0055">int</font> handle, <font color="#7F0055">int</font> x, <font color="#7F0055">int</font> y, <font color="#7F0055">int</font> width, <font color="#7F0055">int</font> height);
+    <font color="#7F0055">static final native void</font> setPosition (<font color="#7F0055">int</font> handle, <font color="#7F0055">int</font> position);
+    <font color="#7F0055">static final native int</font> getPosition (<font color="#7F0055">int</font> handle);
+    <font color="#7F0055">static final native void</font> setMaximum (<font color="#7F0055">int</font> handle, <font color="#7F0055">int</font> max);
+    <font color="#7F0055">static final native int</font> getMaximum (<font color="#7F0055">int</font> handle);
+    <font color="#7F0055">static final native void</font> setMinimum (<font color="#7F0055">int</font> handle, <font color="#7F0055">int</font> min);
+    <font color="#7F0055">static final native int</font> getMinimum (<font color="#7F0055">int</font> handle);
+    <font color="#7F0055">static final native void</font> setFont (<font color="#7F0055">int</font> handle, <font color="#7F0055">int</font> hFont);
+    <font color="#7F0055">static final native void</font> setFocus (<font color="#7F0055">int</font> handle);
+}
+</pre>
+</body>
+</html>

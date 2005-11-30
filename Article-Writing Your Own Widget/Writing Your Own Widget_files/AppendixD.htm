@@ -1,0 +1,317 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta name="Author" content="Carolyn MacLeod">
+<title>Appendix D: Spinner for Motif</title>
+</head>
+
+<body>
+<h2>Appendix D: Spinner for Motif</h2>
+This appendix contains the source code for the Motif version of the <i>Spinner</i> natives in spinner.c, and the shell file and makefile for building the Motif Shared Object Library 
+libspinner.so.
+<h3><strong>spinner.c</strong></h3>
+<pre>
+/*
+ * (c) Copyright IBM Corp. 2000, 2001.
+ * All Rights Reserved.
+ */
+ 
+#include &lt;jni.h&gt;
+#include &lt;Xm/XmAll.h&gt;
+#include &lt;pthread.h&gt;
+#include &lt;stdio.h&gt;
+ 
+#define ARROW_WIDTH 19
+#define SPACING 2
+ 
+static jobject javaClass;
+static jmethodID mid;
+static pthread_key_t envKey;
+ 
+int Callback(Widget handle, XtPointer clientData, XmAnyCallbackStruct * callData) {
+    JNIEnv *env = (JNIEnv *) pthread_getspecific(envKey);
+    if (env != NULL) {
+        /* If an exception has already occurred,
+         * allow the stack to unwind so that the
+         * exception will be thrown in Java. */
+        if ((*env)-&gt;ExceptionOccurred(env)) return 0;
+        switch (callData-&gt;reason) {
+            //case XmCR_SPIN_NEXT:
+            //case XmCR_SPIN_PRIOR:
+            case XmCR_OK:
+                ((*env)-&gt;CallStaticVoidMethod(env, javaClass, mid, handle));
+                return 0;
+        }
+    }
+    return 0;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    createControl
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_createControl
+    (JNIEnv *env, jclass that, jint handleParent)
+{
+    Widget handleSpinBox;
+    Arg argList[10];
+    int n = 0;
+    XtSetArg(argList[n], XmNspinBoxChildType, XmNUMERIC); n++;
+    XtSetArg(argList[n], XmNarrowLayout, XmARROWS_END); n++;
+    handleSpinBox = XmCreateSimpleSpinBox((Widget) handleParent, NULL, argList, n);
+    if (handleSpinBox == 0) return 0;
+    XtManageChild(handleSpinBox);
+    XtAddCallback(handleSpinBox, XmNvalueChangedCallback, (XtCallbackProc) Callback, NULL);
+    if (javaClass == 0) {
+        javaClass = (*env)-&gt;NewGlobalRef(env, (jobject) that);
+        mid = (*env)-&gt;GetStaticMethodID(env, (jobject) that, &quot;widgetSelected&quot;, &quot;(I)V&quot;);
+        pthread_key_create(&amp;envKey, NULL);
+    }
+    pthread_setspecific(envKey, env);
+    return (jint) handleSpinBox;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    computeSize
+ * Signature: (I[I)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_computeSize
+    (JNIEnv *env, jclass that, jint handleSpinBox, jintArray result)
+{
+    Dimension width, height;
+    Arg argList[10];
+    int n;
+    Widget handleText;
+    XmFontList fontList;
+    Dimension sbShadowThickness, textMarginWidth, textMarginHeight, textShadowThickness;
+    int max, digits;
+    char text [64];
+    XmString xmString;
+
+    jint *result1 = NULL;
+    result1 = (*env)-&gt;GetIntArrayElements(env, result, NULL);
+
+    n = 0;
+    XtSetArg(argList[n], XmNtextField, &amp;handleText); n++;
+    XtSetArg(argList[n], XmNmaximumValue, &amp;max); n++;
+    XtSetArg(argList[n], XmNshadowThickness, &amp;sbShadowThickness); n++;
+    XtGetValues((Widget) handleSpinBox, argList, n);
+
+    n = 0;
+    XtSetArg(argList[n], XmNfontList, &amp;fontList);  n++;
+    XtSetArg(argList[n], XmNmarginWidth, &amp;textMarginWidth); n++;
+    XtSetArg(argList[n], XmNmarginHeight, &amp;textMarginHeight); n++;
+    XtSetArg(argList[n], XmNshadowThickness, &amp;textShadowThickness); n++;
+    XtGetValues(handleText, argList, n);
+
+    if (max &gt; 0) {
+        digits = 0;
+        while (max &gt; 0) {
+            text[digits] = '0';
+            max /= 10;
+            digits++;
+        }
+        text [digits] = 0;
+        xmString = XmStringParseText(  
+            (XtPointer) text,
+            (XtPointer *) NULL,
+            XmFONTLIST_DEFAULT_TAG, 
+            XmCHARSET_TEXT, 
+            (XmParseTable) NULL,
+            0,
+            (XtPointer) 0);
+        width = XmStringWidth(fontList, xmString);
+        height = XmStringHeight(fontList, xmString);
+        XmStringFree(xmString);
+    } else {
+        width = 200;
+        height = 50;
+    }
+
+    // Add in the margins.
+    width += textMarginWidth * 2 + textShadowThickness * 2 + sbShadowThickness * 2 + ARROW_WIDTH + SPACING;
+    height += textMarginHeight * 2 + textShadowThickness * 2 + sbShadowThickness * 2;
+    result1 [0] = width;
+    result1 [1] = height;
+    (*env)-&gt;ReleaseIntArrayElements(env, result, result1, 0);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    resizeControl
+ * Signature: (IIIII)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_resizeControl
+    (JNIEnv *env, jclass that, jint handleSpinBox, jint x, jint y, jint width, jint height)
+{
+    Arg arg;
+    Widget handleText;
+    XtSetArg(arg, XmNtextField, &amp;handleText);
+    XtGetValues((Widget) handleSpinBox, &amp;arg, 1);
+    XtResizeWidget((Widget) handleSpinBox, width, height, 0);
+    XtResizeWidget(handleText, width - ARROW_WIDTH, height, 0);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setPosition
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setPosition
+    (JNIEnv *env, jclass that, jint handle, jint position)
+{
+    Arg arg;
+    XtSetArg(arg, XmNposition, position);
+    XtSetValues((Widget) handle, &amp;arg, 1);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    getPosition
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_getPosition
+    (JNIEnv *env, jclass that, jint handle)
+{
+    Arg arg;
+    int pos;
+    XtSetArg(arg, XmNposition, &amp;pos);
+    XtGetValues((Widget) handle, &amp;arg, 1);
+    return (jint) pos;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setMaximum
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setMaximum
+    (JNIEnv *env, jclass that, jint handle, jint max)
+{
+    Arg arg;
+    XtSetArg(arg, XmNmaximumValue, max);
+    XtSetValues((Widget) handle, &amp;arg, 1);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    getMaximum
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_getMaximum
+    (JNIEnv *env, jclass that, jint handle)
+{
+    Arg arg;
+    int max;
+    XtSetArg(arg, XmNmaximumValue, &amp;max);
+    XtGetValues((Widget) handle, &amp;arg, 1);
+    return (jint) max;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setMinimum
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setMinimum
+    (JNIEnv *env, jclass that, jint handle, jint min)
+{
+    Arg arg;
+    XtSetArg(arg, XmNminimumValue, min);
+    XtSetValues((Widget) handle, &amp;arg, 1);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    getMinimum
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_getMinimum
+    (JNIEnv *env, jclass that, jint handle)
+{
+    Arg arg;
+    int min;
+    XtSetArg(arg, XmNminimumValue, &amp;min);
+    XtGetValues((Widget) handle, &amp;arg, 1);
+    return (jint) min;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setFont
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setFont
+    (JNIEnv *env, jclass that, jint handle, jint fontList)
+{
+    Arg arg;
+    Widget handleText;
+    XtSetArg(arg, XmNtextField, &amp;handleText);
+    XtGetValues((Widget) handle, &amp;arg, 1);
+    XtSetArg(arg, XmNfontList, (XmFontList) fontList);
+    XtSetValues(handleText, &amp;arg, 1);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setFocus
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setFocus
+    (JNIEnv *env, jclass that, jint handle)
+{
+    Arg arg;
+    Widget handleText;
+    XtSetArg(arg, XmNtextField, &amp;handleText);
+    XtGetValues((Widget) handle, &amp;arg, 1);
+    XSetInputFocus(XtDisplay(handleText), XtWindow(handleText), RevertToParent, CurrentTime);
+}
+</pre>
+<p>
+<h3><strong>build.csh</strong></h3>
+<pre>
+#!/bin/csh
+ 
+setenv IVE_HOME /bluebird/teamswt/swt-builddir/ive/bin
+setenv MOTIF_HOME /bluebird/teamswt/swt-builddir/motif21
+setenv X_HOME /usr/X11R6
+set path=($IVE_HOME $path)
+setenv LD_LIBRARY_PATH .:$IVE_HOME
+ 
+make -f makefile.mak</pre>
+<p>
+<h3><strong>makefile.mak</strong></h3>
+<pre>
+# Makefile for module 'libspinner.so'
+# assumes IVE_HOME, MOTIF_HOME, and X_HOME are set in the environment
+ 
+# NOTE:
+# We use the VPATH directive to allow the generic UNIX source files to be
+# located in a single directory. IX make does not understand VPATH so
+# you must use a 'make' which does understand it (like LINUX make)
+VPATH= ../:../../common
+ 
+DLLPREFIX=spinner
+DLLNAME=lib$(DLLPREFIX).so
+ 
+CFLAGS=-fpic -O -s -DLINUX -DMOTIF -I./ -I../ -I$(IVE_HOME)/include -I$(MOTIF_HOME)/include -I$(X_HOME)/include
+LFLAGS=-L$(MOTIF_HOME)/lib -lXm -L/usr/lib -L/usr/X11R6/lib -rpath . -x -shared -lX11 -lm -lXext -lXt
+OBJS = spinner.o
+ 
+all: $(DLLNAME)
+ 
+$(DLLNAME): $(OBJS)
+	 ld $(LFLAGS) -o $(DLLNAME) $(OBJS)
+ 
+clean:
+	 rm -f *.o
+	 rm -f $(DLLNAME)
+</pre>
+</body>
+
+</html>

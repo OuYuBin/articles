@@ -1,0 +1,382 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<title>Rich Client Platform</title>
+<link href="../default_style.css" rel=stylesheet>
+</head>
+
+<body>
+
+<div align="right">
+  <font face="Times New Roman, Times, serif" size="2">Copyright © 2003-2005 Ed
+  Burnette.</font>
+  <table border="0" cellspacing="0" cellpadding="2" width="100%">
+    <tbody>
+      <tr>
+        <td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b><font face="Arial,Helvetica"><font color="#ffffff">Eclipse
+          Article</font></font></b></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div align="left">
+  <h1 title="RCP Tutorial"><img src="../images/Idea.jpg" align="middle" width="120" height="86"></h1>
+</div>
+<h1 align="center">Rich Client Tutorial Part 1</h1>
+<p class="summary">The Rich Client Platform (RCP) is an exciting new way to
+build Java applications that can compete with native applications on any
+platform. This tutorial is designed to get you started building RCP applications
+quickly. It has been updated for Eclipse 3.1.</p>
+<p><b>By Ed Burnette, SAS</b><br>
+<font size="-1">July 28, 2004 (Updated July 2005 for Eclipse 3.1)</font></p>
+<hr width="100%">
+<h2>Introduction</h2>
+<p>Try this experiment: Show Eclipse to some friends or co-workers who haven't
+seen it before and ask them to guess what language it is written in. Chances
+are, they'll guess VB, C++, or C#, because those languages are used most often
+for high quality client side applications. Then watch the look on their faces
+when you tell them it was created in Java, especially if they are Java
+programmers.</p>
+<p>Because of its unique open source license, you can use the technologies that
+went into Eclipse to create your own commercial quality programs.
+Before version 3.0, this was possible but difficult, especially when you wanted
+to heavily customize the menus, layouts, and other user interface elements. That
+was because the &quot;IDE-ness&quot; of Eclipse was hard-wired into it. Version
+3.0 introduced the Rich Client Platform (RCP), which is basically a refactoring of the
+fundamental parts of Eclipse's UI, allowing it to be used for non-IDE
+applications.
+Version 3.1 updated RCP with new capabilities, and, most importantly,
+new tooling support to make it easier to create than before.</p>
+<p>If you want to cut to the chase and look at the code for this part
+you can find it in the <a href="part1.zip">accompanying zip file</a>.
+Otherwise, let's take a look at how to construct
+an RCP application.</p>
+
+<h2><a name="section_1"></a> Getting started</h2>
+<p>RCP applications are based on the familiar Eclipse plug-in architecture, (if
+it's not familiar to you, see the references section). Therefore, you'll need to
+create a plug-in to be your main program.
+Eclipse's Plug-in Development Environment (PDE) provides a number of
+wizards and editors that take some of the drudgery out of the process.
+Select <b>File &gt; New &gt; Project &gt; Plug-in
+Development &gt; Plug-in Project</b> to bring up the Plug-in Project wizard. On the
+subsequent pages, enter a Project name such as <b>org.eclipse.ui.tutorials.rcp.part1</b>,
+indicate you want a Java project, select the version of Eclipse you're targetting,
+and enable the option to Create an OSGi bundle manifest.
+Then click Next.
+</p>
+<p>
+<img src="../images/note.gif" alt="Note: " width="62" height="13">
+Beginning in Eclipse 3.1 you will get best results by using the OSGi bundle manifest.
+In contrast to previous versions, this is now the default.
+</p>
+
+<p>
+In the next page of the Wizard you can change the Plug-in ID and other
+parameters.
+Of particular importance is the question, "Would you like to create a
+rich client application?".
+Select <b>Yes</b>.
+The generated plug-in class is optional but for this example
+just leave all the other options at their default values.
+Click Next to continue.
+</p>
+
+<p>
+Starting with Eclipse 3.1, several templates have been provided
+to make creating an RCP application a breeze.
+We'll use the simplest one available and build up from there.
+Make sure the option to Create a plug-in using one of the templates is enabled,
+then select the Hello RCP template.
+This is RCP's equivalent of "Hello, world".
+Click Finish to accept all the defaults and generate the project.
+Eclipse will open the Plug-in Manifest Editor.
+The Plug-in Manifest editor puts a friendly
+face on the various configuration files that control your RCP application.
+</p>
+
+<p>
+<img src="../images/note.gif" alt="Note: " width="62" height="13">
+If you get a dialog asking if Eclipse can switch to the Plug-in Development
+Perspective click Remember my decision and select Yes (this is optional).
+</p>
+
+<h2>Taking it for a spin</h2>
+<p>
+Trying out RCP applications used to be somewhat tedious.
+You had to create a custom launch configuration,
+enter the right application name,
+and tweak the plug-ins that were included.
+Thankfully the PDE keeps track of all this now.
+All you have to do is click on the 
+Launch an Eclipse Application button in the
+Plug-in Manifest editor's Overview page.
+You should see a bare-bones Workbench start up (see Figure 1).
+</p>
+
+<img src="images/spin.png">
+<p><b>Figure 1. World's simplest RCP application.
+</b></p>
+
+<h2>Creating a feature</h2>
+<p>
+In Eclipse, features are just collections of plug-ins.
+Features are optional but recommended because you'll need
+one if you want to later use Eclipse's Automatic Update
+Manager capabilities, or if you want to export your application with JNLP.
+To create a feature, select <b>File &gt; New &gt; Project &gt; Plug-in
+Development &gt; Feature Project</b>.
+The convention is to use the same name as your plug-in project with
+"-feature" appended, so call the feature
+<b>org.eclipse.ui.tutorials.rcp.part1-feature</b>.
+Click Next to get to the Feature Properties page,
+and Next again to get to the Referenced Plug-ins page.
+Put a check mark next to org.eclipse.ui.tutorials.rcp.part1 .
+Click Finish to generate the feature.
+</p>
+
+<h2>Making it a product</h2>
+<p>
+In Eclipse terms a product is everything that goes with your
+application, including all the other plug-ins it depends on,
+a command to run the application (called the native launcher),
+and any branding (icons, etc.) that make your application distinctive.
+Although as we've just seen you can run a RCP application
+without defining a product,
+having one makes it a whole lot easier to run the application
+outside of Eclipse.
+This is one of the major innovations that Eclipse 3.1
+brought to RCP development.
+</p>
+
+<p>
+Some of the more complicated RCP templates already come with a
+product defined, for example the one called "RCP Application with an Intro"
+and "RCP Mail".
+More templates will likely be added with each release so this list
+may change.
+The Hello RCP template does not so we'll have to make one.
+</p>
+<p>
+In order to create a product you first have to add a
+product configuration file to the project.
+Right click on the plug-in project
+and select <b>New &gt; Product Configuration</b>.
+Then enter a file name for this new configuration file, such as
+<b>part1.product</b>.
+Select the option to Use a launch configuration,
+and select <b>Eclipse Application</b> from the list.
+(Note if you've been doing other plug-in development in
+the current workspace you may see a different configuration
+name here. Pick the one associated with the RCP
+plug-in you ran earlier.)
+Then click Finish.
+The Product Configuration editor will open.
+This editor lets you control
+exactly what makes up your product including all its plug-ins
+and branding elements.
+</p>
+
+<p>
+In the Overview page,
+type in the Product Name, for example <b>RCP Tutorial 1</b>.
+Select the option that says This project configuration is based on features.
+Then select the New... button to create a new product.
+Type in or browse to the defining plug-in (<b>org.eclipse.ui.tutorials.rcp.part1</b>).
+Enter a Product ID such as <b>product</b>,
+and for the Product Application select
+<b>org.eclipse.ui.tutorials.rcp.part1.application</b>.
+Click Finish to define the product.
+</p>
+
+<p>
+<img src="../images/note.gif" alt="Note: " width="62" height="13">
+In Eclipse 3.1 if you create the product before filling in the
+Product Name you may see an error appear in the Problems view.
+The error will go away when you Synchronize (see below).
+This is a known bug that will be fixed in future versions.
+</p>
+
+<p>
+Back in the Product Configuration editor's Overview page,
+Click on the product configuration link or on the tab for the Configuration page
+and add both your feature (org.eclipse.ui.tutorials.rcp.part1_feature) and
+the RCP feature (org.eclipse.rcp).
+Then go back to the Overview page and
+press <b>Ctrl+S</b> or <b>File &gt; Save</b> to save
+your work.
+</p>
+
+<p>
+<img src="../images/tip.gif" alt="Tip: " width="62" height="13">
+If your application needs to reference plug-ins outside of the
+basic RCP plug-ins, then you'll need to either include them in your
+feature or make up a new feature to contain them.
+</p>
+
+
+<p>
+At this point you should test out the product to make sure
+it runs correctly.
+In the Testing section of the Overview page, click Synchronize
+then click on Launch the product.
+If all goes well, the application should start up just like before.
+</p>
+
+<h2>Running it outside of Eclipse</h2>
+<p>The whole point of all this is to be able to run stand-alone applications
+without the user having to know anything about the Java and Eclipse code being
+used under the covers. For a real application you may want to provide
+a self-contained executable generated by an install program like InstallShield.
+That's really beyond the scope of this article though, so we'll do something
+simpler.</p>
+
+<p>We need to create a simplified version of the Eclipse install directory
+because the Eclipse plug-in loader expects things to be in a certain layout.
+This directory has to contain the native launcher program,
+config files, and all the features and plug-ins required by the product.
+Thankfully, we've given the PDE enough information that it can
+put all this together for us now.
+</p>
+
+<p>
+In the Exporting section of the Product Configuration editor
+(not the Plug-in Manifest editor),
+click the link to open the Eclipse product export wizard.
+Change the root directory to something else like <b>RcpTutorial1</b>.
+Then select the option to deploy into a Directory, and
+enter a directory path to a temporary (scratch) area
+such as <b>C:\Deploy</b>.
+Check the option to Include source code if you're building an open source project.
+Press Finish to build and export the program.
+</p>
+
+<p>
+The application is now ready to run outside Eclipse.
+When you're
+done you should have a structure that looks like this:</p>
+<pre>
+    RcpTutorial1
+    |    .eclipseproduct
+    |    eclipse.exe
+    |    startup.jar
+    +--- configuration
+    |    |    config.ini
+    +--- plugins
+    |    |    org.eclipse.core.commands_3.1.0.jar
+    |    |    org.eclipse.core.expressions_3.1.0.jar
+    |    |    org.eclipse.core.runtime_3.1.0.jar
+    |    |    org.eclipse.help_3.1.0.jar
+    |    |    org.eclipse.jface_3.1.0.jar
+    |    |    org.eclipse.osgi_3.1.0.jar
+    |    |    org.eclipse.rcp_3.1.0.jar
+    |    |    org.eclipse.swt.win32.win32.x86_3.1.0.jar
+    |    |    org.eclipse.swt_3.1.0.jar
+    |    |    <b>org.eclipse.ui.tutorials.rcp.part1_1.0.0.jar</b>
+    |    |    org.eclipse.ui.workbench_3.1.0.jar
+    |    |    org.eclipse.ui_3.1.0.jar
+    |    |    org.eclipse.update.configurator_3.1.0.jar
+    +--- features
+         +--- org.eclipse.ui.tutorials.rcp.part1_feature_1.0.0
+         +--- org.eclipse.rcp_3.1.0
+</pre>
+
+<p>
+<img src="../images/note.gif" alt="Note: " width="62" height="13">
+Starting in Eclipse 3.1 the recommended format for plug-ins is
+a jar file. Among other things this saves disk space in
+the deployed application.
+</p>
+
+<p>
+<img src="../images/tip.gif" alt="Tip: " width="62" height="13">
+Previous versions of this tutorial recommended using a batch file
+or shell script to invoke your RCP program.
+It turns out this is a bad idea because you will not be able to
+fully brand your application later on.
+For example, you won't be able to add a splash screen.
+So just stick with the native launcher.
+</p>
+
+<p>
+Give it a try!
+Execute the native launcher outside Eclipse and
+watch the application come up.
+The name of the launcher ("eclipse" by default) is controlled
+by branding options in the product configuration.
+</p>
+
+
+<h2>Troubleshooting</h2>
+<p>
+After I wrote the original version of this tutorial I started getting
+mail from people who couldn't run it for one reason or another.
+Much of this feedback went into the design of new versions of
+the PDE so that information is now obsolete.
+Therefore I'm leaving the troubleshooting section blank for now.
+If you have any problems running your application let me know
+and I'll add the solution here for the next person to see.
+</p>
+
+<h2>Compatibility and migration</h2>
+<p>
+If you are migrating a plug-in from version 2.1 to version 3.1
+there are number of issues covered in the on-line documentation
+that you need to be aware of.
+If you're making the smaller step from 3.0 to 3.1, the number of
+differences is much smaller.
+See the References section for more information.
+</p>
+<p>
+<img src="../images/tip.gif" alt="Tip: " width="62" height="13">
+One word of advice: be careful not to duplicate any information
+in both plug-in.xml and MANIFEST.MF.
+Typically this would not occur unless you are converting an older
+plug-in that did not use MANIFEST.MF into one that does,
+and even then only if you are editing the files by hand instead of
+going through the PDE.
+</p>
+
+<h2>Conclusion</h2>
+<p>In part 1 of this tutorial, we looked at what is necessary to create a
+bare-bones Rich Client application.
+The next part will delve into the classes created by the
+wizards such as the WorkbenchAdvisor class.
+All the sample code for this part may be found in the
+<a href="part1.zip">accompanying zip file</a>.
+</p>
+
+<h2>References</h2>
+<a href="../Article-RCP-2/tutorial2.html"> RCP Tutorial Part 2</a><br>
+<a href="../Article-RCP-3/tutorial3.html"> RCP Tutorial Part 3</a><br>
+<a href="http://www.eclipse.org/rcp" target="_blank">
+Eclipse Rich Client Platform</a><br>
+<a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.ui.examples.rcp.browser/readme.html" target="_blank">RCP Browser example
+(project org.eclipse.ui.examples.rcp.browser)</a><br>
+<a href="../Article-PDE-does-plugins/PDE-intro.html">PDE Does Plug-ins</a><br>
+<a href="../Article-Internationalization/how2I18n.html">How to Internationalize 
+your Eclipse Plug-in</a><br>
+<a href="../Article-Plug-in-architecture/plugin_architecture.html">Notes on the 
+Eclipse Plug-in Architecture</a><br>
+<a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/porting/eclipse_3_1_porting_guide.html" target="_blank"> 
+Plug-in Migration Guide: Migrating to 3.1 from 3.0</a><br>
+<a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/porting/eclipse_3_0_porting_guide.html" target="_blank"> 
+Plug-in Migration Guide: Migrating to 3.0 from 2.1</a><br>
+
+<p><small>ref: <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=104146">bug
+104146</a></small></p>
+
+<p><small>IBM is trademark of International Business Machines Corporation in the
+United States, other countries, or both.</small></p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or
+registered trademarks of Sun Microsystems, Inc. in the United States, other
+countries, or both.</small></p>
+<p><small>Microsoft and Windows are trademarks of Microsoft Corporation in the
+United States, other countries, or both.</small></p>
+<p><small>Other company, product, and service names may be trademarks or service
+marks of others.</small></p>
+
+</body>
+
+</html>

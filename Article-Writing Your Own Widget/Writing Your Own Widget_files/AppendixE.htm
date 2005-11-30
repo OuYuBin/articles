@@ -1,0 +1,1517 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 9">
+<meta name=Originator content="Microsoft Word 9">
+<link rel=File-List href="./AppendixE_files/filelist.xml">
+<title>Appendix E: Spinner for Any Platform</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Dave Thomson</o:Author>
+  <o:LastAuthor>Carolyn MacLeod</o:LastAuthor>
+  <o:Revision>6</o:Revision>
+  <o:TotalTime>33</o:TotalTime>
+  <o:Created>2001-06-04T02:59:00Z</o:Created>
+  <o:LastSaved>2001-06-04T04:15:00Z</o:LastSaved>
+  <o:Pages>3</o:Pages>
+  <o:Words>489</o:Words>
+  <o:Characters>2792</o:Characters>
+  <o:Lines>23</o:Lines>
+  <o:Paragraphs>5</o:Paragraphs>
+  <o:CharactersWithSpaces>3428</o:CharactersWithSpaces>
+  <o:Version>9.2720</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+@font-face
+	{font-family:Courier;
+	panose-1:0 0 0 0 0 0 0 0 0 0;
+	mso-font-charset:0;
+	mso-generic-font-family:modern;
+	mso-font-format:other;
+	mso-font-pitch:fixed;
+	mso-font-signature:3 0 0 0 1 0;}
+ /* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;
+	mso-ansi-language:EN-CA;}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:20.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	color:windowtext;
+	mso-font-kerning:14.0pt;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+h2
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	color:windowtext;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+h3
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	color:windowtext;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.MsoToc1, li.MsoToc1, div.MsoToc1
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:.25in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;
+	text-transform:uppercase;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.MsoToc2, li.MsoToc2, div.MsoToc2
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.MsoToc3, li.MsoToc3, div.MsoToc3
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:10.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoToc4, li.MsoToc4, div.MsoToc4
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:20.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoToc5, li.MsoToc5, div.MsoToc5
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:30.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoToc6, li.MsoToc6, div.MsoToc6
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:40.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoToc7, li.MsoToc7, div.MsoToc7
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:50.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoToc8, li.MsoToc8, div.MsoToc8
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:60.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoToc9, li.MsoToc9, div.MsoToc9
+	{mso-style-update:auto;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:70.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoHeader, li.MsoHeader, div.MsoHeader
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoFooter, li.MsoFooter, div.MsoFooter
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:windowtext;}
+p.MsoBodyText, li.MsoBodyText, div.MsoBodyText
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:red;}
+p.MsoBodyText2, li.MsoBodyText2, div.MsoBodyText2
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:.25in .5in .75in 1.0in 1.25in 1.5in;
+	layout-grid-mode:char;
+	font-size:9.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+strong
+	{mso-bidi-font-weight:normal;}
+em
+	{mso-bidi-font-style:normal;}
+p
+	{margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	color:black;}
+code
+	{mso-ascii-font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Times New Roman";}
+p.Code, li.Code, div.Code
+	{mso-style-name:Code;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:.25in .5in .75in 1.0in 1.25in 1.5in 1.75in 2.0in 2.25in 2.5in 2.75in 3.0in 3.25in 3.5in 3.75in 4.0in 4.25in 4.5in 4.75in 5.0in 5.25in 5.5in 5.75in;
+	layout-grid-mode:char;
+	font-size:9.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:windowtext;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-title-page:yes;
+	mso-even-footer:url("./AppendixE_files/header.htm") ef1;
+	mso-footer:url("./AppendixE_files/header.htm") f1;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+</head>
+
+<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in'>
+
+<div class=Section1>
+
+<h2><a name="_Ref506190577"></a><a name="_Toc506634654"><span style='mso-bookmark:
+_Ref506190577'>Appendix E: Spinner for Any Platform</span></a></h2>
+
+<p class=MsoNormal><span lang=EN-CA>This appendix contains the source code for
+a <i style='mso-bidi-font-style:normal'>Spinner</i> class that will run on any
+platform.</span><span style='mso-bidi-font-size:10.0pt;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=Code><span style='color:navy'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>package </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>spinner;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='tab-stops:.25in .5in .75in 1.0in 1.25in 1.5in 1.75in 2.0in 2.25in 2.5in 2.75in 3.0in 3.25in 3.5in 3.75in 4.0in 4.25in 4.5in 4.75in 5.0in 5.25in 5.5in 5.75in 6.0in 456.0pt 480.0pt 7.0in 528.0pt 552.0pt 8.0in 600.0pt 624.0pt 9.0in 672.0pt 696.0pt 10.0in 744.0pt 768.0pt'><span
+lang=EN-CA style='font-size:9.0pt;mso-bidi-font-size:12.0pt;font-family:"Courier New";
+mso-bidi-font-family:"Times New Roman";color:maroon;layout-grid-mode:line'>/*</span><span
+style='font-size:9.0pt;mso-bidi-font-size:10.0pt;font-family:"Courier New";
+mso-bidi-font-family:"Times New Roman";color:maroon;mso-ansi-language:EN-US;
+layout-grid-mode:line'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='tab-stops:.25in .5in .75in 1.0in 1.25in 1.5in 1.75in 2.0in 2.25in 2.5in 2.75in 3.0in 3.25in 3.5in 3.75in 4.0in 4.25in 4.5in 4.75in 5.0in 5.25in 5.5in 5.75in 6.0in 456.0pt 480.0pt 7.0in 528.0pt 552.0pt 8.0in 600.0pt 624.0pt 9.0in 672.0pt 696.0pt 10.0in 744.0pt 768.0pt'><span
+style='font-size:9.0pt;mso-bidi-font-size:12.0pt;font-family:"Courier New";
+mso-bidi-font-family:"Times New Roman";color:maroon;layout-grid-mode:line'><span
+style="mso-spacerun: yes"> </span><span lang=EN-CA>* (c) Copyright IBM Corp.
+2000, 2001.<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='tab-stops:.25in .5in .75in 1.0in 1.25in 1.5in 1.75in 2.0in 2.25in 2.5in 2.75in 3.0in 3.25in 3.5in 3.75in 4.0in 4.25in 4.5in 4.75in 5.0in 5.25in 5.5in 5.75in 6.0in 456.0pt 480.0pt 7.0in 528.0pt 552.0pt 8.0in 600.0pt 624.0pt 9.0in 672.0pt 696.0pt 10.0in 744.0pt 768.0pt'><span
+style='font-size:9.0pt;mso-bidi-font-size:10.0pt;font-family:"Courier New";
+mso-bidi-font-family:"Times New Roman";color:maroon;mso-ansi-language:EN-US;
+layout-grid-mode:line'><span style="mso-spacerun: yes"> </span>* All Rights Reserved.<o:p></o:p></span></p>
+
+<p class=Code><span style='color:maroon;layout-grid-mode:line'><span
+style="mso-spacerun: yes"> </span>*/<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>import </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>java.util.*;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>import </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>org.eclipse.swt.*;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>import </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>org.eclipse.swt.graphics.*;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>import </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>org.eclipse.swt.widgets.*;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>import </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>org.eclipse.swt.events.*;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public class </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Spinner </span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>extends </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Composite {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>static final int </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>BUTTON_WIDTH = 16;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>Text
+text;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>Button
+up, down;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>minimum, maximum;</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Spinner(Composite parent, </span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>style) {</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>super</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>(parent, style);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text
+= </span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Text(</span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>this</span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>, style | SWT.SINGLE | SWT.BORDER);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>up
+= </span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Button(</span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>this</span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>, style | SWT.ARROW | SWT.UP);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>down
+= </span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Button(</span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>this</span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>, style | SWT.ARROW | SWT.DOWN);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.addListener(SWT.Verify,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Listener() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>handleEvent(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>verify(e);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>});</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.addListener
+(SWT.Traverse, </span><span style='font-size:10.0pt;font-family:Courier;
+color:#7F0055;background:white;mso-highlight:white;mso-ansi-language:EN-US'>new
+</span><span style='font-size:10.0pt;font-family:Courier;color:black;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>Listener () {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>handleEvent(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>traverse(e);<span
+style='mso-tab-count:3'>                  </span></span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>});</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>up.addListener(SWT.Selection,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Listener() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>handleEvent(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>up();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>});</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>down.addListener(SWT.Selection,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Listener() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>handleEvent(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>down();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>});</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>addListener(SWT.Resize,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Listener() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>handleEvent(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>resize();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>});</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>addListener(SWT.FocusIn,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Listener() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>handleEvent(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>focusIn();<span
+style='mso-tab-count:3'>              </span></span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>});</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.setFont(getFont());</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>minimum
+= 0;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>maximum
+= 9;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>setSelection(minimum);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>verify(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>try </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>{</span><span style='font-size:10.0pt;font-family:
+Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>Integer.parseInt(e.text);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>}
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>catch </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>(NumberFormatException ex) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>e.doit
+= </span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>false</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>;</span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>traverse(Event e) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>switch </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>(e.detail) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>case </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>SWT.TRAVERSE_ARROW_PREVIOUS:</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>if </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>(e.keyCode == SWT.ARROW_UP) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:5'>                              </span>e.doit
+= </span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>true</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>;</span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:5'>                              </span>e.detail
+= SWT.NULL;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:5'>                              </span>up();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>break</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>;</span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>case </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>SWT.TRAVERSE_ARROW_NEXT:</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>if </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>(e.keyCode == SWT.ARROW_DOWN) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:5'>                              </span>e.doit
+= </span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>true</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>;</span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:5'>                              </span>e.detail
+= SWT.NULL;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:5'>                              </span>down();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:4'>                        </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>break</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>;</span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>up() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>setSelection(getSelection()
++ 1);</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>notifyListeners(SWT.Selection,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Event());</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>down() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>setSelection(getSelection()
+- 1);</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>notifyListeners(SWT.Selection,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Event());</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>focusIn() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.setFocus();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>setFont(Font font) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>super</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>.setFont(font);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.setFont(font);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>setSelection(</span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>selection) {</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>if </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>(selection &lt; minimum) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>selection
+= minimum;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>}
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>else if </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>(selection &gt; maximum) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:3'>                  </span>selection
+= maximum;</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.setText(String.valueOf(selection));</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.selectAll();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>text.setFocus();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public int </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>getSelection() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>return </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Integer.parseInt(text.getText());</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>setMaximum(</span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>maximum) {</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>checkWidget();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>this</span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>.maximum = maximum;</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>resize();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public int </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>getMaximum() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>return </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>maximum;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>setMinimum(</span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>minimum) {</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>this</span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>.minimum = minimum;</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public int </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>getMinimum() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>return </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>minimum;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:1'>     </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>resize() {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>Point
+pt = computeSize(SWT.DEFAULT, SWT.DEFAULT);</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>textWidth = pt.x - BUTTON_WIDTH;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>buttonHeight = pt.y / 2;</span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span>text.setBounds(0,
+0, textWidth, pt.y);</span><span style='font-size:10.0pt;font-family:Courier;
+mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span>up.setBounds(textWidth,
+0, BUTTON_WIDTH, buttonHeight);</span><span style='font-size:10.0pt;font-family:
+Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span>down.setBounds(textWidth,
+pt.y - buttonHeight, BUTTON_WIDTH, buttonHeight);</span><span style='font-size:
+10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:1'>     </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:1'>     </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Point computeSize(</span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>wHint, </span><span style='font-size:10.0pt;
+font-family:Courier;color:#7F0055;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>int </span><span style='font-size:10.0pt;font-family:
+Courier;color:black;background:white;mso-highlight:white;mso-ansi-language:
+EN-US'>hHint, </span><span style='font-size:10.0pt;font-family:Courier;
+color:#7F0055;background:white;mso-highlight:white;mso-ansi-language:EN-US'>boolean
+</span><span style='font-size:10.0pt;font-family:Courier;color:black;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>changed) {</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span>GC gc = </span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>new </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>GC(text);</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>Point
+textExtent = gc.textExtent(String.valueOf(maximum));</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>gc.dispose();</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>Point
+pt = text.computeSize(textExtent.x, textExtent.y);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>width = pt.x + BUTTON_WIDTH;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>int </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>height = pt.y;</span><span style='font-size:10.0pt;
+font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>if </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>(wHint != SWT.DEFAULT) width = wHint;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>if </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>(hHint != SWT.DEFAULT) height = hHint;</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:2'>           </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>return new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>Point(width, height);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes"> </span><span style='mso-tab-count:1'>     </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>public void </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>addSelectionListener(SelectionListener
+listener) {</span><span style='font-size:10.0pt;font-family:Courier;mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span></span><span
+style='font-size:10.0pt;font-family:Courier;color:#7F0055;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>if </span><span style='font-size:
+10.0pt;font-family:Courier;color:black;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>(listener == </span><span style='font-size:10.0pt;
+font-family:Courier;color:#7F0055;background:white;mso-highlight:white;
+mso-ansi-language:EN-US'>null</span><span style='font-size:10.0pt;font-family:
+Courier;color:black;background:white;mso-highlight:white;mso-ansi-language:
+EN-US'>) </span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>throw new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>SWTError(SWT.ERROR_NULL_ARGUMENT);</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:2'>            </span>addListener(SWT.Selection,
+</span><span style='font-size:10.0pt;font-family:Courier;color:#7F0055;
+background:white;mso-highlight:white;mso-ansi-language:EN-US'>new </span><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'>TypedListener(listener));</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:Courier;color:black;background:white;
+mso-highlight:white;mso-ansi-language:EN-US'><span style='mso-tab-count:1'>      </span>}</span><span
+style='font-size:10.0pt;font-family:Courier;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Courier;
+color:black;background:white;mso-highlight:white;mso-ansi-language:EN-US'>}</span><span
+style='font-size:10.0pt;font-family:Courier;color:black;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-CA><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+</div>
+
+</body>
+
+</html>

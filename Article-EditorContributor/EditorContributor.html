@@ -1,0 +1,235 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Dejan Glozic">
+<meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
+<title>Writing Error Report</title>
+</head>
+<body>
+&nbsp; 
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+  <tr> 
+    <td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+      Corner Article</font></font></b></td>
+  </tr>
+</table>
+<h1> <img SRC="../images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+<center>
+  <h1> Editor Contributors - A Distinct Species</h1>
+</center>
+<center>
+  <h3> Why are Eclipse desktop editors using a distinct contribution mechanism 
+    instead of simply doing it directly from editors</h3>
+</center>
+<blockquote><b>Summary</b> <br>
+  Eclipse platform desktop offers various ways a plugin can contribute to menus 
+  and tool bars. The most natural way for views is to contribute directly (if 
+  you own the view, that is). However, editors are somewhat special - their contributors 
+  are registered alongside editors and contribution from editor instances is not 
+  allowed. This article explains why the difference and how editor contributors 
+  prevent renegade runtime footprint and improve user experience. We will also 
+  take a look at handling editor contributors in multi-page editors.</blockquote>
+<b>By <a href="mailto:dejan@ca.ibm.com">Dejan Glozic</a></b> 
+<p> 
+<hr WIDTH="100%">
+<br>
+One of the primary mechanisms of interaction with an Eclipse platform application 
+is by performing actions in the given context. Whether you use menus, tool bars, 
+accelerator keys etc. to perform an action is less important. Consequently, one 
+of the most important considerations for Eclipse plugins is how to expose these 
+actions to the user. 
+<p>A standalone application developer has a relatively easy task since he owns 
+  all of the action vectors (menu bars, tool bars, pop-up menus etc.). A plugin 
+  developer must view its task as a contribution to the whole. Its contribution 
+  will 'rub elbows' with those from other plugins, and seamless integration becomes 
+  very important. 
+<p>Desktop integration of actions is relatively easy for view developers. Eclipse 
+  views are fairly encapsulated desktop parts. They have a local tool bar and 
+  a pull-down menu. Because of this encapsulation, adding a view to the desktop 
+  is a relatively easy affair. 
+<p>Content editor is a completely different animal. Editors normally require a 
+  large number of actions that are applicable in their context. Embedding these 
+  actions into the desktop part is not possible in all but a very few simple cases. 
+  Instead, editors add their actions to the shared desktop areas: the main menu 
+  and tool bars. This creates a few problems. There can be potentially many editors 
+  opened at once. They cannot all add their menus and tool bars into the shared 
+  area - it would be a disaster. It would not be right either, because only one 
+  editor can be active at a time. A context switching mechanism is needed to make 
+  sure that only actions of the active editor are visible at any given point in 
+  time. 
+<p>Context switching ensures that visibility of the editor and its actions in 
+  the desktop's shared areas are in sync. This requirement cannot be left to editor 
+  developers - it is too important. Instead, editors are asked to create a contribution 
+  and this contribution is used to add and remove actions on active editor switching. 
+<h3> Contribution Memento</h3>
+The desktop implements context switching by using a feature of JFace contribution 
+managers called <b>modification bracketing</b>. If you add actions into a contribution 
+manager in its normal state, they will end up in its managed shared area of the 
+desktop. However, it is possible to go into <b>recording mode</b> by calling a 
+method <b>beginModification</b>. From that moment on, all contributions made to 
+this manager are going into a separate record called <b>contribution memento</b>. 
+Once we are done contributing, we call <b>endModification</b>. This method will 
+restore the normal state of the manager and also return an <tt>ContributionMemento</tt> 
+object. We can use this object to activate or deactivate it when needed. Activating 
+a memento means adding all of the recorded actions to the originating manager. 
+Similarly, deactivation of the memento removes the actions. 
+<p>Usage of mementos is transparent to editor developers. Eclipse desktop employs 
+  mementos to implement context switching, and ISVs are only required to do the 
+  contribution part. The only thing for developers to remember is that some kind 
+  of recording takes place, and that it is done on editor creation. Editors will 
+  not be able to modify their contribution afterwards - it will simply be switched 
+  in and out, as shown in Figure 1. <br>
+  &nbsp; <br>
+  &nbsp; 
+<center>
+  <table BORDER=0 CELLSPACING=5 CELLPADDING=0 WIDTH="48%" >
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><img SRC="images/normaltoolbar.jpg" height=132 width=615></td>
+    </tr>
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><b><font size=-1>(a)&nbsp;</font></b></td>
+    </tr>
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><img SRC="images/htmltoolbar.jpg" height=132 width=615></td>
+    </tr>
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><b><font size=-1>(b)</font></b></td>
+    </tr>
+    <tr> 
+      <td><b><font size=-1>Figure 1: Eclipse desktop menu and tool bar with no 
+        editors (a) and with HTML editor opened (b). Note how there are more menus 
+        and buttons in picture (b). These additions are coming from the contribution 
+        associated with the editor.</font></b></td>
+    </tr>
+  </table>
+</center>
+<h3> The problem of flashing and run-time memory waste</h3>
+If you are writing a desktop view, contributing to the local tool bar is fairly 
+simple - you simply ask for the local tool bar manager and add your actions. Similar 
+scenario could be envisioned for contributing from the content editors, but it 
+is not used, and for a reason. Consider the following: desktop views are unique. 
+There cannot be multiple instances of the same view showing up in the desktop 
+(if you try to reopen a view, the currently opened instance simply pops up and 
+regains focus). However, there can be many instances of the same editor type opened 
+at the same time, one for each file. If we contribute actions from the editor 
+instance itself, that would mean a huge waste of time and memory. 
+<p>For example: if we open 10 HTML files with a Web Tooling editor, and it has 
+  40 actions to contribute, we will have 400 action instances in memory. Only 
+  10% of these instances will be used at any point in time because only one of 
+  these editors can be active. The remaining 90% will be switched out. 
+<p>There is also a problem of menu and tool bar updates. In a naive implementation, 
+  every editor switch would mean context switching for these shared areas: actions 
+  of the deactivating editor will be removed, while those of the activating editor 
+  will be added. But switching between editors of the same type means that we 
+  are removing and adding instances of the same actions. Nothing will change in 
+  the desktop except the unavoidable pause and flashing. 
+<h3> The Eclipse solution</h3>
+The Eclipse desktop solution for this problem is to move editor contribution from 
+editor <i>instances</i> to editor <i>types</i>. The desktop extension point for 
+registering new editors accepts not only the Java class name for the editor, but 
+also an optional class name for the <b>editor contributor</b>: 
+<p><tt>interface IEditorActionBarContributor extends IActionBarContributor {</tt> 
+  <br>
+  <tt>&nbsp;&nbsp; public void editorChanged(IEditorPart editor);</tt> <br>
+  <tt>}</tt> 
+<p>This contributor extends action bar contributor interface and adds a method 
+  to inform you about the editor change. This method is called only when editors 
+  of your editor type are switched, so you can safely cast it into your editor 
+  class. The implementors of this interface would use its required methods (<tt>contributeToMenu</tt>, 
+  <tt>contributeToToolBar</tt> etc.) to add actions, submenus etc. in the usual 
+  way. The key difference here is that these actions must be designed without 
+  any specific editor instance in mind. They have to work on the currently active 
+  instance, which means that they need to recalculate their enable state every 
+  time there is editor change. 
+<p>When a file is opened for editing, and the editor instance is the first of 
+  that editor type to be opened, the contributor will be created as well. The 
+  contributor will create a memento and keep it. When editors are switched, it 
+  will use the memento to switch actions in or out. When another editor instance 
+  of the same type is opened, no new actions will be created. The running contributor 
+  will call <tt>editorChanged</tt> to allow actions to update. Contributor and 
+  its actions will be removed and disposed only when the last instance of this 
+  editor type is closed. 
+<p>The key difference here is that context switching will occur only when two 
+  editors of the <i>different</i> type are switched. On switching editors of the 
+  same type, only <tt>editorChanged</tt> will be called in the contributor. This 
+  means that editor changes will be smooth, with no flashes and pauses. 
+<h3> Multi-page editors</h3>
+The situation complicates somewhat if the content editor if of a multi-page variety 
+(for example, Web tooling HTML editor with its Design, Source and Preview pages). 
+In this case, actions need to update their availability not only on an editor-to-editor 
+basis, but also on page switches within the same editor, as shown in Figure 2. 
+Since editor instance do not have access to editor actions (actions are normally 
+created as fields of the class that implements contributor interface), the following 
+solution may work well. 
+<p>First, create a page listener interface: 
+<blockquote><tt>interface IEditorPageListener {</tt> <br>
+  <tt>&nbsp;&nbsp; public void pageChanged(WorkbookPage page);</tt> <br>
+  <tt>}</tt></blockquote>
+In your multi-page editor class, add two methods to register the listener: 
+<blockquote><tt>public void addEditorPageListener(IEditorPageListener listener);</tt> 
+  <br>
+  <tt>public void removeEditorPageListener(IEditorPageListener listener);</tt></blockquote>
+When page within the editor changes, notify the listeners by calling <tt>pageChanged</tt> 
+with the newly active page. 
+<p>In the implementation of editor contributor, connect on each editor switch: 
+<p><tt>public MultiPageContributor implements IEditorActionBarContributor,</tt> 
+  <br>
+  <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  IEditorPageListener {</tt> <br>
+  <tt>&nbsp;&nbsp; MyMultiPageEditor currentEditor=null;</tt><tt></tt> 
+<p><tt>&nbsp;&nbsp; public void editorChanged(IEditorPart part) {</tt> <br>
+  <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyMyltiPageEditor editor = (MyMultiPageEditor)part;</tt> 
+  <br>
+  <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (currentEditor!=null) currentEditor.removeEditorPageListener(this);</tt> 
+  <br>
+  <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; currentEditor = editor;</tt> <br>
+  <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; currentEditor.addEditorPageListener(this);</tt> 
+  <br>
+  <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; updateActions();</tt> <br>
+  <tt>&nbsp;&nbsp; }</tt> <br>
+  <tt>&nbsp;&nbsp; public void pageChanged(WorkbookPage page) {</tt> <br>
+  <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; updateActions(page);</tt> <br>
+  <tt>&nbsp;&nbsp; }</tt> <br>
+  <tt>}</tt> 
+<p>The behavior of this class is straightforward: when editor becomes active, 
+  the contributor disconnects from the old editor and connects to the new one. 
+  While the current editor is active, page changes within it will cause the contributor 
+  to update the action state. The two overloaded methods for updating actions 
+  not shown here simply update the state of the actions according to the state 
+  of the current editor and the currently selected page in the editor. <br>
+  &nbsp; <br>
+  &nbsp; <br>
+  &nbsp; 
+<center>
+  <table BORDER=0 CELLSPACING=5 CELLPADDING=0 WIDTH="48%" >
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><img SRC="images/htmltoolbar.jpg" BORDER=0 height=132 width=615></td>
+    </tr>
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><b><font size=-1>(a)&nbsp;</font></b></td>
+    </tr>
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><img SRC="images/srctoolbar.jpg" height=132 width=615></td>
+    </tr>
+    <tr> 
+      <td ALIGN=CENTER VALIGN=CENTER><b><font size=-1>(b)</font></b></td>
+    </tr>
+    <tr> 
+      <td><b><font size=-1>Figure 2: Eclipse desktop menu and tool bar for the 
+        Source (a) and Design view&nbsp; (b) of the HTML editor. The same actions 
+        are present for&nbsp; both pages, but some of them are disabled for the 
+        Source view.</font></b></td>
+    </tr>
+  </table>
+</center>
+<br>
+&nbsp; 
+<h3> Conclusion</h3>
+This article has shown how contribution to menus and tool bars is 'special' in 
+Eclipse desktop. We described the use of JFace contribution mementos. The article 
+has also shown how the problem of tool bar flashing and action duplication is 
+solved by removing contributors from editor instances. Finally, a tip on handling 
+multi-page editors is presented. 
+</body>
+</html>

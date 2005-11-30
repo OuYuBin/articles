@@ -1,0 +1,504 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.6 [en] (WinNT; I) [Netscape]">
+   <title>Using EMF</title>
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+<body link="#0000FF" vlink="#800080">
+
+<div align=right>&nbsp; <font face="Times New Roman, Times, serif"><font size=-1>Copyright
+&copy; 2002 International Business Machines Corp.</font></font></div>
+&nbsp;
+<div ALIGN=right><table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+Corner Article</font></font></b></td>
+</tr>
+</table></div>
+
+<h1>
+<img SRC="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+
+<center>
+<h1>
+Using EMF</h1></center>
+
+<blockquote><b>Summary</b>
+<br>
+  This article introduces EMF, the Eclipse Modelling Framework, and will help 
+  you get started using EMF in your own Eclipse plug-ins. 
+  <p><b>By Catherine Griffin, IBM</b><br>
+    <font size=-1>December 9, 2002 (revised May 2003 for EMF 1.1.0)</font></blockquote>
+
+<hr width="100%">
+<h1>
+What is EMF, and why would I want to use it ?</h1>
+EMF, the Eclipse Modelling Framework, is used to define and implement structured
+data models. A data model is simply a set of related classes used to handle
+the data which you want to deal with in your application.
+<h2>
+Some good reasons to use EMF</h2>
+
+<ol>
+<li>
+<b>Code generation.</b> All the code needed for a working data model is generated for you,
+based on a definition of the model.  EMF generates nice readable code, from template files
+that can be customized. You can customize the generated code, and your
+changes won't be lost when the classes are regenerated. The input to code
+generation can be a Rational Rose model file, annotated Java interfaces,
+or an XML schema definition (under development).</li>
+
+<li>
+<b>Meta-data.</b> You can programatically query the structure of a model, and
+get more information than the standard Java BeanInfo or reflection would
+allow. EMF also supports accessing and updating models reflectively.</li>
+
+<li>
+<b>Default serialization.</b> EMF can load and save instances of your model as
+XMI (an XML format). If you need to save your data in a different format,
+you can do so. XML schema as a file format is under development.</li>
+
+<li>
+<b>Links between files.</b> You can save and edit data across multiple files.</li>
+
+<li>
+<b>Editors.</b> EMF will also generate an editor for your model,
+complete with content outline and property sheet. There is also a reflective editor, 
+which can view and edit any EMF model file, using only the model meta-data. 
+It provides similar function to the default generated editor, but it can't be easily 
+customized.
+</li>
+</ol>
+For more information see the <a href="http://www.eclipse.org/emf" target="_blank">EMF 
+project page</a>. 
+<p>If you want to try the example from this article, you will need EMF
+and a suitable version of Eclipse (I am using 2.1). EMF version 1.1.0 
+Build 20030501_0612VL was used to generate the example code.
+<h1>
+Developing an Eclipse plug-in using EMF</h1>
+
+<h2>
+The Example</h2>
+The example used in this article is an editor for family trees. 
+
+<h2>
+Step 1: Designing the model</h2>
+The first step is to design the data model for the application - that is, the 
+structure of the data we want to be able to view and edit, and the relationships 
+between data items. You may find a UML tool useful, or a piece of paper. For this 
+application, the main information needed is who had which children. In UML, the 
+data structure looks like this: 
+<p align="center"><img src="images/familytree.JPG"></p>
+A FamilyTree contains families and individuals. Individuals are either Male or 
+Female - Individual itself is an abstract class. A Family contains children and 
+is linked to a mother and father. 
+<p>In addition to these types of relations, EMF will handle multi-valued
+references, two-way relationships (navigable both ways), enumerations and
+data types (Java objects which aren't EMF based, serialized as strings).
+<h2>
+Step 2: Defining the model</h2>
+The next step is to define the model to EMF so that code can be generated.
+If you have Rational Rose, EMF can generate the implementation of your
+model directly from the Rose mdl file. See the EMF tutorial for details.
+<p>It is also possible to generate the model code from annotated Java interfaces.
+and that is what is described below. If you don't want to do any typing,
+just create a new Java project in Eclipse, import <a href="family1.zip">family1.zip,</a>
+and skip to Step 3. Otherwise proceed as follows:
+<ol>
+<li>
+In Eclipse, create a new Java project and a package for the interfaces.
+I am calling my project <b>com.ibm.example.familytree</b> and my package
+<b>com.ibm.example.familytree</b>.</li>
+
+<li>
+Create new Java interfaces called FamilyTree and Family in this package.
+In the Javadoc comment for each interface, add a line with the tag <b>@model</b>.
+This tells EMF that this interface is part of your model.</li>
+
+<li>
+A Java interface is also needed for Individual, but this needs an extra
+piece of information in the Javadoc comment because Individual needs to
+be treated as an abstract class. Add the tag <b>@model abstract="true"</b>.</li>
+
+<li>
+Next create the interfaces Male and Female, each extending Individual.&nbsp;
+Again add the <b>@model</b> tag.</li>
+</ol>
+
+<h3>
+Defining Attributes</h3>
+Individuals have names, so we need to add the attribute 'name' to the Individual
+interface. Just add a method as follows:
+<pre>&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Return the individuals name.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @return the name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @model
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **/
+&nbsp;&nbsp;&nbsp;&nbsp; String getName();</pre>
+Again, the <b>@model</b> tag tells EMF that this method needs some code
+generated. If you add methods to the interface that don't have the <b>@model</b>
+tag, EMF will not generate implementations of those methods, so you will
+have to implement them yourself. Sometimes it makes sense to do this -
+for example, you might want to add some convenience methods to the model
+interfaces.
+<h3>
+Defining simple references</h3>
+A Family should have references to a mother and a father. Add the following
+methods to the Family interface:
+<pre>&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Return the father
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @return the father
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @model
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **/
+<img SRC="images/tag_1.gif" height=13 width=24 align=CENTER>&nbsp; Male getFather();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Return the mother
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @return the mother
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @model
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **/
+&nbsp;&nbsp;&nbsp;&nbsp; Female getMother();</pre>
+Notice that the method&nbsp;<img SRC="images/tag_1.gif" height=13 width=24 align=CENTER>
+is very similar to how an attribute is defined.
+<h3>
+Defining containment relations</h3>
+In the UML model above, the links with black diamonds on them are containment
+relations. For example, an Individual can be contained either by a Family
+or by a FamilyTree. An object can only have one container. For example,
+the relations between Family and Individual defined in the previous section
+are not containment relations - because people can be married more than
+once (even if generally not at the same time).
+<p>When instances of this model are created using the editor generated
+by EMF, there will be a single top-level FamilyTree object and all the
+other objects in the model will be contained by it, directly or indirectly.
+The model cannot be saved correctly if there are objects which have no
+container.
+<p>Add the following methods to FamilyTree to define its containment relations:
+<pre>&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Return a list of contained families
+<img SRC="images/tag_2.gif" height=13 width=24 align=CENTER>&nbsp;&nbsp; * @model type="Family" containment="true"
+&nbsp;&nbsp;&nbsp;&nbsp;  **/
+&nbsp;&nbsp;&nbsp;&nbsp; java.util.List getFamilies();
+&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  * Return a list of contained individuals
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  * @model type="Individual" containment="true"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  **/
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; java.util.List getIndividuals();
+</pre>
+Unlike the simple references defined in the previous section, these methods
+return Lists - thats because a FamilyTree can contain multiple Families
+and Individuals. The return type must be java.util.List or org.eclipse.emf.common.util.EList
+so that EMF recognizes that this is meant to be multi-valued. Notice the
+<b>@model</b> tag&nbsp;<img SRC="images/tag_2.gif" height=13 width=24 align=CENTER>
+declares the type of object that can appear in the List. In addition, the
+flag <b>containment="true"</b> indicates that this is a containment relation.
+<p>There is one other containment relation to define, in Family:
+<pre>&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Return children
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @return list of child Individuals
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @model type="Individual" containment="true"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **/
+&nbsp;&nbsp;&nbsp;&nbsp; java.util.List getChildren();</pre>
+
+<h2>
+Step 3: Generating the model</h2>
+Now that the model has been defined, we can proceed to generate the model
+implementation.
+<ol>
+<li>
+In the File menu, select <b>New > Other...</b></li>
+
+<li>
+In the New File wizard, select <b>Ecore Model Framework</b> in the left-hand
+panel and <b>GenModel model</b> in the right-hand panel, then click <b>Next</b>.</li>
+
+<li>
+On the next page, select your project source folder, enter a filename with
+file type "genmodel", and click <b>Next</b>.</li>
+
+<li>
+Select the <b>Load from Java annotations</b> radio button and click <b>Finish</b>. 
+Two new files will be created in your project folder, one is called <b>familytree.ecore</b> 
+(this is an XMI file which contains a definition of the family tree model) and the other is the
+genmodel file which you entered a name for.  The genmodel file contains additional information about
+how EMF should generate code for the model.  The genmodel file is opened for editing.
+</li>
+
+<li>
+In the editor, select the root (first) node of the tree and right-click
+to bring up the popup menu.</li>
+
+<li>
+Select <b>Generate Model</b> to generate the model implementation code.</li>
+</ol>
+<p>
+Two new packages will be generated in your project, <b>com.ibm.example.familytree.impl</b> and
+<b>com.ibm.example.familytree.util</b>.
+If you look now at the original package <b>com.ibm.example.familytree</b>, you will find that
+two new interfaces called FamilytreeFactory and FamilytreePackage have appeared.  These are used to
+programmatically create model elements and to query meta-data, respectively.
+At the same time as generating the model implementation, EMF has also made some changes to the other interfaces
+in this package.  If you look at Family.java for example, you will see that the return type java.util.List 
+has been changed to EList and that the interface now extends EObject.  These changes are needed so that
+the generated model code works correctly.
+
+
+
+<h2>
+Step 4: Generating an editor</h2>
+The popup menu in the GenModel editor has four generation options:
+<ul>
+<li>
+<b>Generate Model</b> - generates the model implementation code, as you
+have just seen.</li>
+
+<li>
+<b>Generate EMF.Edit </b>- generates an extra plug-in containing adapter
+classes needed by the generated editor.</li>
+
+<li>
+<b>Generate EMF.Editor</b> - generates an editor plug-in for your model.</li>
+
+<li>
+<b>Generate All </b>- generates the model, edit plug-in and editor.</li>
+</ul>
+Since we have already generated the model, to generate the editor we need
+to first generate the EMF.Edit plug-in, then the EMF.Editor plug-in. This
+creates two new plug-in projects called <b>com.ibm.example.familytree.edit</b>
+and <b>com.ibm.example.familytree.editor</b>.
+<h2>
+Step 5: Trying out the generated plug-ins</h2>
+The generated editor can be used as a starting point for developing your
+application. However, resist the temptation to immediately start working
+on fancier views. First use the generated editor to check that your data
+model is able to cope with some sample data. If you find problems, you
+can then redesign the data model and repeat the process until you are happy
+with it. Its much easier to change your model now, than it would be after
+you have put a lot of work into the editor.
+<p>To run the example editor, you need to start a runtime workbench, making
+sure that it will be launched with the three generated plug-ins. If you
+aren't sure how to do this, see the EMF tutorial.
+<p>Once the workbench has started, you need to create a model file:
+<ol>
+<li>
+Create a new simple project</li>
+
+<li>
+Select from the menu <b>File > New > Other...</b></li>
+
+<li>
+Select <b>Example EMF Model Creation Wizards</b> and <b>Familytree Model</b>,
+and click
+<b>Next</b></li>
+
+<li>
+Select the new project, and enter a filename for the new file. The file
+should have the extension 'familytree'. Click Next.</li>
+
+<li>
+From the combo box, select <b>FamilyTree</b>, then click <b>Finish</b>.</li>
+</ol>
+The new file will be opened with the editor. This is a multipage editor,
+each page demonstrating different ways of displaying data from your model.
+The first page is a tree view, the root of the tree being the file you
+are editing. Expand the root and you will see a FamilyTree element - thats
+what the wizard created in the file. Select FamilyTree and right-click
+to bring up the popup menu. The menu allows you to add child elements -
+Family, Female or Male.
+<p>Add a Female or Male to the FamilyTree. If the Properties view is showing,
+you should see the properties for the Individual - there is only one: name.
+Set the name to something meaningful, and the label in the tree view will
+change.
+<p>When you add children to a Family, they appear as child items in the
+tree. You can use the properties view to set the mother and father for
+a Family, but setting these doesn't change the tree, because mothers and
+fathers are linked to families, not contained by them.
+<p>This is what the editor looks like when I have put in some test data:
+<p align="center"><img SRC="images/testdata.JPG"></p>
+
+<p>The test family tree shown here is in the file <a href="Test.familytree">Test.familytree</a>.
+This is an XMI file.  By default, EMF uses XMI (a form of XML) to save model instance data.
+If you need to save your data in a different format, you can write code to do so.
+<h2>
+Anatomy of the EMF Editor</h2>
+As you can see, the editor generated by EMF does quite a lot. The content
+outline view (bottom left in the above image) shows the contents of the
+file you are editing as a tree view. Whatever element is selected in the
+content outline view is also shown selected on the first page of the editor,
+which is a similar tree view. Whenever you select an element either in
+the editor or in the outline, its properties are shown in the properties
+view. The properties view lets you edit all that elements attributes and
+any single-valued references to other model elements (by picking from all
+the available elements of the right type).
+<p>You can drag and drop elements to move them, and cut, copy and paste, delete, 
+undo and redo edit actions are supported.
+<p>The other pages of the editor are -
+<ul>
+<li>
+<b>Parent </b>- whatever element is selected in the outline view, this
+tree view shows you how that element is contained.</li>
+
+<li>
+<b>List</b> - this page shows a list of elements contained by the selected
+element.</li>
+
+<li>
+<b>Tree</b> - same thing again, in a tree view</li>
+
+<li>
+<b>Table</b> - a table view of the children of the selected model element.</li>
+
+<li>
+<b>TableTree</b> - same again, using a table tree control.</li>
+</ul>
+
+<h1>
+Next steps</h1>
+You might decide at this point that some changes to the model are needed.
+For example, say I want to add a description attribute to Individual so
+I can add additional biographical information. I would edit the Individual
+interface as before and add the method:
+<pre>&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Return a description.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @return a description
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @model
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **/
+&nbsp;&nbsp;&nbsp;&nbsp; String getDescription();</pre>
+Then to update the genmodel file, right-click on it to bring up the popup
+menu, and select <b>Reload...</b>. You will also need to regenerate all
+the generated code. If you make changes to the generated code, then remember
+to take out the <b>@generated</b> flag from the Javadoc so that your changes
+are not overwritten.
+<p>The generated editor is meant to be a starting point for your own development
+and a demonstration of the reusable user interfaces parts provided in EMF.&nbsp;
+Once you are satisfied that your model is how you want it to be, you can
+start customizing the generated editor, or writing your own.
+<h2>
+Source code</h2>
+To run the customized versions of the family tree plug-ins, unzip <a href="family2.zip">family2.zip</a>
+into your <i>plugins/ </i>subdirectory. All the source code is included.
+The customized editor has only two pages, the original first page and a
+modified table tree view. For details of the changes see the sections below.
+<h2>
+Labels and Images</h2>
+To change the labels that are used in the editor, you need to go and find
+the adapter classes generated in the <b>com.ibm.example.familytree.edit</b>
+project. In the package <b>com.ibm.example.familytree.provider</b>, there
+is one adapter class for each model class. The methods <b>getText</b> and
+<b>getImage</b> determine the label and image that are used in the editor.
+<p>If you change the <b>getText</b> method, remember to remove the <b>@generated</b>
+flag from the method javadoc comment so that your changes will be kept
+if you regenerate the code.
+<p>To change the icons, you can just change the gifs that are in the <i>icons</i>
+folder in this plug-in project.
+<p>In the customized version of the family tree .edit plug-in, the getText 
+  methods have been changed in FamilyItemProvider, IndividualItemProvider, FemaleItemProvider 
+  and MaleItemProvider. For example, here's the code from IndividualItemProvider: 
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public String getText(Object object) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Individual individual = (Individual)object;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( individual.getName() == null )
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return "Unnamed individual";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return individual.getName();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</pre>
+
+<h2>
+Trees</h2>
+The simplest tree view is the one used for the generated editors
+content outline view and the selection tree view. The content provider
+for this is <b>org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider</b>,
+which uses the generated adapter classes from <b>com.ibm.example.familytree.edit</b>.
+The children of each element are the elements it contains.
+<p>You can create different tree views by writing your own content provider.
+However, make sure that you won't have the same element appearing twice
+in the tree as this will cause problems. The tree viewer assumes that each
+domain element maps to one tree item. If you need to show referenced elements
+in a tree, you will have to wrap them. Other structured viewers (tables
+and lists) behave the same way.
+<p>In the customized version of the family tree editor, I have changed
+the input of the content outline view so that the root of the tree is now
+FamilyTree instead of the resource (file), and changed the root and title
+of the selection tree view.
+<p>I have added the inner class ParentAdapterFactoryContentProvider in place of 
+  ReverseAdapterFactoryContentProvider. This returns the parents of a child as 
+  the tree 'children', resulting in a tree showing parents, grandparents, great-grandparents 
+  etc. Here's how the getChildren method is implemented: 
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public Object [] getChildren(Object object) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Object parent = super.getParent(object);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( parent instanceof Family ){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; List parents = new ArrayList();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( ((Family)parent).getMother() != null )
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; parents.add( ((Family)parent).getMother() );
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( ((Family)parent).getFather() != null )
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; parents.add( ((Family)parent).getFather() );
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return parents.toArray();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return new Object[0];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+
+</pre>
+
+<h2>
+Tables</h2>
+Table viewers require a content provider and a table label provider.
+<b>org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider</b>
+implements the <b>org.eclipse.jface.viewers.ITableLabelProvider</b> interface,
+but it delegates the real work to the generated adapter classes. Modify
+these to implement the <b>org.eclipse.emf.edit.provider.ITableItemLabelProvider</b>
+interface. 
+Then change the constructor of FamilytreeItemProviderAdapterFactory so
+that it knows it can supply a table item label provider.
+<P>You will also need to set up the table with the right columns;
+in the generated editor this is done in the createPages method.
+<p>The second page of the editor is now a table tree, using the content
+provider described above. It shows parents of children. I have defined
+three columns - Parents, Father and Mother. You can expand items in the
+first column to see parents of parents.
+<p>I modified IndividualItemProvider so that it implements ITableItemLabelProvider. 
+  The second column shows the individuals father, the third column their mother. 
+  Here's how the method getColumnText is implemented in IndividualItemProvider: 
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public String getColumnText(Object o, int index ){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( index == 0 ){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return getText(o);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Object f = getParent(o);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( f instanceof Family ){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( index == 1 &amp;&amp; ((Family)f).getFather() != null ){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // father
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return getText(((Family)f).getFather());&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if( index == 2 &amp;&amp; ((Family)f).getMother() != null ){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // mother
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return getText(((Family)f).getMother());&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return "unknown";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</pre>
+<p>Heres the customized version of the editor, showing the table tree:
+<p align="center"> <img SRC="images/customized.JPG"></p>
+<h2>
+Menus</h2>
+The generated ActionBarContributor is responsible for the popup menus,
+toolbar and menu bar items. The popup menu contents depend only on the
+selected elements, not the active viewer.
+<p>The menu items New Child and New Sibling are somewhat confusing in
+this context, so I have changed the ActionBarContributor to just have the
+submenu Add New, with menu items Family, Male, Female.
+<h1>
+Conclusions</h1>
+This article has introduced the process of plug-in development using EMF
+and shown how to start customizing the EMF generated editor code for your
+own use. By using EMF in your own plug-ins you can benefit from reusing
+user interface parts that are based on EMF. When you are familiar with
+the framework, you can quickly build functional new editors and views.
+<p>For more information about EMF, see the EMF tutorial (in the Eclipse Help for
+EMF), documentation, and the EMF newsgroup (<a href="news://www.eclipse.org/eclipse.tools.emf">news://www.eclipse.org/eclipse.tools.emf</a>).
+<p>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries,
+or both.
+</body>
+</html>

@@ -1,0 +1,1151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+        <meta name="Author" content="Joe Szurszewski">
+        <title>We Have Lift-off: The Launching Framework in Eclipse</title>
+        <link type="text/css" rel="stylesheet" href="../../default_style.css">
+    </head>
+    <body link="#0000ff" vlink="#800080">
+        
+<div align="right"> &nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  © 2003 International Business Machines Corp.</font> 
+  <table border="0" cellspacing="0" cellpadding="2" width="100%">
+                <tr>
+                    
+      <td align="LEFT" valign="TOP" bgcolor="#0080C0"> <b><font face="Arial,Helvetica" color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></b> </td>
+                </tr>
+            </table>
+        </div>
+        <div align="left">
+            <h1>
+                <img src="images/Idea.jpg" height="86" width="120" align="CENTER">
+            </h1>
+        </div>
+        <p>&nbsp;
+            
+        </p>
+        
+<h1 align="CENTER"> We Have Lift-off: The Launching Framework in Eclipse </h1>
+        <blockquote>
+            <b>Summary</b><br>
+  The ability to launch (run or debug) code under development is fundamental to 
+  an IDE. But because Eclipse is more of a tools platform than a tool itself, 
+  Eclipse's launching capabilities depend entirely on the current set of installed 
+  plug-ins. This article describes the API available to build launching plug-ins 
+  and works through developing an example launcher using this API. 
+  <p> <b>By Joe Szurszewski, IBM OTI Labs</b><br>
+    <font size="-1">January 8, 2003</font></p>
+        </blockquote>
+        <hr width="100%">
+<h2>Prerequisites</h2>
+To get the most out of this article, the reader should have a basic understanding 
+of the Eclipse plug-in architecture and the structure of <code>plugin.xml</code> 
+files. In addition, some knowledge of Java and Java terminology (VM, classpath, 
+etc.) is helpful, though not necessary. 
+<h2>In the beginning, there was nothing </h2>
+<p>For purposes of this article, <i>launching</i> is defined as running or debugging 
+  a program from within Eclipse, and a <i>launcher</i> is a set of Java classes 
+  that live in an Eclipse plug-in that performs launching. As with most things 
+  in Eclipse, there is no 'built-in' launching functionality. The base Eclipse 
+  workbench can't launch a thing. It is only through plug-ins that Eclipse gains 
+  the ability to launch. The Eclipse SDK does ship with a set of useful launchers 
+  for launching local Java applications &amp; Java applets, connecting to remote 
+  Java applications, launching JUnit test suites and starting an Eclipse workbench, 
+  but if none of these satisfy your needs and you can't find a plug-in someone 
+  else has written to do the job, you will need to write your own launcher. </p>
+<h2>A little history</h2>
+<p>Prior to 2.0, launching in Eclipse was somewhat inflexible and decentralized. 
+  For these reasons and many others, the launching framework was overhauled for 
+  2.0. The primary issues addressed were:</p>
+<ul>
+  <li>Allow developers to easily contribute launchers that are tightly integrated 
+    with the platform.</li>
+  <li>Break the launcher/resource dependency. Previously, launchers only worked 
+    on workspace resources.</li>
+  <li>Centralize the collection of launch-related attributes.</li>
+  <li>Allow users to save sets of launching attributes for reuse.</li>
+</ul>
+<p>The downside of all these improvements is that there is no backward compatibility. 
+  Eclipse 1.0 plug-ins that do launching will have to be reworked for 2.0. However, 
+  such conversions are relatively painless, and should result in much improved 
+  functionality.</p>
+<h2>
+            Let there be framework
+        </h2>
+        
+<p> If you've decided to write your own launcher, you're in luck. Eclipse 2.0 
+  plug-in developers have a rich API at their disposal to build plug-ins with 
+  launching behavior. In 2.0, launching is centered around two main entities, 
+  <b>LaunchConfigurations</b> and <b>LaunchConfigurationTypes</b>. At the simplest 
+  level, LaunchConfigurationTypes are cookie cutters, and LaunchConfigurations 
+  are the cookies made from these cookie cutters. When you as a plug-in developer 
+  decide to create a launcher, what you are really doing is creating a specific 
+  kind of cookie cutter that will allow your users to stamp out as many cookies 
+  as they need. In slightly more technical terms, a LaunchConfigurationType (henceforth, 
+  a 'config type') is an entity that knows how to launch certain types of launch 
+  configurations, and determines what the user-specifiable parameters to such 
+  a launch may be. Launch configurations (henceforth, 'configs') are entities 
+  that contain all information necessary to perform a specific launch. For example, 
+  a config to launch a HelloWorld Java application would contain the name of the 
+  main class ('HelloWorld'), the JRE to use (JDK1.4.1, for example), any program 
+  or VM arguments, the classpath to use and so on. When a config is said to be 
+  'of type local Java Application', this means that the local Java application 
+  cookie cutter was used to make this config and that only this config type knows 
+  how to make sense of this config and how to launch it. </p>
+<h2>Configs and working copies</h2>
+<p> Plug-in developers don't need to directly concern themselves with the launch 
+  configuration lifecycle. Once you've implemented a config type, the launching 
+  infrastructure contributed by the Debug core plug-in (<code>org.eclipse.debug.core</code>) 
+  takes care of creating and persisting configs on behalf of the config type, 
+  and infrastructure provided by the Debug UI plug-in ( <code>org.eclipse.debug.ui</code>) 
+  provides a dialog to manage configs (the 'LaunchConfigurationDialog'), as well 
+  as other launching-related UI.</p>
+<p>However, plug-in developers do need to know how to interact with configs. All 
+  config objects implement the <code>org.eclipse.debug.core.ILaunchConfiguration</code> 
+  interface which defines methods for retrieving information about the config, 
+  but no methods for changing the config. This is because objects implementing 
+  <code>ILaunchConfiguration</code> are immutable and cannot be changed. If you 
+  wish to change a config, you must have a reference to an object that implements 
+  the <code>org.eclipse.debug.core.ILaunchConfigurationWorkingCopy</code> interface. 
+  This interface extends <code>ILaunchConfiguration</code>, but adds methods for 
+  changing the contents of the config. The contents of a config consist of name/value 
+  pairs called 'attributes'. An attribute specifies one discrete piece of information 
+  about a config, for example the JRE to use when launching a Java-oriented config. 
+  By looking at the API defined by <code>ILaunchConfiguration</code> and <code>ILaunchConfigurationWorkingCopy</code>, 
+  you can see that attribute values must be one of 5 types:</p>
+<ul>
+  <li><b>boolean</b></li>
+  <li><b>int</b></li>
+  <li><code>java.lang.String</code></li>
+  <li><code>java.util.List</code> (all elements must be of type <code>java.lang.String</code>)</li>
+  <li><code>java.util.Map</code> (all keys &amp; values must be of type <code>java.lang.String</code>)</li>
+</ul>
+<p>This may seem limiting, but in practice, developers create <code>String</code> 
+  mementos for complex data types and store these. </p>
+<p> <img src="images/tip.gif" width="62" height="13"> <i>When referencing attribute 
+  names in code, you should always use publicly available constants. This allows 
+  other developers to access your attributes. </i></p>
+<h2>Separating model and UI</h2>
+        
+<p> To use the launcher API, your plug-in must make some import declarations in 
+  its <code>plugin.xml</code> file. If your plug-in declares a config type, it 
+  <b>must</b> import <code>org.eclipse.debug.core</code>, and if your plug-in 
+  declares anything related to launching UI, it <b>must</b> import <code>org.eclipse.debug.ui</code>. 
+  In general, it is recommended that the UI and non-UI aspects of your launcher 
+  be handled by two <i>different</i> plug-ins. Note that it is not required for 
+  a launcher to have <i>any</i> associated UI. In this case, the launcher can 
+  only be used programmatically from within code, not by a user (see the forthcoming 
+  related article &quot;How to Launch Java Applications Programmatically&quot; 
+  by Darin Wright). Even if your launcher has an associated UI, there may be times 
+  when you or someone else wants to use your launcher programmatically. Without 
+  a clean separation between UI &amp; non-UI code, a plug-in wishing to use your 
+  launcher programmatically would have to import the standard UI plug-ins, which 
+  may be inconvenient, inefficient or impossible. </p>
+<h2>The Java applet example</h2>
+<p>The rest of this article is concerned with developing a launcher for Java applets. 
+  This launcher is actually part of the Eclipse SDK (as of version 2.1), so all 
+  of the source code presented here can be viewed by downloading the SDK. The 
+  non-UI parts of this launcher live in the <code>org.eclipse.jdt.launching</code> 
+  plug-in, and the UI parts are contained in the <code>org.eclipse.jdt.debug.ui</code> 
+  plug-in. Each XML declaration that follows is marked as being UI or non-UI in 
+  nature. This is to help you separate out the UI components in launchers you 
+  create.</p>
+        
+<h2>
+            Declaring a launch configuration type
+        </h2>
+        <p>
+            The first step in creating our applet launcher is declaring a
+            config type, as shown in the following snippet of XML from our
+            plug-in's <code>plugin.xml</code> file:
+        </p>
+        
+<h5> <u>Non-UI declaration</u> </h5>
+<pre>
+&lt;extension point=&quot;org.eclipse.debug.core.launchConfigurationTypes&quot;&gt;
+    &lt;launchConfigurationType
+        name=&quot;Java Applet&quot;
+        delegate=&quot;org.eclipse.jdt.internal.launching.JavaAppletLaunchConfigurationDelegate&quot;
+        modes=&quot;run, debug&quot;               
+        id=&quot;org.eclipse.jdt.launching.javaApplet&quot;&gt;        
+    &lt;/launchConfigurationType&gt;
+&lt;/extension&gt;
+</pre>
+<p>
+            The most important part of this declaration is the
+            <code>delegate</code> attribute which specifies the
+            fully-qualified name of a class that implements the interface
+            <code>org.eclipse.debug.core.model.ILaunchConfigurationDelegate</code>.
+            The delegate is the brains of the launcher, and implements the
+            <code>launch()</code> method which launches a specified
+            config.
+        </p>
+        
+<p> The <code>modes</code> attribute specifies one or both of <code>run</code> 
+  &amp; <code>debug</code>. The debug infrastructure only supports these two modes 
+  of launching, and to be useful, your config type must support at least one of 
+  these. Among other things, this value tells the workbench where configs of your 
+  type may appear in the UI. For example, if the launch configuration dialog is 
+  opened in run mode, but your config type is for debug mode only, then your config 
+  type and any associated configs will not appear. Note that if your config type 
+  declares both modes, it is your delegate's responsibility in the <code>launch()</code> 
+  method to handle both modes. </p>
+<p>An optional attribute not present in the above declaration is <code>private</code>. 
+  This is a boolean attribute that indicates whether the config type should appear 
+  in the UI, if there is one. Setting this attribute to <code>true</code> effectively 
+  makes your launcher usable for programmatic launching only. The default value, 
+  if this attribute is omitted, is <code>false</code>.</p>
+        
+<p>Another optional attribute not shown above is <code>category</code>. This string-valued 
+  attribute will be discussed later in the section on launch groups.</p>
+        
+<h2>Implementing a launch configuration type </h2>
+<table border="1" cellspacing="0" bordercolor="#0000FF">
+  <tr> 
+    <td bgcolor="#FFFFCC" bordercolor="white"> 
+      <p> <b><font size="2">Source: <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/JavaAppletLaunchConfigurationDelegate.java">org.eclipse.jdt.internal.launching.JavaAppletLaunchConfigurationDelegate</a></font></b> 
+      </p>
+    </td>
+  </tr>
+</table>
+<p> As noted above, the work of implementing a config type boils down to creating 
+  a delegate class that implements the interface <code>org.eclipse.debug.core.ILaunchConfigurationDelegate</code>. 
+  The only method on this interface is: </p>
+<pre>
+public void launch(ILaunchConfiguration configuration, 
+                   String mode, 
+                   ILaunch launch, 
+                   IProgressMonitor monitor) throws CoreException;
+</pre>
+<p> The first argument, <code>configuration</code>, is the most important. This 
+  specifies the config to be launched. The Debug UI framework ensures that your 
+  delegate is never asked to launch a config of the wrong type, however there 
+  is no such guarantee for programmatic launching, so you may want to verify the 
+  type of the <code>config</code> argument. In simple terms, the job of the <code>launch()</code> 
+  method is to extract all of the pertinent information from this config and then 
+  act upon it. For our applet launcher, this information includes things such 
+  as the name of the Applet class, the JRE to use, the width &amp; height of the 
+  applet panel viewing area, the classpath to use and so on. Once this information 
+  has been extracted from the config and checked for validity, it is used to first 
+  generate an HTML file and then to launch an instance of the <code>appletviewer</code> 
+  utility on this HTML file. </p>
+<p> The <code>mode</code> attribute has a value of either ' <code>run</code>' 
+  or ' <code>debug</code> ' . Once again, the Debug UI framework makes sure your 
+  delegate is not asked to launch in a mode it can't handle, but with programmatic 
+  launching, any developer can ask your delegate to do anything, so some sanity 
+  checking is a good idea. </p>
+<p> <img src="images/tip.gif" width="62" height="13"> <em>When specifying a launch 
+  mode in code, you should never use a hard-coded <code>String</code>. Instead, 
+  use one of the constants defined in <code>org.eclipse.debug.core.ILaunchManager</code>.</em> 
+</p>
+<p> The third argument, <code>launch</code>, is the top-level debug model artifact 
+  that represents a launch. This object is created before the <code>launch()</code> 
+  method is called. The delegate's responsibility with respect to this argument 
+  is to add the debug targets and/or processes that result from launching to it. 
+  In our applet launcher, this is done inside the <code>IVMRunner.run()</code> 
+  call. </p>
+<p> The last argument, <code>monitor</code>, is the progress monitor you should 
+  update during any long-running operations you perform. In addition, you should 
+  periodically check this monitor to see if the user has requested that the launch 
+  be canceled. This can be done via <code>monitor.isCanceled()</code>. Doing this 
+  allows your users the chance to change their minds, which makes your launcher 
+  much friendlier. Note that <code>monitor</code> may be <code>null</code> (for 
+  example, during a programmatic launch). </p>
+<p> The implementation of the <code>launch()</code> method for our applet launcher 
+  delegate is made easier by that fact that the delegate extends <code>org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate</code>. 
+  This class provides common functionality that most Java-oriented launchers will 
+  need. For example, it has methods to retrieve and verify Java-related config 
+  attributes such as the main type, classpath, bootpath and VM. In addition, our 
+  applet launcher takes advantage of some Java launching infrastructure in the 
+  form of <code>org.eclipse.jdt.launching.IVMRunner</code>. The VMRunner's job 
+  is simply to build a command line to launch the Java program, call <code>Runtime.exec()</code> 
+  on this command line and add the resulting debug targets/processes to the ILaunch 
+  object. The reason <code>IVMRunner</code> is an interface with several implementors 
+  is that each VM type (1.1.x, 1.3/1.4, J9, etc.) has its own idiosyncrasies. 
+  Also, there are different VMRunners for run &amp; debug modes. </p>
+<p> <img src="images/tip.gif" width="62" height="13"> <em>If you are writing a 
+  launcher that fires up a JVM, you should seriously consider making your delegate 
+  extend <code>AbstractJavaLaunchConfigurationDelegate</code>. Also, you should 
+  take advantage of the <code>IVMRunner</code> infrastructure as much as possible.</em> 
+</p>
+<p>The following code fragment is taken from the <code>beginning of the launch()</code> 
+  method of <code>JavaAppletLaunchConfigurationDelegate</code>:</p>
+<pre><img src="images/tag_1.gif" width="24" height="13">&nbsp;String mainTypeName = verifyMainTypeName(configuration);
+&nbsp;&nbsp;&nbsp;&nbsp;IJavaProject javaProject = getJavaProject(configuration);
+<img src="images/tag_2.gif" width="24" height="13">&nbsp;IType type = JavaLaunchConfigurationUtils.getMainType(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mainTypeName, javaProject);
+&nbsp;&nbsp;&nbsp;&nbsp;ITypeHierarchy hierarchy = type.newSupertypeHierarchy(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new NullProgressMonitor());
+&nbsp;&nbsp;&nbsp;&nbsp;IType javaLangApplet = JavaLaunchConfigurationUtils.getMainType(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;java.applet.Applet&quot;, javaProject);
+<img src="images/tag_3.gif" width="24" height="13">&nbsp;if (!hierarchy.contains(javaLangApplet)) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;abort(&quot;The applet type is not a subclass of java.applet.Applet.&quot;);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+<img src="images/tag_4.gif" width="24" height="13">&nbsp;IVMInstall vm = verifyVMInstall(configuration);
+<img src="images/tag_5.gif" width="24" height="13">&nbsp;IVMRunner runner = vm.getVMRunner(mode);</pre>
+<p>This code snippet is typical of the verification done by the <code>launch()</code> 
+  method:<br>
+  <img src="images/tag_1.gif" width="24" height="13"> Use a framework method to 
+  verify &amp; return the name of the 'main type', which in our case is the class 
+  that extends <code> java.applet.Applet</code>.<br>
+  <img src="images/tag_2.gif" width="24" height="13"> Use a utility method to 
+  return the <code>org.eclipse.jdt.core.IType</code> object for the Applet class.<br>
+  <img src="images/tag_3.gif" width="24" height="13"> Make sure that the specified 
+  applet class really does extend <code>java.applet.Applet</code>.<br>
+  <img src="images/tag_4.gif" width="24" height="13"> Verify &amp; return the 
+  <code>org.eclipse.jdt.launching.IVMInstall</code> object that corresponds to 
+  the JRE specified in the configuration.<br>
+  <img src="images/tag_5.gif" width="24" height="13"> Ask the installed VM for 
+  a VMRunner appropriate to the specified mode.</p>
+<p>Further along in the <code>launch()</code> method is this snippet of code:</p>
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;// Create VM config
+<img src="images/tag_1.gif" width="24" height="13">&nbsp;VMRunnerConfiguration runConfig = new VMRunnerConfiguration(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;sun.applet.AppletViewer&quot;, classpath);
+&nbsp;&nbsp;&nbsp;&nbsp;runConfig.setProgramArguments(new String[] {buildHTMLFile(configuration)});
+&nbsp;&nbsp;&nbsp;&nbsp;String[] vmArgs = execArgs.getVMArgumentsArray();
+&nbsp;&nbsp;&nbsp;&nbsp;String[] realArgs = new String[vmArgs.length+1];
+&nbsp;&nbsp;&nbsp;&nbsp;System.arraycopy(vmArgs, 0, realArgs, 1, vmArgs.length);
+&nbsp;&nbsp;&nbsp;&nbsp;realArgs[0] = javaPolicy;
+<img src="images/tag_2.gif" width="24" height="13">&nbsp;runConfig.setVMArguments(realArgs);
+   
+&nbsp;&nbsp;&nbsp;&nbsp;runConfig.setWorkingDirectory(workingDirName);</pre>
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;// Bootpath
+&nbsp;&nbsp;&nbsp;&nbsp;String[] bootpath = getBootpath(configuration);
+<img src="images/tag_3.gif" width="24" height="13">&nbsp;runConfig.setBootClassPath(bootpath);
+   
+&nbsp;&nbsp;&nbsp;&nbsp;// Launch the configuration
+&nbsp;&nbsp;&nbsp;&nbsp;this.fCurrentLaunchConfiguration = configuration;
+<img src="images/tag_4.gif" width="24" height="13">&nbsp;runner.run(runConfig, launch, monitor); </pre>
+<p>This is the code that actually performs the launch:<br>
+  <img src="images/tag_1.gif" width="24" height="13"> Create a <code>VMRunnerConfiguration</code>, 
+  which is just a convenience holder of various launch parameters. Notice the 
+  program being launched is the <code>appletviewer</code> utility.<br>
+  <img src="images/tag_2.gif" width="24" height="13"> Resolve the VM arguments 
+  and set them on the VMRunnerConfiguration.<br>
+  <img src="images/tag_3.gif" width="24" height="13"> Set the Java bootpath on 
+  the VMRunnerConfiguration.<br>
+  <img src="images/tag_4.gif" width="24" height="13"> Ask the VMRunner to launch. 
+  All information necessary to perform the launch is now contained in <code>runConfig</code>. 
+  This method call will result in building a command line and passing it to <code>Runtime.exec()</code>. 
+  If the launch mode was 'run', the resulting process is registered with the debug 
+  infrastructure. If the launch mode was 'debug', the resulting process is used 
+  to create a 'debug target', which is also registered. </p>
+<p>On a Win32 machine, the command line built by the VMRunner to run a HelloWorld 
+  applet with our applet launcher might look like:</p>
+<pre>
+C:\Java\jdk1.4.1\bin\javaw.exe 
+       -Djava.security.policy=java.policy.applet
+       -classpath C:\TargetWorkspaces\eclipse\MyApplets 
+               sun.applet.AppletViewer HelloWorldApplet1030633365864.html
+</pre>
+<p> Debugging the same applet would result in the following command line: </p>
+<pre>
+C:\Java\jdk1.4.1\bin\javaw.exe 
+       -Djava.security.policy=java.policy.applet
+       -classpath C:\TargetWorkspaces\eclipse\MyApplets 
+       -Xdebug -Xnoagent 
+       -Djava.compiler=NONE
+       -Xrunjdwp:transport=dt_socket,suspend=y,address=localhost:14983 
+               sun.applet.AppletViewer HelloWorldApplet1030634748522.html
+</pre>
+<p> <img src="images/tip.gif" width="62" height="13"> <em>You can always see the 
+  command line used to initiate a launch by right-clicking the resulting process 
+  in the Debug View and selecting Properties. This is useful for debugging your 
+  delegate.</em> </p>
+<p> To summarize, implementing a config type (Java or otherwise) means implementing 
+  the <code>launch()</code> method on your launch configuration delegate. This 
+  method has 2 main tasks to perform: </p>
+<ol>
+  <li> Construct a command line and pass it to <code>Runtime.exec()</code> </li>
+  <li> Create debug targets/processes and add these to the ILaunch object </li>
+</ol>
+<p> Note that the first task may sometimes <i>not</i> involve calling <code>Runtime.exec()</code>. 
+  For example, the Remote Java Debug delegate does not need to execute anything 
+  in the OS because the program to be debugged is already running (possibly on 
+  another machine). In general though, if your delegate is launching something 
+  under development in the Eclipse workspace, you will probably want to use <code>Runtime.exec()</code>. 
+</p>
+<h2>Declaring a launch configuration type icon </h2>
+        
+<p> Now that we have a declared and implemented a config type, the next step is 
+  to flesh out the various UI elements associated with the config type. First 
+  up is an icon for the applet config type: </p>
+<h5> <u>UI declaration</u></h5>
+<pre>
+&lt;extension point=&quot;org.eclipse.debug.ui.launchConfigurationTypeImages&quot;&gt;
+    &lt;launchConfigurationTypeImage
+        icon=&quot;icons/full/ctool16/java_applet.gif&quot;
+        configTypeID=&quot;org.eclipse.jdt.launching.javaApplet&quot;
+        id=&quot;org.eclipse.jdt.debug.ui.launchConfigurationTypeImage.javaApplet&quot;&gt;
+    &lt;/launchConfigurationTypeImage&gt;
+&lt;/extension&gt;
+</pre>
+<p> Note that the <code>id</code> attribute is just a unique identifier, whereas 
+  the <code>configTypeID</code> attribute should have the same value as the <code>id</code> 
+  attribute for our config type declaration. Notice that the icon is declared 
+  via a separate extension point instead of just being an attribute on the config 
+  type declaration. This is in keeping with the goal of not forcing launcher contributors 
+  to provide a UI.</p>
+        
+<h2>Implementing a launch configuration type icon </h2>
+<p>There is no code to write when implementing a config type icon, you simply 
+  need to create the icon. The icon should be 16x16, contain no more than 256 
+  colors, and have a transparent background.</p>
+<h2>
+            Declaring a tab group
+        </h2>
+        
+<p> The most important piece of UI to consider when developing a new launcher 
+  is the 'tab group'. To understand how tab groups work, we need a little background 
+  on the LaunchConfigurationDialog provided by the Debug UI plug-in. This dialog 
+  (henceforth known as the 'LCD') is a central point for creating, managing, deleting 
+  and launching configs of any config type. If you have used any 2.0 or later 
+  version of Eclipse, you have probably seen the LCD: </p>
+        <p>
+            <img src="images/Screenshot1.gif" width="663" height="560">
+        </p>
+        <p>
+            The LCD is broken into two main regions:
+        </p>
+        
+<p> <img src="images/tag_1.gif" width="24" height="13"> The config tree shows 
+  all configs currently defined in the workspace, grouped by config type. </p>
+        <p>
+            <img src="images/tag_2.gif" width="24" height="13"> The tabbed
+            folder lets users edit attributes of the config currently
+            selected in the tree. The contents of this tabbed folder are
+            specified when you declare a tab group.
+        </p>
+        <p>
+            The 6 tabs in the above figure show the launching attributes
+            for <b>HelloWorldApplet</b>. These same 6 tabs would appear if
+            either of the other two configs of type <b>JavaApplet</b> were
+            selected, though of course they would show different values.
+            If <b>InfiniteLoop</b> were selected, it would show a
+            <i>different</i> set of tabs because this config is of a
+            different config type. When you declare a tab group, you are
+            telling the LCD to use the tabs specified in your tab group
+            for configs of your config type. This makes perfect sense
+            because if your config type requires width &amp; height
+            attributes (for example) in order to launch properly, the only
+            way to get values for these attributes is via a set of tabs
+            that appear when a config of your type is selected in the LCD.
+            Another way to look at this is that if your config type
+            requires some attribute X in order to function, then somewhere
+            on a tab specified in your tab group, there better be some UI
+            widget that collects a value for X.
+        </p>
+        <p>
+            Here is the XML for declaring a tab group:
+        </p>
+        
+<h5> <u>UI declaration</u></h5>
+<pre>
+&lt;extension point=&quot;org.eclipse.debug.ui.launchConfigurationTabGroups&quot;&gt;
+    &lt;launchConfigurationTabGroup
+        type=&quot;org.eclipse.jdt.launching.javaApplet&quot;
+        class=&quot;org.eclipse.jdt.internal.debug.ui.launcher.JavaAppletTabGroup&quot;
+        id=&quot;org.eclipse.jdt.debug.ui.launchConfigurationTabGroup.javaApplet&quot;&gt;
+    &lt;/launchConfigurationTabGroup&gt;
+&lt;/extension&gt;
+</pre>
+<p> All that this declaration really does is associate a tab group implementation 
+  (a class that implements the interface <code>org.eclipse.debug.ui.ILaunchConfigurationTabGroup</code>) 
+  with a config type. Any time a config of the specified type is selected in the 
+  LCD, the class named by the <code>class</code> attribute will be used to provide 
+  the content of the tabbed folder.</p>
+        
+<h2>Implementing tab groups </h2>
+<table border="1" cellspacing="0" bordercolor="#FFFFFF">
+  <tr> 
+    <td bgcolor="#FFFFCC" bordercolor="#0000FF"> 
+      <p> <b><font size="2">Source: <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.debug.ui/ui/org/eclipse/jdt/internal/debug/ui/launcher/JavaAppletTabGroup.java">org.eclipse.jdt.internal.debug.ui.launcher.JavaAppletTabGroup</a></font></b> 
+      </p>
+    </td>
+  </tr>
+</table>
+<p> The main job of a tab group is to specify the tabs that will appear in the 
+  LCD and set their order. &nbsp;These tabs may have been specially written for 
+  the&nbsp;particular config type in question, or they may be general purpose 
+  tabs that appear for multiple config types. &nbsp;The tab group for our applet 
+  launcher&nbsp;creates 6 tabs, of which 4&nbsp;already existed (<code>JavaArgumentsTab, 
+  JavaJRETab, JavaClasspathTab, CommonTab</code>) and 2&nbsp;which were written 
+  just for our applet launcher (<code>AppletMainTab </code>and<code> AppletParametersTab</code>):</p>
+<pre>public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
+	ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] {
+			new AppletMainTab(),
+			new AppletParametersTab(),
+			new JavaArgumentsTab(),
+			new JavaJRETab(),
+			new JavaClasspathTab(), 
+			new CommonTab()
+	};
+	setTabs(tabs);
+}</pre>
+<p>A tab group is free to mix &amp;&nbsp;match any combination of existing and 
+  custom-written tabs. &nbsp;The only proviso is that tabs you wish to reuse must 
+  be in public (not internal) packages. &nbsp;In the simplest case, <i>all</i> 
+  of the tabs would be preexisting tabs and the work of providing a UI for our 
+  config type in the LCD would be done&nbsp;once we had defined a class similar 
+  to <code>JavaAppletTabGroup</code>. &nbsp;</p>
+<p><img src="images/tip.gif" width="62" height="13" border="0"> <i>If you are 
+  implementing a tab group for a Java-oriented config type, you should consider 
+  reusing some or all of the Java tabs in the <code>org.eclipse.jdt.debug.ui.launchConfigurations</code> 
+  package.</i></p>
+<p><img src="images/tip.gif" width="62" height="13" border="0"> <i><u>All</u> 
+  tab groups should include <code>org.eclipse.debug.ui.CommonTab</code>. &nbsp;This 
+  tab contains UI that allows users to make their configs 'local' or 'shared', 
+  mark configs as 'favorites' and control perspective switching when launching. 
+  &nbsp;By convention, this tab is the last tab in the tab group.</i></p>
+<p>If you decide that you need to write one or more of your own tabs, you need 
+  to understand the tab lifecycle defined by <code>org.eclipse.debug.ui.ILaunchConfigurationTab</code>, 
+  an interface which all tabs must implement. &nbsp;There is a convenience abstract 
+  class, <code>org.eclipse.debug.ui.AbstractLaunchConfigurationTab</code> that 
+  implements this interface and provides useful implementations of many of its 
+  methods. Whenever possible, you should extend this abstract class.</p>
+<p>The first two events in a tab's life cycle are calls to <code>setLaunchConfigurationDialog(ILaunchConfigurationDialog)</code>and 
+  <code>createControl()</code> in that order.&nbsp;The first simply notifies the 
+  tab of the LCD object that owns it. Tabs make frequent calls to methods on the 
+  LCD, so a&nbsp;tab needs to have a reference to it. &nbsp;The second method 
+  creates&nbsp;the GUI widgetry for the tab and lays it&nbsp;out. &nbsp;</p>
+<table border="1" cellspacing="0" bordercolor="#FFFFFF" width="503">
+  <tr> 
+    <td bgcolor="#FFFFCC" bordercolor="#0000FF"> <p> <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.debug.ui/ui/org/eclipse/jdt/debug/ui/launchConfigurations/AppletParametersTab.java"><b><font size="2">Source: 
+        org.eclipse.jdt.debug.ui.launchConfigurations.AppletParametersTab</font></b> 
+        </a></p></td>
+  </tr>
+</table>
+<p>To illustrate the rest of the methods on <code>ILaunchConfigurationTab</code>, 
+  the <code>AppletParametersTab</code> implementation will be discussed. This 
+  class makes three field declarations you need to be aware of:</p>
+<ul>
+  <li> <code>private Text widthText;</code></li>
+  <li><code>private Text heightText;</code></li>
+  <li><code>private Text nameText;</code>
+  </li>
+</ul>
+<p>where <code>Text</code> is the SWT text-field widget.</p>
+<p>The three most important methods on a tab are the following 'value copying' 
+  methods:</p>
+<ul type="disc">
+  <li><code>public void setDefaults(ILaunchConfigurationWorkingCopy configuration);</code></li>
+  <li><code>public void performApply(ILaunchConfigurationWorkingCopy configuration);</code></li>
+  <li><code>public void initializeFrom(ILaunchConfiguration configuration);</code></li>
+</ul>
+<p>In general terms, the first two methods copy&nbsp;values from the tab to a 
+  working copy,&nbsp;while the third method copies&nbsp;values from&nbsp;a working 
+  copy&nbsp;to&nbsp;the tab. &nbsp;The <code>setDefaults()</code> method is called 
+  when a new config is&nbsp;created. &nbsp;This method&nbsp;sets default values 
+  for all attributes it understands on the working copy argument. &nbsp;This is 
+  done differently depending on the nature of the attributes collected by the 
+  tab. &nbsp;The <code>AppletMainTab</code> checks the current workbench selection 
+  or active editor to determine default values for the Project &amp; Applet class 
+  attributes. &nbsp;The <code>CommonTab</code> sets hard-coded defaults, and the 
+  <code>JavaJRETab</code> sets the default JRE to be the JRE marked as the workbench 
+  default in the Java preferences. </p>
+<p>The <code>performApply()</code> method reads current values from the GUI widgets 
+  on the tab and sets the corresponding attribute values on the working copy argument:</p>
+<pre>public void performApply(ILaunchConfigurationWorkingCopy configuration) {
+	configuration.setAttribute(
+	   IJavaLaunchConfigurationConstants.ATTR_APPLET_WIDTH,
+	   (String)widthText.getText());
+	configuration.setAttribute(
+	   IJavaLaunchConfigurationConstants.ATTR_APPLET_HEIGHT,
+	   (String)heightText.getText());
+	configuration.setAttribute(
+	   IJavaLaunchConfigurationConstants.ATTR_APPLET_NAME,
+	   (String)nameText.getText());
+	configuration.setAttribute(
+	   IJavaLaunchConfigurationConstants.ATTR_APPLET_PARAMETERS,
+	   getMapFromParametersTable());
+}</pre>
+<p>The <code>initializeFrom()</code> method does the opposite of the <code>performApply()</code> 
+  method. &nbsp;It reads attribute values out of the config argument, and sets 
+  these values in the corresponding GUI widgets:</p>
+<pre>public void initializeFrom(ILaunchConfiguration config) {
+&nbsp;&nbsp;&nbsp;&nbsp;try {
+<img src="images/tag_1.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fWidthText.setText(Integer.toString(config.getAttribute(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IJavaLaunchConfigurationConstants.ATTR_APPLET_WIDTH, &quot;200&quot;)));
+&nbsp;&nbsp;&nbsp;&nbsp;} catch(CoreException ce) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fWidthText.setText(Integer.toString(DEFAULT_APPLET_WIDTH));
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;try {
+<img src="images/tag_2.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fHeightText.setText(Integer.toString(config.getAttribute(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IJavaLaunchConfigurationConstants.ATTR_APPLET_HEIGHT, &quot;200&quot;)));
+&nbsp;&nbsp;&nbsp;&nbsp;} catch(CoreException CE) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fHeightText.setText(Integer.toString(DEFAULT_APPLET_HEIGHT));
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;try {
+<img src="images/tag_3.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fNameText.setText(config.getAttribute(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IJavaLaunchConfigurationConstants.ATTR_APPLET_NAME, &quot;&quot;));
+&nbsp;&nbsp;&nbsp;&nbsp;} catch(CoreException CE) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fNameText.setText(&quot;&quot;);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;updateParametersFromConfig(config);
+}</pre>
+<p><img src="images/tag_1.gif" width="24" height="13"> Extract the value of the 
+  width attribute from the config and put it in the corresponding <code>Text</code> 
+  widget.<br>
+  <img src="images/tag_2.gif" width="24" height="13"> Extract the value of the 
+  height attribute from the config and put it in the corresponding <code>Text</code> 
+  widget.<br>
+  <img src="images/tag_3.gif" width="24" height="13"> Extract the value of the 
+  name attribute from the config and put it in the corresponding <code>Text</code> 
+  widget.<br>
+  In all cases, if there is an error retrieving the attribute value, the <code>Text</code> 
+  widget is filled with a default value.</p>
+<p>Both <code>performApply(</code>) and <code>initializeFrom()</code> are&nbsp;called 
+  frequently, for example, whenever the user selects a new tab. &nbsp;Thus, they 
+  should not perform long-running operations.</p>
+<p>The remaining methods on <code>ILaunchConfigurationTab</code> are also fairly 
+  straightforward. The <code>isValid(ILaunchConfiguration)</code> method returns 
+  <code>true</code> if all of the attributes in the tab currently have values 
+  that permit launching, within the context of the specified config:</p>
+<pre>public boolean isValid(ILaunchConfiguration launchConfig) {
+&nbsp;&nbsp;&nbsp;&nbsp;setErrorMessage(null);
+&nbsp;&nbsp;&nbsp;&nbsp;try {
+<img src="images/tag_1.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Integer.parseInt(fWidthText.getText().trim());
+&nbsp;&nbsp;&nbsp;&nbsp;} catch(NumberFormatException nfe) {
+<img src="images/tag_2.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;setErrorMessage(&quot;Width is not an integer&quot;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;try {
+<img src="images/tag_1.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Integer.parseInt(fHeightText.getText()Trim());
+&nbsp;&nbsp;&nbsp;&nbsp;} catch(NumberFormatException nfe) {
+<img src="images/tag_2.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;setErrorMessage(&quot;Height is not an integer&quot;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+<img src="images/tag_3.gif" width="24" height="13">&nbsp;return true;
+}
+</pre>
+<p><img src="images/tag_1.gif" width="24" height="13"> The config can be launched 
+  only when both the <code>width</code> &amp; <code>height</code> attributes have 
+  valid integer values. <br>
+  <img src="images/tag_2.gif" width="24" height="13"> The appropriate response 
+  to a validation failure is calling <code>AbstractLaunchConfigurationTab.setErrorMessage(String)</code> 
+  with a description of the failure and returning <code>false</code>.<br>
+  <img src="images/tag_3.gif" width="24" height="13"> The other attribute values 
+  this tab is responsible for cannot be checked for validity, so at this point 
+  we declare the tab valid.</p>
+<p> The <code>canSave()</code> method is similar to <code>isValid()</code>, and 
+  returns <code>true</code> if all of the attributes in the tab have values that 
+  permit saving. </p>
+<p><img src="images/tip.gif" width="62" height="13" border="0"> <i>If you implement 
+  your own tab, consider making it public API so that others can&nbsp;reuse it.</i></p>
+<p>If you compare the API on <code>ILaunchConfigurationTabGroup</code> and <code>ILaunchConfiguration</code>, 
+  you will see a number of similarities. In particular, the following methods 
+  are common:</p>
+<ul>
+  <li> <code>public void initializeFrom(ILaunchConfiguration configuration);
+    </code></li>
+  <li><code>public void performApply(ILaunchConfigurationWorkingCopy configuration);
+    </code></li>
+  <li><code>public void setDefaults(ILaunchConfigurationWorkingCopy configuration);</code>
+  </li>
+  <li><code>public void launched(ILaunch launch);
+    </code></li>
+</ul>
+<p>You will recognize the 3 'value copying' lifecycle methods for tabs, along 
+  with <code>launched(ILaunch)</code> which is simply a callback that happens 
+  when a successful launch has occurred. In most cases, the tab group is not interested 
+  in these calls and simply forwards them on to its tabs. When this is true, you 
+  should make your tab group extend <code>org.eclipse.debug.ui.AbstractLaunchConfigurationTabGroup</code>. 
+  This abstract class implements these 4 methods to simply loop through all owned 
+  tabs and make the corresponding call on each. The applet launcher tab group 
+  extends this abstract class. However, there are situations when you might want 
+  to implement some of these methods at the tab group level. Suppose you are reusing 
+  someone else's tab that specifies a default value for an attribute you don't 
+  like. You can change this default value and still reuse the tab by implementing 
+  the <code>setDefaults()</code> method on your tab group to first call <code>setDefaults()</code> 
+  on the tab in question (which sets the undesirable default value), then directly 
+  set the attribute in question to the value you prefer. In this way, you 'override' 
+  the one value you care about, while leaving the others as specified in the tab.</p>
+<h2>Declaring launch shortcuts </h2>
+        
+<p> As useful as the LCD is, there are many times when users don't want to bother 
+  with it. They simply want to launch a program. This is where 'launch shortcuts' 
+  come in. A launch shortcut allows users to identify a resource in the workbench 
+  (either via selection or the active editor) and launch that resource with a 
+  single click <i>without</i> bringing up the LCD. Launch shortcuts are <i>not</i> 
+  useful when a user needs to tweak launch configuration attributes because the 
+  user gets no chance to set these. Launch shortcuts <i>are</i> useful when the 
+  user is happy with default values for all config attributes and wants to launch 
+  in a hurry. </p>
+        <p>
+            The following figure shows how launch shortcuts appear in the
+            UI:
+        </p>
+        <p>
+            <img src="images/Screenshot2.gif" width="685" height="355">
+        </p>
+        
+<p> <img src="images/tag_1.gif" width="24" height="13"> The 'Run As' sub-menu 
+  of the 'Run' drop-down menu shows all config types that have registered a launch 
+  shortcut in the current perspective. Selecting one of the 'Run As' sub-menu 
+  choices activates the corresponding launch shortcut. </p>
+        
+<p> This is the XML to declare the applet launch shortcut: </p>
+        
+<h5> <u>UI declaration</u></h5>
+<pre>
+&lt;extension point=&quot;org.eclipse.debug.ui.launchShortcuts&quot;&gt;
+    &lt;shortcut
+        id=&quot;org.eclipse.jdt.debug.ui.javaAppletShortcut&quot;
+        class=&quot;org.eclipse.jdt.internal.debug.ui.launcher.JavaAppletLaunchShortcut&quot;
+        label=&quot;Java Applet&quot;
+        icon=&quot;icons/full/ctool16/java_applet.gif&quot;
+        modes=&quot;run, debug&quot;&gt;
+            &lt;perspective id=&quot;org.eclipse.jdt.ui.JavaPerspective&quot;/&gt;
+            &lt;perspective id=&quot;org.eclipse.jdt.ui.JavaHierarchyPerspective&quot;/&gt;
+            &lt;perspective id=&quot;org.eclipse.jdt.ui.JavaBrowsingPerspective&quot;/&gt;
+            &lt;perspective id=&quot;org.eclipse.debug.ui.DebugPerspective&quot;/&gt;
+    &lt;/shortcut&gt;
+&lt;/extension&gt;
+</pre>
+<p> Though the screenshot showed only the 'Run' shortcuts, launch shortcuts apply 
+  equally to both modes. The <code>modes</code> attribute specifies which of the 
+  drop-down menus include the shortcut. In addition to being mode sensitive, launch 
+  shortcuts can also be configured to only appear in certain perspectives. The 
+  <code>perspective</code> sub-elements list each perspective in which the shortcut 
+  will be available. Only those perspectives that make sense for a particular 
+  shortcut should be specified. For example, specifying a C++ perspective for 
+  the Java applet launcher wouldn't be generally useful. Following this rule of 
+  thumb leads to better UI scalability.</p>
+        
+<h2>Implementing launch shortcuts </h2>
+<table border="1" cellspacing="0" bordercolor="#0000FF" width="504">
+  <tr> 
+    <td bgcolor="#FFFFCC" bordercolor="#FFFFFF"> 
+      <p> <b><font size="2">Source: <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.debug.ui/ui/org/eclipse/jdt/internal/debug/ui/launcher/JavaAppletLaunchShortcut.java">org.eclipse.jdt.internal.debug.ui.launcher.JavaAppletLaunchShortcut</a></font></b> 
+      </p>
+    </td>
+  </tr>
+</table>
+<p> The first step in implementing a launch shortcut is determining if you even 
+  need to. &nbsp;Launch shortcuts are strictly conveniences that make user's lives 
+  easier by allowing them to create a config, set all attributes to default values 
+  and launch that config in a single mouse click. &nbsp;If you don't provide a 
+  shortcut for your config type, users can always bring up the LCD 'manually', 
+  create a config of the desired type and launch it. &nbsp; </p>
+<p><img src="images/tip.gif" width="62" height="13"> <i>There are two ways to 
+  bring up the LCD: (1) Choose Run... or Debug... from the drop-down menus to 
+  bring up the LCD on the last launched config or (2) As of 2.1, you can Ctrl 
+  click a favorite or history item in the drop-down menus to bring up the LCD 
+  on the corresponding config.</i></p>
+<p>Launch shortcut classes&nbsp;must implement the <code>org.eclipse.debug.ui.ILaunchShortcut</code> 
+  interface. &nbsp;This interface defines two <code>launch()</code> methods: </p>
+<ul type="disc">
+  <li> <code>public void launch(ISelection selection, String mode);</code> </li>
+  <li> <code>public void launch(IEditorPart editor, String mode);</code> </li>
+</ul>
+<p> The only difference between them is how the entity to be launched is specified. 
+  &nbsp;In the first method, it's via a workbench selection, in the second it's 
+  as an editor part. &nbsp;Typically, both of these methods will defer the real 
+  work of creating a config and launching it to a helper method once the entity 
+  to be launched has been resolved:</p>
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;public void launch(IEditorPart editor, String mode) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IEditorInput input = editor.getEditorInput();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IJavaElement javaElement = 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(IJavaElement) input.getAdapter(IJavaElement.class);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (javaElement != null) {
+<img src="images/tag_1.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;searchAndLaunch(new Object[] {javaElement}, mode);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} 
+&nbsp;&nbsp;&nbsp;&nbsp;}</pre>
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;public void launch(ISelection selection, String mode) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (selection instanceof IStructuredSelection) {
+<img src="images/tag_1.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;searchAndLaunch(((IStructuredSelection)selection).toArray(), mode);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} 
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;protected void searchAndLaunch(Object[] search, String mode) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IType[] types = null;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (search != null) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;try {
+<img src="images/tag_2.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;types = AppletLaunchConfigurationUtils.findApplets(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new ProgressMonitorDialog(getShell()), search);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} catch (Exception e) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* Handle exceptions */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IType type = null;
+<img src="images/tag_3.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (types.length == 0) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MessageDialog.openInformation(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;getShell(), &quot;Applet Launch&quot;, &quot;No applets found.&quot;};
+<img src="images/tag_4.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} else if (types.length &gt; 1) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type = chooseType(types, mode);
+<img src="images/tag_5.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} else {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type = types[0];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (type != null) {
+<img src="images/tag_6.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;launch(type, mode);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;protected void launch(IType type, String mode) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;try {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ILaunchConfiguration config = findLaunchConfiguration(type, mode);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (config != null) {
+<img src="images/tag_7.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;config.launch(mode, null);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} catch (CoreException e) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* Handle exceptions*/
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}</pre>
+<p><img src="images/tag_1.gif" width="24" height="13"> Both <code>launch()</code> 
+  methods from the <code>ILaunchShortcut</code> interface defer the real work 
+  to <code>searchAndLaunch()</code>. Notice that in the first <code>launch()</code> 
+  method, we have to resolve the entity to launch from the editor, whereas in 
+  the second, the selection contains the candidate entities to launch.<br>
+  <img src="images/tag_2.gif" width="24" height="13"> Since there may be more 
+  than one candidate entity to launch, we first filter out any that aren't applets.<br>
+  <img src="images/tag_3.gif" width="24" height="13"> We handle the case of no 
+  applets to launch by showing an informational dialog.<br>
+  <img src="images/tag_4.gif" width="24" height="13"> If there is more than one 
+  applet available to launch, ask the user to choose one.<br>
+  <img src="images/tag_5.gif" width="24" height="13"> Otherwise, there's exactly 
+  one applet.<br>
+  <img src="images/tag_6.gif" width="24" height="13"> If there's an applet to 
+  launch, do so.<br>
+  <img src="images/tag_7.gif" width="24" height="13"> Launch a config corresponding 
+  to the applet. The <code>findLaunchConfiguration()</code> method first attempts 
+  to find an existing config for the applet. Failing this, a new config is created 
+  and returned. Note that the actual launching happens by just calling <code>launch()</code> 
+  on the config. </p>
+<p>In most cases, a launch shortcut is maximally useful if it performs the following 
+  steps: </p>
+<ol type="1">
+  <li> Resolve something to launch from the specified selection or editor </li>
+  <li> Check to see if there is an existing config based on the resolved entity, 
+    if there is launch it </li>
+  <li> Otherwise, create a new config and populate it with default attribute values, 
+    except for those directly related to the resolved entity </li>
+  <li> Launch the new config </li>
+</ol>
+<p> However, there is nothing in the <code>ILaunchShortcut</code> interface that 
+  requires you to follow these steps. &nbsp;For example, you could create a launch 
+  shortcut implementation that skipped step 2. &nbsp;This way, <i>every</i> time 
+  the shortcut was invoked, a new config would be created. &nbsp;This would normally&nbsp;lead 
+  to a flood of duplicate configs, however if the default value for an&nbsp;attribute 
+  was somehow time-dependent, this could be useful. &nbsp;Another variation might 
+  be to open the LCD on the newly created config. This might be necessary if some 
+  attribute has no reasonable default value and must be specified by the user. 
+  Note that even in this case, the shortcut saves time and keystrokes by creating 
+  a config and populating most of its attributes with appropriate values. The 
+  user only has to supply the required attribute(s), then click Run or Debug.</p>
+<p> In summary, launch shortcuts are optional. &nbsp;If you choose to implement 
+  one, you should consider making it as useful as possible to your users. This 
+  might mean avoiding duplicate configs, or saving as many keystrokes as possible. 
+  &nbsp;In the end though, the <code>ILaunchShortcut</code> contract is very flexible 
+  and just&nbsp;provides a way to insert an action into a particular place in 
+  the UI.</p>
+<h2>Declaring a launch group</h2>
+<p><img src="images/tip.gif" width="62" height="13"> <i>Most developers writing 
+  launchers will not need to worry about 'launch groups', but they are covered 
+  here for completeness. </i></p>
+<p>Launch groups (introduced in Eclipse 2.1) are an organizational construct for 
+  config types whose primary purpose is to provide a way to filter configs &amp; 
+  configs types in the UI. Standard UI components supplied by the launching framework 
+  such as the LCD are set up to always filter their contents with a single active 
+  launch group. In addition, the workbench tracks separate launch histories for 
+  each launch group. The Eclipse SDK provides two default launch groups, a standard 
+  'Run' launch group and a standard 'Debug' launch group. When you open the LCD 
+  by choosing 'Debug...' from the debug drop-down menu, you are actually asking 
+  the LCD to open and display only configs that satisfy the filtering criteria 
+  specified by the standard 'Debug' launch group. </p>
+<p>The filtering criteria of a launch group are specified in two pieces, a <code>mode</code> 
+  attribute (run or debug) and an optional <code>category</code> attribute. Remember 
+  that the config type declaration also included an optional <code>category</code> 
+  attribute. The purpose of this attribute is now clear - it serves to associate 
+  config types with launch groups. If a launch group specifies a value for its 
+  <code>category</code> attribute, then only config types that specify the same 
+  value for their <code>category</code> attributes are considered to belong to 
+  that launch group. The <code>mode</code> attribute serves to further refine 
+  which configs &amp; config types belong to a specific launch group. Recall that 
+  config types declare their support for one or both of the allowable modes, run 
+  and debug. A launch group must specify exactly one of these modes in its declaration. 
+  We can now specify the complete filtering algorithm used to apply launch groups 
+  to UI elements such as the LCD:</p>
+<ul>
+  <li> A config type is visible if it supports the mode of the currently active 
+    launch group <i><b>and</b></i> specifies the same category as the currently 
+    active launch group.</li>
+  <li> A config is visible if its config type is visible.</li>
+</ul>
+<p>This is the XML declaration of the standard 'Run' &amp; 'Debug' launch groups:</p>
+<h5> <u>UI declaration</u></h5>
+<pre>&lt;extension point = &quot;org.eclipse.debug.ui.launchGroups&quot;&gt;
+	&lt;launchGroup
+		id = &quot;org.eclipse.debug.ui.launchGroup.debug&quot;
+		mode = &quot;debug&quot;
+		label =&quot;Debug&quot;
+		image = &quot;icons/full/ctool16/debug_exc.gif&quot;
+		bannerImage = &quot;icons/full/wizban/debug_wiz.gif&quot;&gt;
+	&lt;/launchGroup&gt;
+	&lt;launchGroup
+		id = &quot;org.eclipse.debug.ui.launchGroup.run&quot;
+		mode = &quot;run&quot;
+		label = &quot;Run&quot;
+		image = &quot;icons/full/ctool16/run_exc.gif&quot;
+		bannerImage = &quot;icons/full/wizban/run_wiz.gif&quot;&gt;
+	&lt;/launchGroup&gt; 
+&lt;/extension&gt;</pre>
+<p>Notice that neither declaration specifies a <code>category</code>. This means 
+  that only config types that also do not specify a category attribute will be 
+  visible when one of these launch groups is active in the UI. All of the standard 
+  launchers included in the SDK fall into this category: Java Application, Java 
+  Applet, Remote Java Application, JUnit &amp; Run-time Workbench. </p>
+<p>The rest of the available options for a launch group declaration are straightforward. 
+  The <code>id</code>, as always, is merely a unique identifier for the launch 
+  group, <code>label</code> is a human-readable description of the launch group, 
+  and <code>image</code> and <code>bannerImage</code> are a 16x16 icon and a larger 
+  image suitable for placing at the top of a wizard or dialog. Not shown above 
+  is an optional <code>public</code> attribute that controls whether the launch 
+  group's history is editable by the user in the workbench Debug preferences. 
+  The default value if this attribute is not specified is <code>true</code>.</p>
+<p>Given that the standard toolbar drop down actions always open the LCD with 
+  one of the two default launch groups active, you might wonder about the usefulness 
+  of launch groups. In other words, if all of the standard SDK launchers belong 
+  to the empty category, and the LCD always opens on either the empty debug or 
+  empty run launch group, what is the point? The answer is that unless you are 
+  trying to use the launch config framework in new and clever ways, launch groups 
+  aren't of much interest. However, if you want to use the launch config framework 
+  to do things other than launch code under development, launch groups can be 
+  useful. </p>
+<p>As an example of a <i>useful</i> application of launch groups, we will look 
+  at the external tools plug-ins. The purpose of the external tools plug-ins is 
+  to allow developers to run things <i>other</i> than the code they are currently 
+  developing. Sometimes these programs are tangential to the development process, 
+  such as an MP3 player or a mail client. Other times, developers might want to 
+  launch Ant scripts that build or deploy projects. This type of launching is 
+  different from the launching discussed so far in this article, but it does have 
+  many similarities. Because of the similarities, the launch config framework 
+  was used as the basis of the launching-related pieces of the external tools 
+  plug-ins. </p>
+<p>Below is the declaration of two launch groups associated with external tools:</p>
+<h5> <u>UI declaration</u></h5>
+<pre>&lt;extension point = &quot;org.eclipse.debug.ui.launchGroups&quot;&gt;
+	&lt;launchGroup
+		id = &quot;org.eclipse.ui.externaltools.launchGroup&quot;
+		mode = &quot;run&quot;
+		category = &quot;org.eclipse.ui.externaltools&quot;
+		label = &quot;&amp;External Tools&quot;
+		image = &quot;icons/full/obj16/external_tools.gif&quot;
+		bannerImage = &quot;icons/full/wizban/ext_tools_wiz.gif&quot;&gt;
+	&lt;/launchGroup&gt;
+	&lt;launchGroup
+		id = &quot;org.eclipse.ui.externaltools.launchGroup.builder&quot;
+		mode = &quot;run&quot;
+		category = &quot;org.eclipse.ui.externaltools.builder&quot;
+		label = &quot;&amp;External Tools&quot;
+		image = &quot;icons/full/obj16/external_tools.gif&quot;
+		bannerImage = &quot;icons/full/wizban/ext_tools_wiz.gif&quot;
+		public = &quot;false&quot;&gt;
+	&lt;/launchGroup&gt; 
+&lt;/extension&gt; 
+ </pre>
+<p>Notice that each launch group specifies its own <code>category</code>. This 
+  is so that UI components don't display 'regular' external tool configs and 'builder' 
+  external tool configs at the same time. It also means that there are two different 
+  launch histories for these configs (though the 'builder' history is not public 
+  so it does not appear in the Debug preferences). In addition, this means that 
+  the external tools plug-ins are free to create launch configs as they see fit, 
+  without fear that these configs might show up in the LCD when the user is trying 
+  to run code they are developing. Finally, this means that the external tools 
+  plug-ins can implement their own relaunching actions and not worry about accidentally 
+  launching a program under development.</p>
+<h2>Implementing a launch group</h2>
+<table border="1" cellspacing="0" bordercolor="#0000FF" width="398">
+  <tr> 
+    <td bgcolor="#FFFFCC" bordercolor="#FFFFFF"> 
+      <p> <b><font size="2">Source: <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/DebugUITools.java">org.eclipse.debug.ui.DebugUITools</a></font></b></p>
+    </td>
+  </tr>
+</table>
+
+<p>Implementing a launch group does not require implementing any API. A launch 
+  group exists simply as an XML declaration with no associated classes. However, 
+  there is some launch group-related API you should be aware of. This API allows 
+  developers to bring up the LCD with a specified launch group actively filtering 
+  its contents. It is worth repeating that this is <b><i>not</i></b> something 
+  most launcher developers need to worry about. It is only useful if you have 
+  a need to show configs of a specific config type and mode separately from all 
+  other configs. </p>
+<p>The <code>DebugUITools</code> class defines the following two launch group-related 
+  methods:</p>
+<pre><img src="images/tag_1.gif" width="24" height="13">&nbsp;public static int openLaunchConfigurationDialogOnGroup(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shell shell, IStructuredSelection selection, String groupIdentifier);
+<img src="images/tag_2.gif" width="24" height="13">&nbsp;public static int openLaunchConfigurationPropertiesDialog(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shell shell, ILaunchConfiguration configuration, String groupIdentifier);</pre>
+
+<p>Both of these methods are used to bring up UI components subject to filtering 
+  provided by the specified launch group. In both cases, <code>groupIdentifier</code> 
+  is the value of the <code>id</code> attribute in a launch group XML declaration, 
+  and <code>shell</code> is just the SWT Shell that will be the parent of the 
+  new UI component. </p>
+<img src="images/tag_1.gif" width="24" height="13"> This method opens the LCD 
+and sets the tree selection to the specified selection, which may contain any 
+combination of <code>ILaunchConfigurationType</code>s and <code>ILaunchConfiguration</code>s. 
+<br>
+<img src="images/tag_2.gif" width="24" height="13"> While the previous method 
+opens the entire LCD, this method opens just the tabbed folder properties area 
+for the specified config; the tree is not shown. This is useful for allowing the 
+user to edit a single config without any extraneous UI. 
+<p>One other related method on <code>DebugUITools</code> is:</p>
+<pre>public static int openLaunchConfigurationDialog(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shell shell, IStructuredSelection selection, String mode);</pre>
+<p>This method opens the LCD much as method <img src="images/tag_1.gif" width="24" height="13"> 
+  did above, except that the launch group used for filtering is based on the value 
+  of <code>mode</code>. If <code>mode</code> is '<code>debug</code>', the LCD 
+  is opened on the empty 'Debug' launch group, otherwise it is opened on the empty 
+  'Run' launch group. This can be useful even if you aren't defining launch groups, 
+  since it allows developers to pop up the LCD with an arbitrary selection. </p>
+<p>To summarize, most launcher developers will never need to concern themselves 
+  with launch groups. They are a technique for filtering configs and config types 
+  in the UI that is hidden from the user, in other words, the user has no way 
+  to control which launch group is active in the UI. Launch groups are useful 
+  when a developer uses the launch configuration framework to do something <i>other</i> 
+  than write a launcher that launches user code under development.</p>
+  
+<h2>Declaring a launch configuration comparator</h2>
+<p>The following discussion of launch configuration comparators is somewhat more 
+  advanced than the previous sections, and the implementation example requires 
+  a bit more knowledge of Java and the Eclipse JDT plug-ins (however launch configuration 
+  comparators are <i><b>not</b></i> Java-specific and can be implemented for any 
+  debug model). Launch configuration comparators are an entirely optional feature 
+  of launchers, so this section and the following section on implementation can 
+  be safely skipped.</p>
+<p>Because all attributes on a config are defined by the developer, the Debug 
+  core &amp; Debug UI infrastructures have no knowledge of attribute semantics. 
+  They know only that there is a <code>String</code>-valued attribute named JRE, 
+  not that this String is a memento that specifies the installed name and type 
+  of the JRE. This gets to be a problem when the debug infrastructure needs to 
+  perform comparisons with configs, for example, determine if two config objects 
+  actually represent the same underlying configuration, or in the LCD, determine 
+  if a config has been modified by the user. Without help from the developer, 
+  the best the infrastructure can do is call <code>Object.equals(Object)</code> 
+  on attribute values (or use <code>==</code> for primitive types). This may be 
+  fine for some attributes, but you can imagine situations in which this would 
+  be incorrect. For example, suppose your tab group collects a list of <code>String</code>s 
+  as an attribute value, and suppose that order is not significant. Left to its 
+  own devices, the Debug infrastructure would determine that two configs containing 
+  the same list of Strings in their attribute values but in different orders, 
+  were not equal. The solution to this problem lies in declaring a launch configuration 
+  comparator. This is an entity that the Debug infrastructure will use to perform 
+  all comparisons for attributes with a specified name. The Java Applet launcher 
+  doesn't declare any comparators, but the standard Java Application launcher 
+  does:</p>
+<p><u><b>Non-UI declaration</b></u> </p>
+<pre>&lt;extension point=&quot;org.eclipse.debug.core.launchConfigurationComparators&quot;&gt;
+	&lt;launchConfigurationComparator
+		id=&quot;org.eclipse.jdt.launching.classpathComparator&quot;
+		class=&quot;org.eclipse.jdt.internal.launching.RuntimeClasspathEntryListComparator&quot;
+		attribute=&quot;org.eclipse.jdt.launching.CLASSPATH&quot;/&gt;
+&lt;/extension&gt;</pre>
+<p>This declaration tells the Debug infrastructure to use the class <code>RuntimeClasspathEntryListComparator</code> 
+  any time it performs a comparison involving an attribute named &quot;<code>org.eclipse.jdt.launching.CLASSPATH</code>&quot;. 
+  Note that this comparator will be used for <i>all</i> attributes with this name, 
+  regardless of config type. This allows you to reuse comparators that have already 
+  been implemented by other developers, but requires caution in attribute naming.</p>
+<p><img src="images/tip.gif" width="62" height="13"> <i>When creating names for 
+  config attributes, you should always prefix them with the fully qualified name 
+  of your plug-in. This avoids potential collisions down the road if someone else 
+  extends your launcher. It also avoids unintentionally using someone else's comparator.</i></p>
+<h2>Implementing a launch configuration comparator</h2>
+<table border="1" cellspacing="0" bordercolor="#0000FF" width="526">
+  <tr> 
+    <td bgcolor="#FFFFCC" bordercolor="#FFFFFF"> 
+      <p> <b><font size="2">Source: <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/RuntimeClasspathEntryListComparator.java">org.eclipse.jdt.internal.launching.RuntimeClasspathEntryListComparator</a></font></b> 
+      </p>
+    </td>
+  </tr>
+</table>
+<p>To implement a launch configuration comparator, you simply need to implement 
+  the standard Java library interface <code>java.util.Comparator</code>. This 
+  interface defines a single method, <code>public int compare(Object o1, Object 
+  o2)</code> that returns a negative value if <code>o1</code> is less than <code>o2</code>, 
+  zero if <code>o1</code> equals <code>o2</code> and a positive value if <code>o1</code> 
+  is greater than <code>o2</code>: </p>
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;public int compare(Object o1, Object o2) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List list1 = (List)o1;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List list2 = (List)o2;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (list1.size() == list2.size()) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; list1.size(); i++) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String memento1 = (String)list1.get(i);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String memento2 = (String)list2.get(i);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;try {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IRuntimeClasspathEntry entry1 = 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JavaRuntime.newRuntimeClasspathEntry(memento1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IRuntimeClasspathEntry entry2 = 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JavaRuntime.newRuntimeClasspathEntry(memento2);
+<img src="images/tag_1.gif" width="24" height="13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!entry1.equals(entry2)) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return -1;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} catch (CoreException e) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LaunchingPlugin.log(e);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return -1;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return 0;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+	&nbsp;&nbsp;&nbsp;&nbsp;return -1;
+&nbsp;&nbsp;&nbsp;&nbsp;}</pre>
+<p><img src="images/tag_1.gif" width="24" height="13"> This method simply reconstructs 
+  <code>IRuntimeClasspathEntry</code> objects from the <code>String</code> mementos 
+  stored in the <code>List</code> arguments, then calls <code>equals(Object)</code> 
+  on these. The implementation of <code>equals()</code> on the <code>IRuntimeClasspathEntry</code> 
+  objects will do an intelligent comparison.</p>
+<p>Another use for comparators is disambiguating default values for attributes. 
+  Consider an integer-valued attribute named 'address' whose default value is 
+  zero. If the debug infrastructure is asked to compare two configs, one of which 
+  has an address value of zero, and the other which has no address attribute, 
+  it would normally declare these to be not equal. However the absence of an address 
+  value should in most cases mean the same thing as a default address value. The 
+  solution is to implement a comparator that encapsulates this logic. </p>
+<p><img src="images/tip.gif" width="62" height="13"> <i>In the LCD, if you select 
+  a config, then without making any changes to it select a different config and 
+  are asked if you wish to save changes, the problem is probably due to a mismatch 
+  between a default attribute value and no attribute value. Implement a comparator 
+  to fix the problem.</i></p>
+<h2>Putting it all together</h2>
+<p>There are a couple of things to keep in mind while developing a launcher:</p>
+<ul>
+  <li>Putting your UI code in one plug-in and everything else in another plug-in 
+    makes your launcher easier to maintain, facilitates programmatic launching, 
+    and allows you or someone else to provide an alternate UI for your launcher.</li>
+  <li>If your delegate requires some attribute to function properly, there must 
+    be UI somewhere in your tab group to collect it</li>
+  <li>The 3 main 'value copying' methods on tabs are called frequently and must 
+    execute quickly. If you need to perform some sort of lengthy validation, consider 
+    waiting until launch time to do it.</li>
+</ul>
+<h2>Work smarter, not harder</h2>
+<p>The first rule of implementing a launcher is to reuse as much as possible. 
+  If you are implementing a Java-oriented launcher, there is a large amount of 
+  code that is part of the Eclipse SDK, is public API and ready to be reused. 
+  This article has pointed the opportunities for Java-oriented reuse. Non-Java 
+  launchers can also take advantage of reuse. For example, consider extending 
+  language-independent abstract API classes like: </p>
+<ul>
+  <li><code>org.eclipse.debug.ui.AbstractLaunchConfigurationTabGroup</code> </li>
+  <li><code>org.eclipse.debug.ui.AbstractLaunchConfigurationTab</code>. </li>
+</ul>
+<p>To get further reuse outside of Java, you need to identify plug-ins that contain 
+  code you wish to reuse. Encourage other plug-in developers to make their launching 
+  related classes public so that you can reuse them, and consider making your 
+  own launching-related classes public for the same reason. </p>
+<h2>Source code</h2>
+<p>The Java Applet launcher discussed in this article is part of the Eclipse SDK, 
+  as of release 2.1. All UI code for this launcher is found in the <code>org.eclipse.jdt.debug.ui</code> 
+  plug-in, while the non-UI code lives in the <code>org.eclipse.jdt.launching</code> 
+  plug-in. </p>
+<h2>Acknowledgments</h2>
+<p>Special thanks to Olivier Thomann, the author of the original applet launcher 
+  plug-in. Also thanks to Vadim Berestetsky, Erich Gamma, Paul Gooderham, Dave 
+  Wathen and Darin Wright for reading early drafts of this article and providing 
+  feedback and suggestions. </p>
+</body>
+</html>
+

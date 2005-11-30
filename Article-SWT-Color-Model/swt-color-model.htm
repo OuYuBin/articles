@@ -1,0 +1,346 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.73 [en] (Win98; U) [Netscape]">
+   <meta name="Author" content="James Moody">
+   <title>SWT Color Model</title>
+<!-- saved from url=(0063)http://www.eclipsecorner.org/community/articleHTMLTemplate.html -->
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+<body>
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2001 Object Technology International, Inc.</font> </div>
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+Corner Article</font></font></b></td>
+</tr>
+</table>
+
+<h1>
+<img SRC="Idea.jpg" height=86 width=120 align=CENTER></h1>
+
+<center>
+<h1>
+SWT Color Model</h1></center>
+
+<blockquote><b>Summary</b>
+<br>The combination of platforms, display devices and color depth makes
+providing an easy to use yet powerful and portable color model an interesting
+challenge. In this article we will examine the color management models
+of Windows&reg; and X/Motif and then dig into the makings of the SWT color model
+and its implications for client code.
+<p><b>By James Moody &amp; Carolyn MacLeod OTI</b>
+<br><font size=-1>April 24, 2001</font></blockquote>
+
+<hr width="100%">
+<h2>
+<br>
+Background</h2>
+
+<div class="MsoNormal">Before diving into the SWT color model, let’s examine
+the color management support provided by some of the target platforms.</div>
+
+<h3>
+Windows</h3>
+
+<p>Color management on Windows depends on the depth
+of the display, which can be either low-color (usually 8 bits per pixel
+or less) or high-color (typically 15 bits per pixel or higher).
+On low-color displays, the concept of a <i>Palette</i> is important. A
+palette is simply a logical grouping of colors. When a color is requested,
+the system can either put the color in the palette, or, if the palette
+is full, do a closest match of the colors in the palette to find a reasonable
+facsimile.</p>
+<p>Windows allows the user to define and use one palette per graphics
+context (GC), or to use the default system palette that is on the display.
+The advantage of defining your own palette is space: it is initialized
+as empty, and you have the entire capacity to fill with your own colors.
+On the other hand, the system palette undoubtedly already has many colors
+in it, especially if other applications are using it; the user may not
+be able to use the entire capacity for his or her own application. Using
+the system palette has its advantages, however. For one, it is easier to
+use: simply use your colors normally, and the system will take care of
+mapping them to the system palette. Secondly, switching between two applications
+that are both using the system palette will be smooth. Switching between
+two applications that use different palettes will result in a visible flash
+as Windows maps the appropriate palette and takes colors away from the
+application that no longer has control.</p>
+<p>On high-color displays, colors are effectively free: one can simply
+use RGB values without any regard to palettes or color availability.
+<h3>
+X/Motif</h3>
+
+<div class="MsoNormal">On X, the color model also depends on whether the
+display is palette-based or high-color. X has a palette-based system similar
+to that of Windows, using the term colormap instead of palette. The primary
+difference between Windows and X, however, is that colors on X must be
+allocated with <b>XAllocColor</b> prior to use, and freed with <b>XFreeColor</b>
+when no longer required. As well, switching between two applications that
+define their own palettes (private colormaps) on X results in all other
+applications having their colors altered in such a way that the switch
+is visibly more noticeable than on Windows. For this reason, most X applications
+do not define a private colormap, but rather share the default colormap.
+A limitation of X as compared to Windows is that it will not perform a
+closest-match if a color cannot be allocated, but will answer black instead.
+Thus if a closest match is desired, it must be performed by your code.
+
+<p class="MsoNormal">On high-color displays, where the pixel value encodes
+the RGB value of the color, colors are free as they are on Windows. Although
+the surest way to use colors on a high-color display is still to use <b>XAllocColor</b>,
+one can simply encode the RGB values into pixel values and use the pixels
+directly, without having to allocate or free the colors.
+<h2>
+Options</h2>
+
+<div class="MsoNormal">After taking into account the above platform features
+and limitations, a variety of options presented themselves as possible
+solutions to SWT's color management story.
+<br>&nbsp;</div>
+
+  <div class="MsoNormal"><i>1) expose <code>Palette</code> as a class to the SWT 
+    user:</i></div>
+
+  <div class="MsoNormal" style="margin-left:.5in">Both Windows and X support the 
+    notion of palettes on low-color displays. One option is to expose <code>Palette</code> 
+    as a class to the SWT user, and allow the <i>Palette</i> to be set into a 
+    <i>GC</i>. One problem with this approach is that X's palette solution is 
+    undesirable due to its flashy behavior. This approach maps better to Windows 
+    due to the platform’s improved palette switching capabilities. On X, however, 
+    given the above limitation, SWT would want to give the illusion of palettes 
+    to the developer, while mapping colors to the default colormap underneath. 
+    Another problem is that of managing the palettes of multiple <i>GC</i>s in 
+    the same window; on Windows, the colors from these palettes would need to 
+    be somehow combined into a single palette when the window is given focus. 
+    Providing user palettes would also require SWT to implement a default palette, 
+    which would add complexity to the palette management code. <br>
+    &nbsp;</div>
+
+<div class="MsoNormal"><i>2) support only high-color displays:</i></div>
+
+<div class="MsoNormal" style="margin-left:.5in">Windows and X make it very
+easy to use high-color displays, and more difficult to use low-color displays.
+Another option is simply to support only high-color displays, and make
+colors free from the SWT user's perspective, meaning they do not need to
+be allocated or disposed. The obvious disadvantage of this approach is
+that many low-color displays exist and would be excluded from running SWT-based
+applications. (Of course, over time the number of systems that still run
+in low-color mode is decreasing, but there are still a significant number
+of real-world applications that require this.)
+<br>&nbsp;</div>
+
+<div class="MsoNormal"><i>3) allocate a color cube:</i></div>
+
+<div class="MsoNormal" style="margin-left:.5in">A common approach to color
+management is to allocate a fixed range of diverse colors, called a <i>color
+cube</i>, when the application starts. All requested colors are mapped
+to the closest color in the cube. This approach could be used in SWT for
+low-color displays, making it very easy for the user to manage colors.
+The advantage of this approach is that it is very simple for the user;
+the disadvantage is that the user is constrained to a very limited set
+of colors defined in the color cube, and will never be able to get an exact
+match of the color he or she desires, unless it happens to be in the color
+cube. This approach would not be ideal for high-color displays. Colors
+in SWT would not be resources in this approach, and thus would not need
+to be freed; SWT would take care of allocating the cube on startup and
+freeing it on shutdown.
+<br>&nbsp;</div>
+
+<div class="MsoNormal"><i>4) allocate colors:</i></div>
+
+<div class="MsoNormal" style="margin-left:.5in">The last option is to make
+the user allocate and free colors as if they were platform resources. (i.e.
+create with a constructor and free with <b>dispose</b>). This maps well
+to X, where colors are a resource, but not well to Windows, where colors
+are not a resource. This option is discussed in detail in the next section.</div>
+
+<h2>
+The SWT Color Model</h2>
+
+<h3>
+Goals</h3>
+
+<div class="MsoNormal">After examining the platform behavior and possible
+solutions, the following three goals for SWT's color model were decided
+upon:</div>
+
+<ol start=1 type=1>
+<li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo3;tab-stops:list .5in">
+SWT must support both palette-based and direct color devices (high-color
+displays). Palette-based devices are usually those containing 8 bits per
+pixel or less, while direct color devices are typically 15 bits per pixel
+and higher. In palette-based devices, the OS maintains a mapping of RGB
+values to pixel values, while in direct color devices the RGB values are
+encoded into the pixel value.</li>
+
+<li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo3;tab-stops:list .5in">
+The model must be portable. The color model supported by Windows, for example,
+is fundamentally different than the model supported by X. The SWT model
+must accommodate those differences in a way that is transparent to the
+SWT user.</li>
+
+<li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo3;tab-stops:list .5in">
+It is important that, under normal circumstances, the user be given exactly
+the color that was requested. Any scheme that limits the available colors
+to those contained in a small, pre-allocated palette will fail to offer
+the user exact colors.</li>
+</ol>
+
+<div class="MsoNormal">
+<h3>
+Decisions</h3>
+Our requirement of supporting palette-based displays rules out the second
+of the above options (“support only high-color displays”). The requirement
+to provide exact colors upon request means that allocating a color-cube
+and matching all requests to that cube (the third option – “allocate a
+color cube”) is also not acceptable.
+    <p>Providing the user with palettes that they can manage (as described in 
+      the first option – “expose palette as a class”) sounds like a good solution, 
+      but in practice, it makes client code very complex and hard to manage. Given 
+      the simple color requirements of typical applications, this option was ruled 
+      out.
+    <p>Thus, the only remaining option (the last one listed above), allocating 
+      and disposing of colors independently, forms the basis of SWT's color model. 
+  </div>
+
+<h3>
+Palette Per Display using Allocate &amp; Dispose</h3>
+On palette-based displays under Windows, SWT creates and manages one palette
+per <i>Display</i>. Colors used in a <i>GC</i> are taken from this palette.
+When the user allocates a <i>Color</i>, SWT checks if the palette is full.
+If it is not, the color is added to the palette and the user will get the
+exact color requested. If it is, the <i>Color</i> is allocated to be the
+closest match in the palette. In both cases, the reference count for that
+color is incremented. When a <i>Color</i> is disposed on Windows, SWT decrements
+the reference count. When the reference count reaches zero, SWT will remove
+the color from the palette. As with other SWT resources, clients must allocate
+colors, and free them only when the color is no longer needed.
+<p>On palette-based displays under X, SWT does not create a private colormap
+(palette), but instead uses the default colormap to avoid flashing and
+undesirable behavior. When the user allocates a <i>Color</i>, SWT tries
+to allocate the color with <b>XAllocColor</b>. If this succeeds, the user
+gets exactly the color they asked for, and that color is remembered by
+the <i>Display</i>. If it does not succeed, SWT finds the closest available
+color and uses that instead. In both cases, the reference count for that
+<i>Color</i>
+is incremented.
+<p>When a <i>Color</i> is disposed on X, SWT will call <b>XFreeColor</b>,
+which decrements the reference count on the X Server. As well, SWT will
+decrement its internal reference count for that <i>Color</i>, and remove
+it from the <i>Display</i> if the reference count is zero.
+  <p>On high-color displays on both Windows and X, the SWT display does not maintain 
+    a palette. <i>Color</i>s are still allocated and freed on X, but this operation 
+    simply calculates the pixel value and nothing else. On 24-bit and higher displays, 
+    the user is guaranteed to get exactly the color requested. On 16-bit displays, 
+    the user will get a very close approximation, but not necessarily the exact 
+    color, due to the fact that 16-bit pixel values cannot encode 8-bit red, green 
+    and blue values with 100% accuracy. Low-color displays that use a lot of colors 
+    may still flash.&nbsp; 
+  <h3>
+Standard Colors</h3>
+  <p>SWT provides access to the standard colors through Display.getSystemColor(int). 
+    The following snipet returns the standard color for green.</p>
+<pre>    display.getSystemColor(SWT.COLOR_GREEN)</pre>
+    <p>The creator of an SWT Color is responsible for disposing of 
+    the color when it is no longer required. In the above snipet we did not actually 
+    create the color, consequently we must <b>not</b> dispose of the color. </p>
+  <h3>
+Image Loading</h3>
+<p>When an SWT image is loaded, code similar to the following is usually used:</p>
+<pre>    Image image = new Image(display, "filename");</pre>
+<p>Image loading is actually a two-step process. In the first
+step, SWT loads the image into a device-independent, format-independent
+object, called
+<i>ImageData</i>. The second step involves creating the
+actual device-dependent
+<i>Image</i> from the <i>ImageData</i>. Before
+this can happen, the colors that the image desires must be mapped to colors
+that are actually available on the device. On a true-color display (high-color
+display with at least 24-bit color), the colors are always available.
+  <p>On a low-color display the RGB values contained in the <i>ImageData</i>'s 
+    palette are mapped to the closest match available in the SWT palette. The 
+    colors that are available depend on which colors the user has already allocated. 
+    If the user has not allocated many colors, then there may not be many colors 
+    in the SWT palette for SWT to do a closest match to. SWT does not allocate 
+    application colors. For this reason, it may be desirable to pre-allocate the 
+    colors needed for the image. In the example above, however, there is no place 
+    to allocate the colors; the user doesn't know what colors the image needs 
+    before it is created. In situations like these, code such as the following 
+    may be useful:</p>  
+  <pre>    ImageDate imageData = new ImageData("filename");
+    rgbs = imageData.getRGBs();
+    colors = new Color[rgbs.length];
+    for (int i = 0; i &lt; colors.length; i++) { 
+        colors[i] = new Color(display, rgbs[i]); 
+    }
+    image = new Image(display, imageData);
+    ...
+    // dispose the image and colors when no longer needed
+</pre>
+
+<p>In this example, the two-step process is revealed to the user, giving
+an opportunity to construct colors before the image is created, resulting
+in a more realistic image. In practice, this is not needed, since most
+displays are high-color.
+  <p>The way SWT does image loading presents one possible difficulty. What if 
+    the user allocates some colors, loads an image, and subsequently frees some 
+    colors? There is a possibility that the image has chosen some of the colors 
+    that the user freed. In this case, unpredictable results can occur after the 
+    colors have been freed. Fortunately, this is very easy to work around: always 
+    allocate your colors in a static fashion, and free them when you are finished 
+    with them. This model is described in the section "Tips for Color Management 
+    in SWT".&nbsp; 
+  <h2>
+Tips for Color Management in SWT</h2>
+
+<div class="MsoNormal">Color management in SWT is very simple from the
+user's perspective. There are 3 basic rules to help you manage your application's
+color needs:</div>
+
+<ol start=1 type=1>
+<li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in">
+Colors contain OS resources that must be allocated and freed. For this
+reason, it is necessary to <b>dispose</b> every color that you have created.</li>
+
+<li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in">
+On high-color displays (16 bpp and higher), every <i>Color</i> allocation
+is guaranteed to succeed. On low-color displays (8 bpp and lower), you
+will either receive a <i>Color</i> with the exact RGB values that you asked
+for or a reasonable facsimile (in other words, the closest match that could
+be made). In this case, if you query the new <i>Color</i>, it will report
+the actual RGB values, which are not necessarily the RGB values that you
+asked for.</li>
+
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in"> The envisioned usage of the 
+      color model in SWT is fairly typical among plug-ins: a certain number of 
+      fixed colors are decided upon for usage in the plug-in. The user allocates 
+      these colors on plug-in startup, by creating <i>Color</i> objects. The plug-in 
+      runs, and on shutdown, the user will call the <b>dispose</b> method for 
+      these colors. This leads to a solution with minimal hassles in terms of 
+      palettes being full and other color contention problems associated with 
+      dynamically allocating and freeing colors while the plug-in is running.</li>
+</ol>
+
+<h2 class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in">
+Summary</h2>
+
+<div class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in">We
+have seen that SWT's portable color model supports a color palette per
+display. Clients of SWT must explicitly create their color resources and
+dispose of them when they are no longer required. SWT also provides access
+to standard colors through Display.getSystemColor(int).</div>
+</div>
+
+<p><small>Microsoft, Windows, Windows NT, and the Windows logo are trademarks of Microsoft Corporation in the United States, other countries, or both.</small></p>
+
+</body>
+</html>

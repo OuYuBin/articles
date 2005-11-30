@@ -1,0 +1,130 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>LeakExample.java</title>
+</head>
+
+<body>
+
+<b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">import </font></b>org.eclipse.swt.*;</p>
+<b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">import </font></b>org.eclipse.swt.graphics.*;</p>
+<b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">import </font></b>org.eclipse.swt.widgets.*;</p>
+<b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">import </font></b>org.eclipse.swt.events.*;</p>
+<b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">import </font></b>org.eclipse.swt.layout.*;</p>
+<b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">import </font></b>org.eclipse.swt.program.*;</p>
+<b>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">public class </font></b>LeakExample
+{</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;
+static </font></b>Display display;</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;
+static </font></b>Shell shell;</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;
+static </font></b>List list;</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;
+static </font></b>Canvas canvas;</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;
+static </font></b>Image image;</p>
+<font SIZE="2">
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>
+</font><b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">public static
+void </font></b>main(String[] args) {</p>
+<p style="margin-top: 0; margin-bottom: 0"><font color="#3F7F5F">&nbsp;&nbsp;&nbsp;
+// DeviceData data = <b>new </b>DeviceData();</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font color="#3F7F5F">&nbsp;&nbsp;&nbsp;
+// data.tracking = <b>true</b>;</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font color="#3F7F5F">&nbsp;&nbsp;&nbsp;
+// display = <b>new </b>Display(data);</font></p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; display = <b><font COLOR="#7f0055">new
+</font></b>Display();</p>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#3f7f5f">&nbsp;&nbsp;&nbsp;
+// Sleak sleak = new Sleak();</font></p>
+<font SIZE="2">
+<p style="margin-top: 0; margin-bottom: 0"></font><font COLOR="#3f7f5f">&nbsp;&nbsp;&nbsp;
+// sleak.open();</font></p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; shell = <b><font COLOR="#7f0055">new
+</font></b>Shell(display);</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; shell.setLayout(<b><font COLOR="#7f0055">new
+</font></b>FillLayout());</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; list = <b><font COLOR="#7f0055">new
+</font></b>List(shell, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;
+list.setItems(Program.getExtensions());</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; canvas = <b><font COLOR="#7f0055">new
+</font></b>Canvas(shell, SWT.BORDER);</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;
+canvas.addPaintListener(<b><font COLOR="#7f0055">new </font></b>PaintListener()
+{</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+public void </font></b>paintControl(PaintEvent e) {</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(image != <b><font COLOR="#7f0055">null</font></b>) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+e.gc.drawImage(image, 0, 0);</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; });</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;
+list.addSelectionListener(<b><font COLOR="#7f0055">new </font></b>SelectionAdapter()
+{</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+public void </font></b>widgetSelected(SelectionEvent e) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+image = <b><font COLOR="#7f0055">null</font></b>; <font color="#3F7F5F">
+// potentially leak one image&nbsp;</font></p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+String[] selection = list.getSelection();</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(selection.length != 0) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Program program = Program.findProgram(selection[0]);</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(program != <b><font COLOR="#7f0055">null</font></b>) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ImageData imageData = program.getImageData();</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(imageData != <b><font COLOR="#7f0055">null</font></b>) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b><font COLOR="#7f0055">if </font></b>(image != <b><font COLOR="#7f0055">null</font></b>)
+image.dispose();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+image = <b><font COLOR="#7f0055">new </font></b>Image(display, imageData);</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+canvas.redraw();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; });</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;
+shell.setSize(shell.computeSize(SWT.DEFAULT, 200));</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; shell.open();</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;
+while </font></b>(!shell.isDisposed()) {</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;
+if </font></b>(!display.readAndDispatch()) display.sleep();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; }</p>
+<p style="margin-top: 0; margin-bottom: 0">}</p>
+<p style="margin-top: 0; margin-bottom: 0">}</p>
+
+</body>
+
+</html>

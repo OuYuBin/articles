@@ -1,0 +1,979 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>JET Tutorial Part 2 (Write Code that Writes Code)</title>
+<link rel="stylesheet" href="default_style.css">
+<style type="text/css">
+<!--
+.jet {  background-color: #FFFFCC}
+pre {  color: #4444cc}
+-->
+</style>
+</head>
+
+<body LINK="#0000ff" VLINK="#800080" bgcolor="white">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2003 <a href="http://www.azzurri.jp" target="_blank">Azzurri Ltd.</a></font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">JET Tutorial Part 2 (Write Code that Writes Code)</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+<p>In Part 2 of this JET (Java Emitter Templates) tutorial, we will take a look 
+  at the JET engine API. You will learn how to write plug-ins that use the classes 
+  in the JET package to generate Java source code.</p>
+  <p>As a real-world example, we will create a plug-in that takes user input and 
+    generates a Typesafe Enumeration class. The generated source code is based 
+    on a JET template that can be distributed with the plug-in, allowing users 
+    of the plug-in to customize the generated code by editing the template.</p>
+<p>This article also provides a short reference to the JET API.</p>
+<p><b>By Remko Popma, Azzurri Ltd., remko.popma@azzurri.jp</b><br>
+    <font size="-1">August 26, 2003</font></p>
+</blockquote>
+
+<hr width="100%">
+
+<H2>Source Code </H2>
+<p>To run the example or view the source for code for this article you can unzip 
+  <a href="jp.azzurri.jet.article2.typesafe_enum_1.0.0.zip">jp.azzurri.jet.article2.typesafe_enum_1.0.0.zip</a> 
+  into your <i>plugins/</i> subdirectory. To use the example plug-in, you must 
+  have the <a href="http://eclipse.org/emf/" target="_blank">EMF</a> plug-in installed. 
+  I am using version 1.1.0 build 20030620_1105VL. <b>Note:</b> <i>More recent 
+  versions of EMF will support UTF-8 templates and supply APIs for handling templates 
+  in other encodings.</i></p>
+<H2>Introduction </H2>
+<center>
+  <TABLE border="1" cellspacing="0" width="80%" cellpadding="3">
+    <TBODY> 
+    <TR> 
+    <TD> 
+      <p><b>Translation vs. Generation</b></p>
+        <p>An aspect of JET templates that is at first confusing is that generating 
+          text takes two steps: translation and generation. The first step is 
+          translating the template to a template implementation class. The second 
+          step is using this template implementation class to generate the text. 
+        </p>
+      <p>If your goal with JET is to generate Java source code, it can be confusing 
+        that the template translation step also results in Java source code. Remember 
+        that this source code is <i>not</i> the generated text. The source code 
+        that is the result of the translation step is simply another form of the 
+        template. </p>
+        <p>If you have used JSP and servlets before, you can think of a JET template 
+          as being equivalent to a JSP page. A JET template is translated to a 
+          template implementation class, just like a JSP page is translated to 
+          a servlet. The second step, where the template implementation class 
+          generates text, is equivalent to the servlet creating and returning 
+          HTML.</p>
+    </TD>
+  </TR>
+  </TBODY> 
+</TABLE>
+</center>
+  
+<p><a href="../Article-JET/jet_tutorial1.html">Part 
+  1</a> of this tutorial introduced JET templates and explained how you can add 
+  the JET Nature to a workspace project to have the JET Builder automatically 
+  translate templates in your project to template implementation classes. </p>
+<p>In part 2 of this tutorial, we will focus on writing a plug-in that uses the 
+  classes in the JET package to generate Java source code. A plug-in that generates 
+  text from a JET template can no longer rely on the JET Nature and JET Builder 
+  to automatically translate templates. This is because JET Nature and JET Builder 
+  operate only on workspace projects, not on plug-ins. Plug-ins need to use the 
+  classes in the JET package to translate their templates. </p>
+<p>The next section will discuss some of the classes in the <code>org.eclipse.emf.codegen</code> 
+  package. We will see what the steps are to generate source code with JET, and 
+  how the JET engine classes fit in. If you are anxious to see some code that 
+  shows how to use these classes in practice, you can go straight to <a href="#example_plugin">A 
+  Plug-in that Generates Source Code</a>. </p>
+
+<H2>Some JET Classes</H2>
+<p>In this section, we will take a closer look at some of the classes in the JET 
+  package. They can roughly be divided into two groups: </p>
+<UL>
+  <li>Lower-level classes dealing with the nuts and bolts of translating a template 
+    to a template implementation class. The <code>JETCompiler</code> class brings 
+    all these lower-level classes together to provide a single API for template 
+    translation. </li>
+  <li>Higher-level classes that build on top of <code>JETCompiler</code> to accomplish 
+    user tasks. In Part 1 of this tutorial, we have already seen <code>JETNature</code> 
+    and <code>JETBuilder</code> at work. Other high-level classes are <code>CodeGen</code> 
+    and <code>JETEmitter</code>. </li>
+</UL>
+<p>The lower-level classes are not discussed in-depth in this article. For a description 
+  of all classes in the <code>org.eclipse.emf.codegen</code> plug-in, see the <a href="#jet_api_overview">JET 
+  API Overview</a> section below. In the rest of this section, we will focus on 
+  a few of the higher-level classes.</p>
+<H4><code>org.eclipse.emf.codegen.jet.JETCompiler</code></H4>
+<p><code>JETCompiler</code> is the core class for template translation. This class 
+  is responsible for translating templates to the Java source code of a template 
+  implementation class. The actual translation is delegated to other classes in 
+  the same package. Clients create a JETCompiler object for a particular template 
+  and then call the <code>parse</code> method followed by the <code>generate</code> 
+  method to write the Java source code for the resulting template implementation 
+  class to a specified stream.</p>
+<H4><code>org.eclipse.emf.codegen.jet.JETEmitter</code></H4>
+<p><code>JETEmitter</code> provides a convenient high-level API for users of the 
+  JET package. The <code>generate</code> method of this class combines template 
+  translation and text generation into a single step. By taking care of the gory 
+  details of translating templates and compiling the Java source code of the translated 
+  template implementation class, JETEmitter lets you focus on the final generator 
+  output.</p>
+<p>Another way of looking at JETEmitter is that it abstracts away the translation 
+  step and lets you pretend that you can directly generate text with a template. 
+  Following the <a href="http://www.joelonsoftware.com/articles/LeakyAbstractions.html" target="_blank">Law 
+  of Leaky Abstractions</a>, we cannot always get away with this, and the <a href="#jetemitter_gotchas">JETEmitter 
+  Gotchas</a> section below points to a few places where you have to be careful.</p>
+<p>JETEmitter is the class we will be using in our plug-in, so we will go into 
+  a little more detail here.</p>
+<p>A JETEmitter object is constructed with the uri of the template used to generate 
+  text. Any type of uri is acceptable as long as a protocol handler is available. 
+  This means that <code>file:/</code> uris, <code>ftp:/</code> uris and <code>http:/</code><i> 
+  </i>uris can all be used. Eclipse adds special protocol handlers for <code>platform:/base</code>/, 
+  <code>platform:/plugin/</code>, <code>platform:/fragment/</code> and <code>platform:/resource/</code> 
+  uris, so plug-ins can use a uri like <code>platform:/resource/myproject/myfolder/mytemplate.jet</code> 
+  to specify a template file.</p>
+<p>In our example plug-in, we will distribute our template file together with our 
+  plug-in, so the template file will be located in a <i>myplugin/templates/</i> 
+  folder under the Eclipse <i>plugins/</i> folder. The following code can then 
+  be used to locate and generate a template from this folder:</p>
+<PRE> String pluginId = "myplugin.id";
+ String base = Platform.getPlugin(pluginId).getDescriptor().getInstallURL().toString();
+ String uri = base + "templates/myTemplate.javajet";
+ JETEmitter emitter = new JETEmitter(uri);
+ String generatedText = emitter.generate(new Object[] {parameter});</PRE>
+<p>After constructing a JETEmitter object, clients then call <code>generate</code> 
+  on it to generate text. The <code>generate</code> method will perform the following 
+  steps:</p>
+<OL>
+  <LI>Create a project called <i>.JETEmitters</i> in the workspace 
+  <li>Prepare this project by giving it the Java Nature and adding classpath variables 
+    to its classpath </li>
+  <li>Translate the template to a template implementation Java source file in 
+    the <i>.JETEmitters</i> project </li>
+  <li>Build the project to compile the template implementation source code to 
+    a Java <i>.class</i> file </li>
+  <li>Call the <code>generate</code> method on the translated Java template implementation 
+    class and return the generated text as a String</li>
+</OL>
+<p>Our example plug-in will use JETEmitter and save the generated text to a Java 
+  source file in the workspace. The figure below shows the steps for generating 
+  source code using JETEmitter. </p>
+<p><IMG alt="Using JETEmitter to generate text from a plugin" src="images/jetemitter.gif"> </p>
+<H3><a name="jetemitter_gotchas"></a>JETEmitter Gotchas</H3>
+<p>The JETEmitter class combines template translation and text generation into 
+  a single step, which makes it a very convenient tool. However, it is important 
+  that you know what takes place under the hood, otherwise you might be in for 
+  some nasty surprises. This section highlights some &quot;gotchas&quot; that 
+  I ran into, so that you don't make the same mistakes.</p>
+<H4>1. Plug-in Initialization Required </H4>
+<p>It is not easy to use JET outside of Eclipse. JET is designed to run only as 
+  a workspace application. Any application using JET must minimally run as an 
+  Eclipse &quot;headless&quot; application so that plug-in initialization takes 
+  place. (The term headless refers to running Eclipse without the user interface.)</p>
+<p>This means that using JETEmitter from a simple standalone application (a standard 
+  Java class with a <code>main</code> method) <i>will not work</i>:</p>
+<PRE> // This fails: cannot use JETEmitter from a standalone application
+ public static void main(String[] args) {
+     JETEmitter emitter = new JETEmitter("/myproject/templates/HelloWorld.txtjet");
+ 
+     // this will throw a NullPointerException
+     String result = emitter.generate(new NullProgressMonitor(), {"hi" });
+ 
+     System.out.println(result);
+</PRE>
+<p>Note that this is not a restriction of just the JETEmitter class, many of the 
+  classes in the <code>org.eclipse.emf.codegen</code> plug-in have dependencies 
+  on other plug-ins. The <a href="#appendix">Appendix</a> section below has more 
+  details on using JET from standalone applications.</p>
+<p>In the rest of this article we will assume that our code is running from inside 
+  a plug-in.</p>
+<H4>2. Classloader Issues </H4>
+<p>You may get a NoClassDefFoundError when you pass a custom object as the argument 
+  to the <code>JETEmitter.generate</code> method. This can happen if the object 
+  you pass as the argument is not one of the java "bootstrap" classes (the bootstrap 
+  classes are the runtime classes in rt.jar and internationalization classes in 
+  i18n.jar).</p>
+<p>To prevent this error you must specify the classloader of your plug-in when 
+  using JETEmitter. If no classloader is specified, JETEmitter uses the classloader 
+  of its own class, which is usually the classloader for the <code>org.eclipse.emf.codegen</code> 
+  plug-in, and this classloader can't see much. In recent versions of EMF (since 
+  version 1.1.0 build 20030527_0913VL), JETEmitter has a constructor that takes 
+  a classloader argument.</p>
+<p>Note that another way to specify a classloader is to subclass JETEmitter in 
+  your own project; if no classloader is specified, JETEmitter will use the classloader 
+  of this subclass. (If you are using an older version of EMF, there are no constructors 
+  that take a classloader argument and you will have no choice but to subclass 
+  JETEmitter in your own project.)</p>
+<p>The example below shows an action class that translates and invokes a selected 
+  template using JETEmitter. The example shows how a JETEmitter can be constructed 
+  <img src="images/tag_1.gif" width="24" height="13">with a classloader parameter or by <img src="images/tag_2.gif" width="24" height="13">constructing 
+  an anonymous subclass.</p>
+<PRE>package jp.azzurri.jet.article2.actionexample;
+// imports omitted
+public class EmitAction implements IActionDelegate {
+    protected ISelection selection;
+ 
+    public void selectionChanged(IAction action, ISelection selection) {
+        this.selection = selection;
+        action.setEnabled(true);
+    }
+ 
+    public void run(IAction action) {
+        List files = (selection instanceof IStructuredSelection)
+                ? ((IStructuredSelection) selection).toList()
+                : Collections.EMPTY_LIST;
+                
+        for (Iterator i = files.iterator(); i.hasNext();) {
+            IFile file = (IFile) i.next();
+            IPath fullPath = file.getFullPath();
+ 
+            String templateURI = "platform:/resource" + fullPath;
+            <b>Class</b><b>Loader classloader = getClass().getClassLoader();</b>
+<img src="images/tag_1.gif" width="24" height="13">         JETEmitter emitter = new JETEmitter(templateURI, <b>classloader</b>);
+ 
+            // <b>or: use an anonymous subclass</b>
+<img src="images/tag_2.gif" width="24" height="13">         // emitter = <b>new JETEmitter(templateURI) {}</b>; // notice the brackets
+            
+            try {
+                IProgressMonitor monitor = new NullProgressMonitor();
+                String[] arguments = new String[] { "hi" };
+ 
+                String result = emitter.generate(monitor, arguments);
+                
+                saveGenerated(result, file);
+ 
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+ 
+    // saveGenerated method omitted
+}
+</PRE>
+<H4>3. Classpath Issues </H4>
+<p>JETEmitter translates your templates to Java source files in the <i>.JETEmitters</i> 
+  project, and invokes the JavaBuilder to compile these source files. If your 
+  templates use classes that are not standard Java classes, or not in the EMF 
+  plug-in, you will need to add these classes to the classpath of the <i>.JETEmitters</i> 
+  project, or the JavaBuilder cannot compile the template implementation source 
+  files.</p>
+<p>JETEmitter has a protected method, <code>setVariable</code>, that creates a classpath 
+  variable. (Classpath variables are workspace-wide and can be seen with Window 
+  &gt; Preferences &gt; Java &gt; Classpath Variables.) The <code>setVariable</code> 
+  method loops through the runtime libraries of the specified plug-in, and creates 
+  a classpath variable with the specified name that points to the last CODE-type 
+  runtime library of the specified plug-in.</p>
+<p>If all the classes your template needs can be found in the runtime library 
+  of a plug-in, you probably want to use the <code>setVariable</code> method to create 
+  a variable pointing to that <i>.jar</i> file.</p>
+<p>The next step is to add this variable to the classpath of the <i>.JETEmitters</i> 
+  project. Unfortunately, JETEmitter does not provide a method to do this, but 
+  instead requires you to create a subclass and override the initialize method, 
+  for example, to add the required variable(s). You will need to add your variable(s) 
+  to the <i>.JETEmitters</i> project classpath without breaking the existing classpath.</p>
+<p><i>This is one place where the JET package is a little EMF-centric; when the 
+  .JETEmitters project is created, the JETEmitter class creates a number of EMF-only 
+  classpath variables and adds them to the classpath of the .JETEmitters project. 
+  There is an outstanding EMF feature request for an API for adding custom classpath 
+  variables to the .JETEmitters project.</i></p>
+<p> The example source for this article contains a JETEmitter subclass, <code>MyJETEmitter</code>, 
+  which extends JETEmitter to provide a public API for adding classpath entries 
+  to the <i>.JETEmitters</i> project. Basically, this class loops through the 
+  existing classpath entries of the project, and compares this existing classpath 
+  with the added entries, making sure that only missing entries are added. See 
+  the example source for this article for details.</p>
+<H2><a name="example_plugin"></a>A Plug-in that Generates Source Code </H2>
+<p>In this part of the JET Tutorial, we will write an Eclipse plug-in that uses 
+  a JET template to generate Java source code for typesafe enumerations.</p>
+<p>Our plug-in has to perform the following tasks:</p>
+<OL>
+  <LI>Collect user input values for the variables in our template: the class name, 
+    the type and name of the attributes of the typesafe enumeration class, and 
+    the values of these attributes for each instance. We will write a simple GUI 
+    to collect these values.
+  <li>Translate the JET template file to a Java template implementation class</li>
+  <li>Invoke the template implementation class with an object that contains the 
+    user input values collected by the GUI</li>
+  <li>Save the resulting generated source code to a location obtained from the 
+    GUI</li>
+</OL>
+<p>In the following sections we will go through the steps above one by one.</p>
+<H3><a name="typesafe_enum_example"></a>Typesafe Enumerations</H3>
+<p>Let's have a look at a typesafe enumeration class to see what kind of source 
+  code we want to generate. The Digit class below is an example typesafe enum.</p>
+<PRE> // an example typesafe enum
+ package x.y.z;
+ public class Digit { 
+<img src="images/tag_1.gif" width="24" height="13">  public static final Digit ZERO = new Digit(0, "zero");
+     public static final Digit ONE = new Digit(1, "one");
+     public static final Digit TWO = new Digit(2, "two");
+     public static final Digit THREE = new Digit(3, "three");
+     // ...
+     public static final Digit NINE = new Digit(9, "nine");
+ 
+     private static final Digit[] ALL = 
+         {ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE};
+ 
+<img src="images/tag_2.gif" width="24" height="13">  private final int value;
+     private final String name;
+ 
+     private Digit(int value, String name) { 
+         this.value = value; 
+         this.name = name; 
+     }
+ 
+<img src="images/tag_3.gif" width="24" height="13">  public static Digit lookup(int key) {
+         for (int i = 0; i &lt; ALL.length; i++) {
+             if (key == ALL[i].getValue()) { return ALL[i]; }
+         }
+         // lookup failed:
+         // we have no default Digit, so we throw an exception
+<img src="images/tag_4.gif" width="24" height="13">      throw new IllegalArgumentException("No digit exists for " + key);
+     }
+ 
+     public int getValue() { return value; }
+     public int getName() { return name; }
+     public String toString() { return getName(); }
+ }</PRE>
+<p>Let's take a closer look at this class. First of all, the Digit class has several 
+  <b><img src="images/tag_1.gif" width="24" height="13">instances</b> - the constants 
+  ZERO, ONE, TWO, etc. Each instance is defined by its Java variable name, "ZERO", 
+  "ONE", "TWO"..., and the values for each <b><img src="images/tag_2.gif" width="24" height="13">attribute</b> 
+  of the enumeration class. Most typesafe enums have one or more attributes. The 
+  Digit class has two attributes: a <code>value</code> integer and a <code>name</code> 
+  String.</p>
+<p>Our example Digit class also has a <b><img src="images/tag_3.gif" width="24" height="13"><code>lookup</code></b> 
+  method, which returns the instance whose <code>value</code> attribute equals 
+  the specified int parameter. A lookup method introduces the concept of <b>key 
+  attributes</b>. Many typesafe enums have one or more attributes that uniquely 
+  distinguish one instance from another.</p>
+<p><i>Note that key attributes are not required: the Java VM guarantees that every 
+  newly constructed object is unique, so it is possible to have typesafe enumerations 
+  that have no attributes at all, and simply distinguish their instances with 
+  the <b>==</b> instance identity operator. This works fine, but often it is convenient 
+  to have a key attribute that uniquely identifies an instance, and a <code>lookup</code> 
+  method that finds an instance for a specified key value.</i></p>
+<p>Our template does have a <code>lookup</code> method, so we need to decide what 
+  to do if <img src="images/tag_4.gif" width="24" height="13">no instance is found 
+  for the specified key value. Basically there are three options: throwing an 
+  Exception, returning a designated &quot;default&quot; instance, or returning 
+  <code>null</code>. Which option is best depends on the application in which 
+  the class is used, so we should probably let the user decide.</p>
+<p>Now that we've studied typesafe enums in more detail, let's summarize what 
+  is customizable in a typesafe enumeration:</p>
+<UL>
+  <LI>package name 
+  <li>class name </li>
+  <li>attributes, where each attribute </li>
+  <UL>
+    <LI>has a type 
+    <li>has a name </li>
+    <li>may be a key attribute </li>
+  </UL>
+  <li>instances, where each instance </li>
+  <UL>
+    <LI>has a name 
+    <li>has a value for every attribute </li>
+    <li>may be the default instance to return for failed lookups</li>
+  </UL>
+</UL>
+<H3><a name="typesafe_enum_model"></a>A Simple Typesafe Enumeration Model </H3>
+<p>A simple model for the customizable parts of a typesafe enum could look something 
+  like this:</p>
+<P></P>
+<TABLE border="1" cellspacing="0">
+  <TBODY> 
+  <TR> 
+    <TD><code>TypesafeEnum</code></TD>
+  </TR>
+  <TR> 
+    <TD><code>getInstances() : Instance[]<br>
+      getAttributes() : Attribute[]<br>
+      getKeyAttributes() : Attribute[]<br>
+      getDefaultInstance() : Instance<br>
+      getPackageName() : String<br>
+      getClassName() : String</code></TD>
+  </TR>
+  </TBODY> 
+</TABLE>
+<P></P>
+<TABLE border="1" cellspacing="0">
+  <TBODY> 
+  <TR> 
+    <TD><code>Instance</code></TD>
+  </TR>
+  <TR> 
+    <TD><code> getName() : String<br>
+      getAttributeValues() : Properties<br>
+      getAttributeValue(Attribute) : String<br>
+      isDefault() : boolean</code></TD>
+  </TR>
+  </TBODY> 
+</TABLE>
+<P></P>
+<TABLE border="1" cellspacing="0">
+  <TBODY> 
+  <TR> 
+    <TD><code>Attribute</code></TD>
+  </TR>
+  <TR> 
+    <TD><code> getName() : String<br>
+      getType() : String<br>
+      isKey() : boolean</code></TD>
+  </TR>
+  </TBODY> 
+</TABLE>
+<P></P>
+<p>In the next section we will use these classes to convert our Digit class to 
+  a JET template for typesafe enumerations.</p>
+<H3><a name="typesafe_enum_template"></a>A Typesafe Enumeration Template </H3>
+<p>Now that we have a model, we can take our Digit class and replace all Digit-specific 
+  code with JET scriptlets and expressions that call our model classes. The resulting 
+  template could look something like this:</p>
+<PRE> <span class="jet"><span class="jet">&lt;%@ jet package="translated" imports="java.util.* article2.model.*" class="TypeSafeEnumeration" %&gt;</span></span>
+ <span class="jet"><span class="jet">&lt;% TypesafeEnum enum = (TypesafeEnum) argument; %&gt;</span></span>
+ package <span class="jet">&lt;%=enum.getPackageName()%&gt;</span>;
+ 
+ /**
+  * This final class implements a type-safe enumeration
+  * over the valid instances of a <span class="jet">&lt;%=enum.getClassName()%&gt;</span>.
+  * Instances of this class are immutable.
+  */
+ public final class <span class="jet">&lt;%=enum.getClassName()%&gt;</span> {
+ 
+ <span class="jet">&lt;% for (Iterator i = enum.instances(); i.hasNext(); ) { %&gt;</span>
+ <span class="jet">&lt;%     Instance instance = (Instance) i.next(); %&gt;</span>
+ 
+     // <b>instance definition</b>
+     public static final <span class="jet">&lt;%=enum.getClassName()%&gt;</span> <span class="jet">&lt;%=instance.getName()%&gt;</span> = 
+<img src="images/tag_1.gif" width="24" height="13">      new <span class="jet">&lt;%=enum.getClassName()%&gt;</span>(<span class="jet">&lt;%=instance.constructorValues()%&gt;</span>);
+ <span class="jet">&lt;% } %&gt;</span>
+ 
+ <span class="jet">&lt;% for (Iterator i = enum.attributes(); i.hasNext(); ) { %&gt;</span>
+ <span class="jet">&lt;%     Attribute attribute = (Attribute) i.next(); %&gt;</span>
+ 
+     // <b>attribute declaration</b>
+<img src="images/tag_2.gif" width="24" height="13">  private final <span class="jet">&lt;%=attribute.getType()%&gt;</span> m<span class="jet">&lt;%=attribute.getCappedName()%&gt;</span>;
+ <span class="jet">&lt;% } %&gt;</span>
+ 
+     /**
+      * Private <b>constructor</b>.
+      */
+<img src="images/tag_3.gif" width="24" height="13">  private <span class="jet">&lt;%=enum.getClassName()%&gt;</span>(<span class="jet">&lt;%=enum.constructorParameterDescription()%&gt;</span>) {
+ <span class="jet">&lt;% for (Iterator i = enum.attributes(); i.hasNext(); ) { %&gt;</span>
+ <span class="jet">&lt;%     Attribute attribute = (Attribute) i.next(); %&gt;</span>
+<img src="images/tag_4.gif" width="24" height="13">      m<span class="jet">&lt;%=attribute.getCappedName()%&gt;</span> = <span class="jet">&lt;%=attribute.getUncappedName()%&gt;</span>;
+ <span class="jet">&lt;% } %&gt;</span>
+     }
+               
+ // <b>getter accessor methods</b>
+ <span class="jet">&lt;% for (Iterator i = enum.attributes(); i.hasNext(); ) { %&gt;</span>
+ <span class="jet">&lt;%     Attribute attribute = (Attribute) i.next(); %&gt;</span>
+     /**
+      * Returns the <span class="jet">&lt;%=attribute.getName()%&gt;</span>.
+      *
+      * @return the <span class="jet">&lt;%=attribute.getName()%&gt;</span>. 
+      */
+     public <span class="jet">&lt;%=attribute.getType()%&gt;</span> get<span class="jet">&lt;%=attribute.getCappedName()%&gt;</span>() {
+         return m<span class="jet">&lt;%=attribute.getCappedName()%&gt;</span>;
+     }
+ 
+ <span class="jet">&lt;% } %&gt;</span>     
+ 
+     // lookup method omitted...
+ }</PRE>
+<p>As you can see, the template calls some methods that were not in the simple 
+  model we introduced earlier. We have added a few convenience methods, like the 
+  <code><img src="images/tag_2.gif" width="24" height="13">Attribute.getCappedName()</code> 
+  and <code><img src="images/tag_4.gif" width="24" height="13">getUncappedName()</code> 
+  methods. Such methods help to keep the template simple.</p>
+<p>Another example of methods we added to the model are the <code><img src="images/tag_3.gif" width="24" height="13">TypesafeEnum.constructorParameterDescription()</code> 
+  method and the <code><img src="images/tag_1.gif" width="24" height="13">Instance.constructorValues()</code> 
+  method. The implementation of the <code>constructorValues</code> method is shown 
+  below. </p>
+<pre>// class Instance
+/**
+ * Convenience method that returns the attribute values of this instance,
+ * in the order expected by the constructor of this instance.
+ * 
+ * @return a comma-separated list of all attribute values of this instance,
+ *         formatted like <code>attrib1-value, attrib2-value (, ...)</code>
+ */
+public String constructorValues() {
+    StringBuffer result = new StringBuffer();
+    for (Iterator i = getType().attributes(); i.hasNext(); ) {
+        Attribute attribute = (Attribute) i.next();
+        result.append(getAttributeValue(attribute));
+        if (i.hasNext()) {
+            result.append(", ");
+        }
+    }
+    return result.toString();
+}
+</pre>
+<p>The <code>constructorValues</code> method loops through the attributes of the 
+  typesafe enum, looks up the value for each attribute in the instance, and concatenates 
+  these values into a string, separated by commas. For example, in our <tt>Digit</tt> 
+  typesafe enum class above, this method would return <tt>&quot;0, \&quot;zero\&quot;&quot;</tt> 
+  for the &quot;ZERO&quot; instance. </p>
+<p>We could have looped through the attribute values in the template, but that 
+  would have made the template much more difficult to read. Pushing this logic 
+  into the model made the template more readable and easier to maintain. On the 
+  other hand, we lost some flexibility because users cannot customize that logic 
+  anymore by editing the template. This is a trade-off you have to make. Which 
+  is better depends on your template and your application.</p>
+<H3><a name="gui"></a>A GUI to Collect User Input </H3>
+<p>Now that we have a model and a template, we still need two more pieces to finish 
+  our plug-in: we need a GUI to collect values from the user to populate our model 
+  with, and we need to invoke our template with the populated model to generate 
+  source code and save this source code to a location in the workspace.</p>
+<p>Let's start with the GUI. The workbench provides a few wizards that do something 
+  similar to what we have in mind, for example the New Class, New Interface and 
+  New JUnit TestCase wizards. It probably makes sense to have our GUI look similar 
+  to these wizards and make it accessible from the standard menu and toolbar locations.</p>
+<p>Our wizard has three pages. The first page, shown below, looks like a simplified 
+  version of the New Class wizard. In fact, we are using the same framework that 
+  the New Class wizard uses, the <code>org.eclipse.jdt.ui.wizards</code> package. 
+  In the first page, we collect the package name and the class name of the typesafe 
+  enum, and the location where the result should be saved.</p>
+<p><IMG alt="GUI wizard page one: class, package and location of the typesafe enum" src="images/enum_gui_page1.gif"> 
+</p>
+<P></P>
+<p>Our second page collects information on the attributes of the typesafe enum 
+  class. Every attribute has a name and a type, and may be one of the key attributes. 
+  Our second wizard page is shown below:</p>
+<p><IMG alt="GUI wizard page two: attributes of the typesafe enum" src="images/enum_gui_page2.gif"></p>
+<P></P>
+<p>Our third and last wizard page, shown below, collects information on the instances 
+  of the typesafe enum. The user inputs the instance name, and for each instance 
+  provides values for all attributes.</p>
+<p>Finally, one of the instances may be the &quot;default&quot; instance, which 
+  is the instance returned by the <code>lookup</code> method if no instance was 
+  found for the specified key attribute values.</p>
+<p><IMG alt="GUI wizard page three: instances of the typesafe enum" src="images/enum_gui_page3.gif"></p>
+<H3><a name="invoke_plugin_template"></a>Invoking the Template </H3>
+<p>Now that we have a GUI to populate our model, we can finally use what we learned 
+  in the first part of this article, and generate source code with our template.</p>
+<p>When a user presses Finish on the wizard, the <code>performFinish</code> method 
+  in our wizard is called. The code below shows how we <img src="images/tag_1.gif" width="24" height="13">use 
+  a custom subclass of JETEmitter to <img src="images/tag_2.gif" width="24" height="13">add 
+  the jar file of our plug-in to the classpath of the <i>.JETEmitters</i> project 
+  before we <img src="images/tag_3.gif" width="24" height="13">call generate on 
+  the JETEmitter. The generated typesafe enum source code is <img src="images/tag_4.gif" width="24" height="13">saved 
+  to the location in the workspace that the user specified.</p>
+<PRE> // class NewTypesafeEnumCreationWizard
+ protected void finishPage(IProgressMonitor monitor) 
+ throws InterruptedException, CoreException {
+ 
+     String pluginId = "jp.azzurri.jet.article2.typesafe_enum";
+     String base = Platform.getPlugin(pluginId).getDescriptor().getInstallURL().toString();
+     String relativeUri = "templates/TypeSafeEnumeration.javajet";
+<img src="images/tag_1.gif" width="24" height="13">  MyJETEmitter emitter = new MyJETEmitter(base + relativeUri);
+<img src="images/tag_2.gif" width="24" height="13">  emitter.addClasspathVariable("JET_TUTORIAL", pluginId);
+ 
+     TypesafeEnum model = mPage1.getTypesafeEnumModel();
+     IProgressMonitor sub = new SubProgressMonitor(monitor, 1);
+<img src="images/tag_3.gif" width="24" height="13">  String result = emitter.generate(sub, new Object[] { model });
+     monitor.worked(1);
+ 
+<img src="images/tag_4.gif" width="24" height="13">  IFile file = save(monitor, result.getBytes());
+ 
+     selectAndReveal(file);
+     openResource(file);
+ }</PRE>
+<H3><a name="pluginxml"></a>Registering our Wizard </H3>
+<p>Our final code snippet below shows the part of our <code>plugin.xml</code> configuration 
+  file where we register our wizard as a contribution to the workbench.</p>
+<PRE>   &lt;extension point="org.eclipse.ui.newWizards"&gt;
+      &lt;wizard 
+<img src="images/tag_1.gif" width="24" height="13">         javatype="true"
+            name="Typesafe Enum"
+            icon="icons/newenum_wiz.gif"
+            category="org.eclipse.jdt.ui.java"
+            class="jp.azzurri.jet.article2.ui.NewTypesafeEnumCreationWizard"
+            id="jp.azzurri.jet.article2.ui.NewTypesafeEnumCreationWizard"&gt;
+         &lt;description&gt;
+            Create a Typesafe Enumeration
+         &lt;/description&gt;
+      &lt;/wizard&gt;
+   &lt;/extension&gt;
+</PRE>
+<p>Now our wizard is activated when users select File &gt; New &gt; Other &gt; 
+  Java &gt; Typesafe Enum from the workbench, as shown in the image below. </p>
+<p><IMG alt="Typesafe Enum wizard shows up in the New creation wizard" src="images/new_creation_wizard.gif"> 
+</p>
+<p>Note that we set the <code><img src="images/tag_1.gif" width="24" height="13">javatype</code> 
+  attribute to true in the wizard extension element in the <code>plugin.xml</code> 
+  file. This will cause our wizard to show up as an action on the toolbar in the 
+  Java Perspective, as shown in the image below.</p>
+<p><IMG alt="Typesafe Enum wizard shows up as an action on the toolbar in the Java Perspective" src="images/new_toolbar.gif"> 
+</p>
+<P></P>
+<H2><a name="conclusion"></a>Conclusion </H2>
+JET can be a great help for applications that need to generate text. Templates 
+are as much of an improvement to code generation as JSP pages were to old style 
+servlets. 
+<p>When using JET, you need to decide whether you want to distribute your templates 
+  with your application, or distribute only the template implementation classes.</p>
+<p>If your goal is to simplify the text generation capabilities of your application, 
+  then using JET Nature and JET Builder to automatically translate your templates 
+  is a good choice. See <a href="../Article-JET/jet_tutorial1.html">JET Tutorial 
+  Part 1</a> for details. In that case you only need to distribute the translated 
+  template implementation classes with your application, not the templates themselves.</p>
+<p>On the other hand, if it is important for your application that users have 
+  ultimate control over the generated text, you may want to distribute the template 
+  files themselves with your application. In that case, you will need to translate 
+  these templates every time you generate text. The plug-in we wrote in this article 
+  is an example of this type of application.</p>
+<p>This article explained what classes are available in the JET package to achieve 
+  this and showed how to use these classes with an Eclipse plug-in. The appendix 
+  below provides an overview of the JET API and shows how it can be used in headless 
+  or standalone applications.</p>
+<H2><a name="appendix"></a>Appendix</H2>
+<H3><a name="jet_api_overview"></a>JET API Overview </H3>
+<b>Package org.eclipse.emf.codegen</b> 
+<P></P>
+<TABLE border="1" cellspacing="0">
+  <TBODY> 
+  <TR> 
+    <TD><b>Class</b></TD>
+    <TD><b>Description</b></TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>CodeGen</code></TD>
+    <TD> 
+      <p>The <code>CodeGen</code> class can translate a JET template to Java source 
+        code and optionally merge the template implementation Java source code 
+        with an existing Java class. <code>CodeGen</code> can be used as an Eclipse 
+        headless application. The <code>run</code> method expects a String array parameter 
+        of two or three elements: </p>
+      <ul>
+        <li> the uri of the template to translate </li>
+        <li>the target path where the translation result should be saved </li>
+        <li>an optional <code>JMerge</code> control model file specifying how to merge 
+          the new translation result with the source code of an existing Java 
+          class</li>
+      </ul>
+    </TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>CodeGenPlugin</code></TD>
+    <TD>The plug-in class for the JET package.</TD>
+  </TR>
+  </TBODY>
+</TABLE>
+<P></P>
+<b>Package org.eclipse.emf.codegen.jet</b> 
+<P></P>
+<TABLE border="1" cellspacing="0">
+  <TBODY> 
+  <TR> 
+    <TD><b>Class</b></TD>
+    <TD><b>Description</b></TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>IJETNature</code></TD>
+    <TD>Interface extending <code>org.eclipse.core.resources.IProjectNature</code>. 
+      Defines some of the properties that a JET nature has. Implemented by <code>JETNature</code>. 
+      Used as a filter for project property pages by the <code>org.eclipse.emf.codegen.ui</code> 
+      plugin.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETAddNatureOperation</code></TD>
+    <TD>A <code>org.eclipse.core.resources.IWorkspaceRunnable</code> for adding the 
+      JET nature to a project in the workspace. Used by the <code>AddJETNatureAction</code> 
+      in the <code>org.eclipse.emf.codegen.ui</code> plug-in.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETBuilder</code></TD>
+    <TD>This class extends <code>org.eclipse.core.resources.IncrementalProjectBuilder</code>. 
+      When its <code>build</code> method is invoked, it delegates to <code>JETCompileTemplateOperation</code> 
+      to translate all templates in the workspace project that have been changed 
+      since the previous build. Templates must be located in one of the folders 
+      specified as Template Containers in the JET Nature of the project.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETCharDataGenerator</code></TD>
+    <TD>Responsible for a part of the template translation process. Generates 
+      strings for the character data present in the template file. Used by <code>JETCompiler</code>.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETCompiler</code></TD>
+    <TD>This is the core class for template translation. This class is responsible 
+      for translating templates to the Java source code of a template implementation 
+      class. The actual translation is delegated to other classes in this package. 
+      A <code>JETParser</code> is used to parse the template into template elements. 
+      <code>JETCompiler</code> implements the <code>JETParseEventListener</code> interface 
+      and registers itself with the parser to be notified when the parser recognizes 
+      a template element. For every recognized template element, <code>JETCompiler</code> 
+      uses a <code>JETGenerator</code> to translate the template element to Java source 
+      code. When the template parsing is complete, <code>JETCompiler</code> uses a 
+      <code>JETSkeleton</code> to assemble the Java source code elements to a single 
+      compilation unit (a Java class).</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETCompileTemplateOperation</code></TD>
+    <TD>This class implements <code>org.eclipse.core.resources.IWorkspaceRunnable</code> 
+      so it can execute as a batch operation within the workspace. This operation 
+      takes a workspace project, one or more Template Containers and optionally 
+      a list of specific template files as constructor parameters. When its <code>run</code> 
+      method is invoked, it uses a <code>JETCompiler</code> to translate the template 
+      files in the specified workspace project folders to Java source files for 
+      template implementation classes. This operation can optionally be configured 
+      to trigger a complete build of the project when it is finished to compile 
+      the Java source files to <i>.class</i> files.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETConstantDataGenerator</code></TD>
+    <TD>Responsible for a part of the template translation process. Extends <code>JETCharDataGenerator</code> 
+      to generate constant declarations for the strings with character data present 
+      in the template file.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETCoreElement</code></TD>
+    <TD>Interface for core JET syntax elements (directive, expression, scriptlet 
+      and quote-escape). Used by <code>JETParser</code>.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETEmitter</code></TD>
+    <TD>This class provides a convenient high-level API for users of this package. 
+      The <code>generate</code> method of this class translates a template to Java 
+      source code, compiles this source code to a template implementation class, 
+      asks the template class to generate text and finally returns the generated 
+      result. This class creates a Java project called <i>.JETEmitters</i> in 
+      the workspace, translates the template into this project, and simply calls 
+      <code>build</code> on the <i>.JETEmitters</i> project to compile the source 
+      code. If translation or compilation fails, a <code>JETException</code> is thrown. 
+      A template implementation Java class is "executed" by calling its <code>generate</code> 
+      method.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETException</code></TD>
+    <TD>Extends <code>org.eclipse.core.runtime.CoreException</code>, but provides 
+      more convenient constructors.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETExpressionGenerator</code></TD>
+    <TD>Responsible for a part of the template translation process. Extends <code>JETScriptletGenerator</code> 
+      to translate JET expressions (<code>&lt;%= ... %&gt;</code> stuff) to Java source 
+      code.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETGenerator</code></TD>
+    <TD>Interface for generators: classes that know how to translate part of a 
+      JET template to a Java source code element.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETMark</code></TD>
+    <TD>A state object used by the <code>JETParser</code> to mark points in the JET 
+      character input stream, and delegate the processing of parts of the stream 
+      to other objects.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETNature</code></TD>
+    <TD> 
+      <p>This class implements <code>IJETNature</code> so that it can configure 
+        a workspace project with the JET Nature. When this nature is added to 
+        a project, it adds a JET Builder to the front of the build spec of the 
+        project. This nature defines two properties: </p>
+      <ul>
+        <li> Template Containers - a list of folders in the project that contain 
+          the JET templates to translate. </li>
+        <li>Source Container - the target folder in which to save translated template 
+          implementation Java classes. </li>
+      </ul>
+      <p>These properties are used by the JET Builder when performing a build.</p>
+    </TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETParseEventListener</code></TD>
+    <TD>Interface for objects that know how to process parts of a JET character 
+      input stream.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETParser</code></TD>
+    <TD>The main parser class. Has several inner classes for recognizing core 
+      JET syntax elements (directive, expression, scriptlet and quote-escape). 
+      When a core JET syntax element is recognized, the actual processing of the 
+      element is delegated to a <code>JETParseEventListener</code>.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETReader</code></TD>
+    <TD>An input buffer for the JET parser. Provides a <code>stackStream</code> method 
+      that others can call with the character stream to an include file. Also 
+      provides many other convenience methods for the parser.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETScriptletGenerator</code></TD>
+    <TD>Responsible for a part of the template translation process. Translates 
+      JET scriptlets (<code>&lt;% ... %&gt;</code> stuff) to Java source code.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JETSkeleton</code></TD>
+    <TD>This class provides an interface for assembling Java source code elements 
+      into a single Java compilation unit (a Java class). Java source code elements 
+      are assembled according to a class skeleton definition. A skeleton can be 
+      used to add boilerplate code to a translated template implementation class. 
+      This class provides a default custom template implementation class skeleton 
+      definition, but can also assemble Java elements using a custom skeleton. 
+      The actual parsing and generation of Java source code is delegated to classes 
+      in the <code>org.eclipse.jdt.core.jdom</code> package.</TD>
+  </TR>
+  </TBODY>
+</TABLE>
+<P></P>
+<b>Package org.eclipse.emf.codegen.jmerge</b> 
+<P></P>
+<TABLE border="1" cellspacing="0">
+  <TBODY> 
+  <TR> 
+    <TD><b>Class</b></TD>
+    <TD><b>Description</b></TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JControlModel</code></TD>
+    <TD>A control model that provides dictionaries and rules to drive a merge 
+      process.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JMerger</code></TD>
+    <TD>A class for merging Java source files. Uses classes in the <code>org.eclipse.jdt.core.jdom</code> 
+      package to parse the source code. This class can be used by application 
+      code, but can also be run as an Eclipse headless application.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>JPatternDictionary</code></TD>
+    <TD>A dictionary of signatures and JDOM nodes.</TD>
+  </TR>
+  <TR> 
+    <TD valign="top"><code>PropertyMerger</code></TD>
+    <TD>A class for merging property files. This class can be used by application 
+      code, but can also be run as an Eclipse headless application.</TD>
+  </TR>
+  </TBODY>
+</TABLE>
+<P></P>
+<H3><a name="codegen_headless_application"></a>Running CodeGen as an Eclipse Headless 
+  Application </H3>
+<p>The <code>org.eclipse.emf.codegen.CodeGen</code> class can translate a JET template to Java source code 
+  and optionally merge the template implementation Java source code with an existing 
+  Java class. CodeGen can be used as an Eclipse headless application ("headless" 
+  means that the Eclipse GUI does not start). The <code>plugins/org.eclipse.emf.codegen/test</code> 
+  folder in your Eclipse installation contains some scripts for launching the 
+  CodeGen class as an Eclipse headless application. These scripts are in Unix 
+  format.</p>
+<p><img src="images/win_only.gif" width="49" height="13"> Below is an example 
+  script for Windows. Note that we pass two arguments to the CodeGen class:</p>
+<UL>
+  <li>the <img src="images/tag_1.gif" width="24" height="13">uri of the template 
+    to translate </li>
+  <li>the <img src="images/tag_2.gif" width="24" height="13">target path where 
+    the translation result should be saved </li>
+</UL>
+<p>If the target path already contains a previous translation result, and you 
+  want to merge the new translation result with the existing one, you can specify 
+  a <code>JMerge</code> control model file as the third argument. The <code>plugins/org.eclipse.emf.codegen/test</code> 
+  folder in your Eclipse installation contains an example <code>merge.xml</code> file.</p>
+<PRE>   @echo off
+   set ECLIPSE_HOME=C:\eclipse-2.1\eclipse
+   set WORKSPACE=%ECLIPSE_HOME%\workspace
+   set OPTS=-Xmx900M -Djava.compiler=NONE -verify -cp %ECLIPSE_HOME%\startup.jar
+   set MAIN=org.eclipse.core.launcher.Main -noupdate -data %WORKSPACE% 
+ 
+<img src="images/tag_1.gif" width="24" height="13">set TEMPLATE_URI=test.javajet
+<img src="images/tag_2.gif" width="24" height="13">set TARGET_FOLDER=C:\temp\jetstandalone\MyProject
+   set ARGUMENTS=%TEMPLATE_URI% %TARGET_FOLDER%
+   
+   echo Shut down Eclipse before running this script.
+   java %OPTS% %MAIN% -application org.eclipse.emf.codegen.CodeGen %ARGUMENTS%
+</PRE>
+<H3><a name="jetc"></a>jetc: An ANT Task for Translating JET Templates Outside 
+  of Eclipse </H3>
+<p>Author: Knut Wannheden (knut.wannheden at paranor.ch) </p>
+<p>Binary: <A href="jetc-task.jar">jetc-task.jar</A>. </p>
+<p>The source: <A href="JETCTask.java" target=_blank>JETCTask.java</A>. </p>
+<p>Some notes: </p>
+<UL>
+  <LI>In the <code>&lt;taskdef/&gt;</code> you have to specify the classpath to include 
+    both this task as well as the jars of a number of Eclipse plug-ins (see the 
+    example buildfile). </LI>
+  <li>There are two ways to tell the jetc task which template(s) it should translate: 
+  </li>
+  <UL>
+    <LI>Use a nested fileset to specify the directory containing the template 
+      files. </LI>
+    <li>Specify the template uri in the "template" attribute of the task. When 
+      used this way, the task supports the "class" and "package" attributes which 
+      overload the JET directives "class" and "package" in the template. It can 
+      also be used if the JET directive is missing altogether. Use this attribute 
+      when you want to specify the class to generate outside the template. </li>
+  </UL>
+</UL>
+<p>Here's a simple Ant buildfile (the taskdef classpath assumes you have Eclipse 
+  2.1 and EMF 1.1.0): </p>
+<PRE> &lt;project default="jetc_multiple_templates"&gt;
+  
+  &lt;property name="eclipse.plugins.dir" location="C:/eclipse-2.1/eclipse/plugins"/&gt;
+  
+  &lt;taskdef name="jetc" classname="ch.paranor.epla.structure.JETCTask"&gt;
+    &lt;classpath&gt;
+      &lt;pathelement location="jetc-task.jar"/&gt;
+      &lt;fileset dir="${eclipse.plugins.dir}"&gt;
+        &lt;include name="org.eclipse.core.boot_2.1.0/boot.jar"/&gt;
+        &lt;include name="org.eclipse.core.resources_2.1.0/resources.jar"/&gt;
+        &lt;include name="org.eclipse.core.runtime_2.1.0/runtime.jar"/&gt;
+        &lt;include name="org.eclipse.emf.codegen_1.1.0/runtime/codegen.jar"/&gt;
+        &lt;include name="org.eclipse.jdt.core_2.1.0/jdtcore.jar"/&gt;
+      &lt;/fileset&gt;
+    &lt;/classpath&gt;
+  &lt;/taskdef&gt;
+  
+  &lt;!-- Usage example 1: --&gt;
+  &lt;!-- Specify the template file in the "template" attribute. --&gt;
+  &lt;!-- You can use the "class" and "package" attributes to override the --&gt;
+  &lt;!-- "class" and "package" attributes in the template file. --&gt;
+  &lt;target name="jetc_single_template"&gt;
+    &lt;mkdir dir="jet-output"/&gt;
+    &lt;jetc template="test.xmljet" package="com.foo" class="Test" destdir="jet-output"/&gt;
+    &lt;javac srcdir="jet-output" destdir="classes"/&gt;
+  &lt;/target&gt;
+ 
+  &lt;!-- Usage example 2: --&gt;
+  &lt;!-- Translate a bunch of template files at once. --&gt;
+  &lt;!-- You cannot use the "class" and "package" attributes when using a fileset. --&gt;
+  &lt;target name="jetc_multiple_templates"&gt;
+    &lt;mkdir dir="jet-output"/&gt;
+    &lt;jetc destdir="jet-output"&gt;
+      &lt;fileset dir="jet-templates" includes="*.*jet"/&gt;
+    &lt;/jetc&gt;
+    &lt;javac srcdir="jet-output" destdir="classes"/&gt;
+  &lt;/target&gt;
+  
+ &lt;/project&gt;</PRE>
+<H2>Resources </H2>
+<p><a href="http://developer.java.sun.com/developer/Books/shiftintojava/page1.html#replaceenums" target="_blank">Substitutes 
+  for Missing C Constructs</a> (By Joshua Bloch)</p>
+<a href="http://www.javaworld.com/javaworld/javatips/jw-javatip122.html" target="_blank"> 
+Java Tip 122: Beware of Java typesafe enumerations</a> (By Vladimir Roubtsov)<br>
+<p><a href="http://www.javaworld.com/javaworld/javatips/jw-javatip133.html" target="_blank">Java 
+  Tip 133: More on typesafe enums</a> (By Philip Bishop)</p>
+<p><a href="http://www.eclipse.org/emf/">http://www.eclipse.org/emf/ </a></p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both.</small></p>
+</BODY>
+</HTML>

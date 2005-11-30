@@ -1,0 +1,363 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (WinNT; I) [Netscape]">
+   <title>Using Images in the Eclipse UI</title>
+<!-- saved from url=(0063)http://www.eclipsecorner.org/community/articleHTMLTemplate.html -->
+<link rel="stylesheet" href="../default_style.css">
+</head>
+<body>
+
+<div align=right>&nbsp; <font face="Times New Roman, Times, serif"><font size=-1>Copyright
+&copy; 2001 Object Technology International, Inc.</font></font></div>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+Corner Article</font></font></b></td>
+</tr>
+</table>
+
+<h1> <img SRC="../images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+
+<center>
+<h1>
+Using Images in the Eclipse UI</h1></center>
+
+<blockquote><b>Summary</b>
+<br>
+  Managing images in a large graphical application can be a daunting task. Since 
+  modern operating systems such as Windows&reg; only support a small number of images 
+  in memory at once, an application’s icons and background images must be carefully 
+  managed and sometimes shared between widgets. This article describes the image 
+  management facilities provided by the Eclipse Platform, along with some best 
+  practice guidelines to keep in mind when writing your own Eclipse UI plug-ins. 
+  We assume the reader already has a basic understanding of Eclipse, the UI extension 
+  points defined by the Eclipse Platform, and the Standard Widget Toolkit (SWT). 
+  <p><b>By John Arthorne, OTI<br>
+    </b>April 20, 2001
+  <p>Editor's note: This article describes Eclipse release 1.0. It has been superceded 
+    by the <a href="Article-Using%20Images%20In%20Eclipse/Using%20Images%20In%20Eclipse.html">updated 
+    version of this article</a> for Eclipse release 2.0. </blockquote>
+
+<h2> The Usual Suspects </h2>
+<p>We begin by describing the interesting classes to know about when writing UI 
+  plug-ins that define their own images. Just about anybody writing substantial 
+  UI components for a plug-in needs to understand these basic image management 
+  objects. </p>
+<p>
+  <ul>
+    <li> 
+      <p><b><tt>org.eclipse.swt.graphics.Image</tt></b>. Instances of <tt>Image</tt> 
+        are ready for display on the screen. They have all their data in memory, 
+        and they maintain a handle to an underlying OS resource. These are heavy-weight 
+        objects that generally should not be held onto indefinitely. When no longer 
+        needed, the user must call <tt>dispose()</tt> on the image to free the 
+        underlying resource. The crucial point to understand here is that these 
+        objects are very expensive to leave lying around. The operating system 
+        typically only allows a fixed number of images at once. For example, Windows 
+        98 only allows about 1000 images in memory before it begins to fail. Whenever 
+        you create an instance of Image, think about how long it will be needed, 
+        and make sure that a mechanism is in place to dispose of it when no longer 
+        needed. You <b>cannot</b> rely on the Java&trade; garbage collector to do this 
+        for you, since Images reference memory allocated by the OS, not the Java 
+        virtual machine.&nbsp; An interesting characteristic of Images is that 
+        one <tt>Image</tt> instance can be placed in multiple widgets, a technique 
+        called image sharing.&nbsp; A major challenge of image management is to 
+        take advantage of this sharing as much as possible, but to still know 
+        when it is safe to dispose the image.</p>
+    </li>
+    <li> <b><tt>org.eclipse.jface.resource.ImageDescriptor</tt></b>. These objects 
+      are very light-weight descriptions of images. They know how to find the 
+      image data and load the image into memory, but they do not hold onto any 
+      large structures themselves. There are a number of factory methods on ImageDescriptor 
+      for creating descriptors from Java resource files, normal files, and URLs. 
+      It is okay to create ImageDescriptors for all the images in your plug-in, 
+      and keep them around for the lifetime of the UI.&nbsp; An SWT image can 
+      be created from an ImageDescriptor by calling its createImage method.&nbsp; 
+      Each call to createImage returns a new instance of Image, and it is the 
+      caller's responsibility to ensure that the created image gets disposed.</li>
+    <li> <b><tt>org.eclipse.jface.resource.ImageRegistry</tt></b>. Some images are 
+      used very frequently by a plug-in, and are worth placing in a global pool 
+      so that they can be shared and reused throughout the UI. These images should 
+      be placed in your plug-in's ImageRegistry. It is important to keep the number 
+      of images in your registry small, so that you don't unnecessarily hog OS 
+      resources that may be needed by other plug-ins.</li>
+  </ul>
+  As a general rule of thumb, ImageDescriptors should be used wherever possible 
+in your UI code.&nbsp; However, in places where you are creating real widgets, 
+such as subclasses of <tt>org.eclipse.swt.widgets.Widget</tt>, or <tt>org.eclipse.jface.window.Window</tt>, 
+you need to be manipulating SWT images.&nbsp; Generally, the code that creates 
+the widget should also create the Images to go in it, and the code that disposes 
+the widget should also dispose of its images.&nbsp; An exception to this rule 
+is if you are using Images that are shared between multiple widgets.&nbsp; Image 
+sharing should be approached with caution, because as we discussed earlier, sharing 
+makes it difficult to figure out when to dispose of the images.&nbsp; <tt>org.eclipse.jface.viewers.ILabelProvider</tt> 
+(described later), and <tt>org.eclipse.jface.resource.ImageRegistry</tt>, are two 
+mechanisms provided by JFace that help to achieve image sharing in a controlled 
+manner. 
+<h2>Defining Images Through your plugin.xml File</h2>
+  The simplest and most frequent way images get added to a UI plug-in is via their 
+  plugin.xml file.&nbsp; Many UI extension points allow an image filename to be 
+  provided directly in your extension definition, namely: 
+  <ul>
+    
+  <li> "actions" elements on the org.eclipse.ui.actionSets extension point</li>
+    
+  <li> "editor" elements on the org.eclipse.ui.editors extension point</li>
+    <li> "action" elements on the org.eclipse.ui.editorActions extension point</li>
+    
+  <li> "wizard" elements on the org.eclipse.ui.newWizards extension point</li>
+    
+  <li> "wizard" elements on the org.eclipse.ui.importWizards extension 
+    point</li>
+    
+  <li> "wizard" elements on the org.eclipse.ui.exportWizards extension 
+    point</li>
+    <li> "layout" elements on the org.eclipse.ui.perspective extension point</li>
+    
+  <li> "action" elements on the org.eclipse.ui.popupMenus extension point</li>
+    <li> "page" elements on the org.eclipse.ui.propertyPages extension point</li>
+    <li> "action" elements on the org.eclipse.ui.viewActions extension point</li>
+    <li> "view" elements on the org.eclipse.ui.views extension point</li>
+  </ul>
+  For all of these element types, the way you specify images is the same.&nbsp; 
+There is an attribute called "icon", whose value must be an image filename relative 
+to your plug-IN's install location.&nbsp; To give a quick example, here is an 
+XML definition of an import wizard, taken from the extension point documentation: 
+<pre><tt>&lt;extension</tt> 
+   <tt>point="org.eclipse.ui.import"></tt> 
+<tt>&nbsp;&nbsp; &lt;wizard</tt> 
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="com.xyz.ImportWizard1"</tt>      
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name="XYZ Web Scraper"</tt>      
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="com.xyz.imports.ImportWizard1"</tt>      
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; icon="./images/import1.gif"></tt>      
+<tt>&nbsp;&nbsp; &lt;/wizard></tt> 
+<tt>&lt;/extension></tt>    </pre>
+<p>Here, the wizard is given an image called "import1.gif", found in a subdirectory 
+  of the plug-IN's base directory called "images".&nbsp; See the documentation 
+  for each of the above extension points for more details and examples of their 
+  use. </p>
+<p>There are many advantages to specifying images directly in your XML file, over 
+  defining images programmatically in your UI code: 
+<ul>
+    <li> You can let the Platform worry about loading the image, storing it, and 
+      disposing of it when no longer needed, which means less code and less bugs 
+      for you to worry about.</li>
+    <li> Most of your image filenames are encoded in one place, making it easier 
+      to change and modify them.</li>
+    <li> Your plug-in will take advantage of the Platform's lazy plug-in loading 
+      mechanism.&nbsp; Your classes and images will only be loaded when they are 
+      referenced by the user, and not before.&nbsp; In fact, this is why extension 
+      points always ask for a name and icon for your actions, views, etc.&nbsp; 
+      That way, the Platform can present them in menus and toolbars without having 
+      to load your classes until they are really needed.</li>
+  </ul>
+  <h2> Adding Images to Custom UI</h2>
+  You have begun experimenting with platform extension points, maybe contributing 
+  some actions to popup menus or toolbars, or maybe you've even defined your own 
+  custom view. In many of these cases, specifying an image file in the XML file 
+  for your plug-in is all that is required, and the Platform takes care of the 
+  rest.&nbsp; However, when you move on to writing more advanced UI components, 
+  you may need to define images from within your code.&nbsp; The following example 
+  demonstrates the simplest way to define images within UI code. In this example 
+  we have a UI plug-in called MyPlugin, and some action called MyAction. We would 
+  like to associate an image with MyAction. 
+  <p>Step 1: Create an image using your favorite image editing program. For action 
+    icons, the recommended format is a 16x16 pixel image in the GIF format. For 
+    this example, we'll call the image "my_action.gif", and place it in a subdirectory 
+    of the plug-in base directory called "images". 
+  <p>Step 2: Define an ImageDescriptor in your MyAction class. It's a good idea 
+    to make this field static so that it can be shared across instances of the 
+    action. 
+  
+<pre>public class MyAction extends Action {
+  private static ImageDescriptor image;
+  static {
+    URL url = null;
+    try {
+    url = new URL(MyPlugin.getInstance().getDescriptor().getInstallURL(),
+                  "images/my_action.gif");
+    } catch (MalformedURLException e) {
+    }
+    image = ImageDescriptor.createFromURL(url);
+  }
+	  ... other methods and fields defined here ...
+}
+  </pre>
+  <p>Because plug-ins can be stored anywhere, we use URLs to describe their location. 
+    The image location will always be the same relative to the plug-in location, 
+    so we use that as the base of the image's URL. We then use the factory method 
+    defined on the ImageDescriptor class to create our descriptor. The method 
+    ImageDescriptor#createFromURL() will handle the case where a null URL is passed 
+    to it, so we don't need to handle the possible URL exception. Images that 
+    could not be loaded are visible in the UI as small red squares. If you see 
+    a red square next to your action in the popup menu, it probably means you 
+    got the image location wrong, or the image is missing. 
+  <p>Step 3: Set the ImageDescriptor as the action's image in the constructor: 
+  
+<pre>public MyAction() { 
+    super("My Action", image);
+}</pre>
+<p>That's it! Now, when you startup the Eclipse UI and find your action in a menu 
+  or toolbar, your image will appear next to it. The same approach can be used 
+  to define images within custom views and wizards.&nbsp; Note that since you 
+  only had to deal with ImageDescriptors in this example, no disposal was required.&nbsp; 
+  In this case the platform is responsible for creating, managing, and disposing 
+  any SWT Image it creates from the image descriptor you supplied. </p>
+<h2> Viewers and Label Providers</h2>
+  Adding images to actions and view titles is fairly simple in Eclipse. In these 
+cases, the platform handles the creation and management of the real, underlying 
+SWT image. When you start to add your own objects to viewers, things get a little 
+bit more complicated. This is mainly because many objects in viewers tend to have 
+the same icon. For example, all files in the Navigator have the same icon, as 
+do all public Java fields in the Java Development Tooling (JDT) views. To make 
+this efficient, we want to reuse the same SWT image object for all these items. 
+This is accomplished by creating a label provider for your viewer. 
+<p>You can think of label providers as containing a pool of images that lasts 
+    for the lifetime of a particular viewer.&nbsp; They allow the same SWT Images 
+    to be reused throughout the time that viewer's widget is open.&nbsp; Note 
+    that ILabelProviders don't provide a way to share the same Image across multiple 
+    viewers, which is fine because there are rarely more than a couple of viewers 
+    open at any given time that could share images anyway.&nbsp; Generally, sharing 
+    images across multiple viewers introduces a great deal of complexity for very 
+    little gain. 
+  <p>To give you an idea of how ILabelProviders work, it is instructive to step 
+    through the lifetime of an ILabelProvider instance. 
+  <ul>
+    <li> <b>Creation:</b> The code that creates a viewer instance should also 
+      create an instance of ILabelProvider to supply images for objects in that 
+      viewer.&nbsp; The label provider is then set into the viewer by calling 
+      <tt>org.eclipse.jface.viewer.ContentViewer#setLabelProvider(IBaseLabelProvider)<b>. 
+      </b></tt><b>Important:</b>&nbsp; Once a label provider has been set into 
+      a viewer, that viewer takes over ownership of the instance.&nbsp; A label 
+      provider instance must never be passed to another viewer, or have any of 
+      its methods invoked, once it has been allocated to a viewer.</li>
+    <li> <b>Disposal:</b>&nbsp; The viewer is responsible for invoking dispose() 
+      on its label provider when the underlying widget is closed.&nbsp; This <tt>dispose()</tt> 
+      method must dispose of any images that were ever dispensed by that label 
+      provider instance.</li>
+  </ul>
+  Now that you have an idea of how label providers are created and used, let's 
+  take a look at how to implement one for your viewer.&nbsp; <tt>ILabelProvider</tt> 
+  defines the following method for creating images: 
+  
+<pre>public Image getImage(Object object);</pre>
+<p>This method is called by the viewer framework for each item in the viewer. 
+    As a silly example, let's say you have a fruit view that wants to display 
+    various fruits. Your label provider might look as follows: 
+  <p><tt>public class FruitLabelProvider extends LabelProvider {</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; private Image appleImage = new Image(…);</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; private Image kiwiImage = new Image(…);</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; public Image getImage(Object object) {</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (object.getClass() == Apple.class) 
+    {</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 
+    appleImage;</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (object.getClass() == Kiwi.class) 
+    {</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 
+    kiwiImage;</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return null;</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; }</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; public String getLabel(Object o) {</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //return appropriate labels 
+    for the various fruits</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; }</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; public void dispose() {</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; appleImage.dispose();</tt> 
+    <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; appleImage = null;</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; kiwiImage.dispose();</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; kiwiImage = null;</tt> <br>
+    <tt>&nbsp;&nbsp;&nbsp; }</tt> <br>
+    <tt>}</tt> 
+  <p>Some interesting things to note about this label provider: 
+  <ul>
+    <li> If it failed to find an appropriate image, it just returned null. This 
+      is allowed by the spec, and it also means your code won't blow up if you 
+      throw in some extra fruits later on. When dealing with images, its generally 
+      better to have no image than for your code to fail.</li>
+    <li> The images were disposed in the label provider's dispose method. This 
+      is VERY IMPORTANT! Anywhere an SWT Image is defined, there must be corresponding 
+      code to dispose the image. Even though this is Java, you can't rely on the 
+      garbage collector to free up unused images.</li>
+    
+  <li> The class extended LabelProvider rather than implementing the interface 
+    ILabelProvider directly. This is handy because it means you don't have to 
+    implement the methods on ILabelProvider for which you aren't interested.</li>
+  </ul>
+  <h2> The ImageRegistry</h2>
+  The <tt>ImageRegistry</tt> is only intended to be used for Images that appear 
+  frequently (and in large numbers) in the UI. Since these high-use images need 
+  to be shared, they cannot be disposed by those using them. For this reason, 
+  the <tt>ImageRegistry</tt> is provided to automatically manage these images, 
+  and to dispose of them when the plug-in is shutdown. Many of the images used 
+  by a plug-in should not be placed in the registry, since OS limitations on the 
+  number of images in memory can easily be reached. Lower-frequency images should 
+  instead be managed by having a table of <tt>ImageDescriptor</tt> instances in 
+  your plug-in, and to create new images each time they are needed from the information 
+  in the table of descriptors. 
+  <p>The easiest way to use an <tt>ImageRegistry</tt> in your plug-in is to make 
+    your <tt>Plugin</tt> class a subclass of <tt>org.eclipse.ui.plugin.AbstractUIPlugin</tt>.&nbsp; 
+    This class creates an <tt>ImageRegistry</tt> automatically (one per plug-in 
+    instance), if requested using the <tt>getImageRegistry()</tt> method.&nbsp; 
+    This registry can then be populated with ImageDescriptors in your plug-in 
+    by overriding the <tt>initializeImageRegistry(ImageRegistry)</tt> method.&nbsp; 
+    The registry will then lazily generate and manage SWT images as they are requested.&nbsp; 
+    The registry knows how to dispose of itself when the UI shuts down. 
+  <p>It is possible to create instances of <tt>ImageRegistry</tt> manually, without 
+    using the <tt>AbstractUIPlugin</tt>'s mechanism. However, this should be done 
+    with caution.&nbsp; An <tt>ImageRegistry</tt>, once created, cannot be closed 
+    until the whole UI shuts down.&nbsp; They should only be created and used 
+    if you genuinely have need for images that last for the whole lifetime of 
+    your plug-in. 
+  
+<h2> Using Global Images Provided by Other Plug-ins</h2>
+  Some plug-ins may expose their global images so that other plug-ins can make 
+use of them.&nbsp; Not only does this improve efficiency by allowing a single 
+Image instance to be used across several plugin-ins, it also helps to provided 
+a consistent and integrated feel to the workbench.&nbsp; If a file, folder or 
+bookmark looked different form plugin-in to plug-in it would result in a confusing 
+experience for end-users. 
+<p>The technique used for making Images available in a plug-in's API may vary 
+  between plug-ins.&nbsp; The Platform UI provides an interface called <tt>org.eclipse.ui.ISharedImages</tt>, 
+  accessible from the workbench.&nbsp; This interface supplies images and image 
+  descriptors corresponding to a set of keys defined in ISharedImages.&nbsp; See 
+  the JavaDoc for that class for descriptions of all the available methods.&nbsp; 
+  To give an example, say you want to obtain the image for a file object.&nbsp; 
+  You would invoke the following: 
+<p><tt>PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_FILE);</tt> 
+  <p>The workbench is also accessible from <tt>AbstractUIPlugin</tt>, which your 
+    plug-in class will typically subclass.&nbsp; Other plug-ins use a similar 
+    approach for sharing their images.&nbsp; For example, the Java Development 
+    Tooling supplies <tt>org.eclipse.jdt.ui.SharedImages</tt> in its API. 
+  <p><b>Important: </b>Images provided by these APIs are shared, which means you 
+    <b>must not </b>dispose of them.&nbsp; Again, following the general rule, 
+    since you didn't create the image, its not your responsibility to dispose 
+    of it. 
+  <p>If your plug-in defines images that may be useful to others, you may want 
+    to use a similar approach to make them available in your API.&nbsp; Keep in 
+    mind that the number of SWT Images shared by your plugin should be small, 
+    since these images will have to stay around for the lifetime of your plugin-in. 
+  <h2> Where Else Can I Look For Information About Images?</h2>
+  If this article has left you scratching your head, don't worry.&nbsp; Eclipse 
+has many layers of complexity, and it can take some time to wrap your head around 
+the issues involved.&nbsp; The best thing to do is start with one of the examples, 
+such as the readme example, and see what it's doing.&nbsp; The extension point 
+documentation is an excellent place to learn about the various ways the base UI 
+can be extended.&nbsp; Also, the entire Platform has extensive JavaDoc that describes 
+each class and method in detail, which makes it easy to just dive in and starting 
+learning how it all works.&nbsp; And of course, the <a href="http://www.eclipsecorner.org">Eclipse 
+Corner</a> forums can be used to pose questions and get answers from experienced 
+Eclipse developers. 
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+<p><small>Microsoft, Windows, Windows NT, and the Windows logo are trademarks of Microsoft Corporation in the United States, other countries, or both.</small></p>
+</body>
+</html>

@@ -1,0 +1,918 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<!-- ======================================================== -->
+<!-- = Java Sourcecode to HTML automatically converted code = -->
+<!-- =   Java2Html Converter V4.1 2004 by Markus Gebhard  markus@jave.de   = -->
+<!-- =     Further information: http://www.java2html.de     = -->
+<!-- xhtml format used, bugs in 4.1 fixed by hand/ebb -->
+<head>
+<title>Rich Client Platform</title>
+<link href="../default_style.css" rel="stylesheet">
+
+<style type="text/css">
+td.java, td.java-ln {vertical-align:top;}
+tt.java, tt.java-ln, pre.java, pre.java-ln {line-height:1em; margin-bottom:0em;}
+td.java-ln { text-align:right; }
+tt.java-ln, pre.java-ln { color:#888888 }
+/* UNDEFINED       */ font.java90  { font-size: 10pt; color:#ff6100; }
+/* CODE            */ font.java10  { font-size: 10pt; color:#000000; }
+/* CODE_KEYWORD    */ font.java4  { font-size: 10pt; color:#7f0055; font-weight:bold; }
+/* CODE_TYPE       */ font.java9  { font-size: 10pt; color:#7f0055;}
+/* QUOTE           */ font.java5  { font-size: 10pt; color:#2a00ff; }
+/* COMMENT_LINE    */ font.java3  { font-size: 10pt; color:#3f7f5f; font-style:italic; }
+/* COMMENT_BLOCK   */ font.java2  { font-size: 10pt; color:#3f7f5f; font-style:italic; }
+/* COMMENT_JAVADOC */ font.java14  { font-size: 10pt; color:#3f5fbf; font-style:italic; }
+/* COMMENT_KEYWORD */ font.java11  { font-size: 10pt; color:#7f9fbf; font-style:italic; font-weight:bold; }
+/* EMPTY           */ font.java99  {}
+/* NUM_CONSTANT    */ font.java910 { font-size: 10pt; color:#990000; }
+/* CHAR_CONSTANT   */ font.java911 { font-size: 10pt; color:#990000; }
+/* PARENTHESIS     */ font.java8 { font-size: 10pt; color:#000000; font-style:bold; }
+</style>
+</head>
+
+<body>
+
+<div align="right"><font face="Times New Roman, Times, serif" size="2">Copyright
+© 2004-2005 Ed Burnette.</font>
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+	<tbody>
+		<tr>
+			<td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b><font
+				face="Arial,Helvetica"><font color="#ffffff">Eclipse Article</font></font></b></td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<div align="left">
+<h1 title="RCP Tutorial"><img src="../images/Idea.jpg" align="middle"
+	width="120" height="86" alt=""></h1>
+</div>
+<h1 align="center">Rich Client Tutorial Part 2</h1>
+<p class="summary">The Rich Client Platform (RCP) allows you to build
+Java applications that can compete with native applications on any
+platform. Part 1 of the tutorial introduced you to the platform and the
+steps used to build the smallest possible RCP program. In part 2 we'll
+look at what we did in more detail and introduce some of the
+configuration classes that let you take control of much of the layout
+and functionality of an RCP application. This part has been updated for
+Eclipse 3.1.</p>
+<p><b>By Ed Burnette, SAS</b><br>
+<font size="-1">August 9, 2004 (Updated November 21, 2005 for Eclipse
+3.1)<br>
+</font></p>
+<hr width="100%">
+
+<h2>Introduction</h2>
+<p>In early versions of Eclipse, many functions of the IDE were
+hard-wired into the code. These included the name and location of the
+File menu, the title of the Workbench Window, and the existence of the
+status bar. This was fine for the IDE but when people started to use
+Eclipse as a basis for non-IDE programs, sometimes these things didn't
+make sense. Although all the source code was provided, it was
+inconvenient to find the right places that had to be changed.</p>
+<p>So, beginning in Eclipse 3.0, the designers refactored the API to
+make these and other hard-wired aspects of the user interface
+controllable through public API. Subsequent releases have fine tuned
+that API and provided tooling in the Plug-in Development Environment
+(PDE) to lower the barriers to getting started using it. However, you'll
+eventually need to look behind the PDE wizards and editors to really
+understand what is going on.</p>
+<p>In this part we'll examine the code and configuration files created
+in Part 1 of the tutorial. To keep the parts separate I've recreated the
+examples for each part under a different name. All the sample code for
+Part 2 may be found in the <a href="part2.zip">part2.zip archive file</a>.
+</p>
+
+<p><img src="../images/note.gif" alt="Note: " width="62" height="13"> If
+you're following along with this tutorial in Eclipse and you're thinking
+of just renaming your old project, I don't recommend it. In Eclipse 3.1,
+Refactor &gt; Rename does not work well on plug-in projects due to all
+the internal references in XML files and strings that don't participate.
+Hopefully this will be fixed in a future release.</p>
+
+<p>Before we go any further let's clear up some possible confusion about
+the relationship between Applications, Workbenches, and Workbench
+Windows.</p>
+
+<h2>Applications, Workbenches, and Workbench Windows</h2>
+<p>The Application is a class you create that acts as your RCP program's
+main routine. You can think of it as the controller for the program.
+Just like the controller in a Model2 architecture, it is short and sweet
+and doesn't change significantly for different projects. All it does is
+create a Workbench and attach another class called a Workbench Advisor
+to it (Workbench Advisors will be covered more later).</p>
+<p>The Workbench is declared and maintained for you as part of the RCP
+framework. There is only one Workbench but it can have more than one
+visible top-level Workbench Window. For example, in the Eclipse IDE,
+when you first start Eclipse you will see one Workbench Window, but if
+you select <b>Window &gt; New Window</b> a second window pops up -- two
+Workbench Windows, but only one Workbench.</p>
+
+<p>Ok, now that that's out of the way, let's see what those PDE wizards
+did for us, starting with the plug-in manifest.</p>
+
+<h2>Plug-in manifest</h2>
+<p>The plug-in manifest ties all the code and resources together. When
+you first create a plug-in, Eclipse will create and open the manifest
+for you automatically. The manifest is split into two files: MANIFEST.MF
+and plugin.xml. PDE provides a fancy editor to modify the options stored
+in these files (see Figure 1) but also allows you to edit the source
+directly.</p>
+
+<img src="images/manifest-editor-overview.png" alt="">
+<p><b> Figure 1. The plug-in manifest editor provides a single interface
+for editing the manifest and related files. The tabs along the bottom of
+the editor access all the different sections in the GUI or the raw text
+files.</b></p>
+
+
+<h3>MANIFEST.MF</h3>
+<p>The OSGi bundle manifest is stored in MANIFEST.MF. OSGi is the name
+of a standard that Eclipse uses for dynamically loading plug-ins (see
+refererences). Listing 1 shows the OSGi bundle manifest generated by the
+plug-in wizard. Everything in this file can be edited by the Manifest
+editor, so there should be no need to edit it by hand. However if you
+need to, just double-click it in the Package Explorer to bring up the
+Manifest editor, then click on the MANIFEST.MF tab in the editor to see
+and modify the source.</p>
+
+<p><img src="../images/note.gif" alt="Note: " width="62" height="13">
+For backwards compatability with Eclipse 2.1, Eclipse will recognize and
+load plug-ins that do not use MANIFEST.MF. However, this incurs a small
+performance penalty and is not recommended for plug-ins targeting
+Eclipse 3.0 and later.</p>
+
+<p><b>Listing 1. MANIFEST.MF </b></p>
+
+<pre>
+Manifest-Version: <font class="java5">1.0</font>
+Bundle-ManifestVersion: <font class="java5">2</font>
+Bundle-Name: <font class="java5">Part2 Plug-in</font>
+Bundle-SymbolicName: <font class="java5">org.eclipse.ui.tutorials.rcp.part2; singleton:=true</font>
+Bundle-Version: <font class="java5">1.0.0</font>
+Bundle-Activator: <font class="java5">org.eclipse.ui.tutorials.rcp.part2.Part2Plugin</font>
+Bundle-Localization: <font class="java5">plugin</font>
+Require-Bundle: <font class="java5">org.eclipse.ui,
+ org.eclipse.core.runtime</font>
+Eclipse-AutoStart: <font class="java5">true</font>
+</pre>
+
+<h3>plugin.xml</h3>
+<p>The Eclipse extension manifest is called plugin.xml. It's used for
+defining and using Eclipse extension points, so if you're not using
+extension points then this file may be omitted. Extension points are the
+fundamental way that Eclipse plug-ins are tied together so if you're not
+familiar with them see one of the articles in the Reference section.
+Listing 2 shows the plugin.xml file created by the PDE wizard.</p>
+
+<p><b>Listing 2. plugin.xml </b></p>
+<pre>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;?eclipse version="3.0"?&gt;
+&lt;plugin&gt;
+
+   &lt;extension
+         id=<font class="java5">"application"</font>
+         point=<font class="java5">"org.eclipse.core.runtime.applications"</font>&gt;
+      &lt;application&gt;
+         &lt;run
+               class=<font class="java5">"org.eclipse.ui.tutorials.rcp.part2.Application"</font>&gt;
+         &lt;/run&gt;
+      &lt;/application&gt;
+   &lt;/extension&gt;
+   &lt;extension
+         point=<font class="java5">"org.eclipse.ui.perspectives"</font>&gt;
+      &lt;perspective
+            name=<font class="java5">"Part2 Perspective"</font>
+            class=<font class="java5">"org.eclipse.ui.tutorials.rcp.part2.Perspective"</font>
+            id=<font class="java5">"org.eclipse.ui.tutorials.rcp.part2.perspective"</font>&gt;
+      &lt;/perspective&gt;
+   &lt;/extension&gt;
+   &lt;extension
+         id=<font class="java5">"product"</font>
+         point=<font class="java5">"org.eclipse.core.runtime.products"</font>&gt;
+      &lt;product
+            application=<font class="java5">"org.eclipse.ui.tutorials.rcp.part2.application"</font>
+            name=<font class="java5">"RCP Tutorial 2"</font>/&gt;
+   &lt;/extension&gt;
+
+&lt;/plugin&gt;
+</pre>
+
+<p>The class name of the main program is defined with the <code>org.eclipse.core.runtime.applications</code>
+extension.</p>
+<p><img src="../images/note.gif" alt="Note: " width="62" height="13">
+Although it's not an absolute requirement, I recommend keeping your id's
+and your class names the same except possibly for case. For historical
+reasons, Eclipse prepends the plug-in's id to the id of your top level
+plug-in elements (like <code>extension</code>). For example, even though
+the plugin.xml in listing 2 says <code>id="application"</code>, the
+fully qualified id for that extension is <code>org.eclipse.ui.tutorials.rcp.part2.application</code>.
+Since the perspective's id is written on a sub-element (<code>perspective</code>)
+it has to be spelled out completely in the manifest (<code>org.eclipse.ui.tutorials.rcp.part2.perspective</code>).
+By convention only, package names and ids are lower case and class names
+
+
+
+
+
+
+
+<h2>The main program</h2>
+<p>The <code>org.eclipse.core.runtime.applications</code> extension
+tells the Eclipse runtime the name of your main program. This is a class
+that implements <code>IPlatformRunnable</code> and a <code>run()</code>
+method. Listing 3 shows the simple implementation supplied by the
+plug-in wizard.</p>
+
+<p><b>Listing 3. Application.java </b></p>
+
+<tt class="java"><font class="java4">package </font><font class="java10">org.eclipse.ui.tutorials.rcp.part2;<br />
+<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.core.runtime.IPlatformRunnable;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.swt.widgets.Display;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.PlatformUI;<br />
+<br />
+</font><font class="java14">/**<br />
+* This class controls all aspects of the application's execution<br />
+*/<br />
+</font><font class="java4">public class </font><font class="java10">Application
+</font><font class="java4">implements </font><font class="java10">IPlatformRunnable
+</font><font class="java8">{<br />
+<br />
+&#xA0; </font><font class="java2">/* (non-Javadoc)<br />
+&#xA0;&#xA0; * @see
+org.eclipse.core.runtime.IPlatformRunnable#run(java.lang.Object)<br />
+&#xA0;&#xA0; */<br />
+&#xA0; </font><font class="java4">public </font><font class="java10">Object
+run</font><font class="java8">(</font><font class="java10">Object args</font><font
+	class="java8">) </font><font class="java4">throws </font><font
+	class="java10">Exception </font><font class="java8">{<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java10">Display display =
+PlatformUI.createDisplay</font><font class="java8">()</font><font
+	class="java10">;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">try </font><font
+	class="java8">{<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java9">int </font><font
+	class="java10">returnCode = PlatformUI.createAndRunWorkbench</font><font
+	class="java8">(</font><font class="java10">display, </font><font
+	class="java4">new </font><font class="java10">ApplicationWorkbenchAdvisor</font><font
+	class="java8">())</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java4">if </font><font
+	class="java8">(</font><font class="java10">returnCode ==
+PlatformUI.RETURN_RESTART</font><font class="java8">) {<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java4">return
+</font><font class="java10">IPlatformRunnable.EXIT_RESTART;<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java8">}<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java4">return </font><font
+	class="java10">IPlatformRunnable.EXIT_OK;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java8">} </font><font
+	class="java4">finally </font><font class="java8">{<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java10">display.dispose</font><font
+	class="java8">()</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java8">}<br />
+&#xA0; }<br />
+}</font></tt>
+
+<h2>The default perspective</h2>
+
+<p>A Perspective is a set of visible views, editors, and menus including
+their positions and sizes. In an RCP program you must define at least
+one perspective and make it the default. Perspectives are created by
+implementing <code>IPerspectiveFactory</code> using the class name
+referred to by the <code>org.eclipse.ui.perspectives</code> extension.
+See Listing 4 for the implementation provided by the plug-in wizard. The
+important part of this interface is the <code>createInitialLayout()</code>
+method where you position and open any views and/or editors you'd like
+the user to start with. So far in this example we haven't created any
+views so it's a pretty boring perspective.</p>
+
+<p><b>Listing 4. Perspective.java </b></p>
+
+<tt class="java"><font class="java4">package </font><font class="java10">org.eclipse.ui.tutorials.rcp.part2;<br />
+<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.IPageLayout;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.IPerspectiveFactory;<br />
+<br />
+</font><font class="java4">public class </font><font class="java10">Perspective
+</font><font class="java4">implements </font><font class="java10">IPerspectiveFactory
+</font><font class="java8">{<br />
+<br />
+&#xA0; </font><font class="java4">public </font><font class="java9">void
+</font><font class="java10">createInitialLayout</font><font
+	class="java8">(</font><font class="java10">IPageLayout layout</font><font
+	class="java8">) {<br />
+&#xA0; }<br />
+}</font></tt>
+
+<h2>The Advisor classes</h2>
+<p>The main program referenced a class called <code>ApplicationWorkbenchAdvisor</code>.
+This is one of three Advisor classes that you use to configure all
+aspects of the Workbench such as the title, menu bars, and so on. <b>These
+are the most important classes for an RCP developer to understand.</b>
+You extend the base version of the class, for example <code>WorkbenchAdvisor</code>,
+in your RCP application and override one or more of the methods to set
+whatever options you want. Let's examine these classes now in more
+detail.</p>
+
+<h3>Workbench Advisor</h3>
+<p>Methods in this class are called from the platform to notify you at
+every point in the lifecycle of the Workbench. They also provide a way
+to handle exceptions in the event loop, and provide important parameters
+to the Workbench such as the default perspective. With the exception of
+<code>createWorkbenchWindowAdvisor()</code> and <code>getInitialWindowPerspectiveId()</code>,
+the methods on <code>WorkbenchAdvisor</code> do not have to be
+overridden. Listing 5 shows the implementation that was provided by the
+plug-in wizard.</p>
+
+<p><b>Listing 5. ApplicationWorkbenchAdvisor.java </b></p>
+
+<tt class="java"><font class="java4">package </font><font class="java10">org.eclipse.ui.tutorials.rcp.part2;<br />
+<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.IWorkbenchWindowConfigurer;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.WorkbenchAdvisor;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.WorkbenchWindowAdvisor;<br />
+<br />
+</font><font class="java4">public class </font><font class="java10">ApplicationWorkbenchAdvisor
+</font><font class="java4">extends </font><font class="java10">WorkbenchAdvisor
+</font><font class="java8">{<br />
+<br />
+&#xA0; </font><font class="java4">private static final </font><font
+	class="java10">String PERSPECTIVE_ID = </font><font class="java5">&#34;org.eclipse.ui.tutorials.rcp.part2.perspective&#34;</font><font
+	class="java10">;<br />
+<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">public </font><font
+	class="java10">WorkbenchWindowAdvisor createWorkbenchWindowAdvisor</font><font
+	class="java8">(</font><font class="java10">IWorkbenchWindowConfigurer
+configurer</font><font class="java8">) {<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java4">return
+new </font><font class="java10">ApplicationWorkbenchWindowAdvisor</font><font
+	class="java8">(</font><font class="java10">configurer</font><font
+	class="java8">)</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java8">}<br />
+<br />
+&#xA0; </font><font class="java4">public </font><font class="java10">String
+getInitialWindowPerspectiveId</font><font class="java8">() {<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">return </font><font
+	class="java10">PERSPECTIVE_ID;<br />
+&#xA0; </font><font class="java8">}<br />
+}</font></tt>
+
+<p><img src="../images/note.gif" alt="Note: " width="62" height="13">
+Why not an interface? You'll notice that <code>WorkbenchAdvisor</code>
+is an abstract class. For the most part, Eclipse APIs shun abstract
+classes in favor of interfaces and base classes that implement those
+interfaces. In this case, the designers intend for <code>WorkbenchAdvisor</code>
+to <i>always</i> be implemented by the RCP application, and the base
+class doesn't contain any significant functionality. Also it is very
+likely that new methods will need to be added to the base class in the
+future (something that is difficult using interfaces). So this was a
+deliberate design choice. See the article on evolving Java APIs in the
+reference section for more tips.</p>
+
+
+<h4>Workbench lifecycle hooks</h4>
+
+<p>The Workbench Advisor class has several methods that are called at
+defined points in the Workbench's lifecycle (see Table 1). By overriding
+these you can run whatever code you want at these points.</p>
+
+<p><b>Table 1. Workbench lifecycle hooks provided by <code>WorkbenchAdvisor</code>.
+</b></p>
+<table border="1">
+	<tr>
+		<th>Method</th>
+		<th>Description</th>
+		<th>Parameter(s)</th>
+	</tr>
+	<tr>
+		<td>initialize</td>
+		<td>Called first to perform any setup such as parsing the command
+		line, registering adapters, declaring images, etc..</td>
+		<td><code>IWorkbenchConfigurer</code></td>
+	</tr>
+	<tr>
+		<td>preStartup</td>
+		<td>Called after initialization but before the first window is opened.
+		May be used to set options affecting which editors and views are
+		initially opened.</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>postStartup</td>
+		<td>Called after all windows have been opened or restored, but before
+		the event loop starts. It can be used to start automatic processes and
+		to open tips or other windows.</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>preShutdown</td>
+		<td>Called after the event loop has terminated but before any windows
+		have been closed.</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>postShutdown</td>
+		<td>Called after all windows are closed during Workbench shutdown.
+		This can be used to save the current application state and clean up
+		anything created by <code>initialize</code>.</td>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+
+
+<h4>Event loop hooks</h4>
+
+<p>The event loop is the code that is running most of the time during
+the life of the Workbench. It handles all user inputs and dispatches
+them to the right listeners. RCP provides a couple of hooks to handle
+crashes and perform work during idle time (see Table 2). Note however
+that the Jobs interface (see References) is a better way of performing
+long running work than this idle hook.</p>
+
+<p><b>Table 2. Event loop hooks provided by <code>WorkbenchAdvisor</code>.
+</b></p>
+<table border="1">
+	<tr>
+		<th>Method</th>
+		<th>Description</th>
+		<th>Parameter(s)</th>
+	</tr>
+	<tr>
+		<td>eventLoopException</td>
+		<td>Called if there is an unhandled exception in the event loop. The
+		default implementation will log the error.</td>
+		<td><code>Throwable</code></td>
+	</tr>
+	<tr>
+		<td>eventLoopIdle</td>
+		<td>Called when the event loop has nothing to do.</td>
+		<td><code>Display</code></td>
+	</tr>
+</table>
+
+<h4>Information getting hooks</h4>
+<p>Next, there are few methods you can implement that the platform will
+call to get information about your application (see Table 3). The most
+important one (and the only one that is not optional) is <code>getInitialWindowPerspectiveId</code>.
+We used this in Listing 5 to return the id of the starting perspective.</p>
+
+<p><b>Table 3. Information request methods you can override in <code>WorkbenchAdvisor</code>.
+</b></p>
+<table border="1">
+	<tr>
+		<th>Method</th>
+		<th>Description</th>
+		<th>Parameter(s)</th>
+	</tr>
+	<tr>
+		<td>getDefaultPageInput</td>
+		<td>Return the default input for new workbench pages. Defaults to
+		null.</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>getInitialWindowPerspectiveId</td>
+		<td>Return the initial perspective used for new workbench windows.
+		This is a required function that has no default.</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>getMainPreferencePageId</td>
+		<td>Return the preference page that should be displayed first.
+		Defaults to null, meaning the pages should be arranged alphabetically.
+		</td>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+
+<h4>Advanced configuration</h4>
+<p>The <code>WorkbenchAdvisor</code> events above should be sufficient
+for most applications, but just in case, RCP provides another method to
+take complete control of how your application windows and controls are
+created. It's listed in Table 4 for completeness but I don't expect many
+programs will need it.</p>
+
+<p><b>Table 4. Advanced methods in <code>org.eclipse.ui.application.WorkbenchAdvisor</code>.
+</b></p>
+<table border="1">
+	<tr>
+		<th>Method</th>
+		<th>Description</th>
+		<th>Parameter(s)</th>
+	</tr>
+	<tr>
+		<td>openWindows</td>
+		<td>Open all Workbench windows on startup. The default implementation
+		tries to restore the previously saved workbench state.</td>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+
+
+<h3>Workbench Window Advisor</h3>
+<p>This class is used to control the status line, toolbar, title, window
+size, and other things you'll almost certainly want to customize. You
+can also use it to hook into all the various lifecycle events of the
+Workbench Windows. Listing 6 shows the implementation provided by the
+plug-in wizard.</p>
+
+<p><b>Listing 6. ApplicationWorkbenchWindowAdvisor.java </b></p>
+
+<tt class="java"><font class="java4">package </font><font class="java10">org.eclipse.ui.tutorials.rcp.part2;<br />
+<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.swt.graphics.Point;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.ActionBarAdvisor;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.IActionBarConfigurer;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.IWorkbenchWindowConfigurer;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.WorkbenchWindowAdvisor;<br />
+<br />
+</font><font class="java4">public class </font><font class="java10">ApplicationWorkbenchWindowAdvisor
+</font><font class="java4">extends </font><font class="java10">WorkbenchWindowAdvisor
+</font><font class="java8">{<br />
+<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">public </font><font
+	class="java10">ApplicationWorkbenchWindowAdvisor</font><font
+	class="java8">(</font><font class="java10">IWorkbenchWindowConfigurer
+configurer</font><font class="java8">) {<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java4">super</font><font
+	class="java8">(</font><font class="java10">configurer</font><font
+	class="java8">)</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java8">}<br />
+<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">public </font><font
+	class="java10">ActionBarAdvisor createActionBarAdvisor</font><font
+	class="java8">(</font><font class="java10">IActionBarConfigurer
+configurer</font><font class="java8">) {<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java4">return
+new </font><font class="java10">ApplicationActionBarAdvisor</font><font
+	class="java8">(</font><font class="java10">configurer</font><font
+	class="java8">)</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java8">}<br />
+&#xA0;&#xA0;&#xA0; <br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">public </font><font
+	class="java9">void </font><font class="java10">preWindowOpen</font><font
+	class="java8">() {<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java10">IWorkbenchWindowConfigurer
+configurer = getWindowConfigurer</font><font class="java8">()</font><font
+	class="java10">;<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; configurer.setInitialSize</font><font
+	class="java8">(</font><font class="java4">new </font><font
+	class="java10">Point</font><font class="java8">(</font><font
+	class="java7">400</font><font class="java10">, </font><font
+	class="java7">300</font><font class="java8">))</font><font
+	class="java10">;<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; configurer.setShowCoolBar</font><font
+	class="java8">(</font><font class="java4">false</font><font
+	class="java8">)</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; configurer.setShowStatusLine</font><font
+	class="java8">(</font><font class="java4">false</font><font
+	class="java8">)</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; configurer.setTitle</font><font
+	class="java8">(</font><font class="java5">&#34;Hello RCP&#34;</font><font
+	class="java8">)</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java8">}<br />
+}</font></tt>
+
+<p>Methods on WorkbenchWindowAdvisor (see Table 5 and Table 6) will all
+need access to a Configurer interface (in this case, <code>IWorkbenchWindowConfigurer</code>)
+in order to do anything so they're expected to call <code>getWindowConfigurer()</code>
+to fetch it. You call methods on the Configurer interfaces to actually
+change the options. These interfaces are not covered in any detail in
+this tutorial but you can refer to their Javadoc for more information.</p>
+
+<p><b>Table 5. Workbench window lifecycle hooks provided by <code>WorkbenchWindowAdvisor</code>.
+</b></p>
+<table border="1">
+	<tr>
+		<th>Method</th>
+		<th>Description</th>
+		<th>Parameter(s)</th>
+	</tr>
+	<tr>
+		<td>preWindowOpen</td>
+		<td>Called in the constructor of the Workbench Window. Use this method
+		to set options such as whether or not the window will have a menu bar.
+		However none of the window's widgets have been created yet so they
+		can't be referenced in this method.</td>
+		<td><code></code></td>
+	</tr>
+	<tr>
+		<td>postWindowRestore</td>
+		<td>Optionally called for cases when a window has been restored from
+		saved state but before it is opened.</td>
+		<td><code></code></td>
+	</tr>
+	<tr>
+		<td>postWindowCreate</td>
+		<td>Called after a window has been restored from saved state or
+		created from scratch but before it is opened.</td>
+		<td><code></code></td>
+	</tr>
+	<tr>
+		<td>openIntro</td>
+		<td>Called immediately before a window is opened in order to create
+		the Intro component (if any).</td>
+		<td><code></code></td>
+	</tr>
+	<tr>
+		<td>postWindowOpen</td>
+		<td>Called right after the Workbench window is opened. Can be used to
+		tweak any of the window's widgets, for example to set a title or
+		change its size.</td>
+		<td><code></code></td>
+	</tr>
+	<tr>
+		<td>preWindowShellClose</td>
+		<td>Called before the Workbench window is closed (technically, before
+		its shell is closed). This is the only function that can veto the
+		close, so it's a good place for an "Are you sure" kind of dialog.</td>
+		<td><code></code></td>
+	</tr>
+	<tr>
+		<td>postWindowClose</td>
+		<td>Called after the Workbench window is closed. Can be used to clean
+		up anything created by <code>preWindowOpen</code>.</td>
+		<td><code></code></td>
+	</tr>
+</table>
+
+
+<p><b>Table 6. Advanced methods in <code>WorkbenchWindowAdvisor</code>.
+</b></p>
+<table border="1">
+	<tr>
+		<th>Method</th>
+		<th>Description</th>
+		<th>Parameter(s)</th>
+	</tr>
+	<tr>
+		<td>createWindowContents</td>
+		<td>Creates the contents of one window. Override this method to define
+		custom contents and layout.</td>
+		<td><code>Shell</code></td>
+	</tr>
+	<tr>
+		<td>createEmptyWindowContents</td>
+		<td>Like <code>createWindowContents</code>, but used when the window
+		has no open pages. Override this method to show something other than
+		the default window background.</td>
+		<td><code>Composite</code></td>
+	</tr>
+</table>
+
+<h3>ActionBar Advisor</h3>
+<p>In Eclipse jargon, "action bar" is a catch-all term for menus,
+toolbars, and status bars. The ActionBar Advisor handles creating
+Actions within these locations. A plug-in can also contribute actions
+dynamically with its plugin.xml file. See Listing 7 for the
+implementation provided by the plug-in wizard and Table 7 for the
+methods.</p>
+
+<p><img src="../images/note.gif" alt="Note: " width="62" height="13">The
+whole action, command and keybinding system is a bit of a mess in
+Eclipse 3.1. For example you can't add combo boxes to action bars, and
+plugin.xml can't contribute actions to the status bar. Getting key
+bindings to work involves multiple steps. Hopefully this will be cleaned
+up in a future release.</p>
+
+<p><b>Listing 7. ApplicationActionBarAdvisor.java </b></p>
+
+<tt class="java"><font class="java4">package </font><font class="java10">org.eclipse.ui.tutorials.rcp.part2;<br />
+<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.jface.action.IMenuManager;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.IWorkbenchWindow;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.ActionBarAdvisor;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.application.IActionBarConfigurer;<br />
+<br />
+</font><font class="java4">public class </font><font class="java10">ApplicationActionBarAdvisor
+</font><font class="java4">extends </font><font class="java10">ActionBarAdvisor
+</font><font class="java8">{<br />
+<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">public </font><font
+	class="java10">ApplicationActionBarAdvisor</font><font class="java8">(</font><font
+	class="java10">IActionBarConfigurer configurer</font><font
+	class="java8">) {<br />
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </font><font class="java4">super</font><font
+	class="java8">(</font><font class="java10">configurer</font><font
+	class="java8">)</font><font class="java10">;<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java8">}<br />
+<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">protected </font><font
+	class="java9">void </font><font class="java10">makeActions</font><font
+	class="java8">(</font><font class="java10">IWorkbenchWindow window</font><font
+	class="java8">) {<br />
+&#xA0;&#xA0;&#xA0; }<br />
+<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">protected </font><font
+	class="java9">void </font><font class="java10">fillMenuBar</font><font
+	class="java8">(</font><font class="java10">IMenuManager menuBar</font><font
+	class="java8">) {<br />
+&#xA0;&#xA0;&#xA0; }<br />
+&#xA0;&#xA0;&#xA0; <br />
+}</font></tt>
+
+<p><b>Table 7. Methods you can override in <code>ActionBarAdvisor</code>.
+</b></p>
+<table border="1">
+	<tr>
+		<th>Method</th>
+		<th>Description</th>
+		<th>Parameter(s)</th>
+	</tr>
+	<tr>
+		<td>makeActions</td>
+		<td>Called to create the actions used in the fill methods.</td>
+		<td><code>IWorkbenchWindow</code></td>
+	</tr>
+	<tr>
+		<td>fillMenuBar</td>
+		<td>Called to fill the menu bar with the main menus for the window.</td>
+		<td><code>IMenuManager</code></td>
+	</tr>
+	<tr>
+		<td>fillCoolBar</td>
+		<td>Called to fill the cool bar with the main toolbars for the window.</td>
+		<td><code>ICoolBarManager</code></td>
+	</tr>
+	<tr>
+		<td>fillStatusLine</td>
+		<td>Called to fill the status line with the main status line
+		contributions for the window.</td>
+		<td><code>IStatusLineManager</code></td>
+	</tr>
+	<tr>
+		<td>isApplicationMenu</td>
+		<td>Return true if the menu is one of yours. OLE specific; see Javadoc
+		for details.</td>
+		<td><code>String</code></td>
+	</tr>
+
+</table>
+
+<h2>Plug-in class</h2>
+<p>The plug-in class is an optional singleton class that can be used to
+store global information for the plug-in. It's also a convenient place
+to put a few static utility functions used by other classes in the
+plug-in. See Listing 8 for the plug-in class that was created for us by
+the plug-in wizard.</p>
+
+<p><b>Listing 8. Part2Plugin.java </b></p>
+
+<tt class="java"><font class="java4">package </font><font class="java10">org.eclipse.ui.tutorials.rcp.part2;<br />
+<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.ui.plugin.*;<br />
+</font><font class="java4">import </font><font class="java10">org.eclipse.jface.resource.ImageDescriptor;<br />
+</font><font class="java4">import </font><font class="java10">org.osgi.framework.BundleContext;<br />
+<br />
+</font><font class="java14">/**<br />
+* The main plugin class to be used in the desktop.<br />
+*/<br />
+</font><font class="java4">public class </font><font class="java10">Part2Plugin
+</font><font class="java4">extends </font><font class="java10">AbstractUIPlugin
+</font><font class="java8">{<br />
+<br />
+&#xA0; </font><font class="java3">//The shared instance.<br />
+&#xA0; </font><font class="java4">private static </font><font
+	class="java10">Part2Plugin plugin;<br />
+&#xA0; <br />
+&#xA0; </font><font class="java14">/**<br />
+&#xA0;&#xA0; * The constructor.<br />
+&#xA0;&#xA0; */<br />
+&#xA0; </font><font class="java4">public </font><font class="java10">Part2Plugin</font><font
+	class="java8">() {<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java10">plugin = </font><font
+	class="java4">this</font><font class="java10">;<br />
+&#xA0; </font><font class="java8">}<br />
+<br />
+&#xA0; </font><font class="java14">/**<br />
+&#xA0;&#xA0; * This method is called upon plug-in activation<br />
+&#xA0;&#xA0; */<br />
+&#xA0; </font><font class="java4">public </font><font class="java9">void
+</font><font class="java10">start</font><font class="java8">(</font><font
+	class="java10">BundleContext context</font><font class="java8">) </font><font
+	class="java4">throws </font><font class="java10">Exception </font><font
+	class="java8">{<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">super</font><font
+	class="java10">.start</font><font class="java8">(</font><font
+	class="java10">context</font><font class="java8">)</font><font
+	class="java10">;<br />
+&#xA0; </font><font class="java8">}<br />
+<br />
+&#xA0; </font><font class="java14">/**<br />
+&#xA0;&#xA0; * This method is called when the plug-in is stopped<br />
+&#xA0;&#xA0; */<br />
+&#xA0; </font><font class="java4">public </font><font class="java9">void
+</font><font class="java10">stop</font><font class="java8">(</font><font
+	class="java10">BundleContext context</font><font class="java8">) </font><font
+	class="java4">throws </font><font class="java10">Exception </font><font
+	class="java8">{<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">super</font><font
+	class="java10">.stop</font><font class="java8">(</font><font
+	class="java10">context</font><font class="java8">)</font><font
+	class="java10">;<br />
+&#xA0;&#xA0;&#xA0; plugin = </font><font class="java4">null</font><font
+	class="java10">;<br />
+&#xA0; </font><font class="java8">}<br />
+<br />
+&#xA0; </font><font class="java14">/**<br />
+&#xA0;&#xA0; * Returns the shared instance.<br />
+&#xA0;&#xA0; */<br />
+&#xA0; </font><font class="java4">public static </font><font
+	class="java10">Part2Plugin getDefault</font><font class="java8">() {<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">return </font><font
+	class="java10">plugin;<br />
+&#xA0; </font><font class="java8">}<br />
+<br />
+&#xA0; </font><font class="java14">/**<br />
+&#xA0;&#xA0; * Returns an image descriptor for the image file at the
+given<br />
+&#xA0;&#xA0; * plug-in relative path.<br />
+&#xA0;&#xA0; *<br />
+&#xA0;&#xA0; * </font><font class="java11">@param </font><font
+	class="java14">path the path<br />
+&#xA0;&#xA0; * </font><font class="java11">@return </font><font
+	class="java14">the image descriptor<br />
+&#xA0;&#xA0; */<br />
+&#xA0; </font><font class="java4">public static </font><font
+	class="java10">ImageDescriptor getImageDescriptor</font><font
+	class="java8">(</font><font class="java10">String path</font><font
+	class="java8">) {<br />
+&#xA0;&#xA0;&#xA0; </font><font class="java4">return </font><font
+	class="java10">AbstractUIPlugin.imageDescriptorFromPlugin</font><font
+	class="java8">(</font><font class="java5">&#34;org.eclipse.ui.tutorials.rcp.part2&#34;</font><font
+	class="java10">, path</font><font class="java8">)</font><font
+	class="java10">;<br />
+&#xA0; </font><font class="java8">}<br />
+}</font></tt>
+
+<h2>Build properties</h2>
+<p>The build.properties file (see Listing 9) will be needed when
+exporting the application for others to use. In particular if your
+application needs any resources like icons they should be listed here in
+the <code>bin.includes</code> section. The Plug-in Manifest editor
+provides a convenient interface to modify this file that is less
+error-prone than modifying it by hand.</p>
+
+<p><b>Listing 9. build.properties </b></p>
+
+<pre>
+source.. = <font class="java5">src/</font>
+output.. = <font class="java5">bin/</font>
+bin.includes = <font class="java5">plugin.xml,\
+               META-INF/,\
+               .</font>
+</pre>
+
+<h2>Conclusion</h2>
+<p>In part 2 of this tutorial, we looked at some of the API of the Rich
+Client Platform that allows you to develop customized native-looking
+client-side Java programs. The next part will delve into branding and
+deploying your application so others can use it. All the sample code for
+this part is included in the <a href="part2.zip">part2.zip archive file</a>
+that accompanies this document.</p>
+
+<h2>References</h2>
+<p><a href="../Article-RCP-1/tutorial1.html"> RCP Tutorial Part 1</a><br>
+<a href="../Article-RCP-3/tutorial3.html"> RCP Tutorial Part 3</a><br>
+<a href="http://www.eclipse.org/rcp" target="_blank"> Eclipse Rich
+Client Platform</a><br>
+<a href="http://www.eclipse.org/equinox" target="_blank">The Equinox
+project (OSGi in Eclipse)</a><br>
+<a href="../Article-Internationalization/how2I18n.html" target="_blank">
+How to Internationalize your Eclipse Plug-in</a><br>
+<a
+	href="http://www.eclipse.org/articles/Article-PDE-does-plugins/PDE-intro.html">PDE
+Does Plug-ins</a><br>
+<a
+	href="http://www.eclipse.org/articles/Article-Plug-in-architecture/plugin_architecture.html">Notes
+on the Eclipse Plug-in Architecture</a><br>
+<a
+	href="http://www.eclipse.org/articles/Article-Concurrency/jobs-api.html">On
+the Job: The Eclipse Jobs API</a><br>
+<a
+	href="http://www.fawcette.com/javapro/2002_06/online/servlets_06_11_02/"
+	target="_blank">Almost All Java Web Apps Need Model 2 (introduction to
+the Model 2 architecture)</a><br>
+<a
+	href="http://www.eclipse.org/eclipse/development/java-api-evolution.html"
+	target="_blank"> Evolving Java-based APIs</a><br>
+</p>
+
+
+<p>To discuss or report problems in this article see <a
+	href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=104170">bug 104170</a>.</p>
+
+<p><small>IBM is trademark of International Business Machines
+Corporation in the United States, other countries, or both.</small></p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or
+registered trademarks of Sun Microsystems, Inc. in the United States,
+other countries, or both.</small></p>
+<p><small>Microsoft and Windows are trademarks of Microsoft Corporation
+in the United States, other countries, or both.</small></p>
+<p><small>Other company, product, and service names may be trademarks or
+service marks of others.</small></p>
+
+</body>
+
+</html>

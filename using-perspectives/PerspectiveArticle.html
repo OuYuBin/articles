@@ -1,0 +1,822 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Build">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (WinNT; I) [Netscape]">
+   <title>Using Perspectives in the Eclipse UI</title>
+<link rel="stylesheet" href="default_style.css">
+</head>
+<body>
+
+<div align=right>&nbsp; <font face="Times New Roman, Times, serif"><font size=-1>Copyright
+&copy; 2001 Object Technology International, Inc.</font></font></div>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<caption><TBODY>
+<br></TBODY></caption>
+
+<tr>
+<td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+Corner Article</font></font></b></td>
+</tr>
+</table>
+
+<h1>
+<img SRC="Idea.jpg" height=86 width=120 align=CENTER></h1>
+
+<center>
+<h1>
+Using Perspectives in the Eclipse UI</h1></center>
+
+<h3>
+Summary</h3>
+In the Eclipse Platform a Perspective determines the visible actions and
+views within a window.&nbsp; Perspectives also go well beyond this by providing
+mechanisms for task oriented interaction with resources in the Eclipse
+Platform, multi-tasking and information filtering.&nbsp; In this article
+the concepts behind perspectives are examined.&nbsp; The process for perspective
+definition, extension and instantiation will also be covered in detail
+with coding examples and sample scenarios.
+<p><b>By Dave Springgay, OTI</b>
+<br>August 27, 2001
+<h3>
+
+<hr WIDTH="100%"></h3>
+
+<h3>
+Introduction</h3>
+In the Eclipse Platform there are two main layers: the model layer and
+the user interface layer.&nbsp; The underlying model, known as the Workspace,
+is a collection of resources (projects, folders and files).&nbsp; The user
+interface, or Workbench, defines the presentation for those resources.&nbsp;
+Within the workbench the Perspective feature is used to control the visibility
+of items in the model and the user interface.&nbsp; It controls what you
+see in the model (which project, folder or files) and what you see in the
+user interface (which actions or views).&nbsp; These controls make it possible
+to navigate through and modify the workspace in a way which suits the user
+task.
+<p>In this article the perspective concept will be explored in detail.&nbsp;
+In particular, we'll look at how it relates to task oriented interaction,
+multi-tasking and information filtering.&nbsp; We'll also look at the techniques
+to define a new perspective, extend an existing perspective, or instantiate
+a new perspective at runtime within the workbench.&nbsp; Coding samples
+are provided for each technique.
+<h3>
+What is a Perspective?</h3>
+A perspective is a visual container for a set of views and editors (parts).&nbsp;
+These parts exist wholly within the perspective and are not shared.&nbsp;
+A perspective is also like a page within a book.&nbsp; It exists within
+a window along with any number of other perspectives and, like a page within
+a book, only one perspective is visible at any time.
+<p>Each perspective has an <i>input</i> and a <i>type</i>.&nbsp; The <i>input</i>
+attribute is used to define which resources are visible in the workspace
+and the
+<i>type</i> attribute is used to define which actions and views
+are visible in the user interface.&nbsp; This design is a reflection of
+3 key concepts.
+<br>&nbsp;
+<ol>
+<li>
+Information Filtering</li>
+
+<li>
+Task Oriented Interaction with Your Information</li>
+
+<li>
+Two is Always Better than One</li>
+</ol>
+
+<p><br>Each of these will be covered in detail below.&nbsp; But before
+getting into the details, let's explore the idea of input and type.
+<p>On startup the workbench will most likely consist of one window with
+one perspective.&nbsp; For instance, the window may contain a Resource
+perspective on the entire workspace.&nbsp; This perspective has<i> input
+= the Workspace</i> and <i>type = Resource</i>.&nbsp; If you select a project
+or folder in the Navigator you can open a new perspective by invoking Open
+Perspective > Java&trade; from the object context menu.&nbsp; This new perspective
+has a different input and type: <i>input = the Project</i> and <i>type
+= Java</i>.&nbsp; Now there are two perspectives.&nbsp; The visible resources
+in the second perspective are a subset of those in the first.&nbsp; Each
+perspective contains a set of views and editors which exist wholly within
+the perspective and are not shared with the other.&nbsp; These parts define
+the presentation for a shared, underlying model.
+<h4>
+Information Filtering</h4>
+In a large, real world project the Eclipse Workspace may contain hundreds
+or thousands of resources.&nbsp; For instance, consider the following project
+in Eclipse.&nbsp; It may be small, but this project represents a typical
+three tier B2C web application.&nbsp; There are three folders: ClientSide,
+MiddleTier and DatabaseServer.&nbsp; Each folder represents a different
+tier in the application.&nbsp; The files types in each folder are also
+different.
+<pre>WebApplicationProject
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ClientSide
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; index.html
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; link1.html
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image1.html
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MiddleTier
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; script1.jsp
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; script2.cgi
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; script3.perl
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Main.java
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DataBase.java
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DatabaseServer
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sqlScripts.script
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; serverConguration.config
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...</pre>
+The contents of this project are very typical of application development
+in the Internet age.&nbsp; No single language or technology can do it all,
+and software development involves the application of many technologies
+rather than just one.
+<p>An important tool for comprehension is information filtering.&nbsp;
+In other words, remove the irrelevant so you can see the relevant.&nbsp;
+In Eclipse this is performed in two ways, by using the inherent structure
+of the information (the resource tree) and the unstructured attributes
+of the information (file name, nature, resource type, etc.).&nbsp; For
+this discussion only the first style of information filtering is relevant.
+<p>In a large project the resources are usually structured within a hierarchy.&nbsp;
+The workspace contains many projects containing many folders containing
+many files.&nbsp; It's a tree, and each subtree within the whole defines
+a physical subset of information. This idea is the basis for information
+filtering within the workbench.&nbsp; The user can open a perspective on
+any resource subtree within the workspace.&nbsp; In the resulting perspective
+only the children of the subtree root are visible.&nbsp; The subtree root
+is known as the <i>input</i>.&nbsp; For example, if you open a perspective
+on MiddleTier within the WebApplicationProject only the children of MiddleTier
+are visible within the resulting perspective.&nbsp; The <i>input = MiddleTier</i>.
+<h4>
+Task Oriented Interaction with Your Information</h4>
+As a development platform Eclipse was designed to fulfill the needs of
+a large product development team, from product manager to content developer
+to product tester.&nbsp; It is fully extensible and may be configured with
+hundreds of action, wizard, view and editor extensions for any number of
+languages, tasks, roles, and phases within the development life cycle.&nbsp;
+In other words, it may contain a lot of junk you'll never use.&nbsp; To
+avoid the visual overload and confusion which would occur if everything
+was visible in the UI some mechanism is required to filter the user interface.
+<p>In Eclipse a task oriented approach was taken to filtering. Consider
+a Java developer.&nbsp; Within a single development cycle a Java developer
+may iterate through the following phases: Analysis and Design, Implementation,
+Debug, Testing and Documentation.&nbsp; In one phase the developer may
+use a UML modeling tool.&nbsp; In another you use a Problem Reporting tool.&nbsp;
+The time spent in each phase will vary but rapid transition between phases
+may occur several times a day.&nbsp; If we say that each phase is a "task"
+then it is possible to say there is rapid transition between tasks.&nbsp;
+In addition, the preferred way to look at resources in the workspace will
+change with the active task.
+<p>In Eclipse task orientation is embodied by perspective type.&nbsp; A
+perspective determines the visible actions, views, and view layout within
+the window.&nbsp; There are many types of perspective, and each one defines
+the layout in a different way.&nbsp; Ideally, the layout should be tailored
+to suit a particular set of related tasks.&nbsp; For instance, the standard
+Eclipse platform includes a Java perspective and a Team perspective.&nbsp;
+The Java perspective defines a layout containing the Package, Hierarchy,
+Outline and Tasks view.&nbsp; This is useful for java development.&nbsp;
+The Team perspective defines a layout containing the Repositories and Synchronize
+view.&nbsp; This is useful for code sharing and versioning.&nbsp; In Eclipse
+the user can open a new perspective with a particular type, switch from
+one perspective to another with different type, or change the type (layout)
+of an existing perspective as they move from one task to another.
+<h4>
+Two is Always Better than One</h4>
+In an earlier section we saw how information filtering can be used to limit
+information overload.&nbsp; When information filtering is implemented a
+new need develops: the need to see information which is not visible.&nbsp;
+For instance, a Java developer may explore one class hierarchy while they
+modify code in another.&nbsp; In Eclipse this functionality is provided
+by opening a second perspective on the information required.&nbsp; The
+ability to create two separate perspectives (or more) makes it possible
+to switch between information without loss of context.
+<p>The ability to open more than one perspective is also crucial for multi-tasking
+support.&nbsp; Developers often multi-task without even knowing it.&nbsp;
+For instance, in a team environment a coworker may walk into your office
+to ask a question.&nbsp; In response, you open up a class hierarchy and
+explore the code for a few minutes.&nbsp; This is a new task and it should
+have no impact upon your previous task.&nbsp; It demands good task separation.&nbsp;
+In Eclipse the creation of the second task can be accomplished by just
+opening a new perspective.&nbsp; When the task is complete you can close
+the perspective and return to the old task without loss of context.
+<h3>
+Moving from Concept to Implementation</h3>
+At a conceptual level a perspective is quite simple.&nbsp; A perspective
+is a visual container for a set of views and editors.&nbsp; It has an input
+and type.&nbsp; A perspective is also like a page within a book.&nbsp;
+It exists within a window along with any number of other perspectives and,
+like a page within a book, only one perspective is visible at any time.
+<p>At the implementation level things become more complex.&nbsp; The platform
+user interface is exposed through a series of interfaces in <tt>org.eclipse.ui</tt>.&nbsp;
+The root of the user interface is accessed by invoking <tt>PlatformUI.getWorkbench(
+)</tt>.&nbsp; This returns an object of type <tt>IWorkbench</tt>.&nbsp;
+A workbench has one or more windows of type <tt>IWorkbenchWindow</tt>.&nbsp;
+And each window has a collection of pages of type <tt>IWorkbenchPage</tt>.&nbsp;
+In the user interface a page is known as a "perspective".&nbsp; Within
+each window there is at most one active and visible page.
+<p>The structure of the workbench is exposed within the following diagram.&nbsp;
+The workbench window is outlined in red.&nbsp; Within this window there
+is a single open perspective.&nbsp; It's purple.&nbsp; But to be truly
+accurate, the user calls it a "perspective".&nbsp; At the implementation
+level it is an <tt>IWorkbenchPage</tt>.
+<center>
+<p><img SRC="workbench_decomposed.jpg" height=578 width=480 align=ABSCENTER></center>
+
+<p>While the workbench is running new windows and pages can be created
+interactively by invoking Open Perspective from the window menu or from
+the Navigator context menu.&nbsp; A page can also be created programmatically
+using public API on <tt>IWorkbenchWindow</tt>.&nbsp; For instance, the
+following code demonstrates the creation of a new page.
+<pre>// fWindow is an IWorkbenchWindow.
+fWindow.openPage("org.eclipse.ui.resourcePerspective", ResourcesPlugin.getWorkspace());</pre>
+In this example the two parameters to <tt>openPage</tt> identify the perspective
+type and input, in that order.&nbsp; The perspective type is identified
+by a string.&nbsp; Each perspective has a unique id.&nbsp; In this case
+<tt>"org.eclipse.ui.resourcePerspective"</tt>
+identifies the Resource perspective.&nbsp; The perspective input may be
+any object of type <tt>IAdaptable</tt>.&nbsp; In this case the input is
+the entire workspace.
+<p>The <tt>openPage</tt> method creates and returns an object of type <tt>IWorkbenchPage</tt>.&nbsp;
+Given a page, you can get the input and perspective type by using the following
+methods.
+<pre>public IAdaptable getInput();
+public IPerspectiveDescriptor getPerspective();</pre>
+There is an interesting twist here.&nbsp; When a new page is created you
+identify the perspective type by id.&nbsp; In the <tt>openPage</tt> method
+the id is mapped to a perspective descriptor within a list of known perspectives
+types and the result is stored within the return page.&nbsp; The <tt>getPerspective</tt>
+method on <tt>IWorkbenchPage</tt> returns an object of type <tt>IPerspectiveDescriptor</tt>.&nbsp;
+This object has accessor methods for the perspective id, label and icon.
+<p>The page input determines which resources are visible in the page.&nbsp;
+In practice, resource visibility in a page is implemented through collaboration
+between the page and the views within that page.&nbsp; The page itself
+is a visual container for views and editors.&nbsp; It doesn't provide any
+presentation for resources. That is delegated to the parts within the page.&nbsp;
+The hand-off usually occurs during part creation.&nbsp; In the early stages
+of part life cycle a part can obtain a handle to the containing <tt>IWorkbenchPage</tt>
+and from this it may call <tt>getInput</tt>.&nbsp; The result will be used
+as the initial input for this view.&nbsp; For instance, if a new perspective
+containing the Navigator is opened the Navigator will use the page input
+as its own input.&nbsp; The Packages view does the same.&nbsp; In some
+cases the view may provide additional actions to dynamically change the
+view input.&nbsp; In the Navigator the Go Into, Go Up, Go Back, and Go
+Forward actions can be used to navigate around the workspace tree.
+<p>The perspective determines which views are visible in a page.&nbsp;
+For instance, if you open a new page with the Resource perspective the
+Navigator, Outline, and editor area will be visible.&nbsp; If you open
+a new page with the Java perspective the Packages, Hierarchy, Tasks, and
+editor area will be visible.&nbsp; The visible views are determined by
+the perspective type. The type also influences the visible action sets
+within a page.&nbsp; For instance, the Java and Debug Action Sets are typically
+visible in the Java perspective but not in the Team perspective.&nbsp;
+This influence will be discussed in greater detail in <a href="#Adding a New Perspective">Adding
+a New Perspective</a>.
+<h3>
+<a NAME="Adding a New Perspective"></a>Adding a New Perspective</h3>
+Within the workbench a new perspective can be defined in two ways.&nbsp;
+An ISV can add a new perspective using the perspective extension point
+in the plug-in registry.&nbsp; A user can add a new perspective or override
+an existing perspective by using the customization and persistence features
+built in to the Eclipse user interface.&nbsp; This section will focus on
+the ISV scenario.
+<p>The definition of a new perspective is a three step process.
+<br>&nbsp;
+<ol>
+<li>
+Create a plug-in.</li>
+
+<li>
+Add a perspective extension to the plugin.xml file.</li>
+
+<li>
+Define a perspective class for the extension within the plug-in.</li>
+</ol>
+
+<p><br>This process will be illustrated by defining a plugin with a perspective
+called "Test".&nbsp; The Test Perspective will contain the Navigator View,
+the Outline View, and an editor area.&nbsp; The layout for the perspective
+is illustrated in the quick sketch below.
+<center>
+<p><img SRC="TestPerspectiveSketch.jpg" height=281 width=374></center>
+
+<p>In the first step a new plug-in is created.&nbsp; The process of plug-in
+creation is explained in detail in <a href="http://www.eclipsecorner.org/articles/Your%20First%20Plug-in.html">Your
+First Plugin</a>, by Jim Amsden, so I won't go into the details here.&nbsp;
+For this article I created a Perspective Plugin with following plugin.xml
+file.
+<pre>&lt;plugin
+&nbsp;&nbsp; id="org.eclipse.ui.articles.perspective"
+&nbsp;&nbsp; name="Perspective Article Plugin"
+&nbsp;&nbsp; version="1.0.0"></pre>
+
+<pre>&lt;requires>
+&nbsp;&nbsp; &lt;import plugin="org.eclipse.core.runtime"/>
+&nbsp;&nbsp; &lt;import plugin="org.eclipse.core.resources"/>
+&nbsp;&nbsp; &lt;import plugin="org.eclipse.ui"/>
+&lt;/requires></pre>
+
+<pre>&lt;runtime>
+&nbsp;&nbsp; &lt;library name="perspective.jar"/>
+&lt;/runtime></pre>
+
+<pre>&lt;/plugin></pre>
+The <tt>org.eclipse.ui</tt> plug-in defines a single extension point for
+perspective contribution: <tt>org.eclipse.ui.perspectives</tt>.&nbsp; A
+new perspective is added to the workbench by defining an extension for
+this point.&nbsp; In the example below a perspective extension is defined
+for the Test Perspective.&nbsp; This declaration contains the basic elements:
+id, name and class.
+<pre>&lt;extension point="org.eclipse.ui.perspectives">
+&nbsp;&nbsp; &lt;perspective
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name="Test"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; class="org.eclipse.ui.articles.perspective.TestPerspective"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.ui.articles.perspective.Test">
+&nbsp;&nbsp; &lt;/perspective>
+&lt;/extension></pre>
+A complete description of the extension point and the syntax are available
+in the developer documentation for <tt>org.eclipse.ui</tt>. The attributes
+are described as follows.
+<br>&nbsp;
+<ul>
+<li>
+<b>id</b> - a unique name that will be used to identify this perspective.</li>
+
+<li>
+<b>name</b> - a translatable name that will be used in the workbench window
+menu bar to represent this perspective.</li>
+
+<li>
+<b>class</b>&nbsp; – a fully qualified name of the class that implements
+<tt>org.eclipse.ui.IPerspectiveFactory</tt>
+interface.</li>
+
+<li>
+<b>icon</b> - a relative name of the icon that will be associated with
+this perspective.</li>
+</ul>
+
+<p><br>Perhaps the most important attribute in the perspective declaration
+is <i>class</i>.&nbsp; This attribute names a class that will define the
+initial layout for the perspective.&nbsp; In this example the layout for
+the Test perspective is defined by <tt>org.eclipse.ui.articles.perspective.TestPerspective</tt>.&nbsp;
+The implementation of <tt>TestPerspective</tt> will be examined in a few
+paragraphs.
+<p>Once a perspective extension has been declared for the Test Perspective
+it will appear in the Perspective > Open menu and in the Open Perspective
+menu of the Navigator.&nbsp; If the user invokes either of these actions
+a new workbench page will be created.&nbsp; During this process the following
+steps are taken.
+<br>&nbsp;
+<ol>
+<li>
+A new <tt>IWorkbenchPage</tt> object is created with perspective id = "org.eclipse.ui.articles.perspective.Test".</li>
+
+<li>
+The perspective id is used to lookup the actual perspective extension in
+the plugin registry.&nbsp; Within the workbench a list of the registered
+perspective extensions are stored within the <tt>IPerspectiveRegistry</tt>
+(available from the <tt>IWorkbench</tt> interface).&nbsp; The <tt>findPerspectiveWithId</tt>
+method is called to get a complete description of the perspective.&nbsp;
+This method returns an object of type <tt>IPerspectiveDescriptor</tt>.</li>
+
+<li>
+The perspective class is retrieved from the <tt>IPerspectiveDescriptor</tt>.&nbsp;
+This class must implement <tt>IPerspectiveFactory</tt>.</li>
+
+<li>
+An instance of the perspective class is created, yielding a <tt>IPerspectiveFactory</tt>.</li>
+
+<li>
+The <tt>createInitialLayout</tt> method is called on the <tt>IPerspectiveFactory</tt>.&nbsp;
+This method defines the initial layout for a page. Implementors may add
+views, folders, actions and action sets to the page layout.</li>
+
+<li>
+The <tt>IPerspectiveFactory</tt> is dereferenced and is not used again
+during the life cycle of the page.</li>
+
+<li>
+The <tt>IWorkbenchPage</tt> is activated.</li>
+</ol>
+
+<p><br>In the next few paragraphs we'll concentrate on point # 5.&nbsp;
+When <tt>createInitialLayout</tt> is called on an <tt>IPerspectiveFactory</tt>
+the page layout consists of an editor area with no additional views.&nbsp;
+Within <tt>createInitialLayout</tt> you can add views, folders, and view
+place holders to the page layout.&nbsp; A <i>folder</i> is a stack of views.&nbsp;
+A <i>place holder</i> marks the position of a view within the page.&nbsp;
+The view itself is not initially open, but when opened will occupy the
+position marked by the place holder.
+<p>In the example below you can see how <tt>createInitialLayout</tt> is
+implemented in the <tt>TestPerspective</tt> class.&nbsp; For clarity the
+algorithm has been split into two parts which define the actions and layout:
+<tt>defineActions</tt>
+and <tt>defineLayout</tt>.
+<pre>public void createInitialLayout(IPageLayout layout) {
+&nbsp;&nbsp;&nbsp; defineActions(layout);
+&nbsp;&nbsp;&nbsp; defineLayout(layout);
+}</pre>
+In <tt>defineActions</tt> a number of items and action sets are added to
+the window.&nbsp; A perspective may add items to the File > New, Show View,
+or Perspective > Open menus of the window.&nbsp; You can also add complete
+action sets to the menu or toolbar of the window.&nbsp; In this example
+a few File > New and Show View items are added.
+<pre>public void defineActions(IPageLayout layout) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Add "new wizards".
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.addNewWizardShortcut("org.eclipse.ui.wizards.new.folder");
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.addNewWizardShortcut("org.eclipse.ui.wizards.new.file");
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Add "show views".
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.addShowViewShortcut(IPageLayout.ID_RES_NAV);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.addShowViewShortcut(IPageLayout.ID_BOOKMARKS);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.addShowViewShortcut(IPageLayout.ID_OUTLINE);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.addShowViewShortcut(IPageLayout.ID_PROP_SHEET);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.addShowViewShortcut(IPageLayout.ID_TASK_LIST);
+}</pre>
+In <tt>defineLayout</tt> the TestPerspective factory adds two views to
+the layout.&nbsp; When <tt>createInitialLayout</tt> is called the page
+layout consists of an editor area with no additional views.&nbsp; Additional
+views are added using the editor area as the initial point of reference.&nbsp;
+In <tt>defineLayout</tt> the factory gets the id of the editor area.&nbsp;
+Then it creates a folder to the left of this area and adds the Navigator
+view and Outline view to this folder.
+<pre>public void defineLayout(IPageLayout layout) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Editors are placed for free.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; String editorArea = layout.getEditorArea();
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Place navigator and outline to left of
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // editor area.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IFolderLayout left =
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layout.createFolder("left", IPageLayout.LEFT, (float) 0.26, editorArea);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left.addView(IPageLayout.ID_RES_NAV);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left.addView(IPageLayout.ID_OUTLINE);
+}</pre>
+The <tt>createFolder</tt> method adds a new folder to the page layout.&nbsp;
+The position and relative size of the folder are expressed as a fraction
+of an existing part.&nbsp; In the example above a folder is created with
+the name "left".&nbsp; It is positioned to the left of the editor area
+and occupies 26% of the original space of the editor area.&nbsp; The positioning
+constants are defined on <tt>IPageLayout</tt>, and include <tt>TOP, BOTTOM,
+LEFT </tt>and<tt> RIGHT</tt>.
+<p>In some situations a perspective within one plug-in may be referenced
+by another plug-in.&nbsp; For convenience, the unique id for each perspective
+should be declared on a public interface in the source plug-in.&nbsp; The
+unique id is usually derived by concatenating the plug-in id with some
+plug-in unique perspective id.&nbsp; For instance, the following approach
+was used for the Perspective plugin and perspective.
+<pre>public interface IPerspectivePlugin {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Plugin id.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public final static String PLUGIN_ID = "org.eclipse.ui.articles.perspective";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Test perspective id.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public final static String TEST_PERSPECTIVE_ID = PLUGIN_ID + ".Test";
+}</pre>
+The Test perspective is now ready to use.&nbsp; To test the new perspective
+I installed the Perspective plugin in the Eclipse plugins directory and
+then restarted Eclipse.&nbsp; From the Perspective > Open > Other... dialog
+I selected the Test perspective.&nbsp; After pressing OK the following
+page appeared within my window.
+<center>
+<p><img SRC="TestPerspective.jpg" height=406 width=559></center>
+
+<h4>
+Why is Layout Declaration done in Code Rather than XML?</h4>
+During the design of perspectives both options were considered.&nbsp; Within
+Eclipse XML is typically used to declare the presence of an extension and
+the circumstances under which it should be loaded.&nbsp; The information
+is used to load the extension and its plugin lazily for better startup
+performance.&nbsp; Now let's apply this logic to perspectives.&nbsp; When
+a perspective is selected from the Open Perspective menu the load conditions
+are met, so we can load the extension and move forward using Java.&nbsp;
+Java code provides the benefits of code completion and error detection
+at development time.
+<h4>
+Can I Remove the Editor Area Completely?</h4>
+In some scenarios the ideal layout for a perspective may be made up of
+one or more views with no editor area.&nbsp; To achieve this you can invoke
+<tt>IPageLayout.setEditorAreaVisible(boolean)</tt> to hide or show the
+editor area.&nbsp; This state will be honored unless the user decides to
+override it from the Perspective menu.
+<p>As a philosophical point, wouldn't it be great if you could punt the
+editor area completely?&nbsp; In fact, the workbench user interface favors
+the user more than the ISV.&nbsp; While the ISV may wish to define a closed
+environment with a fixed set of views, the user always has the ability
+to show any view from the Perspective > Show View menu.&nbsp; If the user
+can show any view they can also open any resource in an editor, and this
+necessitates an editor area.&nbsp; This underscores a very important point.&nbsp;
+A perspective definition is just a suggestion.&nbsp; The user can override
+it at any time and probably will.&nbsp; For more information on this idea
+see <a href="#User Customization and Persistance">User Customization and
+Persistence</a>.
+<h4>
+Do I Need a Perspective?</h4>
+The temptation to create a new perspective is strong.&nbsp; The dark side
+beckons.&nbsp; As an ISV, if you add a view extension to the platform you'd
+like some way to make it visible.&nbsp; One way to do that is to copy an
+existing perspective, say the Resource perspective, and add your view to
+the factory class.&nbsp; If every ISV took this approach the user would
+soon be overwhelmed by perspective choices.&nbsp; In all likelihood the
+user would ignore them all and create their own.
+<p>In general, a perspective should only be created when there is a certain
+group of related tasks which would benefit from a predefined configuration
+of actions and views.&nbsp; For instance, the Java Perspective is a good
+context for the completion of Java related tasks.&nbsp; It contains a Packages
+view and Hierarchy view for class navigation.&nbsp; The Tasks view is good
+for problem navigation.&nbsp; And the Outline view is useful for navigation
+within an editor.&nbsp; Together, these views are useful for many Java
+oriented tasks and the creation of a Java Perspective is justified.
+<p>In some situations it may be better to augment an existing perspective.&nbsp;
+For instance, if you create a single view which is Java centric it is probably
+better to add that view to the standard Java perspective rather than defining
+a new perspective.&nbsp; This strategy provides better integration with
+the existing platform.&nbsp; For more information on this process check
+out <a href="#Extend an Existing Perspective">Extending an Existing Perspective</a>.
+<h3>
+<a NAME="User Customization and Persistance"></a>User Customization and
+Persistence</h3>
+In the previous section we examined the techniques an ISV would use to
+add a perspective to the workbench.&nbsp; The user can also add a new perspective
+to the Eclipse user interface or override an existing perspective.&nbsp;
+This section will focus on those aspects of user customization.
+<p>When Eclipse is installed the plug-in registry contains a number of
+perspective extensions.&nbsp; These extensions are contributed by plug-ins
+from various ISV's and form the initial set of perspectives available to
+the user.&nbsp; In my own experience the perspectives contributed by an
+ISV usually fail to completely meet my needs, so I quickly customize them.&nbsp;
+I add views, remove views, add action sets, customize the menus, etc.,
+until the user interface reflects the way I work.&nbsp; Then I save the
+new layout to the original perspective.
+<p>The initial layout for a page is determined by the perspective.&nbsp;
+To be more precise, it is determined by an <tt>IPerspectiveFactory</tt>
+as explained in <a href="#Adding a New Perspective">Adding a New Perspective</a>.&nbsp;
+Once a page is open the user may modify the part layout or the visible
+action sets within the page.&nbsp; If this page is closed the new layout
+is discarded.&nbsp; However, if this page is open when the workbench is
+closed the state of the page (and in fact every window, page and part)
+is saved to an XML file in the <tt>org.eclipse.ui</tt> plug-in.&nbsp; This
+file is used to restore the state of the page when the workbench is restarted
+and contains every important attribute of the page: the visible views,
+their layout, the visible action sets and other state attributes.&nbsp;
+In fact, the <tt>IPerspectiveFactory</tt> which defined the initial layout
+for the page is not consulted when the page is restored.
+<p>The user can also create a new perspective by invoking Perspective >
+Save.&nbsp; In response a dialog appears where the user can type a user
+friendly name for the new perspective.&nbsp; Depending on the option chosen
+by the user, this action will create a new perspective with the layout
+of the current page or override the layout for an existing perspective.&nbsp;
+The resulting perspective has all of the privileges of an ISV perspective.&nbsp;
+The user can open a page with the custom perspective, use it as the default
+perspective, or delete it.&nbsp; The layout of the custom perspective is
+saved as an XML file using the same mechanism described above for workbench
+session persistence, so there is no <tt>IPerspectiveFactory</tt>.
+<h3>
+Opening a New Perspective</h3>
+In the workbench a new perspective can be created interactively by the
+user or programmatically through public API on <tt>IWorkbench, IWorkbenchWindow
+or IWorkbenchPage</tt>.&nbsp; For instance, the user may select a container
+in the Navigator and invoke Open Perspective > Java.&nbsp; This is an explicit
+command from the user to the view to create a new perspective.&nbsp; A
+new perspective may also be created as a step within some other action.&nbsp;
+For instance, if Project > Open Type is invoked an option exists to open
+a new Hierarchy Perspective.&nbsp; In this section the implementation of
+both will be discussed.
+<p>In the Navigator a user may open a new perspective with specific input
+and type by invoking Open Perspective from the context menu.&nbsp; This
+ability is an important element of information filtering and should be
+included in any view where the resource tree is visible.&nbsp; This will
+lead to user interface consistency and ease of use.
+<p>The easiest way to add Open Perspective functionality to a view or menu
+is with the <tt>OpenPerspectiveMenu</tt>.&nbsp; This class is supplied
+in
+<tt>org.eclipse.ui.actions</tt> and can be included in any popup menu.&nbsp;
+For instance, the following code demonstrates its use within the Navigator.
+<pre>/**
+&nbsp;* Add "open to" actions to the context sensitive menu.
+&nbsp;* @param menu the context sensitive menu
+&nbsp;* @param selection the current selection in the project explorer
+&nbsp;*/
+void fillOpenToMenu(IMenuManager menu, IStructuredSelection selection)&nbsp;
+{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // If one file is selected get it.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Otherwise, do not show the "open with" menu.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (selection.size() != 1)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IAdaptable element = (IAdaptable) selection.getFirstElement();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!(element instanceof IContainer))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return;
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Create a menu flyout.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MenuManager submenu = new MenuManager(ResourceNavigatorMessages.getString("ResourceNavigator.openPerspective")); //$NON-NLS-1$
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; submenu.add(new OpenPerspectiveMenu(getSite().getWorkbenchWindow(), element));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; menu.add(submenu);
+
+}</pre>
+In this example the popup menu for the navigator is populated dynamically
+just before the menu is about to show.&nbsp; The <tt>fillOpenToMenu</tt>
+method is called from within <tt>menuAboutToShow</tt>.&nbsp; If the selection
+is a container (project or folder) the Open Perspective submenu is created
+and then populated automatically using the <tt>OpenPerspectiveMenu</tt>.&nbsp;
+The contents of this submenu are determined by the customized settings
+of the active perspective.&nbsp; For instance, if the Perspective > Open
+menu contains "Resource, Java, and Team" your context menu will also contain
+"Resource, Java, and Team".
+<p>In the workbench the behavior of Open Perspective in flexible.&nbsp;
+In fact, the user can configure this behavior in the workbench preferences.&nbsp;
+The "Open a New Perspective" behavior may be defined as "Open in Same Window",
+"Open in New Window", or "Replace Current".&nbsp;&nbsp; The meaning of
+"Open in Same Window" and "Open in New Window" are obvious.&nbsp; The meaning
+of "Replace Current" is less so.&nbsp; Each page has a perspective.&nbsp;
+If "Replace Current" is invoked the active perspective within the page
+is replaced by a new perspective.&nbsp; This causes the view layout and
+visible action sets within the page to change, and is equivalent to changing
+the layout in MS Studio.
+<p>The <tt>OpenPerspectiveMenu </tt>class implements the preferred behavior
+for "Open Perspective" and supports the selection of alternate behaviors
+when the Control or Shift keys are pressed.&nbsp; After the addition of
+an <tt>OpenPerspectiveMenu</tt> object to the context menu no other action
+is required to implement the Open Perspective behavior.
+<p>A new perspective may also be created as a step within some other action.&nbsp;
+For instance, if Project > Open Type is invoked the implementing action
+will open a new page with the Hierarchy perspective.&nbsp;&nbsp; In this
+scenario a new IWorkbenchPage must be created explicitly using the API's
+available on <tt>IWorkbenchWindow</tt>.&nbsp; The following code illustrates
+this process.
+<pre><tt>// Open the page.
+try {
+&nbsp;&nbsp; getWindow().openPage(IPerspectivePlugin.TEST_PERSPECTIVE_ID, pageInput);
+} catch (WorkbenchException e) {
+&nbsp;&nbsp; MessageDialog.openError(getWindow().getShell(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Problem Opening Perspective",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.getMessage());
+}</tt></pre>
+In the code above the active workbench window is retrieved and then <tt>openPage</tt>
+is invoked with a perspective type and input.&nbsp; As we saw in <a href="#Adding a New Perspective">Adding
+a New Perspective</a>, the id of each perspective should be exposed on
+a public interface in the source plug-in for convenient access by other
+plug-ins in Java code.&nbsp; In this example the Test perspective id is
+referenced from the <tt>IPerspectivePlugin</tt> class.&nbsp; The perspective
+id is mapped to an <tt>IPerspectiveDescriptor</tt> within the perspective
+registry.&nbsp; Then the page is opened.&nbsp; If any problems occur during
+the creation of the page an exception will be thrown.
+<p>As a philosophical point, should a hard coded constant be used to specify
+perspective type?&nbsp; In my own experience it is difficult to predict
+the usage pattern for any perspective.&nbsp; For instance, one user may
+prefer to develop java code in the Java perspective.&nbsp; Another may
+prefer to develop java code in the Resource perspective.&nbsp; If a hard
+coded constant is used to specify a perspective type the user may become
+frustrated if the wrong perspective is chosen.&nbsp; It may be better to
+let the user choose the perspective type or disable this behavior completely.
+<p>If you need to open a perspective from within an action there is one
+detail to be aware of: the user may change the default behavior for Open
+Perspective in the workbench preferences.&nbsp; In most scenarios your
+action should honor this preference.
+<p>To demonstrate the use of the Open Perspective preference I created
+an Action Set containing one action: "Open Test Perspective".&nbsp; When
+this action is invoked a new Test Perspective is opened using the preferred
+behavior.&nbsp;&nbsp; At the implementation level the action implements
+<tt>IWorkbenchWindowActionDelegate</tt>.&nbsp;
+Within the <tt>run</tt> method the preference is retrieved from the workbench
+plugin and then the perspective is opened.&nbsp; Here is an snippet containing
+the relevant details of my action delegate class.
+<pre>public void run(IAction action) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; openPerspective(IPerspectivePlugin.TEST_PERSPECTIVE_ID,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ResourcesPlugin.getWorkspace());
+}
+
+/**&nbsp;
+&nbsp;* Implements Open Perspective.&nbsp;
+&nbsp;*/
+private void openPerspective(String perspId, IAdaptable input) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Get "Open Behavior" preference.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AbstractUIPlugin plugin = (AbstractUIPlugin)Platform.getPlugin(PlatformUI.PLUGIN_ID);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IPreferenceStore store = plugin.getPreferenceStore();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; String pref = store.getString(IWorkbenchPreferenceConstants.OPEN_NEW_PERSPECTIVE);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Implement open behavior.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; try {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (pref.equals(IWorkbenchPreferenceConstants.OPEN_PERSPECTIVE_WINDOW))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; workbench.openWorkbenchWindow(perspId, input);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (pref.equals(IWorkbenchPreferenceConstants.OPEN_PERSPECTIVE_PAGE))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; window.openPage(perspId, input);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (pref.equals(IWorkbenchPreferenceConstants.OPEN_PERSPECTIVE_REPLACE)) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IPerspectiveRegistry reg = workbench.getPerspectiveRegistry();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; window.getActivePage().setPerspective(reg.findPerspectiveWithId(perspId));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } catch (WorkbenchException e) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.printStackTrace();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+}</pre>
+
+<h3>
+<a NAME="Extend an Existing Perspective"></a>Extending an Existing Perspective</h3>
+In many scenarios the extension of an existing perspective is a good way
+to introduce new action sets, wizards, or views into the workbench.&nbsp;
+For instance, as an ISV you may create a new Java centric view to the workbench.&nbsp;
+Rather than defining a new perspective to show off your view, you can extend
+the standard Java perspective.&nbsp; This strategy provides better integration
+with the existing platform.&nbsp; In this section the details of perspective
+extension will be covered.
+<p>The extension of an existing perspective is a three step process.
+<br>&nbsp;
+<ol>
+<li>
+Create a plug-in for your extensions.</li>
+
+<li>
+Define an action set or view extension in the plugin.xml file.</li>
+
+<li>
+Add a perspectiveExtension extension to the plug-in registry.</li>
+</ol>
+
+<p><br>This process will be illustrated using the Test Perspective which
+was defined in a <a href="#Adding a New Perspective">Adding a New Perspective</a>.
+<p>The first step is to create a plug-in with an action set or view extension.&nbsp;
+In this example I chose to reuse a few extensions which already exist within
+<tt>org.eclipse.jdt.ui</tt>
+(the Java plug-in).&nbsp; This plug-in defines a Java Action Set, a New
+Java Project Wizard, a Packages View and a Hierarchy View.
+<p>The <tt>org.eclipse.ui</tt> plug-in defines an extension point for perspective
+extension: <tt>org.eclipse.ui.perspectiveExtensions</tt>.&nbsp; This extension
+point can be used to contribute any of the following objects to an existing
+extension perspective.
+<br>&nbsp;
+<ul>
+<li>
+Action Sets</li>
+
+<li>
+File New Items</li>
+
+<li>
+Show View Items</li>
+
+<li>
+Open Perspective Items</li>
+
+<li>
+Views</li>
+</ul>
+
+<p><br>In the following example the extension point is used to add the
+Java extensions discussed above to the Test perspective.&nbsp; In the first
+two lines of XML the target perspective extension is declared: <tt>org.eclipse.ui.articles.perspective.TestPerspective</tt>.&nbsp;
+Following this the specific extensions for this perspective are declared.&nbsp;
+An action set is added.&nbsp; Then menu items for Show View, File > New,
+and Open Perspective are added.&nbsp; And then the Packages view is stacked
+on top of the Navigator.
+<pre>&lt;extension point="org.eclipse.ui.perspectiveExtensions">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;perspectiveExtension targetID="org.eclipse.ui.articles.perspective.Test">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;actionSet id="org.eclipse.jdt.ui.JavaActionSet"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;viewShortcut id="org.eclipse.jdt.ui.PackageExplorer"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;newWizardShortcut
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; id="org.eclipse.jdt.ui.wizards.NewProjectCreationWizard"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;perspectiveShortcut id="org.eclipse.jdt.ui.JavaPerspective"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;view id="org.eclipse.jdt.ui.PackageExplorer"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; relative="org.eclipse.ui.views.ResourceNavigator"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; relationship="stack"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/perspectiveExtension>
+&lt;/extension></pre>
+In the next few paragraphs a brief description of each element within the
+perspectiveExtensions extension point is provided.&nbsp; A complete description
+of the extension point and the syntax are available in the developer documentation
+for org.eclipse.ui.
+<p>In the example an <tt>actionSet</tt>, <tt>viewShortcut</tt>, <tt>newWizardShortcut</tt>
+and <tt>perspectiveShortcut</tt> extension are demonstrated.&nbsp; The
+format of these elements is very simple.&nbsp; There is one attribute,
+<tt>id</tt>, which identifies an existing extension which should be added
+to the perspective.&nbsp; It must identify an action set, view, wizard,
+or perspective which has been registered using the standard extension point
+for each.
+<p>The XML for view extension is a little more complicated.&nbsp; A new
+view may be stacked on or placed relative to an existing view.&nbsp; Minimally,
+you must define an <tt>id</tt> (of the view being added), <tt>relative</tt>
+id, and <tt>relationship</tt> ( <tt>left, right, bottom, top, stack</tt>
+).&nbsp; If the relationship is not <tt>stack</tt> a <tt>ratio</tt> must
+also be supplied.&nbsp; This will be interpreted using the same heuristics
+as <tt>IPageLayout.addView(id, relationship, ratio, refID)</tt>.
+<p>In the current implementation of perspective extension there is one
+limitation.&nbsp; Perspective extension is only possible when the user
+has not modified the default layout for a perspective.&nbsp; If modification
+has occurred perspective extensions will be ignored. However, given the
+customizable nature of the workbench the user can always introduce an action
+set or view into the perspective by invoking the Perspective > Customize
+action or by opening a view from the Perspective > Show View menu.
+<h3>
+Conclusion</h3>
+In this article we have examined the role of perspectives within the workbench
+and their implementation.&nbsp; Perspectives are complex and will certainly
+evolve over time.&nbsp; Hopefully this article will get you started.&nbsp;
+Further information is available in the Platform Plug-in Developer Guide
+and in the javadoc for <tt>org.eclipse.ui</tt>.
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE>Displaying a UML Diagram with Draw2D</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+<META content="Microsoft FrontPage 5.0" name=GENERATOR>
+<LINK href="../default_style.css" rel=stylesheet>
+</HEAD>
+<BODY vLink=#800080 link=#0000FF>
+<DIV align=right>&nbsp; <FONT face="Times New Roman, Times, serif"><FONT
+	size=-1>Copyright © 2003 International Business Machines Corp.</FONT></FONT></DIV>
+&nbsp;
+<DIV align=right>
+<TABLE cellSpacing=0 cellPadding=2 width="100%" border=0>
+	<TBODY>
+		<TR>
+			<TD vAlign=top align=left bgColor=#0080c0 colSpan=2><B><FONT
+				face=Arial,Helvetica><FONT color=#ffffff>&nbsp;Eclipse Corner
+			Article</FONT></FONT></B></TD>
+		</TR>
+	</TBODY>
+</TABLE>
+</DIV>
+<H1><IMG border="0" src="images/Idea.jpg" width="120" height="86"></H1>
+<CENTER>
+<H1>Display a UML Diagram using Draw2D</H1>
+</CENTER>
+<BLOCKQUOTE><B>Summary</B><BR>
+  The Graphical Editing Framework (GEF) ships with a painting and layout plug-in 
+  called <b>Draw2D</b>. Draw2D provides figures and layout managers which form 
+  the graphical layer of a GEF application. This article focuses only on the use 
+  of Draw2D to render a simple UML class diagram.&nbsp; While Draw2D can be used 
+  for standalone purposes, it is not an editing framework.&nbsp; Most applications 
+  will use the GEF plug-in as the editing layer. 
+  <P><B>By Daniel Lee, IBM</B><BR>
+    <FONT size=-1>August 25, 2003</FONT></P>
+</BLOCKQUOTE>
+<HR width="100%">
+
+<H1>Introduction</H1>
+<P>Draw2d provides lightweight rendering and layout capabilities on an SWT Canvas. 
+  Figures, Layout Managers, and Borders can be combined and nested to create more 
+  complex figures to suit just about any application. Choosing the right combination 
+  of figures and layouts to create the desired effect can be a delicate task. 
+  This article will walk you through creating a complex figure. </P>
+<P>Due to the scope of this article, the example code presented uses
+Draw2d in isolation, but most applications will use GEF and Draw2d together.<BR>
+</P>
+
+<H1>Creating the Draw2d Figure</H1>
+<H2>An Example</H2>
+This article will be based upon the creation of the following Draw2d
+Figure, a simplified UML class diagram:
+<BR>
+<BR>
+<DIV align="center"><IMG border="0" src="images/classDiagGIF.gif" width="154"
+	height="91"></DIV>
+<H2>Designing the Figure</H2>
+The first step in the creation of a figure is to decide on the
+components that will comprise the figure, and how they will be
+arranged.
+<P>The example figure is composed of three children figures. The composition itself 
+  is named <b>UMLClassFigure</b>. Its first child, a <code>Label</code> figure, 
+  will display the class name (&quot;Table&quot; in this example).&nbsp; The next 
+  two children are containers for the class' attributes and methods.&nbsp; We 
+  will create a figure called <b>CompartmentFigure</b> for this purpose. Both 
+  the class and compartment figures will use a <code>ToolbarLayout</code> to place 
+  their children. Here is a conceptual diagram of the overall structure:</P>
+<P align="center"><IMG border="0" src="images/UMLDiagGIF.gif" width="536"
+	height="404"></P>
+<H2>Creating the CompartmentFigure Class</H2>
+<P>CompartmentFigure is used to hold both methods and attributes. This class extends 
+  org.eclipse.draw2d.Figure, and uses a ToolbarLayout to place its children. In 
+  addition, CompartmentFigure uses a custom border. This border simply paints 
+  a line 1 pixel in thickness across its top, to serve as the separator between 
+  the CompartmentFigures. The code for CompartmentFigure is as follows:</P>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+<td><pre>public class CompartmentFigure extends Figure {
+
+  public CompartmentFigure() {
+    ToolbarLayout layout = new ToolbarLayout();
+    layout.setMinorAlignment(ToolbarLayout.ALIGN_TOPLEFT);
+    layout.setStretchMinorAxis(false);
+    layout.setSpacing(2);
+    setLayoutManager(layout);
+    setBorder(new CompartmentFigureBorder());
+  }
+    
+  public class CompartmentFigureBorder extends AbstractBorder {
+    public Insets getInsets(IFigure figure) {
+      return new Insets(1,0,0,0);
+    }
+    public void paint(IFigure figure, Graphics graphics, Insets insets) {
+      graphics.drawLine(getPaintRectangle(figure, insets).getTopLeft(),
+                        tempRect.getTopRight());
+    }
+  }
+}</pre></td>
+	</tr>
+</table>
+<H2>Creating the UMLClassFigure Class</H2>
+<P>The UMLClassFigure class is in many ways similar to the
+CompartmentFigure class. It contains three children -- two
+CompartmentFigures for attributes and methods and a Draw2d Label to
+display the class name. It also uses a vertically oriented ToolbarLayout to
+place its children.  UMLClassFigure uses Draw2d's
+LineBorder to draw a box around its edges. The
+code for the UMLClassFigure class is as follows:</P>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>public class UMLClassFigure extends Figure {
+  public static Color classColor = new Color(null,255,255,206);
+  private CompartmentFigure attributeFigure = new CompartmentFigure();
+  private CompartmentFigure methodFigure = new CompartmentFigure();
+  public UMLClassFigure(Label name) {
+    ToolbarLayout layout = new ToolbarLayout();
+    setLayoutManager(layout);	
+    setBorder(new LineBorder(ColorConstants.black,1));
+    setBackgroundColor(classColor);
+    setOpaque(true);
+	
+    add(name);	
+    add(attributeFigure);
+    add(methodFigure);
+  }
+  public CompartmentFigure getAttributesCompartment() {
+    return attributeFigure;
+  }
+  public CompartmentFigure getMethodsCompartment() {
+    return methodFigure;
+  }
+}</pre></td>
+	</tr>
+</table>
+<H2>Adding a Connection</H2>
+<P>Draw2d offers a special type of figure, called a connection, for  connecting two figures.
+ To create a
+connection in Draw2d, it is first necessary to establish the two
+endpoints of the connection. These endpoints are called the
+<I>source</I> and the <I>target</I> anchors. Endpoints are created
+using objects that implement the ConnectionAnchor interface. Once these
+anchors are created, they are set as endpoints via calls to the
+connection's setSourceAnchor(ConnectionAnchor) and
+setTargetAnchor(ConnectionAnchor) methods. This is demonstrated below
+using a ChopboxAnchor. This type of anchor places the connection
+endpoint on the edge of the figure and causes it to point towards the figure's
+center.</P>
+
+
+<P>The following code demonstrates the addition of a connection:</P>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>PolylineConnection c = new PolylineConnection();
+ChopboxAnchor sourceAnchor = new ChopboxAnchor(classFigure);
+ChopboxAnchor targetAnchor = new ChopboxAnchor(classFigure2);
+c.setSourceAnchor(sourceAnchor);
+c.setTargetAnchor(targetAnchor);</pre></td>
+</tr>
+</table>
+<P align="center"><IMG border="0" src="images/classDiagConnectionGIF.gif"
+	width="355" height="343"> <B><BR>
+Two UMLClassFigures connected by a PolyLineConnection </B></P>
+<P align="center"><B></B><BR>
+</P>
+<H2>Adding a Decoration to the Connection</H2>
+<P>Draw2d also provides means for endpoint decorations, such as
+arrow-tips. Staying with the UML theme, we will create a decoration that
+represents a composed relationship, which is shown in UML as a filled
+diamond. This is done using a PolygonDecoration. The default shape of a
+PolygonDecoration is a filled arrowhead, but any shape can be used by creating a template for the decoration using a
+PointList, and calling the PolygonDecoration's setTemplate(PointList)
+method.<BR>
+<P>The following code demonstrates the addition of a PolygonDecoration
+to a Connection:</P>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>PolygonDecoration decoration = new PolygonDecoration();
+PointList decorationPointList = new PointList();
+decorationPointList.addPoint(0,0);
+decorationPointList.addPoint(-2,2);
+decorationPointList.addPoint(-4,0);
+decorationPointList.addPoint(-2,-2);
+decoration.setTemplate(decorationPointList);
+c.setSourceDecoration(decoration);</pre></td>
+</tr>
+</table>
+<P align="center"><IMG border="0" src="images/classDiagDecoGIF.gif" width="350"
+	height="335"><B><BR>
+Connection with a PolygonDecoration </B><BR>
+<BR>
+</P>
+<H2>Adding Labels to the Connection Using Locators</H2>
+<P>In addition to decorations, it is possible to add other Draw2d
+figures to the connection itself. This is done by calling the
+connection's add(IFigure figure, Object constraint) method where
+'figure' is the figure that you wish to add, and 'constraint' is an
+object that implements the Locator interface. The Locator places the figure on the connection. We will
+use this technique to add labels to our class diagram.
+The ConnectionEndpointLocator will be used for these labels. This
+locator places its figure relative to the connection's source or target endpoint. It allows the user to define the distance that the figure will appear relative to the end point via its
+setUDistance(int) and setVDistance(int) methods. (uDistance is the distance from the connection's owner to the figure. vDistance is the distance from the figure to the connection itself).</P>
+<P>The following code demonstrates the use of ConnectionEndpointLocators
+to add Labels to a Connection:</P>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>ConnectionEndpointLocator targetEndpointLocator = 
+            new ConnectionEndpointLocator(c, true);
+targetEndpointLocator.setVDistance(15);
+Label targetMultiplicityLabel = new Label(&quot;1..*&quot;);
+c.add(targetMultiplicityLabel, targetEndpointLocator);
+ConnectionEndpointLocator sourceEndpointLocator = 
+            new ConnectionEndpointLocator(c, false);
+sourceEndpointLocator.setVDistance(15);
+Label sourceMultiplicityLabel = new Label(&quot;1&quot;);
+c.add(sourceMultiplicityLabel, sourceEndpointLocator);
+
+ConnectionEndpointLocator relationshipLocator = 
+            new ConnectionEndpointLocator(c,true);
+relationshipLocator.setUDistance(30);
+relationshipLocator.setVDistance(-20);
+Label relationshipLabel = new Label(&quot;contains&quot;);
+c.add(relationshipLabel,relationshipLocator);
+</pre></td>
+</tr>
+</table>
+<P align="center"><IMG border="0" src="images/classDiagLabelsGIF.gif"
+	width="344" height="334"><BR>
+<B>Adding Labels to the Connection </B></P>
+<H1>Creating a Test Class</H1>
+<P>This class contains a main method that creates an SWT shell and
+places a Draw2d LightweightSystem on that shell. The LightweightSystem
+ class provides the link between SWT and Draw2d. The test
+class creates a Draw2d figure to act as the contents of the
+LightweightSystem and adds two UMLClassFigures to this figure. It then
+connects the two class figures with a polyline connection, adds a
+diamond polygon decorator, and adds the UML relationship labels to the
+connection.<BR>
+<BR>
+This class uses the following images: {  <IMG border="0"
+	src="images/field_private_obj.gif" width="16" height="16">  <IMG border="0"
+	src="images/methpub_obj.gif" width="16" height="16"> <IMG border="0"
+	src="images/class_obj.gif" width="16" height="16"> }. Download them and place them at
+the root of a Java project directory.<BR>
+</P>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td>
+		<pre>import org.eclipse.draw2d.*;
+import org.eclipse.draw2d.geometry.PointList;
+import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+
+/**
+ * A test class to display a UMLFigure
+ */
+public class UMLClassFigureTest {
+ public static void main(String args[]){
+	Display d = new Display();
+	final Shell shell = new Shell(d);
+	shell.setSize(400, 400);
+	shell.setText(&quot;UMLClassFigure Test&quot;);
+	LightweightSystem lws = new LightweightSystem(shell);
+	Figure contents = new Figure();
+	XYLayout contentsLayout = new XYLayout();
+	contents.setLayoutManager(contentsLayout);
+	
+	Font classFont = new Font(null, &quot;Arial&quot;, 12, SWT.BOLD);
+	Label classLabel1 = new Label(&quot;Table&quot;, new Image(d, 
+		UMLClassFigureTest.class.getResourceAsStream(&quot;class_obj.gif&quot;)));
+	classLabel1.setFont(classFont);
+	
+	Label classLabel2 = new Label(&quot;Column&quot;, new Image(d, 
+	        UMLClassFigureTest.class.getResourceAsStream(&quot;class_obj.gif&quot;)));
+	classLabel2.setFont(classFont);
+	
+	final UMLClassFigure classFigure = new UMLClassFigure(classLabel1);
+	final UMLClassFigure classFigure2 = new UMLClassFigure(classLabel2);
+	
+	Label attribute1 = new Label(&quot;columns: Column[]&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;field_private_obj.gif&quot;)));
+	Label attribute2 = new Label(&quot;rows: Row[]&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;field_private_obj.gif&quot;)));
+	Label attribute3 = new Label(&quot;columnID: int&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;field_private_obj.gif&quot;)));
+	Label attribute4 = new Label(&quot;items: List&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;field_private_obj.gif&quot;)));
+
+	classFigure.getAttributesCompartment().add(attribute1);
+	classFigure.getAttributesCompartment().add(attribute2);
+	classFigure2.getAttributesCompartment().add(attribute3);
+	classFigure2.getAttributesCompartment().add(attribute4);
+
+	Label method1 = new Label(&quot;getColumns(): Column[]&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;methpub_obj.gif&quot;)));
+	Label method2 = new Label(&quot;getRows(): Row[]&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;methpub_obj.gif&quot;)));
+	Label method3 = new Label(&quot;getColumnID(): int&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;methpub_obj.gif&quot;)));
+	Label method4 = new Label(&quot;getItems(): List&quot;, new Image(d, 
+		UMLClassFigure.class.getResourceAsStream(&quot;methpub_obj.gif&quot;)));
+
+	classFigure.getMethodsCompartment().add(method1);
+	classFigure.getMethodsCompartment().add(method2);
+	classFigure2.getMethodsCompartment().add(method3);
+	classFigure2.getMethodsCompartment().add(method4);
+					
+	contentsLayout.setConstraint(classFigure, new Rectangle(10,10,-1,-1));
+	contentsLayout.setConstraint(classFigure2, new Rectangle(200, 200, -1, -1));
+	
+	/* Creating the connection */
+	PolylineConnection c = new PolylineConnection();
+	ChopboxAnchor sourceAnchor = new ChopboxAnchor(classFigure);
+	ChopboxAnchor targetAnchor = new ChopboxAnchor(classFigure2);
+	c.setSourceAnchor(sourceAnchor);
+	c.setTargetAnchor(targetAnchor);
+	
+	/* Creating the decoration */
+	PolygonDecoration decoration = new PolygonDecoration();
+	PointList decorationPointList = new PointList();
+	decorationPointList.addPoint(0,0);
+	decorationPointList.addPoint(-2,2);
+	decorationPointList.addPoint(-4,0);
+	decorationPointList.addPoint(-2,-2);
+	decoration.setTemplate(decorationPointList);
+	c.setSourceDecoration(decoration);
+	
+	/* Adding labels to the connection */
+	ConnectionEndpointLocator targetEndpointLocator = 
+	        new ConnectionEndpointLocator(c, true);
+	targetEndpointLocator.setVDistance(15);
+	Label targetMultiplicityLabel = new Label(&quot;1..*&quot;);
+	c.add(targetMultiplicityLabel, targetEndpointLocator);
+
+	ConnectionEndpointLocator sourceEndpointLocator = 
+		new ConnectionEndpointLocator(c, false);
+	sourceEndpointLocator.setVDistance(15);
+	Label sourceMultiplicityLabel = new Label(&quot;1&quot;);
+	c.add(sourceMultiplicityLabel, sourceEndpointLocator);
+
+	ConnectionEndpointLocator relationshipLocator = 
+		new ConnectionEndpointLocator(c,true);
+	relationshipLocator.setUDistance(10);
+	relationshipLocator.setVDistance(-20);
+	Label relationshipLabel = new Label(&quot;contains&quot;);
+	c.add(relationshipLabel,relationshipLocator);
+
+	contents.add(classFigure);
+	contents.add(classFigure2);
+	contents.add(c);
+	
+	lws.setContents(contents);
+	shell.open();
+	while (!shell.isDisposed())
+		while (!d.readAndDispatch())
+			d.sleep();
+ }
+}</pre></td>
+	</tr>
+</table>
+<H1>Conclusions</H1>
+<P>This article has served as an introduction to the customized use of
+the Graphical Editing Framework's visual component, Draw2d figures. The
+concepts of Draw2d connections, decorations, and locators have also been
+introduced. For more information on GEF, see the GEF website. (<A
+	href="http://www.eclipse.org/gef">http://www.eclipse.org/gef</A>).</P>
+<H2><BR>
+Acknowledgements</H2>
+<P>The author would like to thank Randy Hudson and Eric Bordeau for
+providing constructive comments on the article.</P>
+<P><SMALL>Java and all Java-based trademarks and logos are trademarks or
+registered trademarks of Sun Microsystems, Inc. in the United States,
+other countries, or both.</SMALL></P>
+</BODY>
+</HTML>

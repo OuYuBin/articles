@@ -1,0 +1,117 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<TITLE>Getting Started with SWT</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+<body>
+&nbsp; 
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+  <tr> 
+    <td ALIGN=left VALIGN=top COLSPAN="2" BGCOLOR="#0080c0"><b><font face="Arial,Helvetica"><font color="#ffffff">&nbsp;Eclipse 
+      Corner Article</font></font></b></td>
+  </tr>
+</table>
+<h1> <img SRC="../../images/Idea.jpg" height=86 width=120 align=center></h1>
+<center>
+  <h1> Getting Started with SWT</h1>
+</center>
+<center>
+  <h3> Exploring the features of the Eclipse Standard Widget Toolkit</h3>
+</center>
+<blockquote><b>Summary</b> <br>
+  This article contains several examples that show how to use the features of 
+  the Eclipse Widget toolkit, SWT. Each example builds upon the ones before. The 
+  first example shows how to create an empty window. The second example adds some 
+  buttons to the window. The third example registers a listener for events on 
+  one of the buttons.</blockquote>
+<p> 
+<hr WIDTH="100%">
+<br>
+<p>The examples below show how to use SWT to create stand-alone applications, 
+  and provide a good basis for experimenting with SWT. The Eclipse Workbench defines 
+  the UI paradigm and how editors and views are integrated. It provides the display 
+  and shell that are created below so you don't need to create them for you Workbench 
+  plug-in user interfaces.</p>
+<p>For further details on SWT, take a look at the <a href="swt-widget-hierarchy.html">widget 
+  hierarchy</a> and <a href="swt-style-bits.html">supported style bits</a>. Then 
+  try modifying the example below with different widgets, styles, and actions.</p>
+<h2> <a NAME="BM2_1_Example_1__Creating_your_first_win"></a>Creating your first 
+  window</h2>
+<pre>// Create a shell.&nbsp;
+Display display = new Display(); // The "parent" of a shell is the display it is created on.
+
+Shell shell =   
+                 
+
+     
+                 
+
+   new Shell (display); // Create the top level window.&nbsp;
+shell.open (); // Open it
+
+// This is the event loop.
+
+while (!shell.isDisposed ())&nbsp;
+&nbsp; if (!display.readAndDispatch ()) display.sleep ();</pre>
+<h2> <a NAME="BM2_2_Example_2__Adding_a_widget"></a><b>Adding a widget</b></h2>
+This example builds upon the first example and adds two buttons: A push button 
+and a check box. Notice how the constructors in SWT require you to pass the parent 
+widget and style bits. Style bits are used to specify values required to create 
+the underlying OS resource. In this case it specifies the type of button to create. 
+The code added by this example is marked in <i>italic.</i> 
+<pre>Display display = new Display();
+
+Shell shell = new Shell (display);
+
+<i>Button b1 = new Button (shell, SWT.PUSH);&nbsp;
+b1.setText ("Button 1");
+b1.setBounds (0, 0, 100, 60);
+Button b2 =      
+  
+    
+        
+  
+    
+   new Button (shell, SWT.CHECK);
+b2.setText ("Button 2");&nbsp;
+b2.setBounds (0, 60, 100, 45);
+
+</i>shell.open ();&nbsp;
+while (!shell.isDisposed ())&nbsp;
+&nbsp; if (!display.readAndDispatch ()) display.sleep ();</pre>
+<h2> <a NAME="BM2_3_Example_3__Adding_Event_Handlers"></a>Adding event handlers</h2>
+Event handling is done by registering listeners in the same way as in AWT. The 
+code added by this example is marked in <i>italic.</i> 
+<pre>Shell shell = new Shell ();&nbsp;
+Button b1 = new Button (shell, SWT.PUSH);&nbsp;
+b1.setText ("Button 1");&nbsp;
+b1.setBounds (0, 0, 100, 60);
+
+<i>b1.addMouseListener(new MouseListener() {&nbsp;
+&nbsp; public void mouseDown(MouseEvent e) {&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; System.out.println("mouseDown:");&nbsp;
+&nbsp; };&nbsp;
+&nbsp; public void mouseDoubleClick(MouseEvent e) {&nbsp;
+&nbsp;&nbsp;&nbsp; System.out.println("mouseDoubleClick:");&nbsp;
+&nbsp; };&nbsp;
+&nbsp; public void mouseUp(MouseEvent e) {&nbsp;
+&nbsp;&nbsp;&nbsp; System.out.println("mouseUp:");&nbsp;
+&nbsp;};&nbsp;
+});
+
+</i>Button b2 = new Button (shell, SWT.CHECK);&nbsp;
+b2.setText ("Button 2");&nbsp;
+b2.setBounds (0, 60, 100, 45);&nbsp;
+shell.open ();
+&nbsp;&nbsp;<a NAME="BM2_4_LayoutManagers_in_SWT"></a>
+Display display =
+  
+   shell.getDisplay ();&nbsp;
+while (!shell.isDisposed ())&nbsp;
+&nbsp; if (!display.readAndDispatch ()) display.sleep ();</pre>
+<br>
+&nbsp; 
+</body>
+</html>

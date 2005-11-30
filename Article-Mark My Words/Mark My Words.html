@@ -1,0 +1,375 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+
+<html>
+
+<head>
+
+   <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+   <title>Mark My Words</title>
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+
+<body>
+
+		<div align="right">
+			&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright &copy; 2001 International Business Machines Corp.</font>
+			<table border=0 cellspacing=0 cellpadding=2 width="100%">
+				<tr>
+					<td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse Corner Article</font></font></b></td>
+				</tr>
+			</table>
+		</div>
+		<div align="left">
+			<h1><img src="images/idea.jpg" height=86 width=120 align=CENTER></h1>
+			<center>
+				<h1>Mark My Words</h1>
+			</center>
+		</div>
+
+<center>
+<h3>Using markers to tell users about problems and tasks</h3>
+</center>
+
+<blockquote>
+<b>Summary</b>
+
+<br>Eclipse workbench has a central mechanism for managing resource annotations. They are 
+called <b>markers</b>.  In this article, you will learn how to use markers to mark-up 
+resources as well as how to define your own marker types and enhance the Tasks view to
+handle them in a special way.
+<p><b>By Dejan Glozic, IBM and Jeff McAffer, OTI</b>
+<br>
+<font size="-1">April 1, 2001</font> </p>
+</blockquote>
+
+
+
+<hr WIDTH="100%">
+
+<p>Eclipse-based applications may be quite complex, consisting of
+many plug-ins. Each plug-in may have a need to tag resources to communicate
+
+problems and other information to the user. In order to assist plug-in writers
+and ensure consistent user experience, the Eclipse platform has a central mechanism,
+called <b>markers</b> which manages this information.
+
+<p>A marker is like a yellow sticky note stuck to a
+resource.&nbsp; On the marker you can record information about a problem (e.g.,
+location, severity, ...), a task to be done or simply remember the location of
+the marker as a bookmark.&nbsp; Users can quickly jump to the marked
+location.
+
+There are several pre-defined marker <b>types</b>  supplied by the platform:
+<br>&nbsp;
+<center><table BORDER=0 CELLSPACING=5 CELLPADDING=0 >
+<tr>
+<td><img SRC="images/error_tsk.gif" height=16 width=16></td>
+<td><p><b>Problems</b> - for representing invalid states (errors,
+warnings, information)</p></td>
+</tr>
+<tr>
+<td><img SRC="images/task_tsk.gif" BORDER=0 height=16 width=16></td>
+<td><p><b>Tasks</b> - for capturing user created reminders (todo's)</p></td>
+</tr>
+<tr>
+<td><img SRC="images/bkmrk_tsk.gif" height=16 width=16></td>
+<td><p><b>Bookmarks</b> - for marking a location that can be quickly jumped
+to later</p></td>
+</tr>
+</table></center><br>
+
+<h3>Marker attributes, declaration and inheritance</h3>
+
+<p>The set of marker types and attributes managed by the platform is extensible.
+As a matter of fact, the <tt>IMarker</tt> interface has very few methods which are
+type- or attribute-specific. Given a marker, you can ask for its associated resource,
+the marker's id (unique relative to that resource) and
+its type.  You can also access additional information encoded as generic <b>attributes</b>.&nbsp;</p>
+
+<p>
+Attributes are maintained as name/value pairs where the names are strings and a
+value can be any one of the supported value types (Boolean, Integer, String). The limitation
+on value types allows the platform to persistent the markers quickly and simply (its hard to persist generic Objects).</p>
+
+<p>You might ask - &quot;if everything is an attribute, how do I do simple things like
+manipulating marker message or priority?&quot; The answer lies in naming
+conventions.  The IMarker interface defines a set of constants containing
+standard attribute names and values which
+are used when getting and setting attributes.&nbsp; For
+example:</p>
+
+<blockquote>
+  <pre><font color="#0000FF">public void</font> manipulateMarker(IMarker marker) {
+   <font color="#FF0000">// test to see if the marker really exists.  Perhaps its stale?</font>
+   <font color="#0000FF">if</font> (!marker.exists())
+      <font color="#0000FF">return</font>;
+   <font color="#0000FF">try</font> {
+      marker.setAttribute(IMarker.MESSAGE, <font color="#008000">&quot;A sample marker message&quot;</font>);
+      marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
+   } <font color="#0000FF">catch</font> (CoreException e) {
+      <font color="#FF0000">// You need to handle the cases where attribute value is rejected</font>
+   }
+}</pre>
+
+</blockquote>
+<p>Since there is no way the platform could anticipate all possible uses of
+markers, the set of attributes is not fixed - users can declare new marker types
+and new attributes.&nbsp; Plug-in developers create their own types by configuring extensions in their
+plug-in manifest.  While problems, tasks and bookmarks are well-known marker types
+which appear embedded in the platform, they are in fact declared by the platform
+using exactly the same mechanism available to plug-in developers!</p>
+
+<p>New marker types are derived from existing ones using multiple
+inheritance. New marker types inherit all of the attributes
+from their supertypes and add any new attributes defined as part of the
+declaration. They also transitively inherit the supertypes of their supertypes.&nbsp;
+Consider the following markup extracted from the <tt>com.example.markers.r.us</tt>
+plug-in:</p>
+
+<blockquote>
+  <pre>&lt;<font color="#0000FF">extension</font> <font color="#0000FF">id</font>=&quot;coolmarker&quot; <font color="#0000FF">point</font>=&quot;org.eclipse.core.resources.markers&quot;/&gt;
+&lt;<font color="#0000FF">extension</font> <font color="#0000FF">id</font>=&quot;coolproblem&quot; <font color="#0000FF">point</font>=&quot;org.eclipse.core.resources.markers&quot;&gt;
+   &lt;<font color="#0000FF">super</font> <font color="#0000FF">type</font>=&quot;org.eclipse.core.resources.problemmarker&quot;/&gt;
+   &lt;<font color="#0000FF">super</font> <font color="#0000FF">type</font>=&quot;com.example.markers.r.us.coolmarker&quot;/&gt;
+   &lt;<font color="#0000FF">attribute</font> <font color="#0000FF">name</font>=&quot;coolFactor&quot;/&gt;
+   &lt;<font color="#0000FF">persistent</font> <font color="#0000FF">value</font>=&quot;true&quot;/&gt;
+&lt;/<font color="#0000FF">extension</font>&gt;</pre>
+</blockquote>
+<p>Note that the marker type <tt>org.eclipse.core.resources.problemmarker</tt> 
+  is actually one of the pre-defined types (aka <tt>IMarker.PROBLEM</tt>).&nbsp; 
+  The only part of a marker supertype that is not inherited is its persistence 
+  flag.&nbsp; While the standard marker types (task, problem and bookmark) are 
+  declared as persistent, by default, new marker types are <b>not</b> persistent.&nbsp; 
+  The platform will not save their state between sessions.&nbsp; If developers 
+  declare their marker types as persistent (as shown above), the state of markers 
+  of that type will be saved and restored by the platform.&nbsp;</p>
+
+<p>After placing the above declaration into your plug-in manifest file,
+you can create instances of <tt>coolproblem</tt> marker type and freely set or
+get <tt>coolFactor</tt>  attribute (see example below). The new attributes allow you to associate data with markers that you plan to use elsewhere
+(in your views, editors etc.).&nbsp; Markers of a particular type do not have to
+have values for all of the declared attributes.&nbsp; The attribute declarations
+are more for solving naming convention problems (so everyone uses
+&quot;message&quot; to talk about a marker's description) than they are for
+constraining content.&nbsp;&nbsp;&nbsp;</p>
+
+<blockquote>
+  <pre><font color="#0000FF">public </font>IMarker<font color="#0000FF"> </font>createCoolMarker(IResource resource) {
+   <font color="#0000FF">try</font> {
+      IMarker marker = resource.createMarker(<font color="#008000">&quot;com.example.markers.r.us.coolproblem&quot;</font>);
+      marker.setAttribute(&quot;coolFactor&quot;, <font color="#008000">&quot;ULTRA&quot;</font>);
+      <font color="#0000FF">return</font> marker;
+   } <font color="#0000FF">catch</font> (CoreException e) {
+      <font color="#FF0000">// You need to handle the cases where attribute value is rejected</font>
+   }
+}</pre>
+
+</blockquote>
+<p>The real power of defining your own marker types comes from the query
+facilities built-into the platform.&nbsp; The query in the code below finds all <tt>coolmarkers</tt> 
+associated with the given target resource and all its descendents.&nbsp; Note
+that this will also find all <tt>coolproblems</tt>.</p>
+
+<blockquote>
+  <pre><font color="#0000FF">public</font> IMarker[] findCoolMarkers(IResource target) {
+   String type = <font color="#008000">&quot;com.example.markers.r.us.coolmarker&quot;</font>;
+   IMarker[] markers = target.findMarkers(type, <font color="#0000FF">true</font>, IResource.DEPTH_INFINITE);
+}</pre>
+
+</blockquote>
+
+<h3>
+
+<font size=+0>Marker representation in the platform</font></h3>
+
+<p>You don't have to look hard to spot markers in the platform. 
+Just open the Tasks view, create a sample Java&trade; project, open a Java file
+for editing and type something obviously wrong. You will soon see error
+markers in the Tasks view, one per syntax error. And since you have Java
+editor opened, you can also select a line of code and place a bookmark
+there. If you open Bookmarks view, you will see the newly created bookmark.
+Similarly, you can set breakpoint markers for the purpose of debugging your
+code.&nbsp; All of these markers appear together in the vertical left
+sidebar (Figure 1).&nbsp;&nbsp;</p>
+
+<p>The standard platform can display and manage any of the pre-defined marker
+types.&nbsp; A standard set of images are used to denote a marker's type,
+priority, severity etc. as appropriate.&nbsp; The
+presentation is maintained for extended types as well - supertypes will be used
+in that case. For example, if your marker extends the task marker type, it will look like a
+task in the workbench but will still be able to carry additional attributes.&nbsp;
+If you create a new breed of marker that does not
+inherit from the pre-defined types (e.g., tasks, problems or bookmarks), or want
+to change the way markers are presented, you can define new views which give the
+desired look and feel.
+
+</p>
+
+
+<div align="center">
+  <center>
+
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=5 >
+
+<tr>
+<td><img SRC="images/markers.jpg" width="662" height="507"></td>
+</tr>
+
+<tr>
+<td>
+  <p align="center"><b><font size=-1>Figure 1: Places where markers show up in
+  the platform.&nbsp;</font></b></p>
+</td>
+</tr>
+
+</table>
+
+
+  </center>
+</div>
+<br>
+
+<h3>Basic marker operations</h3>
+
+Markers are owned and managed by the platform. It is your job to
+create them, remove them or change their attributes. The platform takes care of
+resource associations, change notification and persistence (you need to define your marker type as persistent for this to happen). It is also important to note that
+they are similar to resources in that they are only handles and it is possible to
+have a 'stale' handle (i.e., a handle to a marker that does not exist). <tt>IMarker.exists()</tt> should be called to test for this situation.
+<p>
+
+Marker changes will be reported in resource deltas. Resource change
+listeners are able to detect this by checking the change flags to see if the
+delta represents changes in the resource, in its markers, or both.
+
+<p>It is interesting to note that markers cannot be directly
+
+created (using the constructor). They are created using a factory method (<tt>IResource.createMarker()</tt>)
+on the resource they will be associated with. If you need to create a marker that has
+a global scope (not associated with any specific resource), you need do it on the
+<b>
+workspace root</b> (see <tt>IWorkspace.getRoot()</tt>).
+
+<blockquote>
+  <pre><font color="#0000FF">public</font> <font color="#0000FF">void</font> createMarkerForResource(IResource resource) <font color="#0000FF">throws</font> CoreException {
+   IMarker marker = resource.createMarker(<font color="#008000">&quot;com.example.markers.r.us.coolproblem&quot;</font>);
+
+   <font color="#FF0000">//Once we have a marker object, we can set its attributes</font>
+   marker.setAttribute(<font color="#008000">&quot;coolFactor&quot;</font>, <font color="#008000">&quot;ULTRA&quot;</font>);
+   marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+   marker.setAttribute(IMarker.MESSAGE, <font color="#008000">&quot;Variable 'i' has not been defined.&quot;</font>);
+}</pre>
+</blockquote>
+
+At a later point in time, you may want to remove the marker you
+have created. If you still have a handle to it, you will do something like
+this:
+
+<blockquote>
+  <pre><font color="#0000FF">try</font> {
+&nbsp;&nbsp; marker.delete();
+} <font color="#0000FF">catch</font> (CoreException e) {
+   <font color="#FF0000">// Something went wrong</font>
+}</pre>
+</blockquote>
+
+Any time during the session, you can query the resources for
+markers. If resource is a folder or a workspace root, you can also ask for
+markers associated with resource children.&nbsp; For example, querying the workspace root
+with infinite depth considers all of the markers in the workspace.
+
+<blockquote>
+  <pre>IMarker[] problems = <font color="#0000FF">null</font>;
+<font color="#0000FF">int</font> depth = IResource.DEPTH_INFINITE;
+<font color="#0000FF">try</font> {
+   problems = resource.findMarkers(IMarker.PROBLEM, <font color="#0000FF">true</font>, depth);
+} <font color="#0000FF">catch</font> (CoreException e) {
+   <font color="#FF0000">// something went wrong</font>
+}</pre>
+</blockquote>
+
+The result of the code snippet above depends on how you tweak the arguments in
+the <tt>findMarkers</tt>
+
+call. For example, if you pass <tt>null</tt> for the marker type, you will get all the
+markers associated with the resource. The depth argument controls the depth of
+the search. The depth can be limited to zero (just the given resource), one (the
+resource and all its direct children) or infinite (the resource and all direct
+and indirect children). Finally, you can specify if you want to include only markers of the
+specified type or markers of all subtypes as well.
+
+<p>Batches of markers can be deleted using the same
+specification technique and <tt>deleteMarkers()</tt> (identical signature). This method is useful when removing markers
+in numbers or when individual marker references or IDs are not available.</p>
+
+<h3>Marker use</h3>
+
+<p>
+The most general statement of marker usage is to say that markers allow plug-ins
+and/or users to highlight points of interest. They are very much like bookmarks
+in typical web browsers except that they may be automatically generated by
+plug-ins.</p>
+<p>
+The most obvious way to use markers in a plug-in is to communicate
+
+build problems. Java Development Tooling plug-in, for example, uses markers to inform users
+
+about Java compilation errors and warnings. These markers show up in the
+
+Tasks view and users can use them to jump directly to the Java editor at
+
+the error location.</p>
+
+<p>Task markers are ideal as user reminders when generated by
+plug-ins that create entire projects using elaborate wizards and templates.
+While the wizard instantiates the template it adds task markers to highlight areas where users needs to
+
+fill in content or make choices.&nbsp; Users can then jump in and quickly fill in the blanks.
+
+<p>Whatever the usage, it is important to remember that the
+platform manages markers, but it is the plug-ins that control their
+creation, removal and attribute values.&nbsp; The platform will throw away
+markers attached to resources which are deleted but you are responsible for removing
+stale markers when they no longer apply to a resource which lives on.&nbsp; Stale markers can be very confusing to users and will make
+them search
+
+for problems when there aren't any.
+
+<h3>Space for creativity</h3>
+
+<p>Markers are intended to be small, lightweight objects.&nbsp; There
+is the potential of hundreds, even thousands of markers in a single Eclipse project. Keep this in mind when defining new marker types with lots
+of new
+attributes. When used in moderation, additional attributes can be used
+by other platform artifacts for a powerful effect. For example, Eclipse UI plug-in uses a Boolean attribute to mark the task completed.</p>
+
+<p>It is possible to combine new attributes and the ability to
+
+extend Tasks view pop-up menu and local tool bar and provide additional behavior for your markers.
+
+For example, spec compliance warning marker can carry violated spec index
+
+as an attribute. An added pop-up menu action can use this information to
+
+show a dialog with the entire text of the violated spec with suggestions
+
+for fixing the problem. Note how we increased the footprint of the marker only
+slightly (one Integer object) by keeping the actual spec text in an indexed
+table elsewhere.</p>
+
+<h3>Conclusion</h3>
+
+<p>This article has shown that the Eclipse platform has a central mechanism for managing annotations on resources. Techniques 
+for performing basic operations on markers, extending the
+basic marker types and creatively tapping into marker attributes for interesting
+effect were also shown.</p>
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+
+</body>
+
+</html>

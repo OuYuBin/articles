@@ -1,0 +1,313 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta name="Author" content="Carolyn MacLeod">
+<title>Appendix C: Spinner for Windows</title>
+</head>
+
+<body>
+<h2>Appendix C: Spinner for Windows</h2>
+This appendix contains the source code for the Windows version of the <i>Spinner</i> natives in spinner.c, and the batch file and makefile for building the Windows Dynamic Link Library 
+spinner.dll.
+<h3><strong>spinner.c</strong></h3>
+<pre>
+/*
+ * (c) Copyright IBM Corp. 2000, 2001.
+ * All Rights Reserved.
+ */
+ 
+#include &lt;jni.h&gt;
+#include &lt;windows.h&gt;
+#include &lt;commctrl.h&gt;
+ 
+static DWORD tlsIndex = 0;
+static jobject javaClass;
+static jmethodID mid;
+static WNDPROC oldProc;
+ 
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    JNIEnv *env = TlsGetValue(tlsIndex);
+    if (env != NULL) {
+        /* If an exception has already occurred,
+         * allow the stack to unwind so that the
+         * exception will be thrown in Java. */
+        if ((*env)-&gt;ExceptionOccurred(env)) return 0;
+        switch (msg) {
+            case WM_VSCROLL:
+                if ((wParam &amp; 0xFFFF) == SB_THUMBPOSITION) {
+                    ((*env)-&gt;CallStaticVoidMethod(env, javaClass, mid, lParam));
+                    return (LRESULT) 0;
+                }
+                break;
+        }
+    }
+    return CallWindowProc(oldProc, hwnd, msg, wParam, lParam); 
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    createControl
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_createControl
+    (JNIEnv *env, jclass that, jint hwndParent)
+{
+    HWND hwndText, hwndUpDown;
+    if (tlsIndex == 0) {
+        tlsIndex = TlsAlloc();
+        if (tlsIndex == -1) return (jint) 0;
+        javaClass = (*env)-&gt;NewGlobalRef(env, (jobject) that);
+        mid = (*env)-&gt;GetStaticMethodID(env, (jobject) that, &quot;widgetSelected&quot;, &quot;(I)V&quot;);
+        oldProc = (WNDPROC) GetWindowLong((HWND) hwndParent, GWL_WNDPROC);
+    }
+    TlsSetValue(tlsIndex, (LPVOID) env);
+
+    hwndText = CreateWindowEx(
+        WS_EX_CLIENTEDGE,
+        &quot;EDIT&quot;,
+        NULL,
+        WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+        0, 0, 0, 0,
+        (HWND) hwndParent,
+        0,
+        GetModuleHandle(NULL),
+        NULL);
+    if (hwndText == 0) return (jint) 0;
+    hwndUpDown = CreateWindowEx(
+        0,
+        UPDOWN_CLASS,
+        NULL,
+        WS_CHILD | WS_VISIBLE | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS,
+        0, 0, 0, 0,
+        (HWND) hwndParent,
+        0,
+        GetModuleHandle(NULL),
+        NULL);
+    if (hwndUpDown == 0) return (jint) 0;
+    SetWindowLong((HWND) hwndParent, GWL_WNDPROC, (long) WindowProc);
+    return (jint) hwndUpDown;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    computeSize
+ * Signature: (I[I)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_computeSize
+    (JNIEnv *env, jclass that, jint hwndUpDown, jintArray result) {
+    int width, height;
+    TEXTMETRIC tm;
+    RECT rect;
+    int comboHeight;
+    int max, digits;
+    UINT flags;
+    char text[64];
+    HWND hwndText = (HWND) SendMessage((HWND) hwndUpDown, UDM_GETBUDDY, 0, 0);
+    HDC hDC = GetDC(hwndText);
+    HFONT oldFont = 0;
+    HFONT newFont = (HFONT) SendMessage(hwndText, WM_GETFONT, 0, 0);
+
+    jint *result1 = NULL;
+    result1 = (*env)-&gt;GetIntArrayElements(env, result, NULL);
+
+    if (newFont != 0) oldFont = SelectObject(hDC, newFont);
+    GetTextMetrics(hDC, &amp;tm);
+    comboHeight = GetSystemMetrics(SM_CYVSCROLL);
+    height = (comboHeight &gt; tm.tmHeight) ? comboHeight : tm.tmHeight;
+    max = SendMessage((HWND) hwndUpDown, UDM_GETRANGE, 0, 0) &amp; 0xFFFF;
+    if (max &gt; 0) {
+        digits = 0;
+        while (max &gt; 0) {
+            text[digits] = '0';
+            max /= 10;
+            digits++;
+        }
+        flags = DT_CALCRECT | DT_EDITCONTROL | DT_NOPREFIX;
+        DrawText(hDC, (LPCTSTR) text, digits, (LPRECT) &amp;rect, flags);
+        width = rect.right - rect.left + 3;
+    } else {
+        width = 10;
+    }
+    if (newFont != 0) SelectObject(hDC, oldFont);
+    ReleaseDC(hwndText, hDC);
+    width += GetSystemMetrics(SM_CXVSCROLL);
+    SendMessage(hwndText, EM_GETRECT, 0, (LPARAM) &amp;rect);
+    if (rect.top == 0) rect.top = 1; // windows bug fix
+    width += (rect.left + 1) * 2;
+    height += (rect.top + 1) * 2;
+
+    result1 [0] = width;
+    result1 [1] = height;
+    (*env)-&gt;ReleaseIntArrayElements(env, result, result1, 0);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    resizeControl
+ * Signature: (IIIII)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_resizeControl
+    (JNIEnv *env, jclass that, jint hwndUpDown, jint x, jint y, jint width, jint height)
+{
+    HWND hwndText = (HWND) SendMessage((HWND) hwndUpDown, UDM_GETBUDDY, 0, 0);
+    UINT flags = SWP_NOZORDER | SWP_DRAWFRAME | SWP_NOACTIVATE;
+    int upDownWidth = GetSystemMetrics(SM_CXVSCROLL);
+    SetWindowPos(hwndText, (HWND) 0, x, y, width - upDownWidth + 2, height, flags);
+    SetWindowPos((HWND) hwndUpDown, (HWND) 0, x + width - upDownWidth, y, upDownWidth, height, flags);               
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setPosition
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setPosition
+    (JNIEnv *env, jclass that, jint hwnd, jint position)
+{
+    SendMessage((HWND) hwnd, UDM_SETPOS, 0, position);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    getPosition
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_getPosition
+    (JNIEnv *env, jclass that, jint hwnd)
+{
+    return (jint) SendMessage((HWND) hwnd, UDM_GETPOS, 0, 0) &amp; 0xFFFF;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setMaximum
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setMaximum
+    (JNIEnv *env, jclass that, jint hwnd, jint max)
+{
+    int min = SendMessage((HWND) hwnd, UDM_GETRANGE, 0, 0) &gt;&gt; 16;
+    SendMessage((HWND) hwnd, UDM_SETRANGE, 0, (min &lt;&lt; 16) | max);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    getMaximum
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_getMaximum
+    (JNIEnv *env, jclass that, jint hwnd)
+{
+    return SendMessage((HWND) hwnd, UDM_GETRANGE, 0, 0) &amp; 0xFFFF;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setMinimum
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setMinimum
+    (JNIEnv *env, jclass that, jint hwnd, jint min)
+{
+    int max = SendMessage((HWND) hwnd, UDM_GETRANGE, 0, 0) &amp; 0xFFFF;
+    SendMessage((HWND) hwnd, UDM_SETRANGE, 0, (min &lt;&lt; 16) | max);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    getMinimum
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_spinner_Spinner_getMinimum
+    (JNIEnv *env, jclass that, jint hwnd)
+{
+    return SendMessage((HWND) hwnd, UDM_GETRANGE, 0, 0) &gt;&gt; 16;
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setFont
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setFont
+    (JNIEnv *env, jclass that, jint hwnd, jint hFont)
+{
+    HWND hwndText = (HWND) SendMessage((HWND) hwnd, UDM_GETBUDDY, 0, 0);
+    SendMessage(hwndText, WM_SETFONT, hFont, 1);
+}
+
+/*
+ * Class:     spinner_Spinner
+ * Method:    setFocus
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_spinner_Spinner_setFocus
+    (JNIEnv *env, jclass that, jint hwnd)
+{
+    HWND hwndText = (HWND) SendMessage((HWND) hwnd, UDM_GETBUDDY, 0, 0);
+    SetFocus(hwndText);
+}
+</pre>
+<p>
+<h3><strong>build.bat</strong></h3>
+<pre>
+@echo off
+ 
+IF NOT &quot;%IVE_HOME%&quot;==&quot;&quot; GOTO MAKE
+ 
+set IVE_HOME=j:\teamswt\swt-builddir\ive\bin
+set path=%IVE_HOME%;%path%
+ 
+rem NOTE:
+rem Initialize MSVC 6.0/MSSDK environment
+call k:\dev\products\msvc60\vc98\bin\vcvars32.bat
+set Mssdk=j:\teamswt\swt-builddir\mssdk
+call %Mssdk%\setenv.bat
+ 
+:MAKE
+nmake makefile.mak
+</pre>
+<p>
+<h3><strong>makefile.mak</strong></h3>
+<pre>
+# Makefile for module 'spinner.dll'
+# assumes IVE_HOME is set in the environment from which nmake is run
+
+!include &lt;win32.mak&gt;
+
+DLLPREFIX=spinner
+DLLNAME=$(DLLPREFIX).dll
+
+CFLAGS=-c -W3 -G6 -GD -O1 -nologo -D_X86_=1 -D_WIN32 -D_WIN95 -D_WIN32_WINDOWS=0x0400 -D_MT -MT -DWIN32 -D_WIN32_DCOM /I$(IVE_HOME)\include /I.
+LFLAGS=/INCREMENTAL:NO /PDB:NONE /RELEASE /NOLOGO /BASE:0x10000000 /DLL
+
+LINK_LIBS=comctl32.lib user32.lib gdi32.lib
+
+OBJS=$(DLLPREFIX).obj
+
+all: $(OBJS) $(DLLPREFIX)
+
+$(DLLPREFIX): $(OBJS)
+    echo $(LINK_LIBS) &gt;templrf
+    echo $(LFLAGS) &gt;&gt;templrf
+    echo -machine:IX86 &gt;&gt;templrf
+    echo -subsystem:windows &gt;&gt;templrf
+    echo -out:$(DLLNAME) &gt;&gt;templrf
+    echo $(OBJS) &gt;&gt;templrf
+    link @templrf
+    del templrf
+
+clean:
+    del *.obj
+    del *.dll
+    del *.exp
+
+.c.obj:
+    cl $(CFLAGS) $*.c
+</pre>
+</body>
+
+</html>

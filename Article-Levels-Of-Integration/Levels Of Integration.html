@@ -1,0 +1,251 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Levels of Integration</title>
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+<body>
+<div align="right">
+			<font size="-1">Copyright &copy; 2001 Object Technology International, Inc</font></div>
+<table border=0 cellspacing=0 cellpadding=2 width="100%" >
+  <tr> 
+    <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica" color="#FFFFFF">&nbsp;Eclipse 
+      Corner Article</font></b></td>
+  </tr>
+</table>
+<h1> <img src="images/idea.jpg" height=86 width=120 align=CENTER></h1>
+<center>
+  <h1> Levels Of Integration</h1>
+</center>
+<center>
+  <h3>Five ways you can integrate with the Eclipse Platform</h3>
+</center>
+<blockquote><b>Summary</b> <br>
+  The types of problems web application developers face today require the use 
+  of a diverse set of tools that operate in many domains. In order to provide 
+  flexible tool integration, a tool integration platform must allow tool developers 
+  to target different levels or integration based on the desired level of investment, 
+  time to market, and specific tool needs. Each integration level determines how 
+  a tool must behave, and what end users can expect as a result. This article 
+  defines the different levels of tool integration supported by Eclipse, and gives 
+  an overview of how they work.<br>
+<p><b>By Jim Amsden, OTI</b>
+<br>
+  <font size="-1">March 25, 2001</font> </p>
+</blockquote>
+
+<p>
+		<hr width="100%">
+		<h3 align="left">Web Application development results in the need for&nbsp;integrated tools</h3>
+		<p><font color="#000000" >The Web&nbsp;represents a complex, highly dynamic, rapidly changing application problem space. A Web application incorporates many resource types representing diverse, yet highly interrelated components including: HTML, GIF, JPEG, DHTML, scripting, Java&trade; Applets, ActiveX controls, servlets, etc. In most cases, these resources are never collectively compiled in order to validate the intended relationships. This often results in applications that are fragile, and difficult to test, scale, and maintain.</font></p>
+		<p><font color="#000000" 
+           >Because of this wide range of content types, building a Web application requires a set of diverse, highly specialized skills including: programmers, graphic designers, database designers, business experts, and document designers. The overall architecture of Web applications&nbsp;is established by the target runtime including client web browsers and HTTP, and web application servers. The resulting distributed applications require compromises between accessibility, availability, integrity, ease of use, performance, and footprint. Web applications are targeted to a broad audience&nbsp;which requires emphasis on ease of use, appealing look and feel, and masking resource and distribution technologies. This isn't easy stuff!</font></p>
+		<p><font color="#000000" >To make matters worse, techniques for developing Web applications are changing fast. Developers end up using new and immature technologies and tools in different stages of maturity: new tools, new revisions of old tools, and beta releases of emerging tools.&nbsp;There is a significant opportunity for point tools that support emerging web technologies to facilitate application development. However, these tools must be effectively integrated with other tools in order to speed Web application development, minimize gaps and overlaps between tools, and provide a positive developer experience.</font></p>
+		<h3>Tools vendors need to maximize acceptance while minimizing development cost</h3>
+		<p><font color="#000000" >In order to be successful, tool developers need to focus on the value added by their tools while minimizing their investment in &quot;plumbing&quot;, porting to other operating systems, browsers, and/or web servers, and minimizing the amount of ancillary functionality that must be provided in order for their tool to be accessible and useful. Minimizing this investment involves integrating tools with other complementary tools and IDEs in such a way that the integrated result provides more value to the end user than the individual tools by themselves. However, integrating tools can require a significant investment! Each tool or IDE that is a candidate for integration may provide its own set of extensibility and integration&nbsp; mechanisms. In order to achieve maximum market penetration, a tool vendor needs to integrate with as many other tools and IDEs as possible, and in such a way that the tools complement each other without creating undue redundancy and coupling.</font></p>
+		<h3>The Eclipse Platform provides a tool integration framework</h3>
+		<p><font color="#000000" 
+           >The Eclipse Platform reduces the cost of tool integration by providing a large number of services, APIs, and frameworks that enable effective and scalable tool integration. Wherever possible, Eclipse uses open standards to limit tool vendor investment and reduce time to market. The Platform provides a focal point for integrating and configuring best-of-breed tools in a manner that best fits the end user's development process and Web application architecture. The Eclipse Workbench provides a central integration point for project control and an integration mechanism&nbsp;for resource-specific tools. This approach allows a user to build applications using a heterogeneous set of tools while at the same time providing a common view of the complete application across all components and the entire team.&nbsp;</font></p>
+		<p><font color="#000000" >The Eclipse Platform can also provide services common to different tools including user interface frameworks, managing relationships between components, component version management, and publishing services. Using Eclipse simplifies tool integration by allowing tools to integrate with the platform instead of each other. This significantly reduces the number of integration problems that must be solved, and provides a more consistent environment for the end user.</font></p>
+<h3><A name=ConformanceLevels></A>Integration Conformance Levels</h3>
+<p><font color="#000000" >Full integration with Eclipse provides an experience for the end user that is so seamless they can't tell where one tool ends and another begins.  However full integration isn't always practical for all tools. In order to provide flexible tool integration, Eclipse supports a number of integration levels that tool developers can target based on the desired level of investment, time to market, and specific tool needs. Each level specifies what tool vendors must do to achieve that level of integration, and the required technologies that must be employed. The integration levels are summarized in the table below, and described in detail in the following sections.</font></p>
+		<DIV align=center> 
+  <TABLE border=1 cellPadding=1 cellSpacing=1 width="75%">
+    <TR> 
+      <TD> 
+        <P align=left><STRONG>None</STRONG></P>
+      </TD>
+      <TD>No integration, tools are separate and independent.</TD>
+    </TR>
+    <TR> 
+      <TD><STRONG>Invocation</STRONG></TD>
+      <TD>Integration is through invocation of registered applications on resource 
+        types</TD>
+    </TR>
+    <TR> 
+      <TD><STRONG>Data</STRONG></TD>
+      <TD>Integration is achieved through data sharing</TD>
+    </TR>
+    <TR> 
+      <TD><STRONG>API</STRONG></TD>
+      <TD>Tools interact with other tools through Java APIs that abstract tool 
+        behavior and make it publicly available</TD>
+    </TR>
+    <TR> 
+      <TD><STRONG>UI</STRONG></TD>
+      <TD>Tools and their user interfaces are dynamically integrated at runtime including window panes, menus, toolbars, properties, preferences, etc.</TD>
+    </TR>
+  </TABLE>
+</DIV>
+		<h4><a name=None></a>None - No integration</h4>
+		<blockquote> 
+  <p><font color="#000000" 
+             >Tools don't always need to be integrated. If a tool has a good user 
+    interface that is consistent with the host platform, doesn't share or require 
+    require data other tools, or has limited relationships with other resources, 
+    there may be no need to integrate it with other tools.</font></p>
+  <p><font color="#000000" 
+             >At this level, there is no integration of the tool with other Eclipse-based 
+    tools. Users use the tool and other Eclipse tools independently. Any integration 
+    is done by the end user through their own development processes. This level 
+    provides no integration services, and requires nothing of tool vendors. </font></p>
+</blockquote>
+		<h4><a name=Invocation></a>Invocation - Tool launched in external process</h4>
+		<blockquote> 
+  <p><font color="#000000">Invocation, or launch, integration allows the Eclipse platform to be configured to invoke a tool on resources of a specific type. Using the Eclipse resource navigator view, the tool is launched in a separate window, and is completely responsible for managing all aspects of the resource contents. Since the Eclipse workspace is a view on the local file system, other tools can easily be launched on the user's project files. There is no need to export, modify, and reimport resources in order to use them with Eclipse. File based tools can also benefit from the Eclipse resource management facilities for version management, team support, access control, and synchronization with a shared team server.</font></p>
+  <p><font color="#000000">The Eclipse Platform provides an operating system independent 
+    registry mechanism for registering tools to be invoked on resource types. 
+    Tools that integrate at the invocation level only need to specify the resource 
+    types they are interested in managing.</font></p>
+  <p><font color="#000000">Invocation integration is often the best place to start when integrating existing tools, especially file based tools that have user interfaces conforming to the host platform conventions. The tool doesn't run in the Eclipse workbench, doesn't share the same JVM, and can't integrate with other Eclipse views and editors. But it can be launched and use the Eclipse project model and resource management facilities. Developers can use the Eclipse Workbench as a central control point for navigating, editing, and managing all their project resources, including the ones manipulated the launched tools. That's a lot of functionality for practically no additional investment. </font></p>
+</blockquote>
+		<h4><a name=Data></a>Data - Data sharing</h4>
+		<blockquote> 
+  <p><font color="#000000">Data integration allows data manipulated by the tool to be available to other tools. Data integration has three requirements on tool integration frameworks; an access method, an interchange protocol, and data transformation facilities. The access method says how applications access other applications' data. The interchange method specifies the form in which the data is accessed. Sometimes the form of the source data is not ideal for the requesting client. Transformation facilities are used to transform the data to make it more useful by the requesting application. These data integration requirements and facilities must be met independently of the actual data repositories, schemas, and physical stored data formats. This way multiple client applications can share data while minimizing the coupling between them.</font></p>
+  <p><font color="#000000" 
+             >The Eclipse platform supports managed resources representing the 
+    persistent state of some tool's data. These resources are edited and saved 
+    in the user's private workspace on their local file system where they are 
+    isolated from changes made by other members of the team. The resource manager 
+    uses standard file access mechanisms to access resources. There is no proprietary 
+    repository. File contents are not dictated by the platform. The platform can 
+    be configured through workbench extension points to support any resource type. 
+    To facilitate data integration with other tools, tool vendors may want to 
+    store their resources as XML, or provide XML translators on proprietary data 
+    formats. <a href="http://www.omg.org/technology/xml/index.htm">XMI</a> can 
+    also be used as a standard data interchange format to provide even better 
+    data integration. If a tool's data is available as XML or XMI, it is fairly 
+    simple for other tools to use XSLT to transform the resource as needed by 
+    the requesting tool.</font></p>
+  <p><font color="#000000">The Eclipse Platform can also be enabled to support WebDAV as a common, open, standard access protocol for accessing resources managed by WebDAV servers. This provides even more openness and flexibility for data access. Tools that want to focus on data integration with Eclipse, while leveraging open standards that enable integration with other environments can use WebDAV, XMI, and XSLT as their standard access, interchange, and transformation protocols. This provides a great deal of flexibility for handling multiple WebDAV enabled repositories and resource stored data formats. All based on open standards.</font></p>
+</blockquote>
+		<h4><a name=API></a>API - Integration through platform API's</h4>
+		<blockquote> 
+  <p><font color="#000000" 
+             >Data integration provides significantly more value than invocation 
+    integration, but each tool that consumes the data must be responsible for 
+    decoding its format, understanding it, and maintaining its integrity. Since 
+    the data is public, other tools can access and potentially update the data. 
+    This can compromise data integrity due to loss of encapsulation exposing implementation 
+    details. It may also introduce undesirable data coupling limiting tool vendors' 
+    ability to update their respective data models and associated tools. Using 
+    XML/XMI as the interchange format can minimize the data integrity and coupling 
+    issues, but not eliminate them. Data integration provides state reuse, but 
+    not behavioral reuse. Each tool that consumes another tool's data must re-create 
+    any behavior of that tool that is required as part of the integration. This 
+    can result in less code reuse, and potential errors.</font></p>
+  <p><font color="#000000" 
+             >API integration allows client applications to access data through 
+    tool-specific client APIs. These APIs provide a high-level means of capturing 
+    reusable semantics and simplify client application development by providing 
+    data encapsulation and behavioral reuse. Tools that want to provide integration 
+    at the API level simply provide Java client interfaces for accessing their 
+    tool's model. Tools written in other languages must provided implementations 
+    of the Java interfaces through JNI. By standardizing on Java, Eclipse inherits 
+    a rich, object-oriented component model that is easy to use, distributed, 
+    portable, and easy to develop. Separation of the specification of the interfaces 
+    from their implementation and stored data formats allows tool vendors to update 
+    their tool's implementation while minimizing the effect on current clients.</font></p>
+  <p><font color="#000000">To make the tool's Java API available to other Eclipse 
+    tools, the tool vendor simply needs to describe the API in a plug-in manifest 
+    file. Minimally this would require specifying the plug-in name, vendor, version, 
+    runtime component (usually a .jar or .zip file containing Java classes), and 
+    any required plug-ins. The Eclipse Platform plug-in class loader takes care 
+    of loading the classes from the plug-in's runtime when they are needed. The 
+    integrated tools are now running in the same JVM and can easily and securely 
+    access each other's data. To facilitate tool model access through API integration, 
+    tool developers may want to separate their tool's model and UI into separate 
+    plug-ins so the model can be reused in other contexts, and by other tools.</font></p>
+</blockquote>
+		<h4><a name=UI></a>UI - User interface integration</h4>
+		
+<blockquote> 
+  <p><font color="#000000" 
+             >UI integration allows a tool to participate with other tools as 
+    if they were designed as a single application. Tool integration is done by 
+    specifying at run-time the tools with which an application wants to integrate. 
+    It is not necessary to compile, package, and release all the tool components 
+    as a single monolithic unit. Eclipse allows &quot;just-in-time&quot; tool 
+    components to be plugged into the platform when they are available and needed 
+    instead of waiting six months to a year for the next release of some monster 
+    IDE. An Eclipse editor's menu items, toolbar items and preferences are integrated 
+    with the Workbench and share its content area as if they were built together. 
+    Users move seamlessly from one tool to another.</font></p>
+  <p><font color="#000000">UI integration is accomplished by building the user 
+    interface for the tool using the Eclipse UI frameworks, and integrating with 
+    the Workbench through its extension points. Most application development tools 
+    (in fact, most tools in general) operate on hierarchically structured data. 
+    The Eclipse platform exploits this commonality by providing a number of reusable 
+    viewers that can be easily customized through content providers to provide 
+    a user interface for a tool's object model. There are many other facilities 
+    in the Eclipse platform that support tool UI development including SWT, the 
+    Source Editing Framework, contribution frameworks, wizard frameworks, etc. 
+    The Workbench provides extension points for adding new views, editors, wizards, 
+    preference pages, builders, project natures, perspectives, splash screens, 
+    etc. Tools can also extend other tool's menus as well as add extensions to 
+    their extension points. </font></p>
+  <p><font color="#000000" 
+             >The tools can also be integrated by registering interest in events 
+    generated by other tools. For example, each tool can participate in selection 
+    management by providing a selection provider, and listening for selection 
+    events from other editors and views. When the active workbench part (the one 
+    with the focus) sets its selection, all other selection listeners are notified 
+    by the Workbench, and can negotiate with the selected object to see if it 
+    implements an interesting interface. If so, the receiving tool can adjust 
+    its UI accordingly. The Eclipse Platform also provides a number of views that 
+    can easily be reused by other tools including the properties view, outline 
+    view, and task view. Each of these views expects its contributor to implement 
+    certain interfaces. By implementing these interfaces, or delegating to an 
+    adapter, your tool can easily contribute to these views eliminating the need 
+    for you to create them yourself, providing better integration with Eclipse, 
+    minimizing the number of opened windows, and providing your users with a more 
+    consistent look-and-feel.</font></p>
+  <p><font color="#000000" 
+             >Microsoft&reg; OLE document editors can be immediately integrated with 
+    the Eclipse workbench, but only the UI is integrated. The tool will not be 
+    able to contribute to the properties or outline views without additional work. 
+    This shows that it is also possible to do UI integration without doing any 
+    other integration. Other tools, including tools based on Microsoft's COM can 
+    be integrated at the UI level by providing Java wrappers around the tool.</font></p>
+</blockquote>
+<h3>Conclusion</h3>
+<p>Application development, and in particular Web application development, isn't 
+  getting any easier. Clients are demanding high-quality applications in Web time 
+  to support critical business processes. They're betting their business on our 
+  software. But these aren't the only demands we face. Modern Web applications 
+  consist of many loosely coupled technologies requiring diverse, often distributed 
+  teams, to create highly linked resources that are seldom collectively managed. 
+  Addressing this &quot;software paradox&quot; and managing application development 
+  complexity requires truly best-of-breed tools that can be selected and integrated 
+  to provide a roles appropriate, end-to-end development environment tailored 
+  to individual development processes. No longer can we wait for six to twelve 
+  months for the next release of our development tools to get that bug fixed or 
+  add the features we need to get our work done. We want what we need when we 
+  need it!</p>
+<p>But integrated tools require a platform of services, frameworks, and standards 
+  that allow vendors to focus on their value-add while reusing common infrastructure. 
+  The platform must include a workbench that provides a common view of the whole 
+  application across all resource types and the entire team. And the platform 
+  must be accessible to tool vendors under an acceptable license. Eclipse not 
+  only provides such a platform, but it's architecture also provides flexibility 
+  in how tool venders integrate their tools and at what level. This allows vendors 
+  to match their integration investment with their product needs and market window.</p>
+<p>Some tools don't need to be integrated at all. That's great when it works, 
+  not so great when it doesn't. For simple integration, use <a href="#Invocation">invocation 
+  integration</a> to provide users navigation, access, editing, and management 
+  of file-based resources. Use <a href="#Data">data integration</a> to share data 
+  between tools that are otherwise unconnected. When data integration isn't enough, 
+  use <a href="#API">API integration</a> to provide secure access to encapsulated 
+  data. Finally, for the whole Enchilada, use <a href="#UI">UI integration</a> 
+  to make tool components fit seamlessly together as if they were built by a single 
+  hand. Pick the integration you need today, but use Eclipse to do it in such 
+  a way that you're prepared for integration your customers want tomorrow.</p>
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+<p><small>Microsoft, Windows, Windows NT, and the Windows logo are trademarks of Microsoft Corporation in the United States, other countries, or both.</small></p>
+  
+</body>
+</html>

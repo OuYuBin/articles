@@ -1,0 +1,500 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Building and delivering a table editor with SWT/JFace</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body link="#0000ff" vlink="#800080" bgcolor="#FFFFFF">
+
+<div align="right">
+  &nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright © 2003
+  Mirasol Op'nWorks inc.</font>
+  <table border="0" cellspacing="0" cellpadding="2" width="100%">
+    <tr>
+      <td align="LEFT" valign="TOP" colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left">
+  <h1><img src="images/Idea.jpg" align="CENTER" width="120" height="86"></h1>
+</div>
+<p>&nbsp;</p>
+<h1 align="CENTER">Building and delivering a table editor with SWT/JFace</h1>
+<blockquote>
+  <b>Summary</b><br>
+  The JFace API provides several classes that can be used to build editable table 
+  views. In this article, we present a fairly extensive example that exercises 
+  the JFace and SWT classes needed to implement a table with cell editors for 
+  check-boxes, free text and combo-boxes. We also show how to package and deliver 
+  the classes into a stand-alone (non-Eclipse) Java application. 
+  <p><b>By Laurent Gauthier, Mirasol Op'nWorks, <a href="mailto:lgauthier@opnworks.com">lgauthier@opnworks.com<br>
+  </a></b>July 3<font size="-1">, 2003</font></p>
+</blockquote>
+<hr width="100%">
+<h2>Introduction</h2>
+<p>Users of business software take many things for granted from modern GUI
+applications. Their reference consists of office automation software such as
+word processing and spreadsheet applications and they rightly expect other
+programs to exhibit similar look and feel. They certainly do not want to hear
+that because the application was written using this or that technology, they
+should not expect the same behavior from the application as the one they are
+used to. They do not understand, do not want to understand and should not even
+have to be confronted with such an issue. The Eclipse team and more
+specifically, the folks who worked on the SWT and JFace APIs fully understand
+this and have done a tremendous job in providing Java developers with a toolset
+that can be used to quickly build robust native applications. In this article,
+we examine a small part of the SWT/JFace API, namely the constructs that allow
+us to program a table with editable cells and sortable columns.</p>
+<p>The example we use for this article is a task list editor. It is by no means
+a truly useful application and the GUI design was driven essentially by the need
+to provide examples of the use of cell editors. The code presented here can be a
+useful starting point for projects that need the functionality of a table view
+with editable cells.</p>
+<h2>Installation</h2>
+<p>The project and code described herein was designed and implemented as a standalone 
+  SWT/JFace application. In other words, it was meant to run outside the Eclipse 
+  environment per say although it has dependencies on some core Eclipse APIs. 
+  I have wrapped the main class in a plug-in so that it can be conveniently installed 
+  into Eclipse. This also shows how one can build an application that is meant 
+  to run both as a standalone Java application and as an Eclipse extension. But 
+  that could be the subject of another article.</p>
+<p><img src="images/tryit.gif" width="61" height="13">The reader can install the
+executable and source code by extracting the contents of the <a href="TableViewerExamplePlugin.zip">TableViewerExamplePlugin.zip</a>
+file into the <i>plugins</i> directory of an Eclipse 2.1 installation and start
+(or restart) Eclipse.</p>
+<h2>Running the example</h2>
+<p><img src="images/win_only.gif" width="49" height="13">To run the example,
+simply open the sample view through the following menu item: Window -&gt; Show
+View -&gt; Other... -&gt; Examples -&gt; TableViewerExample view. You may also
+want to import the Java source code into an Eclipse project. To run the example
+as a standalone Java application inside the Eclipse workbench, simply run the <code>TableViewerExample</code>
+class making sure you specify the following VM runtime variable:</p>
+<pre><font color="#4444cc">-Djava.library.path=ECLIPSE_HOME\plugins\org.eclipse.swt.win32_2.1.0\os\win32\x86</font></pre>
+<p>where ECLIPSE_HOME is your eclipse home installation folder (the above is for
+Eclipse v2.1 on Win32, for other versions and other platforms, the path and file
+name will be different).</p>
+<h2>The Task List Editor</h2>
+<p>A Task List editor window is shown below. The first column is used to
+indicate whether the task is completed or not. The other columns and buttons are
+self explanatory. The user can toggle the &quot;completed&quot; cell, edit in
+place the &quot;Description&quot; and &quot;% Complete&quot; cells, change the
+&quot;Owner&quot; cell through the use of a combo box, change the sort order by
+clicking on a column header and add and delete tasks by clicking on the
+corresponding button.</p>
+<p><img src="images/tableViewer.gif" width="630" height="292"></p>
+<h2>The ExampleTask and ExampleTaskList classes</h2>
+<p>The example uses two simple classes that play the role of the model in our
+MVC design. The <code>ExampleTask</code> is a simple business object
+representing a task with getters and setters for the following <code></code>properties:</p>
+<pre>     <font color="#4444cc">private boolean completed   = false;
+     private String description  = &quot;&quot;;
+     private String owner        = &quot;?&quot;;
+     private int percentComplete = 0;</font></pre>
+<p>The <code>ExampleTaskList</code> is used to hold, as the name implies, a
+collection of <code>ExampleTask</code> instances. It also knows about the list
+of possible task owners.</p>
+<h2>Building the TableViewerExample class</h2>
+<p>Here we get into the substance of our subject matter: how do we go about
+building and implementing the view and behavior described above? We do this with
+a combination of SWT and JFace constructs. SWT provides an interface to the
+native platform widgetry while JFace provides a high-level abstraction to build
+rich GUIs. In other words, we could implement the example by using only SWT
+objects but that would represent much more work and more complicated code.</p>
+<p>So lets start by examining our <code>TableViewerExample</code> class. It
+inherits from <code>Object</code> and the <code>main()</code> method simply
+creates a new instance, calls the <code>open()</code> method on the window and
+runs until the user tells the window to close itself.</p>
+<pre>     <font color="#4444cc">/**
+      * Main method to launch the window 
+      */
+     public static void main(String[] args) {
+<img src="images/tag_1.gif" width="24" height="13">     Shell shell = new Shell();
+        shell.setText(&quot;Task List - TableViewer Example&quot;);
+
+        // Set layout for shell
+        GridLayout layout = new GridLayout();
+        shell.setLayout(layout);
+		
+        // Create a composite to hold the children
+<img src="images/tag_2.gif" width="24" height="13">     Composite composite = new Composite(shell, SWT.NONE);
+<img src="images/tag_3.gif" align="baseline" width="24" height="13">     TableViewerExample tableViewerExample = new TableViewerExample(composite);
+
+        // Open the shell and run until a close event is detected
+        shell.open();
+        tableViewerExample.run(shell);
+     }</font></pre>
+<p>We first <font color="#4444cc"><img src="images/tag_1.gif" width="24" height="13"></font>
+create and configure a SWT <code>Shell</code> object. Then, <font color="#4444cc"><img src="images/tag_2.gif" width="24" height="13"></font>
+we create a <code>Composite</code> to hold the widgets (table and buttons) and <font color="#4444cc"><img src="images/tag_3.gif" align="baseline" width="24" height="13"></font>
+instantiate our class passing the composite to the constructor. We could have
+done things differently but passing the composite to the constructor makes it
+easy to wrap our class in an Eclipse view for example.</p>
+<p>Adding widgets to the composite is done in the <code>addChildControls()</code> 
+  method. The more interesting part of this method is in the following code fragment:</p>
+<pre>     <font color="#4444cc">// Create the table 
+<img src="images/tag_1.gif" width="24" height="13">  createTable(composite);
+	
+     // Create and setup the TableViewer
+<img src="images/tag_2.gif" width="24" height="13">  createTableViewer();
+<img src="images/tag_3.gif" align="baseline" width="24" height="13">  tableViewer.setContentProvider(new ExampleContentProvider());
+     tableViewer.setLabelProvider(new ExampleLabelProvider());
+     // The input for the table viewer is the instance of ExampleTaskList
+     tableViewer.setInput(taskList);</font></pre>
+<p>We first <font color="#4444cc"><img src="images/tag_1.gif" width="24" height="13"></font>
+create a <code>org.eclipse.swt.widgets.Table</code> and then <font color="#4444cc"><img src="images/tag_2.gif" width="24" height="13"></font>
+create a <code>org.eclipse.jface.viewers.TableViewer</code> on that table. We
+then <font color="#4444cc"><img src="images/tag_3.gif" align="baseline" width="24" height="13"></font>
+set the content provider, label provider and input for the <code>TableViewer</code>.
+We will come back to these later. Let's first look at the <code>createTable()</code>
+method. It starts by instantiating a <code>Table</code> object and sets its
+parent, style and layout attributes. It then creates each of the four columns in
+turn. As an example, the second column is created with the following fragment:</p>
+<pre>     <font color="#4444cc">// 2nd column with task Description
+<img src="images/tag_1.gif" width="24" height="13">  column = new TableColumn(table, SWT.LEFT, 1);
+     column.setText(&quot;Description&quot;);
+     column.setWidth(400);
+     // Add listener to column so tasks are sorted by description when clicked 
+<img src="images/tag_2.gif" width="24" height="13">  column.addSelectionListener(new SelectionAdapter() {
+       	
+          public void widgetSelected(SelectionEvent e) {
+               tableViewer.setSorter(
+                   new ExampleTaskSorter(ExampleTaskSorter.DESCRIPTION));
+               }
+          });</font></pre>
+<p>Here, we <img src="images/tag_1.gif" align="CENTER" width="24" height="13">
+create a <code>TableColumn</code> object for the <code>Table</code>, set some of
+its attributes and <img src="images/tag_2.gif" align="CENTER" width="24" height="13">
+add a selection listener that sets the sorter object for the <code>TableViewer</code>
+object when the column header is clicked. We will look at column sorting later.</p>
+<p>The rest of the method is concerned with setting up the other columns using
+the same approach. The creation of the <code>TableViewer</code> is also of
+particular interest to us. The method is outlined below (less important code was
+omitted):</p>
+<pre><font color="#4444cc">     /**
+      * Create the TableViewer 
+      */
+     private void createTableViewer() {
+<img src="images/tag_1.gif" align="baseline" width="24" height="13">       tableViewer = new TableViewer(table);    
+          tableViewer.setUseHashlookup(true);
+<img src="images/tag_2.gif" align="baseline" width="24" height="13">       tableViewer.setColumnProperties(columnNames);
+     
+          // Create the cell editors
+<img src="images/tag_3.gif" align="baseline" width="24" height="13">       CellEditor[] editors = new CellEditor[columnNames.length];
+
+          // Column 1 : Completed (Checkbox)
+<img src="images/tag_4.gif" align="baseline" width="24" height="13">       editors[0] = new CheckboxCellEditor(table);
+
+          // Column 2 : Description (Free text)
+<img src="images/tag_4.gif" align="baseline" width="24" height="13">       TextCellEditor textEditor = new TextCellEditor(table);
+          ((Text) textEditor.getControl()).setTextLimit(60);
+          editors[1] = textEditor;
+
+          // Column 3 : Owner (Combo Box) 
+<img src="images/tag_4.gif" align="baseline" width="24" height="13">       editors[2] = new ComboBoxCellEditor(table, taskList.getOwners(),
+                                              SWT.READ_ONLY);
+
+          // Column 4 : Percent complete (Text with digits only)
+          textEditor = new TextCellEditor(table);
+          ((Text) textEditor.getControl()).addVerifyListener(
+		
+<img src="images/tag_5.gif" align="baseline" width="24" height="13">           new VerifyListener() {
+                  public void verifyText(VerifyEvent e) {
+                      e.doit = &quot;0123456789&quot;.indexOf(e.text) &gt;= 0;  
+                  }
+              });
+          editors[3] = textEditor;
+
+          // Assign the cell editors to the viewer 
+<img src="images/tag_6.gif" align="baseline" width="24" height="13">       tableViewer.setCellEditors(editors);
+          // Set the cell modifier for the viewer
+          tableViewer.setCellModifier(new ExampleCellModifier(this));
+          // Set the default sorter for the viewer 
+<img src="images/tag_7.gif" align="baseline" width="24" height="13">       tableViewer.setSorter(
+             new ExampleTaskSorter(ExampleTaskSorter.DESCRIPTION));
+     }</font>
+</pre>
+<p><br>
+  We <img src="images/tag_1.gif" align="CENTER" width="24" height="13"> first 
+  construct the <code>TableViewer</code> object, passing along our <code>Table</code> 
+  instance since a <code>TableViewer</code> always operates on a table. We then 
+  <font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font> 
+  set the column properties that will be used in callbacks to recognize the column 
+  on which we will want to operate. We <font color="#4444cc"><img src="images/tag_3.gif" align="baseline" width="24" height="13"></font> 
+  initialize an array of <code>CellEditor</code> objects and we <font color="#4444cc"><img src="images/tag_4.gif" align="baseline" width="24" height="13"></font> 
+  build editors for each column. For the checkbox editor, we do not need to do 
+  anything special. For column 2, we set the text length limit of the free text 
+  editor while for column 3, we specify the items used in the combo box editor. 
+  We obtain these from our <code>ExampleTaskList</code> object. In the case of 
+  column 4, we <font color="#4444cc"><img src="images/tag_5.gif" align="baseline" width="24" height="13"></font> 
+  add a validator (a <code>VerifyListener</code>) to makes sure we accept only 
+  digits.</p>
+<p>We finish setting up our <code>TableViewer</code> by <font color="#4444cc"><img src="images/tag_6.gif" align="baseline" width="24" height="13"></font>
+setting it's cellEditors and cellModifier properties and by <font color="#4444cc"><img src="images/tag_7.gif" align="baseline" width="24" height="13"></font>
+specifying the default sorter. The <code>ExampleCellModifier</code> is described
+in detail below.</p>
+<h2>Specifying Content and Label Providers</h2>
+<p>Coming back to the <code>TableViewerExample.open()</code> method, we now have
+a <code>TableViewer</code> instance for which we can set the content and label
+providers. The content provider is implemented as an inner class of the <code>TableViewerExample</code>
+class. This allows us to implement both the <code>IStructuredContentProvider</code>
+and the <code>ITaskListViewer</code> without &quot;polluting&quot;, so to speak,
+our model with JFace dependencies. This class does several things. It handles
+the <code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font>
+inputChanged() </code>and <codee><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font>
+dispose()</codee>     calls by registering (or deregistering) itself as a change
+listener for the model. It <font color="#4444cc"><img src="images/tag_3.gif" align="baseline" width="24" height="13"></font>
+relays the <code>getElements()</code> request to our model (a <code>TaskList</code>
+object) and packages the result into an array of <code>Object</code> instances.
+Finally, it implements the <code><font color="#4444cc"><img src="images/tag_4.gif" align="baseline" width="24" height="13"></font>
+addTask()</code>, <code><font color="#4444cc"><img src="images/tag_5.gif" align="baseline" width="24" height="13"></font>
+removeTask()</code> and <code><font color="#4444cc"><img src="images/tag_6.gif" align="baseline" width="24" height="13"></font>
+updateTasks()</code> callbacks specified by <code>ITaskListViewer</code>. The
+general principle here is that one should not assume that the model
+&quot;feeds&quot; a single view. Hence, views should register and deregister
+their interest in model changes (in our case, task additions, removals and
+changes).</p>
+<pre><font color="#4444cc">    /**    
+     * InnerClass that acts as a proxy for the ExampleTaskList 
+     * providing content for the Table. It implements the ITaskListViewer 
+     * interface since it must register changeListeners with the 
+     * ExampleTaskList 
+     */
+    class ExampleContentProvider
+	       implements IStructuredContentProvider, ITaskListViewer {
+<img src="images/tag_1.gif" align="baseline" width="24" height="13">     public void inputChanged(Viewer v, Object oldInput, Object newInput) {
+            if (newInput != null)
+                ((ExampleTaskList) newInput).addChangeListener(this);
+            if (oldInput != null)
+                ((ExampleTaskList) oldInput).removeChangeListener(this);
+        }
+
+<img src="images/tag_2.gif" align="baseline" width="24" height="13">     public void dispose() {
+            taskList.removeChangeListener(this);
+        }
+
+        // Return the tasks as an array of Objects
+<img src="images/tag_3.gif" align="baseline" width="24" height="13">     public Object[] getElements(Object parent) {
+            return taskList.getTasks().toArray();
+        }
+
+        /* (non-Javadoc)
+         * @see ITaskListViewer#addTask(ExampleTask)
+         */
+<img src="images/tag_4.gif" align="baseline" width="24" height="13">        public void addTask(ExampleTask task) {
+            tableViewer.add(task);
+        }
+
+        /* (non-Javadoc)
+         * @see ITaskListViewer#removeTask(ExampleTask)
+         */
+<img src="images/tag_5.gif" align="baseline" width="24" height="13">        public void removeTask(ExampleTask task) {
+            tableViewer.remove(task);			
+        }
+
+        /* (non-Javadoc)
+         * @see ITaskListViewer#updateTask(ExampleTask)
+         */
+<img src="images/tag_6.gif" align="baseline" width="24" height="13">        public void updateTask(ExampleTask task) {
+            tableViewer.update(task, null);	
+        }
+    }</font></pre>
+<p>For the label provider, we chose to use a top-level class (the <code>ExampleLabelProvider</code>
+class). An <code>org.eclipse.jface.viewers.ITableLabelProvider</code> must
+implement two methods: <code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font>
+getColumnText()</code> and <font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font><code>
+getColumnImage()</code>. As the names imply, these methods must return the label
+text and image for a given column of a given element and are implemented using
+the following code:</p>
+<pre><font color="#4444cc"><code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font></code> public String getColumnText(Object element, int columnIndex) {
+        String result = &quot;&quot;;
+        ExampleTask task = (ExampleTask) element;
+        switch (columnIndex) {
+            case 0:  // COMPLETED_COLUMN
+                break;
+            case 1 :
+                result = task.getDescription();
+                break;
+            case 2 :
+                result = task.getOwner();
+                break;
+            ...code omitted... 	
+            }
+        return result;
+    }	
+
+<code><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font></code> public Image getColumnImage(Object element, int columnIndex) {
+        return (columnIndex == 0) ?   // COMPLETED_COLUMN?
+            getImage(((ExampleTask) element).isCompleted()) : 
+            null;
+    }</font></pre>
+<p>These methods are called by the <code>TableViewer</code> whenever a table element 
+  needs to be refreshed. Our <code>ITableLabelProvider</code> extends <code>org.eclipse.jface.viewers.LabelProvider</code>. 
+  This way, we benefit from the behavior defined in the superclass. Internally, 
+  our class manages an image registry (for the checkboxes) so we had to put in 
+  place the mechanics to load and manage instances of <code>org.eclipse.jface.resource.ImageDescriptor</code> 
+  and <code>org.eclipse.jface.resource.ImageRegistry</code>. The details of this 
+  can be assessed by looking at the source code for the class. In SWT, platform 
+  resources such as images and fonts must be disposed of when the application 
+  exits. However, an <code>ImageRegistry</code> owns all of the image objects 
+  registered with it and automatically disposes of them when the SWT Display is 
+  disposed so we do not need to explicitly do so.</p>
+<h2>Supporting cell editors with an ICellModifier</h2>
+<p>We now have in place all the parts to display our task list in a table. What
+we need to add is the componentry to support cell editing. For this, we
+implement an <code>org.eclipse.jface.viewers.ICellModifier</code>. The later
+must define the <code>canModify()</code>, <code>getValue()</code> and <code>modify()</code>
+methods. The first one returns a <code>boolean</code> given an element (a table
+row) and a column name. The second method returns a cell value (given an element
+and a column name). Part of its implementation is shown below:</p>
+<pre><font color="#4444cc">	public Object getValue(Object element, String property) {
+
+        // Find the index of the column
+<code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font></code>     int columnIndex = tableViewer.getColumnNames().indexOf(property);
+
+        Object result = null;
+<code><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font></code>     ExampleTask task = (ExampleTask) element;
+
+<code><font color="#4444cc"><img src="images/tag_3.gif" align="baseline" width="24" height="13"></font></code>     switch (columnIndex) {
+            case 0 : // COMPLETED_COLUMN 
+                result = new Boolean(task.isCompleted());
+                break;
+            case 1 : // DESCRIPTION_COLUMN 
+                result = task.getDescription();
+                break;
+<code><font color="#4444cc"><img src="images/tag_4.gif" align="baseline" width="24" height="13"></font></code>         case 2 : // OWNER_COLUMN 
+                String stringValue = task.getOwner();
+                String[] choices = tableViewer.getChoices(property);
+                int i = choices.length - 1;
+                while (!stringValue.equals(choices[i]) &amp;&amp; i &gt; 0)
+                    --i;
+                result = new Integer(i);
+                break;
+            ...code omitted...
+        }
+        return result;	
+    }</font></pre>
+<p><code></code>First, <code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font></code>
+we obtain the column index for the property. <code></code>Second, <code><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font></code>
+we cast the contents of <code>element</code> into a <code>ExampleTask</code>
+object so we can directly address its interface. Finally, <code><font color="#4444cc"><img src="images/tag_3.gif" align="baseline" width="24" height="13"></font></code>
+we <code></code>switch to the proper block of code based on the column index.
+Cases 0 and 1 are self explanatory. In <code><font color="#4444cc"><img src="images/tag_4.gif" align="baseline" width="24" height="13"></font></code>
+case 2, we must return the index for the combo box. Hence, we match the <code>stringValue</code>
+to one of the choices and return an <code>Integer</code> representing the
+current selection.</p>
+<p>The <code>modify()</code> method is somewhat symmetrical to the previous one.
+It is where the actual modification of the <code>ExampleTask</code> takes place.</p>
+<pre><font color="#4444cc">    public void modify(Object element, String property, Object value) {	
+
+        // Find the index of the column 
+        ...code omitted...
+
+        switch (columnIndex) {
+<code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font></code>         case 0 : // COMPLETED_COLUMN 
+                task.setCompleted(((Boolean) value).booleanValue());
+				break;
+            case 1 : // DESCRIPTION_COLUMN 
+                task.setDescription(((String) value).trim());
+                break;
+            ...code omitted...
+            }
+<code><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font></code>     tableViewerExample.getTaskList().taskChanged(task);
+    }</font></pre>
+<p>As an example, for the <code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font></code>
+&quot;completed&quot; column, we <code></code>convert the passed value into a <code>boolean</code>
+and use the resulting value as an argument to the <code>ExampleTask.setCompleted()</code>
+method. We implement an equivalent behavior for each column. The <code><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font></code>
+final line asks the <code>TableViewerExample </code>for its model (an <code>ExampleTaskList</code>)
+and notifies the model that a given task was changed. The model in turn notifies
+this change to each of its registered views.</p>
+<h2>Adding and Deleting Table Items</h2>
+<p>Editing existing tasks is useful but we also want to add and remove tasks
+using the GUI. The following code attaches the proper behavior to the
+&quot;Add&quot; button (very similar code is used for the &quot;Delete&quot;
+button):</p>
+<pre><font color="#4444cc">    </font><font color="#4444cc">// Create and configure the &quot;Add&quot; button
+<code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font></code> Button add = new Button(parent, SWT.PUSH | SWT.CENTER);
+    add.setText(&quot;Add&quot;);
+		
+    GridData gridData = new GridData (GridData.HORIZONTAL_ALIGN_BEGINNING);
+    gridData.widthHint = 80;
+    add.setLayoutData(gridData);
+<code><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font></code> add.addSelectionListener(new SelectionAdapter() {
+       	
+        // Add a task to the ExampleTaskList and refresh the view
+	    public void widgetSelected(SelectionEvent e) {
+            taskList.addTask();
+        }
+    });</font>
+</pre>
+<p>In the above code fragment, we <code><font color="#4444cc"><img src="images/tag_1.gif" align="baseline" width="24" height="13"></font></code>
+layout the button and <code><font color="#4444cc"><img src="images/tag_2.gif" align="baseline" width="24" height="13"></font></code>
+specify a selection listener that invokes the model's <code>addTask()</code>
+method. This later method notifies all its active views that a task was added
+using the following implementation:</p>
+<pre><font color="#4444cc">    public void addTask() {
+        ExampleTask task = new ExampleTask(&quot;New task&quot;);
+        tasks.add(tasks.size(), task);
+        Iterator iterator = changeListeners.iterator();
+        while (iterator.hasNext())
+            ((ITaskListViewer) iterator.next()).addTask(task);
+    }</font>
+</pre>
+<p>This pretty much closes the loop for cell and table editing. Through
+relatively simple implementations of <code>ICellModifier</code>, <code>ITableLabelProvider</code>
+and <code>IStructuredContentProvider</code>, we have a sophisticated and robust
+GUI supporting in-place edition of table cells and a viewer that will always
+reflect the current state of the model.<br>
+</p>
+<h2>Supporting column-wise sorting</h2>
+<p>As hinted above, adding column-wise sorting is almost trivial. To achieve
+this, we extend the <code>org.eclipse.jface.viewers.ViewerSorter</code> class
+and override the <code>compare()</code> public method with one that knows how to
+compare tasks based on its preset criteria. We leave it up to the reader to look
+up the class implementation. Specifying a sorter for our table viewer is done
+using the following pattern:</p>
+<pre><font color="#4444cc">    tableViewer.setSorter(
+       new ExampleTaskSorter(ExampleTaskSorter.PERCENT_COMPLETE))</font></pre>
+<p>We construct a sorter using one of its exposed criteria and use the result as
+an argument to the <code>TableViewer.setSorter()</code> method. On selection of
+a column header, we tell the <code>TableViewer</code> to use a different sorter
+and table lines get resorted &quot;automagically&quot;!</p>
+<h2>Packaging the table viewer as a stand-alone application</h2>
+<p>This table viewer/editor is all very nice but how and where can I make use of
+it in applications? One answer is, obviously, within an Eclipse plugin. But more
+than that, as others have described, SWT and JFace can be used to build
+applications that live outside the Eclipse framework. This is actually very
+simple: One simply has to put the following files in the same folder: <b>TableViewerExample.jar</b>
+(contains the application class and image files), <b>swt.jar</b>, <b>jface.jar</b>,<b>
+runtime.jar</b> and <b>boot.jar</b>. In addition, in a Win32 environment, you
+will need the <b>swt-win32-2133.dll</b> file which contains the &quot;glue&quot;
+allowing Java objects to communicate with Windows native widgets and APIs. On
+other platforms, the Java to native code will be found in a different file so
+you would need to somehow make sure your Java VM can find it.</p>
+<p><img src="images/win_only.gif" width="49" height="13"> On Windows, to launch
+the TableViewerExample application, you need to execute the following command:</p>
+<pre><font color="#4444cc">java -classpath TableViewerExample.jar;swt.jar;jface.jar;runtime.jar;boot.jar 
+  -Djava.library.path=. com.opnworks.tableviewer.example.TableViewerExample</font></pre>
+<p>You would typically but such a command inside a .bat file. You can also
+achieve a clickable icon result on Windows and on other platforms by using a
+Java aware packager/installer application, some of which are free to use even
+for commercial purposes. With such a packaging, users will never know they are
+using Java technology! Not that there is anything to be shy about, it is just
+that most users really don't care and why should they?</p>
+<h2>Wrap-up</h2>
+<p>With the popularity of the web, it seems people and programmers have been
+shying away from building GUI applications. In addition, Java programmers and
+software development managers are often convinced that Java does not cut it on
+the client and that it cannot be used to build &quot;native&quot; applications.
+You can convince them of the contrary by rapidly prototyping and packaging a
+native application using the SWT and JFace APIs.<br>
+</p>
+
+</body>
+
+</html>

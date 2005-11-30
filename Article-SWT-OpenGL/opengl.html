@@ -1,0 +1,1248 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"> 
+
+<html lang="en">
+<head>
+  <title>Using OpenGL with SWT</title>
+  <link rel="stylesheet" href="../default_style.css" type="text/css">
+  <link rel="stylesheet" href="opengl.css" type="text/css">
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+  <meta name="author" content="Bo Majewski">
+</head>
+
+<body>
+  <div align="right">
+	&nbsp; <span class="copy">Copyright &copy; 2005 Cisco Systems Inc.</span>
+
+	<table border="0" cellpadding="2" cellspacing="0" width="100%">
+	  <tbody>
+		<tr>
+		  <td colspan="2" align="left" bgcolor="#0080C0" valign="top">
+		  	<span class="corner">&nbsp;Eclipse Corner Article</span>
+		  </td>
+		</tr>
+	  </tbody>
+	</table>
+  </div>
+
+  <div align="left">
+	<h1><img src="images/Idea.jpg" alt="tag" align="middle" height=
+	"86" width="120"></h1>
+  </div>
+
+  <p>&nbsp;</p>
+
+  <h1 align="center">Using OpenGL with SWT</h1>
+
+  <blockquote>
+    <p><b>Summary</b></p>
+
+	<p>
+	OpenGL is a vendor-neutral, multi-platform standard for creating 
+	high-performance 2D and 3D graphics. Hardware and software implementations 
+	exist on  various operating systems, including Windows, Linux and 
+	MacOS. OpenGL may be used to render simple 2D charts or complex 3D games. This 
+	article describes an experimental Eclipse plug-in that facilitates the use 
+	of OpenGL for drawing onto SWT widgets. A short history and overview of 
+	OpenGL is presented, followed by an example application.
+	</p>
+
+	<p><b>By Bo Majewski, Cisco Systems, Inc.</b><br>
+	<font size="-1">April 15, 2005</font></p>
+  </blockquote>
+  <hr width="100%">
+
+  	<h2>Introduction</h2>
+  	<p>
+  	As the common saying goes, a picture is worth a thousand words. Or
+  	a thousand database records. In a world flush with terabytes of data, gaining
+  	an understanding of information often requires an effective way to visualize
+  	it. A field of molecular biology, specifically proteomics, is a good 
+  	example. The raw data, in the form of an amino acid sequence, is insufficient
+  	to understand the function of a given protein. Only knowing a full 3D
+  	structure of it can one gain a deeper comprehension of the protein's purpose and
+  	the way that it fulfills its tasks (see Figure 1).
+  	</p>
+  
+  	<div class="figure">
+    <table align="center">
+    <tbody>
+    	<tr>
+    		<td style="font-size: 8pt; font-family: monospace;">
+KVFERCELARTLKRLGMDGYRGISLANWMCLAKWESGYNTRATNY<br>
+NAGDRSTDYGIFQINSRYWCNDGKNPGAVNACHLSCSALLQDNIA<br>
+DAVACAKRVVRDPQGIRAWVAWRNRCQNRDVRQYVQGCGV<br>
+<br>
+ATOM      1  N   LYS A   1      19.534  32.582  38.371  1.00 25.04           N<br>
+ATOM      2  CA  LYS A   1      18.911  32.387  37.062  1.00 25.51           C<br>  
+ATOM      3  C   LYS A   1      17.908  33.472  36.753  1.00 27.65           C<br>  
+ATOM      4  O   LYS A   1      17.251  33.988  37.643  1.00 29.70           O<br>  
+ATOM      5  CB  LYS A   1      18.184  31.056  37.123  1.00 27.48           C<br>  
+ATOM      6  CG  LYS A   1      17.069  30.921  36.093  1.00 24.63           C<br>  
+ATOM      7  CD  LYS A   1      16.059  29.845  36.488  1.00 20.32           C<br>  
+ATOM      8  CE  LYS A   1      14.972  29.702  35.432  1.00 17.75           C<br>  
+ATOM      9  NZ  LYS A   1      14.270  28.408  35.603  1.00 22.15           N<br>  
+ATOM     10  N   VAL A   2      17.863  33.900  35.497  1.00 28.50           N<br>  
+ATOM     11  CA  VAL A   2      16.885  34.898  35.083  1.00 30.21           C<br>  
+ATOM     12  C   VAL A   2      15.664  34.300  34.397  1.00 28.35           C<br>  
+<span style="font-size: large; font-weight: bold;">&hellip;</span>
+    		</td>
+    		<td valign="top">
+    		<img src="images/1W08-2.png" width="300" height="211" border="0" alt="T70N">
+    		</td>
+    	</tr>
+    </tbody>
+    </table>
+    	<div class="figure-caption">
+    		<span class="figure-number">Figure 1</span>. Structure Of T70N Human Lysozyme without side chains<br>
+    		(source: <a href="http://www.rcsb.org/">The 
+    		RSCB Protein Data Bank</a>; 3D rendering done by 
+    		<a href="http://www.ncbi.nlm.nih.gov/">NCBI</a>'s
+    		<a href="http://www.ncbi.nlm.nih.gov/Structure/CN3D/cn3d.shtml">Cn3D 4.1</a>)
+    	</div>
+  	</div>
+  	
+  	<p>
+  		Eclipse ships with the Standard Widget Toolkit (SWT) which provides access to
+  		native widget functionality through a platform-independent API. While the toolkit
+  		provides a rich selection of widgets, graphics support was somewhat limited.
+		The SWT Graphics <a href="#winchester">[1]</a> package provided 
+  		basic functionality needed to do 2D drawings, from rendering 2D primitives such
+  		as lines, arcs, rectangles and ovals, through clipping, text drawing
+  		and image display.
+  	</p>
+  	<p>
+  		The Draw2D plug-in that builds on top of SWT
+  		provides lightweight rendering and layout capabilities.
+  		The lightweight term means that you need only one native widget (i.e. heavy widget), 
+  		such as a <code>Canvas</code> to draw multiple figures. Layout functionality 
+  		allows you to automatically position multiple <code>IFigures</code>. If your goal was
+  		to develop a charting package for Eclipse, Draw2D would provide a good
+  		start.
+  	</p>
+  	
+  	<p>
+  		Until recently, in order to utilize advanced 2D graphics, one possible approach
+		was to use Java2D. By relying on a <code>BufferedImage</code> a developer could 
+  		use Java2D APIs to draw in memory, transfer the image to an SWT image, and 
+  		then render it on any SWT component (see <a href="#saillet">[2]</a> 
+  		for details). However, the drawback of this technique was added storage 
+  		and processing time requirements. These limitations were overcome
+  		in milestone 5 of the 3.1 release through a new SWT API that utilizes native
+  		<a href="http://www.cairographics.org/">Cairo</a> or <a href="http://msdn.microsoft.com/library/en-us/gdicpp/gdiplus/gdiplus.asp">GDI+</a> graphics 
+  		libraries. Developers now can use
+  		transparency, rotation, shearing, brushes, pens and many more techniques
+  		for enhancing graphical output, directly in SWT. Unfortunately, even with these additions,
+  		the realm of high-performance 3D graphics is still out of reach.
+  	</p>
+  	
+  	<p>
+  		To address this need, a 
+  		<a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/opengl/opengl.html">plug-in</a> was developed that 
+  		enabled OpenGL rendering onto an SWT <code>Drawable</code>. While the
+  		plug-in is still experimental, it can be used to create high-impact,
+  		high-performance graphics in Eclipse plug-ins and SWT applications. The goal of this article is to give
+  		the reader a gentle introduction to the world of OpenGL and its use in SWT.
+  		Immediately I am going to provide caveat lector. The subjects of 3D
+  		rendering and OpenGL are so vast that they are well beyond the scope
+  		of this short writeup. Readers interested in either of the topics
+  		are encouraged to explore the available pool of extensive literature, some of which
+  		has been listed in the <a href="#bibliography">Bibliography</a> section. 
+  		Hands-on experience may be gained by following various online tutorials,
+  		with <a href="http://nehe.gamedev.net/">NeHe Productions</a> providing a
+  		particularly good selection of 48 OpenGL lessons.
+  	</p>
+  	
+
+  	<h2>OpenGL</h2>
+  	
+  	<p>
+  		Open Graphics Library, or OpenGL for short, traces its roots to SGI's IRIS GL.
+  		Its first public release was made available on July 1, 1992. It went through six
+  		revisions, culminating in version 2.0 published on September 7, 2004.
+  		The main goal of OpenGL is to provide an efficient and easy-to-use 
+  		API for creating 2D and 3D computer graphics. Interestingly, and in part
+  		due to the fact that it was designed when hardware capable of 
+  		rendering 3D scenes efficiently was expensive and often only available
+  		on a central server, OpenGL can work transparently across a network. OpenGL 
+  		was designed to be cross-platform, and as a consequence is devoid of methods,
+  		also known as commands, for
+  		performing windowing tasks or obtaining user input. Instead, the bulk of the
+  		calls specify vertices or properties of geometric 
+  		primitives, such as points, lines, triangles, quads and polygons. 
+  		Properties may define
+  		colors, textures, and material properties such as how they interact
+  		with light. Through these and other calls that deal with light sources,
+  		scene depth and angles, OpenGL allows one to build sophisticated 3D scenes.
+  		Some of the features that go beyond regular graphics are listed
+  		below.
+  	</p>
+
+  	<dl>
+  		<dt>3D world</dt>
+  		<dd>
+  			Each point may be given a <i>z</i> coordinate, placing it at a
+  			particular depth of the scene. If depth testing is enabled,
+  			OpenGL removes those surfaces that are hidden by
+  			other surfaces located closer to the viewer. A drawing may
+  			be depth-cued, so that the lines further from the eye 
+  			appear dimmer.
+  		</dd>
+  		<dt>Transparency and Blending</dt>
+  		<dd>
+  			Colors of several objects may be combined to create a blended
+  			color. This creates translucent fragments, and can be used to
+  			mimic the effect of light passing through stained glass or a
+  			reflection appearing on a surface. By
+  			specifying transparency, or the alpha value of colors, you can
+  			control how much light can pass through each object.
+  		</dd>
+  		<dt>Anti-aliasing</dt>
+  		<dd>
+  			By default, all lines drawn at an angle appear jagged on a 
+  			computer screen. OpenGL calculates coverage values for
+  			pixels for diagonal lines, which in turn is used to compute
+  			the correct blending of the pixel color with the background.
+  			This blending creates the appearance of smooth rather than
+  			sharp, unnatural edges.
+  		</dd>
+  		<dt>Projection Transformations</dt>
+  		<dd>
+  			The scene may use either a perspective or orthographic projection.
+  			In perspective projection, objects that are further from the
+  			viewer appear smaller, while the orthographic projection maintains the
+  			original size of the objects. Orthographic projection is useful in applications such as CAD,
+  			which should communicate information about the real size
+  			of objects rather than how they may look when viewed from a distance.
+  		</dd>
+  		<dt>Textures</dt>
+  		<dd>
+  			Textures allow you to glue a 2D image to a polygon. For example,
+  			by using a picture of a wooden plank you can easily create a 
+  			wooden wall. Texture mapping also performs required transformations
+  			of the original image when the polygon onto which it was mapped
+  			is reshaped.
+  		</dd>
+  		<dt>Lighting and Shadows</dt>
+  		<dd>
+  			Scenes may be lit by up to eight sources of light, each with 
+  			ambient, diffuse, and specular components, as well
+  			as color and position. 
+  			Further, by specifying material type and how it reflects light, in
+  			combination with textures, you can create
+  			realistic looking objects. Lifelike shadows may be added to a 
+  			scene to further enhance the illusion of depth.
+  		</dd>
+  		<dt>Atmospheric effects</dt>
+  		<dd>
+  			Atmospheric effects add further realism to scenes by blurring
+  			and dispersing light, similar to how the light reflected from
+  			objects is distorted by air.
+  		</dd>
+  	</dl>
+  	
+  	<p>
+  		OpenGL concentrates on core 2D and 3D functionality, and as such
+  		does not provide high-level commands that describe complex 3D
+  		models and their dependencies. As a result, a few extensions have
+  		been added for working with higher-level structures. In particular, 
+  		the OpenGL Utility Library (GLU <a href="#opengl-glu">[9]</a>) provides
+  		a number of APIs that allow one to create more complex objects with
+  		ease. Disks, cylinders, spheres, and nonuniform rational B-splines
+  		(NURBS for short) are a few such examples.
+  	</p>
+
+   	<p>
+		Each GL command consists of the library prefix,
+		followed by the command name, followed by an optional argument
+		count, and ends with an optional argument type. This is illustrated in Figure 2.  For example,
+		the <code>glVertex3f</code> has the library prefix <code>gl</code>,
+		the command <code>Vertex</code>, and it takes <code>3</code> arguments
+		of the type <code>f</code>loat. The parameter count varies between
+		2 and 4, and parameters may be of type double (d), float (f),  
+		integer (i), short (s), byte (b), unsigned integer (ui), 
+		unsigned short (us), unsigned byte (ub), or a vector of any
+		of these types (*v). 
+   	</p>
+   	
+  	<div class="figure">
+  		<img src="images/gl_command.png" width="105" height="142" border="0" alt="GL command"><br /> <br />
+    	<div class="figure-caption">
+    		<span class="figure-number">Figure 2</span>. The structure of a GL command
+    	</div>
+  	</div>
+  	
+  	<p>
+  		One may roughly divide OpenGL methods into two types: those that
+  		specify parameters of geometric primitives and those that alter
+  		the state of the drawing engine. Because of this, OpenGL is often
+  		described as a state machine. Parameters such as color, 
+  		projection transformation, line and polygon stipple patterns
+  		are said to be part of the state of the OpenGL machine.
+  		State can be changed by calling methods such as 
+  		<code>glColor*()</code> or <code>glLight*()</code>. In order
+  		for state variables to impact rendering, you need to
+  		enable or disable them with the <code>glEnable()</code>
+  		and <code>glDisable()</code> methods, respectively. While the
+  		full description of the OpenGL state machine 
+  		<a href="#opengl-machine">[6]</a> is well beyond the scope of this
+  		article, the basic concept is simple. You can put the rendering engine
+  		in a state by, for instance, defining the current color as blue, and from then on
+  		all objects are drawn with this attribute until that particular state
+  		variable is changed.
+  	</p>
+  	
+  	<p>
+  		Drawing of objects follows the begin/end paradigm. 
+  		You indicate to the rendering engine, by passing the appropriate value to 
+  		the <code>glBegin(int)</code> method, what you are going to draw. Next, 
+  		you specify one or more vertices of the object's surface. Finally, you end drawing 
+  		by calling the <code>glEnd()</code> method.
+  		There are ten geometric objects that can be drawn this way: points, 
+  		line segment strips, line segment loops, individual line segments, 
+  		polygons, triangle strips, triangle fans, individual triangles, 
+  		quad strips, and individual quads (quads are four-vertex surfaces such as 
+  		rectangles, squares and rhomboids).
+  		For example, if you specify that you are drawing line strips, the first
+  		vertex specifies the starting point of line segments, and every subsequent
+  		vertex defines the end of the previous segment and the start of the next.
+  		If you specify <i>i &gt; 1</i> vertices, <i>i-1</i> connected segments are
+  		drawn. For efficiency reasons, querying the state of the OpenGL machine between
+  		the begin and end calls is not guaranteed to return correct values. A single
+  		scene may consist of one or more begin/end blocks.
+  	</p>
+
+
+  	<h2>SWT OpenGL plug-in</h2>
+
+	<p>
+		SWT exposes the functionality of OpenGL version 1.1. It consists
+		of three core classes and one data class. The core classes are 
+		<code>GLContext</code>, <code>GL</code> and <code>GLU</code>. 
+		The <code>GLContext</code> provides a bridge between SWT and OpenGL. 
+		A context must be created with a <code>Drawable</code>, usually an 
+		SWT <code>Canvas</code>, on which OpenGL renders its scenes. It is 
+		important that the context be disposed when no longer needed. Also, 
+		it is erroneous to attempt to render a scene once the drawable has 
+		been disposed. Every time the drawable is resized, the
+		context must be notified about it through a call to its <code>resize</code>
+		method. The call allows the context to adjust its view port and perspective
+		parameters. The <a href="#groundwork">Laying 
+		Groundwork</a> section describes a class that
+		takes care of most of these tasks.
+	</p>
+	
+	<p>
+		A scene may be drawn by making a series of calls to methods defined
+		in the <code>GL</code> and <code>GLU</code> classes once the 
+		context is made current.
+		The <code>GL</code> class exposes over 330 commands. There are 
+		essentially one-to-one mappings between methods
+		defined in the <code>GL</code> and <code>GLU</code> classes 
+		and their native counterparts.  Figure 3 provides
+		sample code that draws a triangle. For every <code>gl*</code>
+		function in C, there is a corresponding <code>GL.gl*</code> Java method, and
+		for every enumerated value <code>GL_*</code> in C, 
+		there is an equivalent <code>GL.GL_*</code> Java constant.
+		Adopting the same APIs in the SWT OpenGL plug-in makes it easy for those 
+   		familiar with the C language APIs to code in Java. 
+	</p>
+	
+	<a name="fig3"></a>
+	<table align="center">
+	<tbody>
+	<tr>
+		<td>
+		<center><b>(a)</b> C Code</center>
+<pre class="code" style="background-color: #f0fff0;">
+void drawScene() {
+    glClear(GL_COLOR_BUFFER_BIT 
+        | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+    glTranslatef(0.0f, 0.0f, -5.0f);
+
+    glBegin(GL_TRIANGLES);
+        glVertex3f(-1.0f, -1.0f, 0.0f);
+        glVertex3f(1.0f, -1.0f, 0.0f);
+        glVertex3f(0.0f, 1.0f, 0.0f);
+    glEnd();
+
+    glutSwapBuffers();
+}</pre>
+		</td>
+		<td>
+		<center><b>(b)</b> Java Code</center>
+<pre class="code" style="background-color: #f0f0ff;">
+public void drawScene() {
+    GL.glClear(GL.GL_COLOR_BUFFER_BIT 
+        | GL.GL_DEPTH_BUFFER_BIT);
+    GL.glLoadIdentity(); 
+    GL.glTranslatef(0.0f, 0.0f, -5.0f);
+    
+    GL.glBegin(GL.GL_TRIANGLES);
+        GL.glVertex3f(-1.0f, -1.0f, 0.0f); 
+        GL.glVertex3f(1.0f, -1.0f, 0.0f);
+        GL.glVertex3f(0.0f, 1.0f, 0.0f);
+    GL.glEnd();
+    
+    glContext.swapBuffers();
+}</pre>
+		</td>
+	</tr>
+	</tbody>
+	</table>
+    <div class="figure-caption">
+    	<span class="figure-number">Figure 3</span>. GL scene rendered in C and Java
+   	</div>
+   	
+  	<h3>JNI Interface</h3>
+  	<p>
+  		The OpenGL plug-in relies on the JNI interface to access the native OpenGL
+  		libraries. The native interface consists of roughly two parts. First,
+  		as OpenGL was designed to be free of hardware and operating system dependencies,
+  		the <code>GL</code> and <code>GLU</code> calls can be translated to 
+  		identical calls under all operating systems.
+  		Thus, on all three platforms you can see the following code
+  		for the <code>glBegin</code> method:
+  	</p>
+<pre class="code">
+JNIEXPORT void JNICALL GL_NATIVE(glBegin)
+	(JNIEnv *env, jclass that, jint arg0)
+{
+	GL_NATIVE_ENTER(env, that, glBegin_FUNC);
+	glBegin(arg0);
+	GL_NATIVE_EXIT(env, that, glBegin_FUNC);
+}</pre>
+
+	<p>
+		The difference between the three available implementations is how the 
+		SWT drawable is hooked up with the native GL context. This code
+   		is internal to the SWT OpenGL plug-in and is platform-dependent. For example, both
+		the GTK and Motif implementations use GLX, "the glue connecting
+		OpenGL and the X Windowing System", while the Windows native
+		interface is provided through a similar Windows library called WGL.
+		At the time of this writing there was no plug-in for Apple's
+   		OpenGL for Mac OS.
+	</p>
+	
+	<h3>Alternatives</h3>
+	<p>
+		There exist alternative solutions for performing 3D drawing in Java. For example, Sun maintains
+		<a href="http://java.sun.com/products/java-media/3D/">Java 3D</a>, which 
+		unlike OpenGL,
+		provides a set of object-oriented interfaces that support a  
+		high-level programming model for building, rendering, and controlling 
+		the behavior of 3D objects. Closer to the spirit of the SWT OpenGL plug-in
+		is the <a href="https://jogl.dev.java.net/">JOGL</a> project, which provides access to OpenGL commands for drawing on AWT and Swing components. 
+		While both solutions are
+		more mature than the SWT OpenGL plug-in project, they both target Swing and
+		AWT, and therefore do not tie in to the Eclipse environment
+		and SWT as directly as the SWT OpenGL plug-in does.
+	</p>
+
+	<h2>Example Application</h2>
+
+  	<p>
+		In the following sections I describe a simple application that shows a 
+		3D chart of four quantities. The application uses 
+		<code>GLScene</code>, which is a utility class for displaying OpenGL scenes.
+		In order to facilitate looking at a scene from various angles
+		and zoom levels, a scene grip is added; the
+		grip uses either the mouse or the keyboard to do zooming and 
+		panning. Both the <code>GLScene</code> class and the grip are of a generic nature and may
+		be reused in other applications that use OpenGL. These components
+		are described first.
+	</p>
+
+	<a name="groundwork"></a>
+  	<h3>Laying Groundwork</h3>
+  	<p>
+  		The <code>GLScene</code> class is similar to SWT's 
+  		<code>Canvas</code>. However, rather than using 
+  		a <code>GC</code> to draw on it, its content is
+  		rendered by OpenGL commands. This is achieved by associating
+  		a <code>GLContext</code> with an SWT <code>Canvas</code>
+  		and making it the current context whenever a scene is
+  		rendered by the commands defined in the <code>drawScene</code>
+  		method.
+  	</p>
+
+<pre class="code">
+<a name="line1"> 1</a> <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">class</span> <span class="c2h_identifier">GLScene</span> <span class="c2h_braces">{</span>
+<a name="line2"> 2</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_identifier">GLContext</span> <span class="c2h_identifier">context</span><span class="c2h_symbol">;</span>
+<a name="line3"> 3</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_identifier">Canvas</span> <span class="c2h_identifier">canvas</span><span class="c2h_symbol">;</span>
+<a name="line4"> 4</a>     
+<a name="line5"> 5</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_identifier">GLScene</span><span class="c2h_braces">(</span><span class="c2h_identifier">Composite</span> <span class="c2h_identifier">parent</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line6"> 6</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">canvas</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">new</span> <span class="c2h_identifier">Canvas</span><span class="c2h_braces">(</span><span class="c2h_identifier">parent</span>, <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">NONE</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line7"> 7</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">canvas</span>.<span class="c2h_identifier">addControlListener</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">new</span> <span class="c2h_identifier">ControlAdapter</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line8"> 8</a>             <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">controlResized</span><span class="c2h_braces">(</span><span class="c2h_identifier">ControlEvent</span> <span class="c2h_identifier">e</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line9"> 9</a>                 <span class="c2h_identifier">resizeScene</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line10">10</a>             <span class="c2h_braces">}</span>
+<a name="line11">11</a>         <span class="c2h_braces">}</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>  
+<a name="line12">12</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">canvas</span>.<span class="c2h_identifier">addDisposeListener</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">new</span> <span class="c2h_identifier">DisposeListener</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line13">13</a>             <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">widgetDisposed</span><span class="c2h_braces">(</span><span class="c2h_identifier">DisposeEvent</span> <span class="c2h_identifier">e</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line14">14</a>                 <span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line15">15</a>             <span class="c2h_braces">}</span>
+<a name="line16">16</a>         <span class="c2h_braces">}</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line17">17</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">init</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line18">18</a>         <span class="c2h_identifier">Rectangle</span> <span class="c2h_identifier">clientArea</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">parent</span>.<span class="c2h_identifier">getClientArea</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line19">19</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">canvas</span>.<span class="c2h_identifier">setSize</span><span class="c2h_braces">(</span><span class="c2h_identifier">clientArea</span>.<span class="c2h_identifier">width</span>, <span class="c2h_identifier">clientArea</span>.<span class="c2h_identifier">height</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line20">20</a>     <span class="c2h_braces">}</span>
+</pre>
+
+	<p>
+		In the constructor, a new SWT <code>Canvas</code> is created. This is
+		the canvas that is associated with a <code>GLContext</code>
+		instance. Immediately, two listeners are registered on it. The first
+		listener  makes sure that whenever the canvas is resized the <code>GLContext</code>
+		is notified and appropriately resized. The second listener takes care of 
+		disposing the context once the canvas is disposed. In order to make sure
+		that the rendering area is of non-zero size, the client rectangle of 
+		the parent is fetched and used to set the initial size of the canvas.
+		This size may later be changed either by a layout manager or user
+		actions.
+	</p>
+<pre class="code">
+<a name="line22">22</a>     <span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">resizeScene</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line23">23</a>         <span class="c2h_identifier">Rectangle</span> <span class="c2h_identifier">rect</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">canvas</span>.<span class="c2h_identifier">getClientArea</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line24">24</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span>.<span class="c2h_identifier">resize</span><span class="c2h_braces">(</span><span class="c2h_numeric">0</span>, <span class="c2h_numeric">0</span>, <span class="c2h_identifier">rect</span>.<span class="c2h_identifier">width</span>, <span class="c2h_identifier">rect</span>.<span class="c2h_identifier">height</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line25">25</a>     <span class="c2h_braces">}</span>
+<a name="line26">26</a>     
+<a name="line27">27</a>     <span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line28">28</a>         <span class="c2h_reserved_word">if</span> <span class="c2h_braces">(<span class="c2h_reserved_word">this</span>.</span><span class="c2h_identifier">context</span> <span class="c2h_symbol">!</span><span class="c2h_symbol">=</span> <span class="c2h_reserved_word">null</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line29">29</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span>.<span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line30">30</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">null</span><span class="c2h_symbol">;</span>
+<a name="line31">31</a>         <span class="c2h_braces">}</span>
+<a name="line32">32</a>     <span class="c2h_braces">}</span>
+</pre>
+	<p>
+		<code>GLScene</code> uses the entire area of the canvas for
+		drawing. Whenever the canvas is resized, we fetch the client area and
+		pass the new width and height to the context. Based on the new width
+		and height, the context adjusts the view appropriately. 
+	</p>
+	<p>
+		Disposing the canvas (line 27) requires that we dispose the context.
+		This is particularly important in operating systems where a limited
+		number of device contexts are available. To prevent multiple calls to
+		the <code>dispose</code> method of the context, once it is disposed it
+		is set to <code>null</code>.
+	</p>
+<pre class="code">
+<a name="line34">34</a>     <span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">init</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line35">35</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">initGLContext</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line36">36</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">initGL</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line37">37</a>     <span class="c2h_braces">}</span>
+<a name="line38">38</a>     
+<a name="line39">39</a>     <span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">initGLContext</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line40">40</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">new</span> <span class="c2h_identifier">GLContext</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">canvas</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line41">41</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span>.<span class="c2h_identifier">setCurrent</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line42">42</a>     <span class="c2h_braces">}</span>
+<a name="line43">43</a>     
+<a name="line44">44</a>     <span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">initGL</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line45">45</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glClearColor</span><span class="c2h_braces">(</span><span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line46">46</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glClearDepth</span><span class="c2h_braces">(</span><span class="c2h_numeric">1.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line47">47</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glDepthFunc</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_LEQUAL</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line48">48</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEnable</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_DEPTH_TEST</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line49">49</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glShadeModel</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_SMOOTH</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line50">50</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glHint</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_PERSPECTIVE_CORRECTION_HINT</span>, <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_NICEST</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line51">51</a>     <span class="c2h_braces">}</span>
+</pre>
+	<p>
+		The <code>GLScene</code> initialization is split into two parts:
+		initializing the context and initializing the state machine of 
+		OpenGL. For the context, we simply create a new <code>GLContext</code> and make it
+		current. OpenGL rendering always draws on the current
+		context, and thus if you have more than one <code>GLScene</code>
+		active, it is important to make its context current before any
+		drawing takes place. The <code>initGL</code> method is a bit more
+		interesting. It begins by specifying the color used to clean color buffers
+		(black). Next, the
+		depth buffer is set up; line 46 establishes the
+		depth value used when the depth buffer is cleared (this value must be between 0.0 and 1.0), and line 47 specifies how
+		depth value comparisons are done. This comparison function is used to
+		reject or accept incoming pixels, and
+		<code>GL.GL_LEQUAL</code> in particular accepts only those pixels that are
+		closer to or at an equal distance from the viewer. Line 48 enables
+		depth testing, since as was mentioned before, not only must the OpenGL state machine
+		be set in a particular state, but the state must also be enabled in order to
+		impact rendering.  The
+		next line sets the shade model to <code>GL.GL_SMOOTH</code>, which
+		interpolates colors (smooths them out) if two vertices
+		of a surface have different colors. Finally, line 50 asks
+		the rendering engine to put a significant effort into the computing of color and texture coordinate interpolation.
+		On older and slower hardware you may wish to use <code>GL.GL_FASTEST</code>
+		or <code>GL.GL_DONT_CARE</code> instead.
+	</p>
+<pre class="code">
+<a name="line53">53</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">render</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line54">54</a>         <span class="c2h_reserved_word">if</span> <span class="c2h_braces">(</span><span class="c2h_symbol">!</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span>.<span class="c2h_identifier">isCurrent</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line55">55</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span>.<span class="c2h_identifier">setCurrent</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line56">56</a>         <span class="c2h_braces">}</span>
+<a name="line57">57</a>         
+<a name="line58">58</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">drawScene</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line59">59</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">context</span>.<span class="c2h_identifier">swapBuffers</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line60">60</a>     <span class="c2h_braces">}</span>
+<a name="line61">61</a>     
+<a name="line62">62</a>     <span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">drawScene</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line63">63</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glClear</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_COLOR_BUFFER_BIT</span> <span class="c2h_symbol">|</span> <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_DEPTH_BUFFER_BIT</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line64">64</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glLoadIdentity</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span> 
+<a name="line65">65</a>     <span class="c2h_braces">}</span>
+</pre>
+
+  	<p>
+  		The final two methods of the <code>GLScene</code> class deal with
+  		repainting and scene drawing. The first method is exposed to other
+  		classes and should be used whenever a repaint of the scene is
+  		needed. As an example, one could repeatedly call it to display
+  		animation. The second method is meant to be overridden by 
+  		extending classes. Its default implementation simply clears the color and depth buffers and
+  		restores the coordinate system by loading the identify matrix.
+  	</p>
+  	
+  	<h3>A Scene Grip</h3>
+  	
+  	<p>
+  		One of the nice things about 3D is that it allows you to view scenes
+  		in perspective, with obstructed objects hidden. However,
+  		sometimes you might want to view a scene from a different angle, so 
+  		that what was hidden becomes visible and what was in the foreground
+  		moves to the background. OpenGL provides two methods that can be
+  		used to achieve just that. The <code>glRotate</code> method allows
+  		you to rotate your scene by any angle in the x, y and z planes. 
+  		For example, <code>GL.glRotatef(180f, 0f, 1f, 0f)</code> rotates
+  		the scene by 180 degrees and thus makes its furthest point become the
+  		closest to the viewer. <code>GL.glRotatef(180f, 1f, 0f, 0f)</code>
+  		flips the scene upside down (see Figure 4). 
+  		Scene translation can be achieved by calling the <code>GL.glTranslate</code>
+  		method, which takes three parameters, <i>x</i>, <i>y</i> and <i>z</i>,
+  		to indicate how many units to move the scene in each direction. For
+  		example, <code>GL.glTranslatef(5f, -1f, -2f)</code> moves the
+  		scene 5 units to the right, 1 unit down, and 2 units away from the viewer.
+  	</p>
+
+  	<div class="figure">
+		<img src="images/rotation5.png" width="242" height="245" border="0" alt="rotation">
+    	<div class="figure-caption">
+    		<span class="figure-number">Figure 4</span>. Scene rotation
+    	</div>
+  	</div>
+  	
+  	<p>
+  		In order to provide the ability to move and rotate a scene, we
+  		need to perform the appropriate transformation before the scene is
+  		being rendered. The solution developed in this article relies on an
+  		external class, a <code>SceneGrip</code>, that does necessary rotations
+  		and translations. How much the scene is transformed is dictated by
+  		internal variables. These, in turn, are adjusted on key and mouse events.
+  	</p>
+<pre class="code">
+<a name="line31"> 31</a> <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">class</span> <span class="c2h_identifier">SceneGrip</span> <span class="c2h_reserved_word">extends</span> <span class="c2h_identifier">MouseAdapter</span> 
+<a name="line32"> 32</a>                        <span class="c2h_reserved_word">implements</span> <span class="c2h_identifier">MouseMoveListener</span>, <span class="c2h_identifier">Listener</span>, <span class="c2h_identifier">KeyListener</span> <span class="c2h_braces">{</span>
+<a name="line33"> 33</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_reserved_word">float</span> <span class="c2h_identifier">xrot</span><span class="c2h_symbol">;</span>
+<a name="line34"> 34</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_reserved_word">float</span> <span class="c2h_identifier">yrot</span><span class="c2h_symbol">;</span>
+<a name="line35"> 35</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_reserved_word">float</span> <span class="c2h_identifier">zoff</span><span class="c2h_symbol">;</span>
+<a name="line36"> 36</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_reserved_word">float</span> <span class="c2h_identifier">xoff</span><span class="c2h_symbol">;</span>
+<a name="line37"> 37</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_reserved_word">float</span> <span class="c2h_identifier">yoff</span><span class="c2h_symbol">;</span>
+...
+<a name="line45"> 45</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_identifier">SceneGrip</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line46"> 46</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">init</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line47"> 47</a>     <span class="c2h_braces">}</span>
+<a name="line48"> 48</a>     
+<a name="line49"> 49</a>     <span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">init</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line50"> 50</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xrot</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yrot</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">0.0f</span><span class="c2h_symbol">;</span>
+<a name="line51"> 51</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xoff</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yoff</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">0.0f</span><span class="c2h_symbol">;</span>
+<a name="line52"> 52</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">zoff</span> <span class="c2h_symbol">=</span> <span class="c2h_symbol">-</span><span class="c2h_numeric">8.0f</span><span class="c2h_symbol">;</span>
+<a name="line53"> 53</a>     <span class="c2h_braces">}</span>
+</pre>
+
+	<p>
+		The class defines two variables that store the current angle of the
+		rotation along the <i>x</i> and <i>y</i> axis. In addition, three
+		variables remember by how much to move a scene in each of the three
+		directions. The initial values of all of the variables, except for the
+		<i>z</i> offset, are set to 0.0f. The offset along the <i>z</i> axis
+		is set to <i>-8.0f</i> so that the scene has some separation
+		from the viewer. Setting <i>z</i> offset to 0.0f would be equivalent to 
+		jamming the scene up against the viewer's nose.
+	</p>
+<pre class="code">
+<a name="line99"> 99</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">keyPressed</span><span class="c2h_braces">(</span><span class="c2h_identifier">KeyEvent</span> <span class="c2h_identifier">e</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line100">100</a>         <span class="c2h_reserved_word">switch</span> <span class="c2h_braces">(</span><span class="c2h_identifier">e</span>.<span class="c2h_identifier">keyCode</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line101">101</a>         <span class="c2h_reserved_word">case</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">ARROW_UP</span><span class="c2h_symbol">:</span>
+<a name="line102">102</a>             <span class="c2h_reserved_word">if</span> <span class="c2h_braces">(</span><span class="c2h_braces">(</span><span class="c2h_identifier">e</span>.<span class="c2h_identifier">stateMask</span> <span class="c2h_symbol">&amp;</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">CTRL</span><span class="c2h_braces">)</span> <span class="c2h_symbol">!</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line103">103</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xrot</span> <span class="c2h_symbol">-</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.5f</span><span class="c2h_symbol">;</span>
+<a name="line104">104</a>             <span class="c2h_braces">}</span> <span class="c2h_reserved_word">else</span> <span class="c2h_braces">{</span>
+<a name="line105">105</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yoff</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.05f</span><span class="c2h_symbol">;</span>
+<a name="line106">106</a>             <span class="c2h_braces">}</span>
+<a name="line107">107</a>             <span class="c2h_reserved_word">break</span><span class="c2h_symbol">;</span>
+<a name="line108">108</a>         <span class="c2h_reserved_word">case</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">ARROW_DOWN</span><span class="c2h_symbol">:</span>
+<a name="line109">109</a>             <span class="c2h_reserved_word">if</span> <span class="c2h_braces">(</span><span class="c2h_braces">(</span><span class="c2h_identifier">e</span>.<span class="c2h_identifier">stateMask</span> <span class="c2h_symbol">&amp;</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">CTRL</span><span class="c2h_braces">)</span> <span class="c2h_symbol">!</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line110">110</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xrot</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.5f</span><span class="c2h_symbol">;</span>
+<a name="line111">111</a>             <span class="c2h_braces">}</span> <span class="c2h_reserved_word">else</span> <span class="c2h_braces">{</span>
+<a name="line112">112</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yoff</span> <span class="c2h_symbol">-</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.05f</span><span class="c2h_symbol">;</span>
+<a name="line113">113</a>             <span class="c2h_braces">}</span>
+<a name="line114">114</a>             <span class="c2h_reserved_word">break</span><span class="c2h_symbol">;</span>
+<a name="line115">115</a>         <span class="c2h_reserved_word">case</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">ARROW_LEFT</span><span class="c2h_symbol">:</span>
+<a name="line116">116</a>             <span class="c2h_reserved_word">if</span> <span class="c2h_braces">(</span><span class="c2h_braces">(</span><span class="c2h_identifier">e</span>.<span class="c2h_identifier">stateMask</span> <span class="c2h_symbol">&amp;</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">CTRL</span><span class="c2h_braces">)</span> <span class="c2h_symbol">!</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line117">117</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yrot</span> <span class="c2h_symbol">-</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.5f</span><span class="c2h_symbol">;</span>
+<a name="line118">118</a>             <span class="c2h_braces">}</span> <span class="c2h_reserved_word">else</span> <span class="c2h_braces">{</span>
+<a name="line119">119</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xoff</span> <span class="c2h_symbol">-</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.05f</span><span class="c2h_symbol">;</span>
+<a name="line120">120</a>             <span class="c2h_braces">}</span>
+<a name="line121">121</a>             <span class="c2h_reserved_word">break</span><span class="c2h_symbol">;</span>
+<a name="line122">122</a>         <span class="c2h_reserved_word">case</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">ARROW_RIGHT</span><span class="c2h_symbol">:</span>
+<a name="line123">123</a>             <span class="c2h_reserved_word">if</span> <span class="c2h_braces">(</span><span class="c2h_braces">(</span><span class="c2h_identifier">e</span>.<span class="c2h_identifier">stateMask</span> <span class="c2h_symbol">&amp;</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">CTRL</span><span class="c2h_braces">)</span> <span class="c2h_symbol">!</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line124">124</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yrot</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.5f</span><span class="c2h_symbol">;</span>
+<a name="line125">125</a>             <span class="c2h_braces">}</span> <span class="c2h_reserved_word">else</span> <span class="c2h_braces">{</span>
+<a name="line126">126</a>                 <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xoff</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.05f</span><span class="c2h_symbol">;</span>
+<a name="line127">127</a>             <span class="c2h_braces">}</span>
+<a name="line128">128</a>             <span class="c2h_reserved_word">break</span><span class="c2h_symbol">;</span>
+<a name="line129">129</a>         <span class="c2h_reserved_word">case</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">PAGE_UP</span><span class="c2h_symbol">:</span>
+<a name="line130">130</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">zoff</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.05f</span><span class="c2h_symbol">;</span>
+<a name="line131">131</a>             <span class="c2h_reserved_word">break</span><span class="c2h_symbol">;</span>
+<a name="line132">132</a>         <span class="c2h_reserved_word">case</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">PAGE_DOWN</span><span class="c2h_symbol">:</span>
+<a name="line133">133</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">zoff</span> <span class="c2h_symbol">-</span><span class="c2h_symbol">=</span> <span class="c2h_numeric">0.05f</span><span class="c2h_symbol">;</span>
+<a name="line134">134</a>             <span class="c2h_reserved_word">break</span><span class="c2h_symbol">;</span>
+<a name="line135">135</a>         <span class="c2h_reserved_word">case</span> <span class="c2h_identifier">SWT</span>.<span class="c2h_identifier">HOME</span><span class="c2h_symbol">:</span>
+<a name="line136">136</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">init</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line137">137</a>             <span class="c2h_reserved_word">break</span><span class="c2h_symbol">;</span>
+<a name="line138">138</a>         <span class="c2h_braces">}</span>
+<a name="line139">139</a>     <span class="c2h_braces">}</span>
+</pre>
+
+	<p>
+		Upon receiving a key event, we adjust the offset and rotation variables.
+		The convention used here is that if the Ctrl key is pressed, pressing
+		arrow keys rotates the scene. Otherwise, pressing arrow keys moves the scene. For example,
+		when the arrow up key is pressed we either increase the <i>y</i> offset,
+		moving the scene up, or decrease the <i>x</i> angle, twisting the scene
+		so that the part closest to the viewer is lifted up, and the part
+		furthest away from the user is rotated down. The left arrow performs a
+		similar function for the <i>x</i> offset or <i>y</i> axis rotation.
+		Page up and page down keys are used to zoom in and out.
+		Finally, hitting the Home key restores the scene to its original settings.
+		(The step size values
+		chosen here work well for small scenes. For larger scenes, 
+		the step size should be calculated based on how far the viewer is from the 
+		center of the scene. However, for simplicity this has been omitted in this example.)
+	</p>
+	
+<pre class="code">
+<a name="line144">144</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">adjust</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line145">145</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xoff</span>, <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yoff</span>, <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">zoff</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line146">146</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glRotatef</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">xrot</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line147">147</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glRotatef</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">yrot</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line148">148</a>     <span class="c2h_braces">}</span>
+</pre>
+	<p>
+		The <code>adjust</code> method performs necessary translations and 
+		rotations of the scene. Just like other OpenGL operations, they
+		are applied to the current context. As the reader may notice, the
+		translations can be performed in one call. However, to enable independent
+		rotation in the <i>x</i> and <i>y</i> axis, two <code>glRotatef</code> calls passing the 
+		appropriate <i>x</i> and <i>y</i> angles are made. To make use of the
+		scene grip, the <code>GLScene</code> class needs to be modified. When
+		creating a new instance, a scene grip must be created and register as
+		a listener of mouse, mouse move, and key events of the SWT canvas. In <code>drawScene</code>,
+		a call must be made to the <code>adjust</code> method before any GL
+		calls are made (see next section).
+	</p>
+
+  	<h3>3D Charting</h3>
+
+	<p>
+		With all the above preparations, we are ready to dive into the main
+		application. The chart shows four sets of data. Each set consists
+		of the same, fixed number of points, each point being a positive value
+		between 0.0 and 10.0. These requirements are intentionally simple,
+		so that the brunt of the work can go into developing OpenGL
+		code rather than dealing with issues of scaling, missing points,
+		disparate axis ranges, and other challenges that a true charting application
+		needs to address.
+	</p>
+	<p>
+		The demo runs as a very simple Eclipse view (a stand-alone SWT
+		application is
+		also included in the provided source code). The only
+		interesting addition is the <code>Refresher</code>, which
+		periodically forces repainting of the OpenGL scene.
+		This way, as the viewpoint is moved or rotated, the up-to-date
+		rendering is shown in the component. The refresher, which is launched
+		just after the SWT control for the view
+		is created, repeatedly calls the 
+		<code>redraw</code> method of the scene. The calls are spaced
+		every 100ms, giving it a theoretical rate of 10 frames per second.
+	</p>
+<pre class="code">
+<a name="line13">13</a> <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">class</span> <span class="c2h_identifier">Refresher</span> <span class="c2h_reserved_word">implements</span> <span class="c2h_identifier">Runnable</span> <span class="c2h_braces">{</span>
+<a name="line14">14</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">static</span> <span class="c2h_reserved_word">final</span> <span class="c2h_reserved_word">int</span> <span class="c2h_identifier">DELAY</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">100</span><span class="c2h_symbol">;</span>
+<a name="line15">15</a>     
+<a name="line16">16</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_identifier">GLScene</span> <span class="c2h_identifier">scene</span><span class="c2h_symbol">;</span>
+<a name="line17">17</a>     
+<a name="line18">18</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_identifier">Refresher</span><span class="c2h_braces">(</span><span class="c2h_identifier">GLScene</span> <span class="c2h_identifier">scene</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line19">19</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">scene</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">scene</span><span class="c2h_symbol">;</span>
+<a name="line20">20</a>     <span class="c2h_braces">}</span>
+<a name="line21">21</a>     
+<a name="line22">22</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">run</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line23">23</a>         <span class="c2h_reserved_word">if</span> <span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">scene</span> <span class="c2h_symbol">!</span><span class="c2h_symbol">=</span> <span class="c2h_reserved_word">null</span> <span class="c2h_symbol">&amp;</span><span class="c2h_symbol">&amp;</span> <span class="c2h_symbol">!</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">scene</span>.<span class="c2h_identifier">isDisposed</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line24">24</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">scene</span>.<span class="c2h_identifier">render</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line25">25</a>             <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">scene</span>.<span class="c2h_identifier">getDisplay</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span>.<span class="c2h_identifier">timerExec</span><span class="c2h_braces">(</span><span class="c2h_identifier">DELAY</span>, <span class="c2h_reserved_word">this</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line26">26</a>         <span class="c2h_braces">}</span>
+<a name="line27">27</a>     <span class="c2h_braces">}</span>
+<a name="line28">28</a> <span class="c2h_braces">}</span>
+</pre>
+
+	<p>
+		The values of points of each data set are represented
+		by cylinders. Rendering a cylinder can be achieved
+		by executing three GLU calls: two to render the disks needed at 
+		both ends of the cylinder, and one to render the cylinder walls. For
+		example, to draw a cylinder 2 units long, you could use the
+		code shown in Figure 5.
+	</p>
+	
+	<table align="center"  width="80%">
+	<tbody>
+	<tr>
+		<td width="50%">
+<pre class="code">
+<a name="line1">1</a> <span class="c2h_reserved_word">int</span> <span class="c2h_identifier">qobj</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluNewQuadric</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line2">2</a> <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glRotatef</span><span class="c2h_braces">(</span><span class="c2h_symbol">-</span><span class="c2h_numeric">90.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line3">3</a> <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluDisk</span><span class="c2h_braces">(</span><span class="c2h_identifier">qobj</span>, <span class="c2h_numeric">0.0</span>, <span class="c2h_numeric">1.0</span>, <span class="c2h_numeric">32</span>, <span class="c2h_numeric">1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line4">4</a> <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluCylinder</span><span class="c2h_braces">(</span><span class="c2h_identifier">qobj</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">1.0</span>, <span class="c2h_numeric">2.0</span>, <span class="c2h_numeric">32</span>, <span class="c2h_numeric">1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line5">5</a> <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">2.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line6">6</a> <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluDisk</span><span class="c2h_braces">(</span><span class="c2h_identifier">qobj</span>, <span class="c2h_numeric">0.0</span>, <span class="c2h_numeric">1.0</span>, <span class="c2h_numeric">32</span>, <span class="c2h_numeric">1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line7">7</a> <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_symbol">-</span><span class="c2h_numeric">2.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line8">8</a> <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glRotatef</span><span class="c2h_braces">(</span><span class="c2h_numeric">90.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line9">9</a> <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluDeleteQuadric</span><span class="c2h_braces">(</span><span class="c2h_identifier">qobj</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+</pre>
+		</td>
+		<td width="50%" align="center">
+			<img src="images/cylinder.png" width="82" height="105" alt="Cylinder">
+		</td>
+	</tr>
+	</tbody>
+	</table>
+    <div class="figure-caption">
+    	<span class="figure-number">Figure 5</span>. Code for rendering a cylinder and its result
+   	</div>
+
+	<p>
+		The first line allocates a new quadric needed by the disk and cylinder
+		calls. The scene is then rotated by -90 degrees, so that the cylinder is
+		drawn upright. Next, the bottom disk is rendered, followed by the
+		cylinder walls (the value of 32 indicates how many slices are to be used to
+		approximate the circular perimeter of both, and
+		gives a fair approximation of roundness). Before we can draw the 
+		top disk, we need to move 2 units along the z-axis,
+		which is done by 
+		performing a scene translation. The final disk is then drawn and
+		the coordinate system is restored by moving back by 2 units and 
+		twisting it in the opposite direction. Finally, the
+		quadric that was allocated in line 1 is deleted.
+	</p>
+	<p>
+		While this approach works, it is also time-consuming. When drawing
+		one cylinder the inefficiency is not a problem, but rendering hundreds 
+		of them could severely impact the program's performance. OpenGL provides
+		a solution for such situations, allowing us to perform a cooking
+		show trick - rather than "baking" the scene in front of a live
+		audience, we can ask OpenGL to use the one we prepared earlier. This
+		trick can be done by using display lists.
+	</p>
+	<p>
+		A display list is a collection of compiled OpenGL commands. A list
+		is defined by the set of commands placed between the 
+		<code>glNewList(int list, int mode)</code> and <code>glEndList()</code> 
+		method calls. The first parameter must be a positive integer that
+		uniquely identifies the display list being created. You can ask
+		GL to create one or more list identifiers for you, using the 
+		<code>glGenLists(int n)</code>
+		method. The second <code>glNewList</code> parameter specifies whether the list is compiled
+		or compiled and immediately executed. Most of the time you probably just
+		want to compile the list. Later, you can display the list by 
+		calling the <code>glCallList(int list)</code> method with the
+		identifier of the list to be displayed. For example, the triangle
+		code shown in <a href="#fig3">Figure&nbsp;3</a> could be turned into a list using the
+		following code:
+	</p>
+<pre class="code">
+<span class="c2h_identifier">triangle</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glGenLists</span><span class="c2h_braces">(</span><span class="c2h_numeric">1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glNewList</span><span class="c2h_braces">(</span><span class="c2h_identifier">triangle</span>, <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_COMPILE</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glBegin</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_TRIANGLES</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+        <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glVertex3f</span><span class="c2h_braces">(</span><span class="c2h_symbol">-</span><span class="c2h_numeric">1.0f</span>, <span class="c2h_symbol">-</span><span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span> 
+        <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glVertex3f</span><span class="c2h_braces">(</span><span class="c2h_numeric">1.0f</span>, <span class="c2h_symbol">-</span><span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+        <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glVertex3f</span><span class="c2h_braces">(</span><span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEnd</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEndList</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+</pre>
+	<p>
+		To display it in, for instance, the <code>drawScene</code> method, you would simply
+		call <code>glCallList(triangle)</code>. Finally, you should also delete
+		any lists no longer needed by calling the <code>glDeleteLists(int list, int range)</code>
+		method. If you allocated just one list, the <code>range</code> is set
+		to 1.
+	</p>
+	<p>
+		In the charting application we are using two kinds of display lists,
+		one to represent a particular value in a chart, and the other to
+		draw chart axes. To simplify chart rendering, I defined a common
+		base class, the <code>CompiledShape</code>. In the constructor, it
+		grabs the next available list index. In addition, it defines three 
+		methods: one for accessing the list index (line 8), one for rendering the
+		pre-compiled list (line 12), and one for deleting it (line 16).
+	</p>
+<pre class="code">
+<a name="line1"> 1</a> <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">abstract</span> <span class="c2h_reserved_word">class</span> <span class="c2h_identifier">CompiledShape</span> <span class="c2h_braces">{</span>
+<a name="line2"> 2</a>     <span class="c2h_reserved_word">private</span> <span class="c2h_reserved_word">int</span> <span class="c2h_identifier">listIndex</span><span class="c2h_symbol">;</span>
+<a name="line3"> 3</a>     
+<a name="line4"> 4</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_identifier">CompiledShape</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line5"> 5</a>         <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">listIndex</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glGenLists</span><span class="c2h_braces">(</span><span class="c2h_numeric">1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line6"> 6</a>     <span class="c2h_braces">}</span>
+<a name="line7"> 7</a>     
+<a name="line8"> 8</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">int</span> <span class="c2h_identifier">getListIndex</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line9"> 9</a>         <span class="c2h_reserved_word">return</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">listIndex</span><span class="c2h_symbol">;</span>
+<a name="line10">10</a>     <span class="c2h_braces">}</span>
+<a name="line11">11</a>     
+<a name="line12">12</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">draw</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line13">13</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glCallList</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">getListIndex</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line14">14</a>     <span class="c2h_braces">}</span>
+<a name="line15">15</a>     
+<a name="line16">16</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line17">17</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glDeleteLists</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">getListIndex</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span>, <span class="c2h_numeric">1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line18">18</a>     <span class="c2h_braces">}</span>
+<a name="line19">19</a> <span class="c2h_braces">}</span>
+</pre>
+	<p>
+		The values of the chart are represented by instances of
+		the <code>CompiledShape</code> class. Note that <code>CompiledShape</code>
+		does not create a display list, but leaves this task to the constructors
+		of extending classes. For the <code>BarValue</code> we reuse the
+		same quadric for each generated list. For a value passed to the 
+		constructor, we build a cylinder in a similar manner as previously
+		described. The only two significant differences here are that the cylinder is
+		compiled into a display list (lines 6-14), and the specified <code>value</code>
+		is used to render the cylinder height (lines 8 and 10).
+	</p>
+<pre class="code">
+<a name="line1"> 1</a> <span class="c2h_reserved_word">private</span> <span class="c2h_reserved_word">static</span> <span class="c2h_reserved_word">class</span> <span class="c2h_identifier">BarValue</span> <span class="c2h_reserved_word">extends</span> <span class="c2h_identifier">CompiledShape</span> <span class="c2h_braces">{</span>
+<a name="line2"> 2</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">static</span> <span class="c2h_reserved_word">final</span> <span class="c2h_reserved_word">float</span> <span class="c2h_identifier">RADIUS</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">1.0f</span><span class="c2h_symbol">;</span>
+<a name="line3"> 3</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">static</span> <span class="c2h_reserved_word">int</span> <span class="c2h_identifier">QUADRIC</span></span><span class="c2h_symbol">;</span>
+<a name="line4"> 4</a>     
+<a name="line5"> 5</a>     <span class="c2h_reserved_word">public</span> <span class="c2h_identifier">BarValue</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">float</span> <span class="c2h_identifier">value</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+<a name="line6"> 6</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glNewList</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">getListIndex</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span>, <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_COMPILE</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line7"> 7</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glRotatef</span><span class="c2h_braces">(</span><span class="c2h_symbol">-</span><span class="c2h_numeric">90.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line8"> 8</a>         <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluCylinder</span><span class="c2h_braces">(</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">QUADRIC</span>, <span class="c2h_identifier">RADIUS</span>, <span class="c2h_identifier">RADIUS</span>, <span class="c2h_identifier">value</span>, <span class="c2h_numeric">32</span>, <span class="c2h_numeric">1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line9"> 9</a>         <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluDisk</span><span class="c2h_braces">(</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">QUADRIC</span>, <span class="c2h_numeric">0.0</span>, <span class="c2h_identifier">RADIUS</span>, <span class="c2h_numeric">32</span>, <span class="c2h_numeric">32</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line10">10</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_identifier">value</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line11">11</a>         <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluDisk</span><span class="c2h_braces">(</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">QUADRIC</span>, <span class="c2h_numeric">0.0</span>, <span class="c2h_identifier">RADIUS</span>, <span class="c2h_numeric">32</span>, <span class="c2h_numeric">32</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line12">12</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_symbol">-</span><span class="c2h_identifier">value</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line13">13</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glRotatef</span><span class="c2h_braces">(</span><span class="c2h_numeric">90.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line14">14</a>         <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEndList</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<a name="line15">15</a>     <span class="c2h_braces">}</span>
+<a name="line16">16</a> <span class="c2h_braces">}</span>
+</pre>
+
+	<p>
+		The widget on which the chart is drawn is a modification of the previously
+		introduced <code>GLScene</code> class. It overrides a number of methods
+		to add functionality needed by the application. Its <code>initGL</code>
+		method starts by setting up and enabling color blending. This creates
+		translucent rather than opaque cylinders, allowing us to view chart
+		values that would normally be hidden. To add the 3D realism, a light
+		source is set up. It emits a dim white light and a bright diffuse
+		(directional) light. The light is positioned above and to the left
+		of the scene. Finally, compiled shapes are created. First the axes
+		are set up, then bar values are generated. A simple shifted
+		sinusoidal curve is used for each row.
+	</p>
+<pre class="code">
+<span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">initGL</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+    <span class="c2h_reserved_word">super</span>.<span class="c2h_identifier">initGL</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    
+    <span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">QUADRIC</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluNewQuadric</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span>;
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glBlendFunc</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_SRC_ALPHA</span>, <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_ONE_MINUS_SRC_ALPHA</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEnable</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_BLEND</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEnable</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_LINE_SMOOTH</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluQuadricNormals</span><span class="c2h_braces">(</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">QUADRIC</span>, <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">GLU_SMOOTH</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glLightfv</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_LIGHT1</span>, 
+                 <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_DIFFUSE</span>, 
+                 <span class="c2h_reserved_word">new</span> <span class="c2h_reserved_word">float</span><span class="c2h_braces">[</span><span class="c2h_braces">]</span> <span class="c2h_braces">{</span><span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">1.0f</span>, <span class="c2h_numeric">1.0f</span><span class="c2h_braces">}</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glLightfv</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_LIGHT1</span>, 
+                 <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_AMBIENT</span>, 
+                 <span class="c2h_reserved_word">new</span> <span class="c2h_reserved_word">float</span><span class="c2h_braces">[</span><span class="c2h_braces">]</span> <span class="c2h_braces">{</span><span class="c2h_numeric">0.5f</span>, <span class="c2h_numeric">0.5f</span>, <span class="c2h_numeric">0.5f</span>, <span class="c2h_numeric">1.0f</span><span class="c2h_braces">}</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glLightfv</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_LIGHT1</span>, 
+                 <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_POSITION</span>, 
+                 <span class="c2h_reserved_word">new</span> <span class="c2h_reserved_word">float</span><span class="c2h_braces">[</span><span class="c2h_braces">]</span> <span class="c2h_braces">{</span><span class="c2h_symbol">-</span><span class="c2h_numeric">50.f</span>, <span class="c2h_numeric">50.0f</span>, <span class="c2h_numeric">100.0f</span>, <span class="c2h_numeric">1.0f</span><span class="c2h_braces">}</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEnable</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_LIGHT1</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEnable</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_LIGHTING</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glEnable</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_COLOR_MATERIAL</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glColorMaterial</span><span class="c2h_braces">(</span><span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_FRONT</span>, <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">GL_AMBIENT_AND_DIFFUSE</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+
+    <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">axis</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">new</span> <span class="c2h_identifier">Axis</span><span class="c2h_braces">(</span><span class="c2h_numeric">15.0f</span>, <span class="c2h_numeric">9.0f</span>, <span class="c2h_numeric">11.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">chart</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">new</span> <span class="c2h_identifier">BarValue</span><span class="c2h_braces">[</span><span class="c2h_identifier">CHART_COUNT</span><span class="c2h_braces">]</span><span class="c2h_braces">[</span><span class="c2h_identifier">ROW_LENGTH</span><span class="c2h_braces">]</span><span class="c2h_symbol">;</span>
+    <span class="c2h_reserved_word">double</span> <span class="c2h_identifier">slice</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">Math</span>.<span class="c2h_identifier">PI</span>/<span class="c2h_identifier">ROW_LENGTH</span><span class="c2h_symbol">;</span>
+    
+    <span class="c2h_reserved_word">for</span> <span class="c2h_braces">(</span><span class="c2h_reserved_word">int</span> <span class="c2h_identifier">i</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_symbol">;</span> <span class="c2h_identifier">i</span> <span class="c2h_symbol">&lt;</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">chart</span>.<span class="c2h_identifier">length</span><span class="c2h_symbol">;</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">+</span> <span class="c2h_identifier">i</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+        <span class="c2h_identifier">BarValue</span><span class="c2h_braces">[</span><span class="c2h_braces">]</span> <span class="c2h_identifier">value</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">chart</span><span class="c2h_braces">[</span><span class="c2h_identifier">i</span><span class="c2h_braces">]</span><span class="c2h_symbol">;</span>
+        <span class="c2h_reserved_word">double</span> <span class="c2h_identifier">shift</span> <span class="c2h_symbol">=</span> <span class="c2h_identifier">i</span><span class="c2h_symbol">*</span><span class="c2h_identifier">Math</span>.<span class="c2h_identifier">PI</span>/<span class="c2h_numeric">4.0</span><span class="c2h_symbol">;</span>
+        
+        <span class="c2h_reserved_word">for</span> <span class="c2h_braces">(</span><span class="c2h_reserved_word">int</span> <span class="c2h_identifier">j</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">1</span><span class="c2h_symbol">;</span> <span class="c2h_identifier">j</span> <span class="c2h_symbol">&lt;</span><span class="c2h_symbol">=</span> <span class="c2h_identifier">value</span>.<span class="c2h_identifier">length</span><span class="c2h_symbol">;</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">+</span> <span class="c2h_identifier">j</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+            <span class="c2h_identifier">value</span><span class="c2h_braces">[</span><span class="c2h_identifier">j</span><span class="c2h_symbol">-</span><span class="c2h_numeric">1</span><span class="c2h_braces">]</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">new</span> <span class="c2h_identifier">BarValue</span><span class="c2h_braces">(</span><span class="c2h_braces">(</span><span class="c2h_reserved_word">float</span><span class="c2h_braces">)</span> <span class="c2h_braces">(</span><span class="c2h_numeric">8.0</span><span class="c2h_symbol">*</span><span class="c2h_identifier">Math</span>.<span class="c2h_identifier">abs</span><span class="c2h_braces">(</span><span class="c2h_identifier">Math</span>.<span class="c2h_identifier">sin</span><span class="c2h_braces">(</span><span class="c2h_identifier">slice</span><span class="c2h_symbol">*</span><span class="c2h_identifier">j</span> <span class="c2h_symbol">-</span> <span class="c2h_identifier">shift</span><span class="c2h_braces">)</span><span class="c2h_braces">)</span><span class="c2h_braces">)</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+        <span class="c2h_braces">}</span>
+    <span class="c2h_braces">}</span>
+<span class="c2h_braces">}</span>
+</pre>
+
+	<p>
+		To render the chart we override the <code>drawScene</code> method. 
+		This method first asks the scene grip to adjust the view point. Next,
+		the axes figure is drawn, followed by the bars. After each bar is drawn,
+		the coordinate system is moved to the right so that bars are 
+		arranged in a row. After a complete row of bars is rendered, the
+		coordinate system is translated to the left and forward.
+	</p>
+	<p>
+		When using light sources it is customary to set up 
+		material properties. These define how each component of light
+		is reflected by a given material, and whether the material is
+		shiny or dull. To simplify this procedure, the <code>initGL</code>
+		method sets up color tracking. This way, material properties are
+		automatically inferred from the current color. In order to make
+		cylinders translucent rather than opaque, we use the color command
+		that defines four rather than three parameters. The fourth parameter is the 
+		alpha composite, which dictates the level of transparency. Objects that have
+		alpha set to <code>1.0f</code> are opaque, while objects with an alpha of <code>0.0f</code> are completely
+		transparent, and hence effectively invisible.
+		The program
+		uses alpha equal to <code>0.7f</code> to allow some but not all
+		light to pass through walls of cylinders.
+	</p>
+<pre class="code">
+<span class="c2h_reserved_word">protected</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">drawScene</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+    <span class="c2h_reserved_word">super</span>.<span class="c2h_identifier">drawScene</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">grip</span>.<span class="c2h_identifier">adjust</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glLineWidth</span><span class="c2h_braces">(</span><span class="c2h_numeric">1.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">axis</span>.<span class="c2h_identifier">draw</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">RADIUS</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">RADIUS</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    
+    <span class="c2h_reserved_word">for</span> <span class="c2h_braces">(</span><span class="c2h_reserved_word">int</span> <span class="c2h_identifier">i</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_symbol">;</span> <span class="c2h_identifier">i</span> <span class="c2h_symbol">&lt;</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">chart</span>.<span class="c2h_identifier">length</span><span class="c2h_symbol">;</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">+</span> <span class="c2h_identifier">i</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+        <span class="c2h_identifier">BarValue</span><span class="c2h_braces">[</span><span class="c2h_braces">]</span> <span class="c2h_identifier">value</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">chart</span><span class="c2h_braces">[</span><span class="c2h_identifier">i</span><span class="c2h_braces">]</span><span class="c2h_symbol">;</span>
+        <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glColor4fv</span><span class="c2h_braces">(</span><span class="c2h_identifier">COLOR</span><span class="c2h_braces">[</span><span class="c2h_identifier">i</span> <span class="c2h_symbol">%</span> <span class="c2h_identifier">COLOR</span>.<span class="c2h_identifier">length</span><span class="c2h_braces">]</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+        
+        <span class="c2h_reserved_word">for</span> <span class="c2h_braces">(</span><span class="c2h_reserved_word">int</span> <span class="c2h_identifier">j</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_symbol">;</span> <span class="c2h_identifier">j</span> <span class="c2h_symbol">&lt;</span> <span class="c2h_identifier">value</span>.<span class="c2h_identifier">length</span><span class="c2h_symbol">;</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">+</span> <span class="c2h_identifier">j</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+            <span class="c2h_identifier">value</span><span class="c2h_braces">[</span><span class="c2h_identifier">j</span><span class="c2h_braces">]</span>.<span class="c2h_identifier">draw</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+            <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_numeric">2.0f</span><span class="c2h_symbol">*</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">RADIUS</span>, <span class="c2h_numeric">0.0f</span>, <span class="c2h_numeric">0.0f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+        <span class="c2h_braces">}</span>
+        
+        <span class="c2h_identifier">GL</span>.<span class="c2h_identifier">glTranslatef</span><span class="c2h_braces">(</span><span class="c2h_symbol">-</span><span class="c2h_numeric">2.0f</span><span class="c2h_symbol">*</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">RADIUS</span><span class="c2h_symbol">*</span><span class="c2h_identifier">value</span>.<span class="c2h_identifier">length</span>, 
+                        <span class="c2h_numeric">0.0f</span>, 
+                        <span class="c2h_numeric">2.0f</span><span class="c2h_symbol">*</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">RADIUS</span> <span class="c2h_symbol">+</span> <span class="c2h_numeric">0.5f</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_braces">}</span>
+<span class="c2h_braces">}</span>    
+</pre>
+
+	<p>
+		The <code>dispose</code> method is used to free resources used by the
+		program. First, the quadric used by GLU to render cylinders and disks
+		is destroyed. Next, all display lists used by bars are freed, as well
+		as the list used to display the axes. Finally, the parent's <code>dispose</code> 
+		method is called to dispose the context.
+	</p>
+<pre class="code">
+<span class="c2h_reserved_word">public</span> <span class="c2h_reserved_word">void</span> <span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+    <span class="c2h_identifier">GLU</span>.<span class="c2h_identifier">gluDeleteQuadric</span><span class="c2h_braces">(</span><span class="c2h_identifier">BarValue</span>.<span class="c2h_identifier">QUADRIC</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    
+    <span class="c2h_reserved_word">for</span> <span class="c2h_braces">(</span><span class="c2h_reserved_word">int</span> <span class="c2h_identifier">i</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_symbol">;</span> <span class="c2h_identifier">i</span> <span class="c2h_symbol">&lt;</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">chart</span>.<span class="c2h_identifier">length</span><span class="c2h_symbol">;</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">+</span> <span class="c2h_identifier">i</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+        <span class="c2h_identifier">BarValue</span><span class="c2h_braces">[</span><span class="c2h_braces">]</span> <span class="c2h_identifier">value</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">chart</span><span class="c2h_braces">[</span><span class="c2h_identifier">i</span><span class="c2h_braces">]</span><span class="c2h_symbol">;</span>
+        
+        <span class="c2h_reserved_word">for</span> <span class="c2h_braces">(</span><span class="c2h_reserved_word">int</span> <span class="c2h_identifier">j</span> <span class="c2h_symbol">=</span> <span class="c2h_numeric">0</span><span class="c2h_symbol">;</span> <span class="c2h_identifier">j</span> <span class="c2h_symbol">&lt;</span> <span class="c2h_identifier">value</span>.<span class="c2h_identifier">length</span><span class="c2h_symbol">;</span> <span class="c2h_symbol">+</span><span class="c2h_symbol">+</span> <span class="c2h_identifier">j</span><span class="c2h_braces">)</span> <span class="c2h_braces">{</span>
+            <span class="c2h_identifier">value</span><span class="c2h_braces">[</span><span class="c2h_identifier">j</span><span class="c2h_braces">]</span>.<span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+            <span class="c2h_identifier">value</span><span class="c2h_braces">[</span><span class="c2h_identifier">j</span><span class="c2h_braces">]</span> <span class="c2h_symbol">=</span> <span class="c2h_reserved_word">null</span><span class="c2h_symbol">;</span>
+        <span class="c2h_braces">}</span>
+    <span class="c2h_braces">}</span>
+    
+    <span class="c2h_reserved_word">this</span>.<span class="c2h_identifier">axis</span>.<span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+    <span class="c2h_reserved_word">super</span>.<span class="c2h_identifier">dispose</span><span class="c2h_braces">(</span><span class="c2h_braces">)</span><span class="c2h_symbol">;</span>
+<span class="c2h_braces">}</span>
+</pre>
+
+	<p>
+		The end result is shown in Figure&nbsp;6. The view point can be moved
+		around and rotated using either the mouse left or right buttons or the 
+		keyboard. Depending on the 
+		angle from which the chart is inspected, one can observe different 
+		interaction of the light source and objects in the scene. The color
+		blending creates the translucent appearance of cylinders.
+	</p>
+	
+  	<div class="figure">
+		<img src="images/3dchart4.png" width="500" height="366" border="0" alt="3D Chart">
+    	<div class="figure-caption">
+    		<span class="figure-number">Figure 6</span>. OpenGL 3D Chart
+    	</div>
+  	</div>
+  	
+  	<p>
+  		<img src="images/tryit.gif" alt="Try it!" width="61" height="13"> 
+  		To run this article's demo plug-in in your workspace make sure you 
+  		have the correct 
+  		<a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/opengl/opengl.html">OpenGL</a>
+  		plug-in installed. Download
+  		<a href="lib/demo_plugin.zip">demo_plugin.zip</a> which contains an 
+  		Eclipse plug-in that defines a view that shows the OpenGL chart. 
+  		Unzip it to your Eclipse root directory; it should create the 
+  		<code>org.bluear.opengl_0.1.0</code> directory in Eclipse's plugins 
+  		folder. Start Eclipse with the <code>-clean</code> switch to ensure 
+  		that your newly-installed plug-in is detected. From the 
+  		<i>Show View</i> dialog, accessible under the <i>Windows</i> menu,
+  		select the <i>OpenGL Chart</i> view listed in 
+  		the <i>OpenGL Examples</i> category.
+  		In order to obtain access to the source code, import the plug-in
+  		as the source project. The code also contains a stand alone version in the
+  		form of an SWT program, with the entry point defined in the <code>Launcher</code>
+  		class. To run it you need to set the <code>java.library.path</code>
+  		variable with the path to both the SWT and OpenGL binary libraries.
+  	</p>
+  	<div class="figure">
+		<img src="images/workbench2.png" width="734" height="400" border="0" alt="Eclipse OpenGL view">
+    	<div class="figure-caption" style="margin-top: 1ex;">
+    		<span class="figure-number">Figure 7</span>. An Eclipse view using <code>GLScene</code>.
+    	</div>
+  	</div>
+  	
+
+  	<h2>Conclusion</h2>
+
+	<p>
+	 	This article introduces and presents some of the functionality available
+	 	today in the OpenGL plug-in for SWT. While the subject of 3D and OpenGL
+	 	is too vast to be fully explored, I tried to give the reader a taste
+	 	of what can be achieved. Some of the components and techniques, such
+	 	as <code>GLScene</code> and <code>SceneGrip</code>, may be reused
+	 	in other 3D applications.
+	</p>
+	<p>
+		The plug-in is still considered experimental. For example, if you pass a 
+		<code>null</code> array to some GL methods, rather than getting a possible to catch
+   		<code>NullPointerException</code>, you end up with a JVM crash. These 
+   		and other issues must be addressed before the final release of the 
+   		plug-in.
+   	</p>
+   	<p>
+   		OpenGL is not the only game in town; one could expect that a Windows-only
+   		DirectX plug-in with similar capabilities could be developed. On 
+   		the other hand, OpenGL has the enormous benefit of being a platform-neutral
+   		solution. The majority of the code for this article has been developed 
+   		under Linux and then tested, without any additional modifications,
+   		under Windows. This fits well with the SWT philosophy of using native platform
+   		capabilities but exposing them through platform-agnostic APIs. One
+   		can only hope that the plug-in will continue to mature and be deployed 
+   		in other operating systems to which Eclipse has been ported.
+   	</p>
+   	
+   	<h3>Acknowledgments</h3>
+   	<p>
+   		 I would like to thank Grant Gayed and Ed Burnette for their comments 
+   		 that helped improve the structure and accuracy of this article. My 
+   		 thanks also go to Jill Sueoka for tirelessly reviewing numerous 
+   		 versions that I managed to produce.
+   	</p>
+
+	<a name="bibliography"></a>
+	<h2>Bibliography</h2>
+	
+	<table>
+	<tbody>
+  	<tr>
+    	<td valign="top"><a name="winchester"></a>[1]</td>
+      	<td> 
+	      	Joe Winchester, 
+	      	<a href="http://www.eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html"><i>Introduction
+  			to SWT Graphics</i></a>, 
+	      	Eclipse Corner Article, July 2003 
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="saillet"></a>[2]</td>
+      	<td> 
+	      	Yannick Saillet,
+	      	<a href="http://www-106.ibm.com/developerworks/library/j-2dswt/?ca=dnt-522"><i>Java 
+	      	2D imaging for the Standard Widget Toolkit</i></a>, 
+	      	IBM developerWorks, Jun 2004 
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="opengl-pg"></a>[3]</td>
+      	<td> 
+	      	OpenGL Architecture Review Board, Dave Shreiner, Mason Woo, Jackie Neider, 
+	      	Tom Davis, 
+	      	<a href="http://fly.cc.fer.hr/~unreal/theredbook/"><i>OpenGL Programming 
+	      	Guide</i></a>, 
+	      	Addison-Wesley, November 14, 2003, ISBN 0321173481.
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="opengl-pg"></a>[4]</td>
+      	<td> 
+	      	OpenGL Architecture Review Board, Dave Shreiner,
+	      	<a href="http://rush3d.com/reference/opengl-bluebook-1.0/"><i>OpenGL Reference
+	      	Manual</i></a>, 
+	      	Addison-Wesley, March 16, 2004, ISBN 032117383X.
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="computer-graphics"></a>[5]</td>
+      	<td> 
+	      	James D. Foley, Andries van Dam, Steven K. Feiner, John F. Hughes,
+	      	<a href="http://www.awprofessional.com/titles/0-201-84840-6"><i>Computer 
+	      	Graphics: Principles and Practice in C</i></a>, 
+	      	Addison-Wesley, August 4, 1995, ISBN 0201848406.
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="opengl-machine"></a>[6]</td>
+      	<td> 
+	      	<a href="http://www.opengl.org/documentation/specs/version1.1/state.pdf"><i>The
+	      	OpenGL Machine</i></a>, 
+	      	Silicon Graphics, Inc., 1996.
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="opengl-spec"></a>[7]</td>
+      	<td> 
+      		Mark Segal, Kurt Akeley,
+	      	<a href="http://www.opengl.org/documentation/specs/version1.1/glspec1.1/index.html"><i>The 
+	      	OpenGL Graphics System: A Specification (Version 1.1)</i></a>, 
+	      	Silicon Graphics, Inc., 1992-1997.
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="opengl-superbible"></a>[8]</td>
+      	<td> 
+      		Richard S Wright, Benjamin Lipchak,
+	      	<a href="http://www.starstonesoftware.com/OpenGL/"><i>OpenGL 
+	      	SuperBible</i></a>, 
+	      	Sams, 3rd edition, June 30, 2004, ISBN: 0672326019
+      	</td>
+  	</tr>
+  	<tr>
+    	<td valign="top"><a name="opengl-glu"></a>[9]</td>
+      	<td> 
+      		Norman Chin, Chris Frazier, Paul Ho, Zacheng Liu, Kevin P. Smith,
+	      	<a href="http://www.opengl.org/documentation/specs/glu/glu1_3.pdf"><i>OpenGL 
+	      	Graphics System Utility Library</i></a>, 
+	      	Editor Jon Leech, version 1.3, November 1998
+      	</td>
+  	</tr>
+  	</tbody>
+  	</table>
+  	
+	<p>
+		<small>Java and all Java-based trademarks and logos are trademarks or 
+		registered trademarks of Sun Microsystems, Inc. in the United States, 
+		other countries, or both.</small>
+	</p>
+</body>
+</html>

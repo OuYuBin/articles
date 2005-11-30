@@ -54,7 +54,7 @@
           	
           	<p>Besides these, a number of other web sites carry technical articles about
 			Eclipse. You can find pointers to these on the 
-			<a href="../community/main.html#EclipseInformation">Eclipse Community page</a>.
+			<a href="/community/">Eclipse Community page</a>.
 	
 		<div class="homeitem3col">
 			$articles

@@ -1,0 +1,225 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Sleak</title>
+</head>
+
+<body>
+
+<h3>
+Sleak
+</h3>
+
+<p>
+<i>Sleak</i> is a simple tool that monitors SWT <i> graphics</i> resources.
+(Applications typically don't leak <i>widget</i> resources because of rule 2). You can use
+<i>Sleak</i> to detect leaks in SWT application code.
+</p>
+
+<p>
+Here is the source code: <a href="Sleak.java.htm">Sleak.java</a>.
+</p>
+
+<p>
+To use the tool, put the <i> Sleak</i> class on your class path and then find the place
+in your application code where you create the <i>Display</i>:
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp; Display display = <b><font COLOR="#7f0055">new
+</font></b>Display();
+</p>
+
+<p>
+Before creating the display, create a <i>DeviceData</i> and set the <b>data.tracking</b>
+flag to true.<br>
+Then create the <i>Display</i>  with this new <i>DeviceData</i>  object.<br>
+Then create an instance of <i>Sleak</i> and open it.<br>
+Your new code will look something like this:&nbsp;
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; DeviceData data = <b><font COLOR="#7f0055">new
+</font></b>DeviceData();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; data.tracking = <b><font COLOR="#7f0055">true</font></b>;</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; Display display = <b><font COLOR="#7f0055">new
+</font></b>Display(data);</p>
+
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; Sleak sleak = <b><font SIZE="2" COLOR="#7f0055">new
+</font></b>Sleak();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; sleak.open();</p>
+
+<p>
+Now run your code as usual. When the <i>Sleak</i> window comes up, it looks like
+this:
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0">
+<img border="0" src="sleak.1.gif" width="384" height="268">
+</p>
+
+<p>When you press the &quot;Start&quot; button, <i>Sleak</i> collects and
+displays a list of the SWT graphics resources that are currently allocated. At this point, perform
+the action in your application that you suspect is leaking. When you press the
+&quot;Stop&quot; button, <i>Sleak</i> displays the list of resources
+that were allocated since you pressed &quot;Start&quot;. Select a resource in
+the list on the left and it will be drawn in the canvas on the right. Select the &quot;Stack&quot;
+checkbox to see a stack trace showing where the resource was created. This does not
+necessarily imply that this resource was leaked - just that it currently exists.
+If you believe that this particular resource is no longer needed and should have
+been disposed, then you have discovered a leak.
+</p>
+
+<h3>
+Example
+</h3>
+
+<p>
+Look at <a href="LeakExample.java.htm">LeakExample.java</a>. You suspect that
+this code is
+leaking, and decide to use <i>Sleak</i> to verify your theory, and to
+investigate a possible fix.
+</p>
+
+<p>
+Find the line of code that creates the <i>Display</i>:
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp; display = <b><font SIZE="2" COLOR="#7f0055">new
+</font></b>Display();
+</p>
+
+<p>
+And rewrite the beginning of the <b>main()</b>
+method as follows:
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">public
+static void </font></b>main(String[] args) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; DeviceData data = <b><font COLOR="#7f0055">new
+</font></b>DeviceData();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; data.tracking = <b><font COLOR="#7f0055">true</font></b>;</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; display = <b><font COLOR="#7f0055">new
+</font></b>Display(data);</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; Sleak sleak = <b><font COLOR="#7f0055">new
+</font></b>Sleak();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; sleak.open();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp; ...</p>
+<p style="margin-top: 0; margin-bottom: 0">}</p>
+
+<p>
+Run the <i>LeakExample</i> class as usual, and two windows open: your
+application, and the <i>Sleak</i> window. Press <i>Sleak</i>'s &quot;Start&quot;
+button, and
+notice that no resources have yet been allocated - nothing shows up in <i>Sleak</i>'s
+resource list.
+</p>
+
+<p>
+<img border="0" src="sleak.2.gif" width="222" height="227">&nbsp;&nbsp;&nbsp; <img border="0" src="sleak.3.gif" width="222" height="227">
+</p>
+
+<p>
+Return to the <i>LeakExample</i> window and click on an item in the list that
+has an associated image, say, '.gif'. Press &quot;Start&quot; again,
+and now you can see that one image has been created. Select the image and see
+that it is the one currently being displayed in the example. This will be your
+&quot;starting point&quot;. No resources have been leaked yet because there is only one image, and it
+is still being used.
+</p>
+
+<p>
+<img border="0" src="sleak.4.gif" width="222" height="227">&nbsp;&nbsp;&nbsp; <img border="0" src="sleak.5.gif" width="222" height="227">
+</p>
+
+<p>
+Now click on some other items in the example list, and press &quot;Stop&quot;. <i>Sleak</i>
+shows 2 images that were both created since &quot;Start&quot; was pressed, but
+only one is being displayed in the application.
+</p>
+
+<p>
+<img border="0" src="sleak.6.gif" width="222" height="228">&nbsp;&nbsp;&nbsp; <img border="0" src="sleak.8.gif" width="222" height="227">
+</p>
+
+<p>
+&nbsp;Select one of the new images, and check &quot;Stack&quot; to see where the image was created:
+</p>
+
+<p>
+<img border="0" src="sleak.7.gif" width="587" height="228">
+</p>
+
+<p>The image was created in the <b>widgetSelected</b> method in the <i>LeakExample</i>
+class, so this is the method to look at to see if the example is leaking. Here
+is the code for the method:
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+public void </font></b>widgetSelected(SelectionEvent e) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+image = <b><font COLOR="#7f0055">null</font></b>;</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+String[] selection = list.getSelection();</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(selection.length != 0) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Program program = Program.findProgram(selection[0]);</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(program != <b><font COLOR="#7f0055">null</font></b>) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ImageData imageData = program.getImageData();</p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(imageData != <b><font COLOR="#7f0055">null</font></b>) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b><font COLOR="#7f0055">if </font></b>(image != <b><font COLOR="#7f0055">null</font></b>)
+image.dispose();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+image = <b><font COLOR="#7f0055">new </font></b>Image(display, imageData);</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+canvas.redraw();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+
+<p>The <b>image = null</b> at the beginning of the method looks suspicious.
+This was added so that the paint did not draw the old image if an item with no
+image was
+selected. Before setting <b>image</b> to null, the image should be disposed, as follows:
+</p>
+
+<b>
+<p style="margin-top: 0; margin-bottom: 0"><font COLOR="#7f0055">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if </font></b>(image != <b><font COLOR="#7f0055">null</font></b>) {</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+image.dispose();</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+image = <b><font COLOR="#7f0055">null</font></b>;</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</p>
+
+<p>After adding this dispose code, notice that you can delete the old line that
+disposed the image right before creating a new one:
+</p>
+
+<p><b><font COLOR="#7f0055">
+if </font></b>(image != <b><font COLOR="#7f0055">null</font></b>) image.dispose();
+</p>
+
+<p>Now the code has been cleaned up, so run it under <i>Sleak</i> again and
+verify that nothing is leaking. One last thing for completeness and to get into
+good habits: you should also check if <b>image</b> needs disposing after the read and
+dispatch loop, or in a dispose listener on the shell.
+</p>
+
+</body>
+
+</html>

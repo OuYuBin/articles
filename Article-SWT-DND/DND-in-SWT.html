@@ -1,0 +1,1739 @@
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Veronika Irvine">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<link rel="stylesheet" href="../default_style.css" >
+<title>DND in SWT</title>
+</head>
+
+<body bgcolor="white" lang="EN-US" link="blue" vlink="purple" style="tab-interval:.5in">
+
+<div align="right"><font size="-2">Copyright &copy; 2003 International Business Machines 
+  Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica" color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></b></td>
+    </tr>
+  </table>
+</div>
+<h1> <img src="images/idea.jpg" align=CENTER></h1>
+  <h1 align="center">Drag and Drop</h1>
+  <h3 align="center">Adding Drag and Drop to an SWT Application</h3>
+  <p align="justify"><b>Summary</b><br>
+  Drag and drop provides a quick and easy mechanism for users to re-order and
+  transfer data within an application and between applications. This article is
+  an overview of how to implement Drag and Drop and Clipboard data transfers
+  within an SWT application.</p>
+  <p><b>By Veronika Irvine, IBM OTI Labs</b><br>
+  <span style="font-size:10.0pt">August 25, 2003 (revised November 2, 2005)</span></p>
+  <div align="center" style="text-align:center">
+    <hr size="2" width="100%" align="center">
+  </div>
+  <h2>Drag and Drop Overview</h2>
+  <p>Consider the simple example of dragging an item from one table to another
+  as shown in Figure 1:</p>
+  <p align="center"><img border="0" src="images/image002.jpg"><br>
+  Figure 1: Shopping Cart example</p>
+  <p align="justify">On the right there is a list of items that I can purchase
+  and on the left is my shopping cart. To buy something, I select it from the
+  list on the right (I have selected “Truffle Assortment” in Figure 1), drag
+  it over to my shopping cart and drop it. When I let go of the mouse over my
+  shopping cart, the item will be added to the list of items I wish to purchase.
+  In this data transfer, the list of assorted chocolates on the right is the
+  drag source and my shopping cart is the drop target. A drag source is the
+  source of the data being transferred and a drop target is the receiver. As I
+  drag the mouse over a drop target, I get feedback in various forms. First, the
+  cursor changes to let me know that I am over a valid drop target by changing
+  from a “do not enter” sign to an arrow (this is called a “drag over
+  effect”). The cursor also tells me what kind of operation will be performed
+  when the data is transferred – the data may be copied or moved or a link may
+  be made to the data. Secondly, if I am dragging over a widget that has
+  sub-items like a tree or table, the sub-item may be highlighted to indicate
+  that the data will be dropped on a specific sub-item (this is called a “drag
+  under effect”). This is useful when you are organizing data into folders or
+  rearranging items. In this article, I will explain in more detail the terms I
+  have introduced above and how SWT allows an application to define and
+  manipulate these components.</p>
+  <ul>
+    <li><a href="#_Drag_Source">DragSource</a></li>
+    <li><a href="#_Drop_Target">DropTarget</a></li>
+    <li><a href="#_Using_the_Clipboard">Clipboard</a></li>
+    <li><a href="#_Transfer">Transfer</a></li>
+  </ul>
+  <h2><a name="_Drag_Source"></a>Drag Source</h2>
+  <p align="justify">A drag source is the provider of data in a Drag and Drop
+  data transfer as well as the originator of the Drag and Drop operation. The
+  data provided by the drag source may be transferred to another location in the
+  same widget, to a different widget within the same application, or to a
+  different application altogether. For example, you can drag text from your
+  application and drop it on an email application, or you could drag an item in
+  a tree and drop it below a different node in the same tree.</p>
+  <p align="justify">Let us walk through a simple example showing how to define
+  a drag source. The example in Listing 1 shows how to drag text from a label
+  widget.</p>
+  <table border="1" cellspacing="0" cellpadding="0" style="width:650">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt;
+  border-left:solid windowtext .5pt;border-bottom:none;border-right:none;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds1C" href="#_ds1D">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext;
+  border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>import
+        org.eclipse.swt.dnd.*;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">2</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds4C" href="#_ds4D">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">//
+        Enable a label as a Drag Source</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds4D">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>final
+        Label dragLabel = new Label(shell, SWT.BORDER);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds4D">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>dragLabel.setText(&quot;text
+        to be transferred&quot;);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">6</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds8C" href="#_ds8D">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">//
+        Allow data to be copied or moved from the drag source</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds8D">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>int
+        operations = DND.DROP_MOVE | DND.DROP_COPY;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds8D">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>DragSource
+        source = new DragSource(dragLabel, operations);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">10</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds12C" href="#_ds12D">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">//
+        Provide data in Text format</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds12D">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>Transfer[]
+        types = new Transfer[] {TextTransfer.getInstance()};</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds12D">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>source.setTransfer(types);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">14</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds15C" href="#_ds15D">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>source.addDragListener(new
+        DragSourceListener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds16C" href="#_ds16D">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        public void dragStart(DragSourceEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds16D">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <font color="#0080C0">// Only start the drag if there is actually text
+        in the</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds16D">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  		<font color="#0080C0">// label - this text will be what is dropped on the target.</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds16D">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if
+        (dragLabel.getText().length() == 0) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds16D">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.doit
+        = false;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds16D">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds16D">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds23C" href="#_ds23D">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        public void dragSetData(DragSourceEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds23D">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">&nbsp;&nbsp;&nbsp;&nbsp;
+        // Provide the data of the requested type.</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds23D">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if
+        (TextTransfer.getInstance().isSupportedType(event.dataType)) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds23D">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.data
+        = dragLabel.getText();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds23D">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds23D">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds29C" href="#_ds29D">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        public void dragFinished(DragSourceEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds29D">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0080C0">//
+        If a move operation has been performed, remove the data</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds29D">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0080C0">//
+        from the source</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds29D">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if
+        (event.detail == DND.DROP_MOVE)</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds29D">33</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dragLabel.setText(&quot;&quot;);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_ds29D">34</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">35</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:none;border-left:solid windowtext .5pt;
+  border-bottom:solid windowtext .5pt;border-right:none;padding:0in 5.4pt 0in 5.4pt">36</td>
+      <td valign="top" style="width:788;border-top:medium none;border-left:medium none;
+  border-bottom:.5pt solid windowtext;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>});</code></td>
+    </tr>
+  </table>
+  <p align="left">Listing 1: Dragging text from a Label widget.
+  <p align="justify"><a name="_ds1D" href="#_ds1C"><b>Line 1:</b></a><br>
+  All the SWT drag and drop classes are defined in the package
+  org.eclipse.swt.dnd.</p>
+  <p align="justify"><a name="_ds4D" href="#_ds4C"><b>Lines 3 to 5:</b></a><br>
+  Create a widget. In order to start a drag, the user holds the mouse button
+  down in a widget and drags the mouse. In our example, the user starts the drag
+  in the label. Note that you cannot have multiple drag sources on one widget.
+  If you try to create a second drag source, an SWTError will be thrown.</p>
+  <p align="justify"><a name="_ds8D" href="#_ds8C"><b>Lines 7 to 9:</b></a><br>
+  To make a widget into a drag source, we must create an
+  org.eclipse.swt.dnd.DragSource object. The DragSource constructor takes two
+  arguments, the widget that will be the location of the drag source and the
+  operations that are allowed. The allowed operations determine what kind of
+  actions the drop target can do with the data being transferred. The allowed
+  values are any bitwise OR combination of DND.DROP_COPY, DND.DROP_MOVE or
+  DND.DROP_LINK. In the example, we are allowing the data to be copied or moved.</p>
+  <p align="justify"><a name="_ds12D" href="#_ds12C"><b>Lines 11 to 13:</b></a><br>
+  To complete the definition of a drag source, you must specify the types of
+  data that can be transferred. A data type is defined by a subclass
+  org.eclipse.swt.dnd.Transfer such as TextTransfer or FileTransfer. For a
+  detailed description of Transfer types see <a href="#_Transfer">Transfer</a>.
+  A drag source can provide more than one format of the data, however, it is
+  required to provide the data in any of the specified formats when requested.
+  In this example, the user can drag text from the label.</p>
+  <p align="justify"><a name="_ds15D" href="#_ds15C"><b>Line 15:</b></a><br>
+  Once the drag source is defined, a mechanism is required for it to interact
+  with the Drag and Drop operation. Adding a DragSourceListener does this.</p>
+  <p align="justify">The following event sequences may occur:</p>
+  <ol>
+    <li>dragStart</li>
+    <li>dragStart, one or more dragSetData, dragFinished</li>
+    <li>dragStart, dragFinished</li>
+  </ol>
+  <p align="justify"><a name="_ds16D" href="#_ds16C"><b>Lines 16 to 22:</b></a><br>
+  The dragStart event signals that the user has performed the action that
+  initiates a Drag and Drop operation. The exact action taken by the user
+  depends on the platform – on Windows for example, the user presses down with
+  the left mouse button and drags for a certain number of pixels (the exact
+  distance is configurable by the user in the Mouse control panel). On Motif,
+  the user presses down the middle mouse button. The application does not need
+  to be concerned about the exact conditions that started the operation because
+  SWT handles these platform differences. When the dragStart event is received,
+  the application has the choice to start a Drag and Drop operation or not. For
+  example, if no valid items are currently selected in the drag source widget,
+  the application may choose to cancel the operation. The operation is cancelled
+  by setting the event.doit field to ‘false’.</p>
+  <p align="justify">Note: the application is not required to specify the type
+  of data that will be transferred until the dragStart event has been received.
+  That is, the application can defer the call to DragSource.setTransfer until
+  the dragStart event. However, once the dragStart event has been processed, if
+  no transfer types have been specified for the drag source, the Drag and Drop
+  operation will be cancelled.</p>
+  <p align="justify">By allowing the Drag and Drop operation, the application is
+  making a promise to provide data of the specified type when requested. Failure
+  to do so is a violation of the DND contract and could result in unexpected
+  behavior.</p>
+  <p align="justify"><a name="_ds23D" href="#_ds23C"><b>Lines 23 to 28:</b></a><br>
+  The dragSetData event is a request for the data promised in the dragStart
+  event. This event may be called multiple times either repeatedly for the same
+  data type or for any of the data types promised. On some platforms, a
+  potential drop target can request data when the mouse is moving over the drop
+  target (e.g. Windows) and on some platforms the data may only be requested
+  when a drop is performed (the mouse is released over a valid drop site) (e.g.
+  Motif). Therefore, do not make any assumptions that the drag and drop
+  operation is completed when receiving this event. There is no way to know
+  where the data is being dropped – it could be dropped on the same
+  application, even on the same widget or on another application.</p>
+  <p align="justify">The type of data being requested is specified in the
+  event.dataType field. The event.dataType field contains a TransferData object.
+  While the fields of the TransferData object are public, they are platform
+  dependant. Therefore, you should not access the fields directly but rather
+  pass the TransferData to a Transfer object to determine the type of data. This
+  is done in the example by calling TextTransfer.getInstance().isSupportedType
+  (line 25).</p>
+  <p align="justify">The drag source must fill in the event.data field. The
+  exact form of the data depends on the Transfer type. For example, TextTransfer
+  expects a String object containing the entire text whereas a FileTransfer
+  expects a String array where each entry in the array is the absolute path of a
+  File. The javadoc for each transfer type should describe the expected value
+  for the Java object being transferred. More information on Transfer and
+  TransferData is available in the <a href="#_Transfer">Transfer</a> section of
+  this document.</p>
+  <p align="justify"><a name="_ds29D" href="#_ds29C"><b>Lines 29 to 34:</b></a><br>
+  The dragFinished event indicates that the drag and drop operation is complete.
+  The user may have dropped the data on a valid location, dropped the data on an
+  invalid location or hit Escape. If the user dropped the data on an invalid
+  location or hit Escape, the event.doit field will be false and the
+  event.detail field will be DND.DROP_NONE. If the user dropped the data on a
+  valid location, the event.doit field will be true and the event.detail field
+  will indicate the kind of operation performed by the drop target. This will be
+  one of values specified in table 1.</p>
+  <table border="1" cellspacing="0" cellpadding="2" width="90%">
+    <tr>
+      <th width="30%" valign="top" height="19">dragFinished event.detail value</th>
+      <th width="70%" valign="top" height="19">Description</th>
+    </tr>
+    <tr>
+      <td width="30%" valign="top" height="19">DND.DROP_COPY</td>
+      <td width="70%" valign="top" height="19">The drop target made a copy of
+        the data.</td>
+    </tr>
+    <tr>
+      <td width="30%" valign="top" height="20">DND.DROP_LINK</td>
+      <td width="70%" valign="top" height="20">The drop target made a link to
+        the data – usually only used for files.</td>
+    </tr>
+    <tr>
+      <td width="30%" valign="top" height="38">DND.DROP_MOVE</td>
+      <td width="70%" valign="top" height="38">The drop target made a copy of
+        the data and the drag source should now delete the original and update
+        its display.</td>
+    </tr>
+    <tr>
+      <td width="30%" valign="top" height="57">DND.DROP_TARGET_MOVE</td>
+      <td width="70%" valign="top" height="57">The drop target moved the data
+        from its original location to a new location. This is usually only used
+        with files. In this case, the drag source does not need to delete the
+        original; it just needs to update its display information.</td>
+    </tr>
+  </table>
+  <p align="left">Table 1: Valid dragFinished event.detail values
+  <h2><a name="_Drop_Target"></a>Drop Target</h2>
+  <p align="justify">A drop target receives data in a Drag and Drop operation.
+  The data received by the drop target may have come from the same widget, from
+  a different widget within the same application, or from a different
+  application altogether. For example, you can drag text from an email
+  application and drop it on your application, or you could drag an item in a
+  tree and drop it below a different node in the same tree.</p>
+  <p align="justify">Let us walk through a simple example showing how to define
+  a drop target. The example in Listing 2 shows how to drop files or text on a
+  table widget.</p>
+  <table border="1" cellspacing="0" cellpadding="0" style="width:680;
+ border-collapse:collapse;border:medium none;">
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border-top:solid windowtext .5pt;
+  border-left:solid windowtext .5pt;border-bottom:none;border-right:none;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt1C" href="#_dt1D">1</a></td>
+      <td valign="top" style="width:1060;border-top:.5pt solid windowtext;
+  border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>import
+        org.eclipse.swt.dnd.*;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">2</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">&nbsp;</td>
+      <code></code>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt3C" href="#_dt3D">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">//
+        Enable a table as a Drop Target</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt3D">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>final
+        Table dropTable = new Table(shell, SWT.BORDER);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt3D">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>for
+        (int i = 0; i &lt; 10; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt3D">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        TableItem item = new TableItem(dropTable, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt3D">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        item.setText(&quot;item&quot; + I);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt3D">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">9</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt10C" href="#_dt10D">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">//
+        Allow data to be copied or moved to the drop target</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt10D">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>operations
+        = DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_DEFAULT;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt10D">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>DropTarget
+        target = new DropTarget(dropTable, operations);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">13</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt14C" href="#_dt14D">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">//
+        Receive data in Text or File format</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt14D">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>final
+        TextTransfer textTransfer = TextTransfer.getInstance();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt14D">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>final
+        FileTransfer fileTransfer = FileTransfer.getInstance();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt14D">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>types
+        = new Transfer[] {fileTransfer, textTransfer};</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt14D">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>target.setTransfer(types);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">19</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt20C" href="#_dt20D">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>target.addDropListener(new
+        DropTargetListener() {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt21C" href="#_dt21D">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;
+        public void dragEnter(DropTargetEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt22C" href="#_dt22D">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;
+        if (event.detail == DND.DROP_DEFAULT) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt22D">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        if ((event.operations &amp; DND.DROP_COPY) != 0) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt22D">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        event.detail = DND.DROP_COPY;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt22D">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        } else {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt22D">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        event.detail = DND.DROP_NONE;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt22D">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt22D">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt29C" href="#_dt29D">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">&nbsp;&nbsp;&nbsp;&nbsp;
+        // will accept text but prefer to have files dropped</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;for (int i = 0; i &lt; event.dataTypes.length; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;if (fileTransfer.isSupportedType(event.dataTypes[i])){</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;event.currentDataType = event.dataTypes[i];</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">33</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;<font color="#0080C0">// files should only be copied</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">34</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        if (event.detail != DND.DROP_COPY) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">35</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        event.detail = DND.DROP_NONE;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">36</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">37</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        break;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">38</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt29D">39</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">40</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt41C" href="#_dt41D">41</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;
+        public void dragOver(DropTargetEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt42C" href="#_dt42D">42</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        event.feedback = DND.FEEDBACK_SELECT | DND.FEEDBACK_SCROLL;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt43C" href="#_dt43D">43</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;if
+        (textTransfer.isSupportedType(event.currentDataType)) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt43D">44</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <font color="#0080C0">// NOTE: on unsupported platforms this will return null</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt43D">45</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Object o = textTransfer.nativeToJava(event.currentDataType);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt43D">46</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        String t = (String)o;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt43D">47</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (t != null) System.out.println(t);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt43D">48</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">50</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt51C" href="#_dt51D">51</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        public void dragOperationChanged(DropTargetEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">52</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        if (event.detail == DND.DROP_DEFAULT) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">53</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        event.detail = (event.operations &amp; DND.DROP_COPY) != 0) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">54</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        event.detail = DND.DROP_COPY;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">55</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        } else {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">56</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        event.detail = DND.DROP_NONE;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">57</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">58</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">59</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;<font color="#0080C0">// allow text to be moved
+        but files should only be copied</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">60</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;if
+        (fileTransfer.isSupportedType(event.currentDataType)){</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">61</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (event.detail !=
+        DND.DROP_COPY) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">62</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.detail
+        = DND.DROP_NONE;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">63</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">64</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt51D">65</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt66C" href="#_dt66D">66</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        public void dragLeave(DropTargetEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt66D">67</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt68C" href="#_dt68D">68</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        public void dropAccept(DropTargetEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt68D">69</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_dt70C" href="#_dt70D">70</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        public void drop(DropTargetEvent event) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">71</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;if
+        (textTransfer.isSupportedType(event.currentDataType)) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">72</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String text =
+        (String)event.data;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">73</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TableItem item = new
+        TableItem(dropTable, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">74</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.setText(text);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">75</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">76</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;if
+        (fileTransfer.isSupportedType(event.currentDataType)){</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">77</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String[] files =
+        (String[])event.data;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">78</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt;
+        files.length; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">79</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TableItem
+        item = new TableItem(dropTable, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">80</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.setText(files[i]);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">81</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">82</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_dt70D">83</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:1060;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border-top:none;border-left:solid windowtext .5pt;
+  border-bottom:solid windowtext .5pt;border-right:none;padding:0in 5.4pt 0in 5.4pt">84</td>
+      <td valign="top" style="width:1060;border-top:medium none;border-left:
+  medium none;border-bottom:.5pt solid windowtext;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>});</code></td>
+    </tr>
+  </table>
+  <p align="left">Listing 2: Drop text or files on a table widget
+  <p align="justify"><a name="_dt1D" href="#_dt1C"><b>Line 1:</b></a><br>
+  All the related drag and drop classes are defined in the package
+  org.eclipse.swt.dnd.</p>
+  <p align="justify"><a name="_dt3D" href="#_dt3C"><b>Lines 3 to 8:</b></a><br>
+  Create a widget. The user drags the data over a target, which in user
+  interface terms is some visible widget. In our example, the user can drop the
+  data on a table. Note that you cannot have multiple drop targets on one
+  widget. If you try to create a second drop target, an SWTError will be thrown.</p>
+  <p align="justify"><a name="_dt10D" href="#_dt10C"><b>Lines 10 to 12:</b></a><br>
+  Define the types of operations that this drop target is likely to perform on
+  any data dropped on it. This is a bitwise OR combination of any of
+  DND.DROP_COPY, DND.DROP_MOVE, or DND.DROP_LINK. By default, if no operations
+  are defined, the DND.DROP_MOVE operation is assumed.</p>
+  <p align="justify">The operation may also include DND.DROP_DEFAULT (Note: the
+  DND.DROP_DEFAULT style must be combined with one or more of the other
+  DND.DROP_* styles). The DND.DROP_DEFAULT style allows the drop target to
+  determine the default operation – the default operation is what happens when
+  no modifier keys are pressed. If the DND.DROP_DEFAULT style is NOT specified,
+  the default operation will be DND.DROP_MOVE. See also dragEnter and
+  dragOperationChanged below.</p>
+  <p align="justify"><a name="_dt14D" href="#_dt14C"><b>Lines 14 to 18:</b></a><br>
+  Define the types of data that this drop target will accept. A data type is
+  defined by a subclass org.eclipse.swt.dnd.Transfer such as TextTransfer or
+  FileTransfer. For a detailed description of Transfer types see <a href="#_Transfer">Transfer</a>.
+  A drop target can be receptive to more than one type of data. The current 2.1
+  implementation will, however, only allow one format to be retrieved in the
+  final drop. That is to say, the drop target can indicate that it is interested
+  in both text and RTF text, but only one of these is provided in the drop event
+  – either text or RTF text. The advantage of registering for both formats is
+  that some applications may only provide text and some may only provide RTF
+  text. If an application provides both, you can choose which format you would
+  prefer to receive. See dragEnter below.</p>
+  <p align="justify"><a name="_dt20D" href="#_dt20C"><b>Line 20:</b></a><br>
+  Once the drop target is defined, a mechanism is required for it to interact
+  with the Drag and Drop operation. Adding a DropTargetListener does this.</p>
+  <p align="justify">The following event sequences may occur:</p>
+  <ul>
+    <li>dragEnter, dragLeave</li>
+    <li>dragEnter, one or more dragOver *, dragLeave</li>
+    <li>dragEnter, one or more dragOver *, dragLeave, dropAccept</li>
+    <li>dragEnter, one or more dragOver *, dragLeave, dropAccept, drop</li>
+  </ul>
+  <p>*may be a mixture of dragOver and dragOperationChanged</p>
+  <p align="justify"><a name="_dt21D" href="#_dt21C"><b>Line 21 to 40:</b></a><br>
+  The dragEnter event occurs when a drag and drop operation is in progress and
+  the cursor enters the bounds of the drop target widget. If the cursor leaves
+  the bounds of the widget and re-enters, another dragEnter is issued.</p>
+  <p align="justify"><a name="_dt22D" href="#_dt22C"><b>Lines 22 to 28:</b></a><br>
+  A drag over effect is a visual cue to the user about what kind of operation
+  will be performed when the drop occurs. The exact appearance of the visual cue
+  is platform dependant – some examples are shown in Figure 2. The drop target
+  can update this drag over effect by setting the event.detail field to one of
+  DND.DROP_COPY, DND.DROP_MOVE, DND.DROP_LINK or DND.DROP_NONE. The value set in
+  the event.detail field must be one of the values defined in the
+  event.operations field, which is a bitwise OR of the operations supported by
+  the DragSource. If a value is chosen that is not allowed by the DragSource,
+  the operation would be set to DND.DROP_NONE. The event.detail field can also
+  be updated in the dragOver, dragOperationChanged, dropAccept and drop events.</p>
+  <p align="justify">In dragEnter, the application can define the default
+  operation. As discussed above, if the drop target is created with the style
+  DND.DROP_DEFAULT, it will be notified when there are no user modifier keys
+  pressed. In this case, the event.detail field in the dragEnter event is set to
+  DND.DROP_DEFAULT. The application can specify the default operation by
+  changing the event.detail field to the desired operation. If the application
+  does not change the event.detail field from DND.DROP_DEFAULT to some
+  operation, it will by default be changed to DND.DROP_MOVE. The
+  DND.DROP_DEFAULT value is also set in the dragOperationChanged event.</p>
+  <p align="justify">In our example, we make Copy the default operation if it is
+  allowed by the drag source.</p>
+  <table border="1" cellspacing="0" cellpadding="2" style="border-collapse:collapse;
+ border:none;" width="30%">
+    <tr>
+      <th valign="top" width="50%">
+        <p>Operation</p>
+      </th>
+      <th valign="top" width="50%">Win32 cursor</th>
+    </tr>
+    <tr>
+      <td valign="top" width="50%" align="center">Move</td>
+      <td valign="top" width="50%" align="center"><img border="0" width="21" height="31" src="images/image004.jpg"></td>
+    </tr>
+    <tr>
+      <td valign="top" width="50%" align="center">Copy</td>
+      <td valign="top" width="50%" align="center"><img border="0" width="26" height="38" src="images/image006.jpg"></td>
+    </tr>
+    <tr>
+      <td valign="top" width="50%" align="center">Link</td>
+      <td valign="top" width="50%" align="center"><img border="0" width="27" height="38" src="images/image008.jpg"></td>
+    </tr>
+    <tr>
+      <td valign="top" width="50%" align="center">None</td>
+      <td valign="top" width="50%" align="center"><img border="0" width="22" height="22" src="images/image010.jpg"></td>
+    </tr>
+  </table>
+  <p align="left">Figure 2: Cursors for the allowed transfer operations
+  <p align="justify"><a name="_dt29D" href="#_dt29C"><b>Lines 29 to 39:</b></a><br>
+  The drop target can choose what type of data it would prefer to receive. The
+  dragEnter event has two fields for this, event.currentType, which is the type
+  of data preferred by the application (represented by a TransferData object),
+  and event.dataTypes, which is the list of types provided by the drag source
+  (represented by an array of TransferData objects). You can set the
+  event.currentType to any value in the event.dataTypes. These fields can also
+  be modified in the dragOver, dragOperationChanged, and dropAccept events.</p>
+  <p align="justify">In the example, we are allowing Text or Files to be dropped
+  on the table, but if both are available, we prefer to get the Files. If a file
+  is being transferred, we also have restricted the operation to allow only copy
+  (we don’t want you to delete files from your operating system when you play
+  with this example :-)).</p>
+  <p align="justify"><a name="_dt41D" href="#_dt41C"><b>Lines 41 to 50:</b></a><br>
+  The dragOver event occurs repeatedly as the user drags the cursor over the
+  drop target widget. If the cursor is motionless, the dragOver event will
+  continue to be received at regular intervals. In addition to what is shown in
+  the example, you can modify the event.detail or event.currentType fields. This
+  is most often done with a table or tree when the operation changes based on
+  what item you are over. For example, you may have a tree representing the file
+  system and you may allow files to be dropped on folders but not on other
+  files. The event.item field will indicate what item you are over in a table or
+  tree.</p>
+  <p align="justify"><a name="_dt42D" href="#_dt42C"><b>Line 42:</b></a><br>
+  A drag under effect is some visual cue or action in the drop target widget
+  that gives the user more detailed feedback about where the drop may occur. The
+  application can control the drag under effect by setting the event.feedback
+  field as shown in Table 2.</p>
+  <table border="1" cellspacing="0" width="90%" cellpadding="2">
+    <tr>
+      <th align="center" valign="top">dragOver event.feedback values</th>
+      <th align="center" valign="top">Description</th>
+    </tr>
+    <tr>
+      
+    <td height="24" align="left" valign="top">DND.FEEDBACK_SELECT</td>
+      <td align="left" valign="top">The item under the cursor is selected;
+        applies to table and trees.</td>
+    </tr>
+    <tr>
+      <td align="left" valign="top">DND.FEEDBACK_SCROLL</td>
+      <td align="left" valign="top">The widget is scrolled up or down to allow
+        the user to drop on items that are not currently visible; applies to
+        tables and trees.</td>
+    </tr>
+    <tr>
+      <td align="left" valign="top">DND.FEEDBACK_EXPAND</td>
+      <td align="left" valign="top">The item currently under the cursor is
+        expanded to allow the user to select a drop target from a sub item;
+        applies to trees.</td>
+    </tr>
+    <tr>
+      <td align="left" valign="top">DND.FEEDBACK_INSERT_BEFORE</td>
+      <td align="left" valign="top">An insertion mark is shown before the item
+        under the cursor; applies to trees.</td>
+    </tr>
+    <tr>
+      <td align="left" valign="top">DND.FEEDBACK_INSERT_AFTER</td>
+      <td align="left" valign="top">An insertion mark is shown after the item
+        under the cursor; applies to trees.</td>
+    </tr>
+    <tr>
+      <td align="left" valign="top">DND.FEEDBACK_NONE</td>
+      <td align="left" valign="top">No effect is shown.</td>
+    </tr>
+  </table>
+  <p align="left">Table 2: drag under effect types
+  <p align="justify"><a name="_dt43D" href="#_dt43C"><b>Lines 43 to 49:</b></a><br>
+  When dragging data over the target, the information provided in the event
+  tells you what type of data is being dragged but does not give the content of
+  the data. For example, the event.currentType may indicate that a file is being
+  dragged but the event does not indicate the name of the file or the extension
+  of the file. If your application will perform a different operation for a Java
+  file versus a text file, then you might want to get the data in the dragOver
+  event. Unfortunately this is not supported on all platforms. As of 2.1, it is
+  only possible to access the data in the dragOver event on Windows. The data
+  can be accessed by passing the event.currentType TransferData object to the
+  nativeToJava method of the corresponding Transfer object. On all platforms
+  except Windows, this will return null. In the future, this capability may be
+  extended to other platforms where supported.</p>
+  <p align="justify">(Note: in 1.0 through 2.1, you can only get the data for
+  event.currentType but in 3.0, you can get the data for any type in
+  event.dataTypes).</p>
+  <p align="justify"><a name="_dt51D" href="#_dt51C"><b>Lines 51 to 65:</b></a><br>
+  The dragOperationChanged event occurs when the user presses or releases a
+  modifier key (such as Ctrl, Shift, Command, Option). The modifier keys are
+  used to switch the operation to be performed. For example, on Windows when
+  just the Ctrl key is down, a copy is requested, when the Ctrl and Shift keys
+  are both down, a link is requested and when just the Shift key is down, a move
+  is requested. When no modifier keys are pressed, the default operation is
+  requested. See the dragEnter event for more details.</p>
+  <p align="justify"><a name="_dt66D" href="#_dt66C"><b>Lines 66 to 67:</b></a><br>
+  The dragLeave event occurs when the cursor moves outside of the drop target
+  widget. If you allocated any resources in dragEnter, you should free them in
+  dragLeave. The dragLeave event also occurs if the user cancels the Drag and
+  Drop operation by hitting Escape, and just before a drop is performed.</p>
+  <p align="justify"><a name="_dt68D" href="#_dt68C"><b>Lines 68 to 69:</b></a><br>
+  The dropAccept event provides the application with one last chance to define
+  the type of data that will be returned in the drop event. This is done by
+  setting the event.currentDataType to one of the values defined in
+  event.dataTypes.</p>
+  <p align="justify"><a name="_dt70D" href="#_dt70C"><b>Lines 70 to 83:</b></a><br>
+  The drop event occurs when the user releases the mouse over the drop target if
+  a valid operation and currentDataType were requested in the previous events.
+  The event.data field contains the data requested. The object type contained in
+  the event.data field depends on what Transfer type was requested. The data is
+  of the type defined in the event.currentDataType field.</p>
+  <p align="justify">When the drop operation is completed, update the
+  event.detail field with the operation performed.</p>
+  <h2><a name="_Using_the_Clipboard"></a>Clipboard</h2>
+  <p align="justify">Drag and drop allows the simultaneous transfer of data
+  between a source and a target but sometimes the user may wish to copy data to
+  be transferred at a later point in time. The Clipboard acts like a temporary
+  holder for the data. In addition, the same data may be copied to multiple
+  targets using the clipboard.</p>
+  <p align="justify">In the following example, we will copy data in two
+  different formats onto the clipboard and retrieve one of the formats from the
+  clipboard.</p>
+  <table border="1" cellspacing="0" cellpadding="0" style="width:650" width="650">
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border-top:solid windowtext .5pt;
+  border-left:solid windowtext .5pt;border-bottom:none;border-right:none;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_cb1C" href="#_cb1D">1</a></td>
+      <td valign="top" style="width:850;border-top:.5pt solid windowtext;
+  border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>import
+        org.eclipse.swt.dnd.*;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">2</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  	<code>. . .</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">3</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>public static void main(String[] args) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">4</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;Display display = new Display();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_cb5C" href="#_cb5D">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;final Clipboard cb = new Clipboard(display);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">6</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;Shell shell = new Shell(display);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">7</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;final Text text = new Text(shell, SWT.BORDER | SWT.MULTI);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">8</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;text.setBounds(10, 10, 300, 300);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">9</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;Button button = new Button(shell, SWT.PUSH);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">10</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;button.setText(&quot;Copy&quot;);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">11</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;button.setBounds(320, 10, 100, 40);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">12</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;button.addListener(SWT.Selection, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">13</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public void handleEvent(Event e) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_cb14C" href="#_cb14D">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String textData = text.getSelectionText();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb14D">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (textData == null) return;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb14D">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0080C0">// to show the rtf formatting, make the text bold and italic</font></code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb14D">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String rtfData = &quot;{\\rtf1\\b\\i &quot; + textData + &quot;}&quot;;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb14D">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TextTransfer textTransfer = TextTransfer.getInstance();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb14D">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RTFTransfer rtfTransfer = RTFTransfer.getInstance();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb14D">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Transfer[] types = new Transfer[]{textTransfer, rtfTransfer};</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb14D">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cb.setContents(new Object[]{textData, rtfData}, types);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">22</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">23</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;});</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">24</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+	  	<code>&nbsp;&nbsp;button = new Button(shell, SWT.PUSH);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">25</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;button.setText(&quot;Paste&quot;);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">26</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;button.setBounds(320, 60, 100, 40);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">27</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;button.addListener(SWT.Selection, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">28</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public void handleEvent(Event e) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_cb29C" href="#_cb29D">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TextTransfer transfer = TextTransfer.getInstance();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb29D">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String data = (String)cb.getContents(transfer);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb29D">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (data == null) return;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a href="#_cb29D">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text.insert(data);</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">33</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">34</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;});</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">35</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;shell.open();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">36</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;while (!shell.isDisposed()) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">37</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!display.readAndDispatch())</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">38</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;display.sleep();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">39</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code></code>&nbsp;</td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">40</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_cb41C" href="#_cb41D">41</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;cb.dispose();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">42</td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:850;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>&nbsp;&nbsp;display.dispose();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width:23.4pt;border-top:none;border-left:solid windowtext .5pt;
+  border-bottom:solid windowtext .5pt;border-right:none;padding:0in 5.4pt 0in 5.4pt">43</td>
+      <td valign="top" style="width:850;border-top:medium none;border-left:medium none;
+  border-bottom:.5pt solid windowtext;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+  		<code>}</code></td>
+    </tr>
+  </table>
+  <p align="left">Listing 3: Using the clipboard to copy text
+  <p align="justify"><a name="_cb1D" href="#_cb1C"><b>Line 1:</b></a><br>
+  All the related drag and drop classes are defined in the package
+  org.eclipse.swt.dnd.</p>
+  <p align="justify"><a name="_cb5D" href="#_cb5C"><b>Line 5:</b></a><br>
+  Create a clipboard object. A Clipboard object gives you access to the
+  operating system clipboard. It will allow you to exchange data within your
+  application or with other applications. Note: A Clipboard object uses system
+  resources and must be released when you are finished (see line 41). You can
+  choose to create a new clipboard object each time you want to access the data
+  on the clipboard or you can keep an instance around for your application.</p>
+  <p align="justify"><a name="_cb14D" href="#_cb14C"><b>Lines 14 to 21:</b></a><br>
+  Copy the text selected in the Text widget onto the clipboard. If no text is
+  selected, do nothing.</p>
+  <p>When placing data on the clipboard, it is possible to make the data
+  available in more than one format. In our example, we are using both Text and
+  RTF Text formats. This makes it possible for our application to interact with
+  a larger variety of applications. That is, if we only place RTF text on the
+  clipboard, then we cannot interact with an application such as Notepad that
+  does not understand RTF text. To better integrate your application into the
+  environment, make your data available in as many useful forms as possible.</p>
+  <p>Each successful call to Clipboard.setContents will clear any previous
+  content from the clipboard. This applies not only to the data formats you are
+  placing on the clipboard but to all data formats. For example, if the
+  clipboard contains File data placed there by some other application and you
+  call Clipboard.setContents with Text data, the File data will no longer be
+  available. If you want to have multiple kinds of data available on the
+  clipboard at the same time, you must pass them to the clipboard in the same
+  Clipboard.setContents call. The Clipboard.setContents API takes an array of
+  data objects and an array of data types. The values for the data objects must
+  be in the same order as the data types and must be valid for the corresponding
+  data type (that is, a TextTransfer expects a String, a File Transfer expects a
+  String[] - the javadoc for each type should specify the expected format of the
+  data).</p>
+  <p>The data that you place on the clipboard will be available even after your
+  application is closed. (Note: GTK is an exception to this. Currently, there is
+  no mechanism in GTK to persist the data beyond the life time of the
+  application.)</p>
+  <p>On some platforms, there are actually multiple clipboards available. On
+  Unix/Linux there is a PRIMARY clipboard which is supposed to contain the data
+  that was most recently selected (implicitly set by the act of selection) and
+  there is a CLIPBOARD clipboard which is supposed to contain data that was
+  explicitly set through a keyboard accelerator (such as CTRL+Insert) or through
+  a menu item (there are also other clipboards but these are used infrequently).
+  On GTK and Motif, you can use <code>DND.CLIPBOARD</code> and 
+  <code>DND.SELECTION_CLIPBOARD</code> when setting and getting clipboard data
+  to target a specific one.  On Mac OS X, SWT supports the default Scrap.</p>
+  <p><a name="_cb29D" href="#_cb29C"><b>Lines 29 to 32:</b></a><br>
+  If there is Text available on the clipboard, insert it into the text widget.</p>
+  <p>To request data of a certain type, call Clipboard.getContents with a
+  Transfer subclass of the appropriate type. In our example, we are pasting Text
+  and have used the TextTransfer class. If there is no data of this type
+  available, null will be returned. The type of object returned by
+  Clipboard.getContents will depend on the Transfer class used. The javadoc for
+  the Transfer subclass should specify the Java object type.</p>
+  <p><a name="_cb41D" href="#_cb41C"><b>Line 41:</b></a><br>
+  Dispose of the clipboard. As mentioned above, failure to dispose the clipboard
+  will result in system resources being leaked.</p>
+  <h3>NEW for 3.0 – How to query data types on the Clipboard</h3>
+  <p>In 2.1 and earlier releases of SWT, the only mechanism available to
+  determine if a specific data type is available on the clipboard is to use
+  Clipboard.getContents and actually transfer the data. In addition to being
+  slow, this mechanism can cause problems when a &quot;Cut&quot; operation is
+  being performed. In a &quot;Cut&quot; operation, one application puts data on
+  the clipboard and when that data is transferred from the clipboard, the
+  original copy of the data is deleted. In 3.0, there will be new API to query
+  what types of data are on the clipboard without actually transferring the data
+  to your application. An example of how to use it is shown in Listing 4.</p>
+  <table border="1" cellpadding="0" cellspacing="0" width="650">
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">1</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>TransferData[]
+        available = cb.getAvailableTypes();</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">2</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>boolean
+        enabled = false;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">3</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>for
+        (int i = 0; i &lt; available.length; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">4</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>&nbsp;&nbsp;&nbsp;
+        if (TextTransfer.getInstance().isSupportedType(available[i])) {</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">5</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        enabled = true;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">6</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        break;</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">7</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>&nbsp;&nbsp;&nbsp;
+        }</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt none windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17">8</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="17"><code>}</code></td>
+    </tr>
+    <tr>
+      <td width="31" valign="top" style="width: 23.4pt; border-left: .5pt solid windowtext; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom: .5pt solid windowtext; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="18">9</td>
+      <td valign="top" style="width: 658; border-left-style: none; border-left-width: medium; border-right: .5pt solid windowtext; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium; padding-left: 5.4pt; padding-right: 5.4pt; padding-top: 0in; padding-bottom: 0in" height="18"><code>pasteMenuItem.setEnabled(enabled);</code></td>
+    </tr>
+  </table>
+  <p align="left">Listing 4: Query the data types available on the clipboard.
+  <p>Clipboard.getAvailableTypes returns an array of TransferData objects. A
+  TransferData object contains platform specific information that represents a
+  data type. While the fields of the TransferData object are public, do not
+  attempt to interpret them directly. Instead use the
+  &quot;isSupportedType&quot; method of any subclass of Transfer as shown in
+  line 4.</p>
+  <h2><a name="_Transfer"></a>Transfer</h2>
+  <p>Transfer is an abstract class that provides a mechanism for converting
+  between a Java representation of data and a platform specific representation
+  of data and vice versa. The Java representation of the data is the currency
+  the application uses. For example, text is represented by a String object. The
+  platform specific representation is the currency of the operating system and
+  is represented in SWT by the TransferData object. Table 3 shows the subclasses
+  of Transfer provided in org.eclipse.swt.dnd.</p>
+  <table border="1" cellpadding="2" cellspacing="0" width="90%">
+    <tr>
+      <th width="15%" align="center">Transfer</th>
+      <th width="20%" align="center">Java format</th>
+      <th width="60%" align="center">Example</th>
+    </tr>
+    <tr>
+      <td width="15%"><code>TextTransfer</code></td>
+      <td width="20%"><code>String</code></td>
+      <td width="60%"><code>&quot;hello world&quot;</code></td>
+    </tr>
+    <tr>
+      <td width="15%"><code>RTFTransfer</code></td>
+      <td width="20%"><code>String</code></td>
+      <td width="60%"><code>&quot;{\\rtf1\\b\\i hello world}&quot;</code></td>
+    </tr>
+    <tr>
+      <td width="15%"><code>FileTransfer</code></td>
+      <td width="20%"><code>String[]</code></td>
+      <td width="60%"><code>new String[] {file1.getAbsolutePath(),
+        file2.getAbsolutePath()}</code></td>
+    </tr>
+  </table>
+  <p align="left">Table 3: Transfer types provided by SWT
+  <p>The TransferData class contains public fields that are platform-specific.
+  Because the fields in TransferData vary from platform to platform,
+  applications should not access them. The purpose of making the fields public
+  is to allow developers to extend the Transfer class and provide additional
+  platform specific types for data transfer (e.g., bitmap images or wave files).</p>
+  <h2>Summary</h2>
+  <p>This article describes the SWT mechanism for transferring data either via
+  Drag and Drop or using the Clipboard. SWT uses the underlying operating system
+  mechanism which allows data transfer across applications for maximum system
+  integration. SWT provides standard data transfer types as well as an
+  infrastructure for defining your own transfer types or supporting additional
+  platform-defined data types.</p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both.</small></p>
+</body>

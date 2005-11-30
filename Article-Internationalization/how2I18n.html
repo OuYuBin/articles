@@ -1,0 +1,1255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<META name="GENERATOR" content="IBM WebSphere Studio Homepage Builder V6.0.2 for Windows">
+<META http-equiv="Content-Style-Type" content="text/css">
+<title>How to Internationalize your Eclipse Plug-In</title>
+<link rel="stylesheet" href="../../default_style.css">
+</head>
+<BODY link="#0000ff" vlink="#800080" bgcolor="#ffffff" leftMargin="2" topMargin="2" marginwidth="2" marginheight="2">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2002 International Business Machines Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">How to Internationalize your Eclipse Plug-In</h1>
+<BLOCKQUOTE>
+<b>Summary</b>
+<br>
+This article is a roadmap for writing Eclipse plug-ins destined for the
+international market. We'll begin with a brief review of the motivations
+and technical challenges of internationalization, followed by step-by-step
+instructions of how to internationalize your Eclipse plug-in.
+<p><B>By Dan Kehn, Scott Fairbrother, and Cam-Thu Le</b><br>
+IBM Eclipse ISV Enablement
+(Jumpstart) Team
+
+  <p>August 23, 2002</p>
+  <p>Editor's note: This article reflects Eclipse release 2.0.</p>
+</blockquote>
+<H2>Introduction</H2>
+<p>An old joke in the internationalization community goes like this:</p>
+<blockquote>"A person who speaks three languages is called trilingual.
+      And a person who speaks two languages is called bilingual.
+      So what do you call someone who only speaks one language?"
+<P><I>&lt;insert dramatic pause here&gt;</I></P>
+</blockquote>
+<blockquote>
+    "American."
+</blockquote>
+<p>Today, providing a software product solely in English is no longer acceptable 
+  from a usability, quality, marketing, and in some cases, legal standpoint. Enabling your product for the world market simply makes economic sense.  And the enablement process is relatively straightforward, as this article will show.</p>
+<p>A few notes before we begin. Because the Eclipse
+Platform adopts the internationalization
+implementation provided with the Java SDK, it's helpful 
+to read the <a href="http://java.sun.com/docs/books/tutorial/i18n/intro/index.html">Java 
+  Tutorial: Internationalization</a> trail before continuing. The tutorial presents a fine overview of the issues and 
+  steps involved in the process. We will assume that you've already read the tutorial 
+  so we can underscore the key points, surface other noteworthy items, and cover 
+  Eclipse-specific issues and steps in this article. And when you run into unfamiliar 
+  terminology or acronyms in this article,
+jump to our <a href="#glossary">glossary</a>.</p>
+<H3><a name="overview">Overview of internationalization</a></H3>
+<p><i>Internationalization</i> is the process of creating software for the world market. 
+  Besides the economic benefits, some countries require products to pass certain localization requirements set by the government before it can be introduced to their markets.</p>
+<p>The process of internationalition is usually accomplished in two steps:</p>
+<ol>
+<li>
+<b>NLS-enabling the product.</b>
+<br />
+  This step covers coding techniques and user interface 
+  design issues. Enabling a product for National Language Support (NLS) ensures the product is designed for national language function 
+  and uses proper APIs to handle national language data. During this step, smart 
+  coding practices -- such as avoiding hardcoded strings, making input buffers 
+  large enough to hold translatable text, properly parsing strings that contain 
+  non-Latin characters, not localizing strings saved as part of a file format, 
+  and isolating the national language elements from program code -- must be weighed 
+  and considered so the translation can be completed with minimal expense and 
+  effort.
+<p>
+  </li>
+<li>
+<b>Translating the product.</b>
+<br />This step involves translating the domestic
+language elements 
+  into a foreign language. As with words and phrases, pictures
+  and symbols may also be interpreted differently
+by various cultures. It is during 
+  the translation verification step that
+all translations are reviewed for contextual
+  accuracy, icons or clip art are modified
+to ensure there are no user misinterpretations,
+  and page layouts are checked for inadvertent
+text truncation. While verifying 
+  the product's functional integrity after
+translation, this step also looks for 
+  hidden cultural impacts.
+</li>
+</ol>
+<H3><a name="affected">What does internationalization affect?</a></H3>
+<p><i>Monoglots take note</i>: This is the beginning of your sensitivity training. 
+  There may be a quiz at end of this article.  :-)</p>
+<p>Let's begin with a distillation of the list of culturally dependent data
+presented in the Java Internationalization tutorial, reordered by the likelihood
+that the typical developer will encounter it, and followed by details on
+each:</p>
+<ol>
+<li>
+<a href="#data_text">Text</a>
+<br />Messages, labels on GUI components
+  <br />Online help (*.html), Plug-in manifest (plugin.xml)<br />
+  </li>
+<li>
+<a href="#data_formatting">Data formatting</a>
+<br />Numbers, dates, times, currencies
+  <br />Phone numbers, postal addresses<br />
+  </li>
+<li>
+<a href="#data_regional">Regional and personal substitutions</a>
+<br />Measurements
+  <br />Honorifics and personal titles<br />
+  </li>
+<li>
+<a href="#data_multimedia">Multimedia considerations</a>
+</li>
+</ol>
+<H4><a name="data_text">Text</a></H4>
+<p><b>Messages, labels on GUI components</b>
+<br />
+Resource bundles nicely handle language-dependent
+texts. The strategy is either to load all
+strings at once into a <a href="http://java.sun.com/j2se/1.3/docs/api/java/util/class-use/ResourceBundle.html">ResourceBundle</a> subclass, or to retrieve them individually.
+The Eclipse Java Development Tooling (JDT)
+in version 2.0 provides wizards to support
+the detection of translatable strings. We'll
+return to them shortly in <a href="#steps">Internationalization steps</a>.</p>
+<p>Loading translated strings into memory is only the first step. The next
+step is to pass them to the appropriate controls for display (such as a
+label, text field, menu choice, etc.). The page designer and programmer
+must work together to assure that the chosen layout allows for appropriate
+resizing and reflowing of the dialog. The layout support in the Standard
+Widget Toolkit (SWT) library relies heavily on the programmer to &quot;do
+the right thing&quot; by specifying layout descriptions that react appropriately
+to changes in field sizes. The article <A href="http://eclipse.org/articles/Understanding%20Layouts/Understanding%20Layouts.htm">Understanding Layout in SWT</A> covers the implementation issues in detail.</p>
+<p>This is particularly important because text
+length increases during translation. English
+phrases are often shorter than their equivalent
+translations, usually on the order of 40%.
+Font sizes also may need to be modified to
+accommodate the local language. 
+</p>
+<p>
+<b>
+<a name="plugin_xml_attribs">Online help (*.html), Plug-in manifest (plugin.xml)</a>
+</b>
+<br />
+  These forms of text content are more involved than simple key/value-oriented 
+  properties files, so the steps to their externalization are slightly more complex.</p>
+<p>In the case of the manifest file, it is coupled
+with a similarly named property file, plugin.properties,
+      containing only the externalized text.
+Special care must be taken with manifest
+files like plugin.xml and fragment.xml, since
+the attributes of the tags can contain both
+translated and untranslated text. Consider
+the benign example below:</p>
+<a name="c1"><b>Listing 1. Plug-in manifest file, before translation</b></a><table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+<tr><td><pre><code>   &lt;plugin
+     name=&quot;Jumpstart Example Plug-in&quot;
+     id=&quot;com.ibm.jumpstart.example&quot;
+     version=&quot;2.0.0&quot;
+     provider-name=&quot;IBM Corporation&quot;
+     class=&quot;com.ibm.jumpstart.example.ExamplePlugin&quot;&gt; 
+</code></pre></td></tr>
+</table>
+<p>Here we see a mix of translatable text, untranslatable text, and "gray 
+  area" translatable text, all as tag attributes. Clearly the 
+<code>id</code> and <code>class</code> attributes are not translatable, 
+since they represent programming identifiers. It is equally certain that the 
+<code>name</code> attribute should be translated.</p>
+<p>You might be tempted to consider the 
+<code>version</code> attribute (because of the locale-dependent decimal separator) or <CODE>provider-name</CODE> attribute (because of the locale-dependent legal attribution &quot;Corporation&quot;)
+as candidates for translation, since they will be displayed to the end
+user. However, version numbers are generally left untranslated for two
+reasons: end users attribute little meaning to their numeric value, and
+programmers sometimes write code that expects version numbers to be a composed
+string like &quot;3.5.4&quot;. It is arguably a better design decision
+that the version information be stored as separate numbers like major,
+minor, and service update to avoid the need to parse a version string,
+but that discussion is beyond the scope of this article.</p>
+<p>The <CODE>provider-name</CODE> may be left untranslated as well, since &quot;Corporation&quot; has legal meaning that can defy accurate translation. After identifying what text needs to be externalized, our example now looks like this:</p>
+<a name="c2"><b>Listing 2. Plug-in manifest file, after translation</b></a><table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+<tr><td><pre><code>  &lt;plugin
+    name=&quot;<B>%<span class="boldcode">plugin.name</span></B>&quot;
+    id=&quot;com.ibm.jumpstart.example&quot;
+    version=&quot;2.0.0&quot;
+    provider-name=&quot;IBM Corporation&quot;
+    class=&quot;com.ibm.jumpstart.example.ExamplePlugin&quot;&gt; 
+</code></pre></td></tr>
+</table>
+<p>where <code>plugin.properties</code> contains the externalized string, &quot;Jumpstart 
+  Example Plug-in&quot; associated with the key <code>plugin.name</code>.</p>
+<p>This simple example demonstrates 
+that translating isn't simply providing equivalent
+words or phrases for your text; it also involves
+an understanding of the local cultural considerations
+and potential legal impacts. This is why
+a translation professional is necessary,
+as well as translation verification testing.</p>
+<H4><a name="data_formatting">Data formatting</a></H4>
+<p><b>Numbers, dates, times, currencies</b>
+<br />
+The Java library includes classes that handle the necessary formatting for numbers 
+  (decimal separator, thousands separator, grouping), dates (MDY, DMY, first day 
+  of work week), times (12- or 24-hour format, separator), and currencies (local 
+  symbol, shown as suffix or prefix, leading separator or none).</p>
+<p>
+<b>Phone numbers, postal addresses</b>
+<br />
+These are more subtle and less common text
+translation concerns, but still noteworthy.
+Many applications simply allow free-format
+entry of phone numbers since there are so
+many local variations. Postal addresses are
+straightforward: Adding a "State/Province"
+field and allowing for multiple address lines
+is generally sufficient.</p>
+<H4><a name="data_regional">Regional and personal substitutions</a></H4>
+<p><b>Honorifics and personal titles</b>
+<br />
+Though less common in the United States, the proper enablement 
+  of honorifics (Mr., Mrs., Dr.) is considered absolutely necessary elsewhere to avoid a 
+  serious breach of etiquette.</p>
+<p>
+<b>Measurements</b>
+<br />
+These are less frequently encountered. This
+involves substitution of measurement indications
+with corresponding conversion (for example, miles
+versus kilometers). In many cases, users
+will need either simultaneous display of
+a measure in different units, or an easy
+way of toggling between them.</p>
+<H4><a name="data_multimedia">Multimedia considerations</a></H4>
+<p>In general, products should select regionally 
+  neutral sounds, colors, graphics, and icons.</p>
+<p>This means no Homer Simpson "D'oh!" sound associated with
+error messages. If you're thinking that
+no serious development organization would
+do such a thing, consider an icon that is
+typical of those that are proposed and rejected:</p>
+<p>
+<IMG src="images/route66.jpg" width="39" height="39" alt="Route 66 icon" />
+</p>
+<p>The developer wanted to convey a metaphor for &quot;IP router&quot; by using a symbol harkening back to a national highway that traversed the United States from Chicago to Los Angeles, called <A href="http://www.national66.org/66hstry.html">Route 66</A>. Most Americans would find this metaphor obtuse; imagine the confusion of the hapless non-US user.</p>
+<p>Similarly, the image below may be intuitive to many North American users:
+<p>
+<IMG src="images/mailbox.jpg" width="85" height="95" alt="Mailbox icon" />
+</p>
+      <p>But in recognition studies, others from outside
+the United States have guessed that this
+is a birdhouse.  This is the more
+universally accepted image for mail:</p>
+<p>
+<IMG src="images/envelope.jpg" width="23" height="23" alt="Envelope icon" />
+</p>
+<p>To avoid confusing and potentially offensive visuals, the best course is to engage professional graphic artists who are aware of cultural issues.</p>
+<H3><a name="steps">Internationalization steps</a></H3>
+<p>Now let's turn to the actual steps for internationalizing your Eclipse plug-in:</p>
+<ol>
+<li>
+<a href="#step1">Move translatable strings into *.properties
+  files</a>
+</li>
+<li>
+<a href="#step2">Separate presentation-dependent parameters</a>
+</li>
+<li>
+<a href="#step3">Use proper locale-sensitive data formatting,
+  substitutions APIs</a>
+</li>
+<li>
+<a href="#step4">Test in domestic language</a>
+</li>
+<li>
+<a href="#step5">Create initial translated plug-in fragment</a>
+</li>
+<li>
+<a href="#step6">Prepare and send domestic language materials
+  for translation</a>
+</li>
+<li>
+<a href="#step7">Repackage and validate translated materials</a>
+</li>
+<li>
+<a href="#step8">Deploy fragments</a>
+</li>
+</ol>
+<p>We'll discuss each of these steps in detail.</p>
+<H4><a name="step1">Step 1. Move translatable strings into *.properties
+files</a></H4>
+<p>Fortunately, Eclipse's Java Development Tooling provides considerable help to properly separate translatable strings. The <b>Source &gt; Find Strings to Externalize</b> menu choice displays the <b>Externalize Strings</b> wizard. This wizard will lead you through
+the steps to locate hardcoded strings in
+your code, classify them as translatable
+or not, then modify the code to use a resource
+bundle where appropriate.</p>
+<p>We'll introduce the <b>Externalize Strings</b> wizard with an example, 
+  the canonical "Hello World" <i>before</i> using the wizard:</p>
+<a name="c3"><b>Listing 3. Hello world, before translation</b></a><table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+<tr><td><pre><code>  package com.jumpstart.nls.example.helloworld;
+  public class HelloWorld {
+     static public void main(String[] args) {
+       System.out.println(&quot;Copyright (c) IBM Corp. 2002.&quot;);
+       System.out.println(&quot;Hello.&quot;);
+       System.out.println(&quot;How are you?&quot;);
+       System.out.println(&quot;Goodbye.&quot;);
+   }
+}
+</code></pre></td></tr>
+</table>
+<p>Selecting <CODE>HelloWorld.java</CODE> and then <b>Source &gt; Externalize Strings</b> will display the wizard shown in Figure 1:</p>
+<p>
+<a name="f2"><b>Figure 1. Externalize Strings wizard</b></a><br /><IMG src="images/image2.jpg" width="576" height="430" alt="Externalize Strings wizard" />
+</p>
+<p>By selecting an entry from the table and
+then one of the pushbuttons to the 
+  right, you can mark the strings as belonging
+to one of three cases:</p>
+<ul>
+<li>
+<IMG src="images/translate.jpg" width="10" height="10" alt="Translate" />
+ Translate 
+<br />
+Action: An entry is added in the properties files; the auto-generated key and 
+  access code is substituted in the code for the original string. The string used 
+  to specify the key is marked as non-translatable with a comment marker, such as  
+"<code>// $NON-NLS-1$</code>"<br />
+<br />
+</li>
+<li>
+<IMG src="images/never.jpg" width="12" height="11" alt="Never translate" />
+    Never Translate<br />
+Action: The string is marked as non-translatable with a comment marker. The 
+  <b>Externalize Strings</b> wizard will not flag it as untranslated in subsequent 
+  executions.<br />
+<br />
+</li>
+<li>
+<IMG src="images/skip.jpg" width="11" height="11" alt="Skip" />
+Skip<br />
+Action: Nothing is modified. Subsequent executions of the <b>Externalize Strings</b> wizard will flag the string as potentially translatable.</li>
+</ul>
+The trailing number in the <code>// $NON-NLS-1$</code> comment marker indicates which 
+  string is not to be translated in the case where are there are several strings 
+  on a single line. For example:
+ <blockquote>
+<code>x.foo("Date", "TOD", "Time"); // $NON-NLS-2$</code>
+</blockquote>
+      <p>Here the middle parameter is flagged as non-NLS. The other two are skipped.</p>
+<p>Returning to our example, note that the total number of strings for each category 
+  is summarized below the list. The key names of the externalized strings are 
+  auto-generated based on the string value, but they can be renamed directly in 
+  the table. In addition, an optional prefix can be specified (<code>S_</code>  
+  in the example below).</p>
+<p>
+<a name="f6"><b>Figure 2. Externalize Strings wizard</b></a><br /><IMG src="images/image6.jpg" width="576" height="434" alt="Externalize Strings wizard" />
+</p>
+<p>
+<i>Hint</i>: Clicking the icon in the first column of a given row will advance 
+  to the next choice: Translate, Never Translate, or Skip.</p>
+<p>Now that we've identified what strings are translatable, continue to the next 
+  step to choose how they will be externalized. Here's the page displayed after 
+  selecting <b>Next</b>; the <b>Property file name</b> and resource bundle accessor 
+  <b>Class name</b> were modified to more specific values than the defaults:</p>
+<p>
+<a name="f7"><b>Figure 3. Externalize Strings wizard</b></a><br /><IMG src="images/image7.jpg" width="576" height="434" alt="Externalize Strings wizard" />
+</p>
+<p>The resource bundle accessor class will contain code to load the properties 
+  file and a static method to fetch strings from the file. The wizard will generate 
+  this class, or you can specify your own existing alternative implementation. 
+  In the latter case, you may want to uncheck the <b>Use default substitution 
+  choice</b> and specify an alternative code pattern for retrieving externalized 
+  strings. If the accessor class is outside of the package (for example, a centralized 
+  resource bundle accessor class), you can optionally specify that you want to 
+  <b>Add [an] import declaration</b> to the underlying source.</p>
+<p>The <b>Externalize Strings</b> wizard uses the JDT Refactoring framework, so 
+  the next two pages should look familiar. First, a list of warnings:</p>
+<p>
+<a name="f8"><b>Figure 4. Externalize Strings wizard</b></a><br /><IMG src="images/image8.jpg" width="576" height="357" alt="Externalize Strings wizard" />
+</p>
+<p>And finally a side-by-side presentation of the proposed changes:</p>
+<p>
+<a name="f9"><b>Figure 5. Externalize Strings wizard</b></a><br /><IMG src="images/image9.jpg" width="576" height="356" alt="Externalize Strings wizard" />
+</p>
+<p>Once you select <b>Finish</b>, the wizard performs the source code modifications, 
+  creates the resource bundle accessor class, and generates the initial properties 
+  file. Here is the code for the standard resource bundle accessor class:</p>
+<a name="c4"><b>Listing 4. Standard resource bundle accessor class</b></a><table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+<tr><td><pre><code>  package com.jumpstart.nls.example.helloworld;
+  import java.util.MissingResourceException;
+  import java.util.ResourceBundle;
+
+  public class HelloWorldMessages {
+
+  private static final String BUNDLE_NAME =
+     &quot;com.jumpstart.nls.example.helloworld.HelloWorld&quot;; //$NON-NLS-1$
+
+  private static final ResourceBundle RESOURCE_BUNDLE =
+     ResourceBundle.getBundle(BUNDLE_NAME);
+
+  private HelloWorldMessages() {}
+
+  public static String getString(String key) {
+     try {
+         return RESOURCE_BUNDLE.getString(key);
+     } catch (MissingResourceException e) {
+         return &quot;!&quot; + key + &quot;!&quot;;
+     }
+   }
+  }
+</code></pre></td></tr>
+</table>
+<p>The only variation in this generated code
+is the value assigned to the static final,
+<code>BUNDLE_NAME</code>. Before we continue to the next
+step, below are some noteworthy guidelines
+contributed by Erich Gamma and Thomas M&#228;der
+of the JDT team.</p>
+<H4><a name="gln">Guidelines for managing resource bundles and properties files</a></H4>
+<p>These guidelines are designed to:</p>
+<ul>
+<li>Reduce the number of NLS errors, in other words, the values of externalized strings 
+    that are not found at runtime</li>
+<li>Enable cross-referencing between the keys
+  referenced in the code and the keys defined
+  in the properties file</li>
+<li>Simplify the management of the externalized strings. Using a centralized 
+    property file can result in frequent change conflicts. In addition, it requires 
+    the use of prefixes to make keys unique and complicates the management of 
+    the keys.</li>
+</ul>
+<p>To achieve these goals, we propose the following guidelines: </p>
+<ol>
+<li>
+<b>Use a properties file per package, and qualify
+the keys by class name</b>
+<p>For example, all the strings for the JDT
+search component are in SearchMessages.properties,
+with key/value pairs like:<br />
+<br />
+<code>SearchPage.expression.pattern=(? = any character, * = any string) <BR>
+  ShowTypeHierarchyAction.selectionDialog.title=Show in Type Hierarchy </code>
+</p>
+</li>
+<li>
+<b>Use a dedicated static resource bundle accessor
+class </b>
+<p>Let the <b>Externalize Strings</b> wizard generate this class. It should be
+named like the properties file. So in our
+example, it would be called SearchMessages.
+When you need to create formatted strings,
+add the convenience methods to the bundle
+accessor class. For example:</p>
+<a name="c5"><b>Listing 5. Static resource bundle accessor class</b></a><table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+<tr><td><pre><code>     public static String getFormattedString(String key, Object arg) { 
+         String format= null; 
+         try { 
+             format= RESOURCE_BUNDLE.getString(key); 
+         } catch (MissingResourceException e) { 
+             return &quot;!&quot; + key + &quot;!&quot;;//$NON-NLS-2$ //$NON-NLS-1$ 
+         } 
+         if (arg == null) 
+             arg= &quot;&quot;; //$NON-NLS-1$ 
+         return MessageFormat.format(format, new Object[] { arg }); 
+     }
+     public static String getFormattedString (String key, String[] args) { 
+         return MessageFormat.format(RESOURCE_BUNDLE.getString(key), args); 
+     }
+</code></pre></td></tr>
+</table>
+<br />
+</li>
+<li>
+<b>Do not use computed keys</b>
+<p>There is no easy way to correlate a computed
+key in the code with the key in the properties file. In particular
+it is almost impossible to determine whether a key is no longer in use.</p>
+</li>
+<li>
+<b>The convention for the key name is &lt;classname&gt;.&lt;qualifier&gt;</b>
+<p>Example: PackageExplorerPart.title</p>
+</li>
+</ol>
+<H4><a name="step2">Step 2. Separate presentation-dependent parameters</a></H4>
+<p>Not all externalized text is simply words and phrases that will be translated to a target language. Some are more specifically related to your plug-in's implementation. Examples include properties, preferences, and default dialog settings.</p>
+<p>Here are a few specific examples that might
+find their way into a properties file:</p>
+<ul>
+<li>Size or layout constraints. For example,
+  the appropriate width of a non-resizable
+  table column</li>
+  <li>Default fonts that are dependent on the language or operating system. A good 
+    default font for Latin-1 languages is an invalid choice for DBCS languages.</li>
+</ul>
+<p>For those plug-ins that subclass from <a href="http://eclipse.org/documentation/html/plugins/org.eclipse.platform.doc.isv/doc/reference/api/org/eclipse/ui/plugin/AbstractUIPlugin.html">AbstractUIPlugin</a>, NL-related parameters can also be found
+in its <a href="http://eclipse.org/documentation/html/plugins/org.eclipse.platform.doc.isv/doc/guide/preferences_prefs.htm">default 
+  preference</a> stores (pref_store.ini) and <a href="http://eclipse.org/documentation/html/plugins/org.eclipse.platform.doc.isv/doc/guide/dialogs_settings.htm">dialog 
+  settings </a>(dialog_settings.xml). The Eclipse Workbench itself does not use 
+  default preference stores, opting instead to store defaults in properties files 
+  and then initialize them via AbstractUIPlugin's <code>initializeDefaultPreferences(IPreferenceStore)</code> method.</p>
+<H4><a name="step3">Step 3. Use proper locale-sensitive data formatting, substitutions APIs</a></H4>
+<p>Please refer to the detailed coverage in the <a href="http://java.sun.com/docs/books/tutorial/i18n/intro/index.html">Java Tutorial: Internationalization</a> trail.</p>
+<H4><a name="step4">Step 4. Test in domestic language</a></H4>
+<p>Testing the readiness of a product for translation is non-trivial and beyond
+the scope of this article. However, the follow-on article <a href="http://eclipse.org/articles/Article-TVT/how2TestI18n.html">How to Test your Internationalized Eclipse Plug-in</a> presents strategies for validating the NL-sensitive aspects of your product.</p>
+<H4><a name="step5">Step 5. Create initial translated plug-in fragment</a></H4>
+<p>At this point, we could simply copy our domestic language property files to 
+similarly named files with locale-specific suffixes (for example, MyMessages_xx.properties,  
+where xx is the language), and move to step 6, <a href="#step6">Prepare and send domestic language materials for translation</a>. In this case, the product is delivered with its code and whatever languages it supports as a single install.</p>
+<p>However, this approach has a few drawbacks.
+Firstly, the code and its national language
+resources are intermingled in the same directory
+/ JAR file. If the translation lags the code
+delivery, the plug-in JAR file must be updated,
+despite the fact that the underlying code
+is unchanged. Secondly, files other than
+property files are not inherently locale-sensitive,
+so they must be segregated to separate directories
+for each language (for example, HTML, XML, images).</p>
+<p>To address these issues, the Eclipse Platform
+introduces the notion of another reusable
+component that complements plug-ins, called
+a <i>plug-in fragment</i>. A plug-in fragment provides
+additional functionality to its target plug-in.
+At runtime, these plug-in contributions
+are merged along with all dependent fragments.
+These contributions can include code contributions
+and contributions of resources associated
+with a plug-in, like property and HTML files.
+In other words, the plug-in has access to
+the fragment's contents via the plug-in's classloader.</p>
+<H4><a name="g1">How and why to use fragments to provide the translatable information</a></H4>
+<p>A plug-in fragment is an ideal way to distribute
+Eclipse-translated information including
+HTML, XML, INI, and bitmap files. Delivering
+translations in a non-intrusive way, the
+Eclipse Platform translations are packaged
+in fragment JAR files and are added to existing
+Eclipse installations without changing or
+modifying any of the original runtime elements.
+This leads to the notion of a <i>language
+pack</i>.</p>
+<p>The Eclipse Platform merges plug-in fragments
+in a way that the runtime elements in the
+fragment augment the original targeted plug-in.
+The target plug-in is not moved, removed, 
+or modified in any way. Since the fragment's
+resources are located by the classloader, the plug-in developer
+has no need to know whether resources are
+loaded from the plug-in's JAR file or
+one of its fragments' JAR files.</p>
+<H4><a name="g2">Eclipse Language Pack JAR</a></H4>
+<p>The Java language supports the notion of a language pack
+with the resource bundle facility. The Java
+resource bundles do not require modification
+of the application code to support another
+language. The *.properties file namespace
+avoids collisions through the following naming
+convention: <i>basename_lang_region_variant</i>. At runtime, the <a href="http://java.sun.com/j2se/1.3/docs/api/java/util/class-use/ResourceBundle.html">ResourceBundle</a> facility finds the appropriate properties
+file for the current locale.</p>
+<p>The approach to deploying files such as HTML
+and XML files in fragments is slightly different
+than Java resource bundles in that the Eclipse
+fragment uses a directory structure to sort
+out the different language versions.</p>
+<p>
+<b>Example fragment contents</b>
+<br />
+The plug-ins and the plug-in fragments reside
+in separate subdirectories found immediately
+under the eclipse subdirectory. Looking at
+our example fragment, as deployed on a German
+system, we see an \nl folder, fragment.xml
+and an nl1.jar file.</p>
+<p>
+<a name="f20"><b>Figure 6. Fragments subdirectories</b></a><br /><IMG src="images/image20.jpg" width="504" height="278" border="0" alt="" />
+</p>
+<p>Typically, translated *.properties files
+are suffixed according to the resource bundle
+rules and deployed in JAR files. In contrast,
+when a view needs an input file type whose
+name is not locale-sensitive like resource
+bundles (such as *.xml), we define a subdirectory
+structure for each language version of the
+file. The de subdirectory above
+is one such example, where de = German.</p>
+<p>
+<b>Fragment manifest</b>
+<br />
+Each plug-in folder can optionally contain a fragment
+manifest file, fragment.xml. The manifest
+file describes the plug-in fragment, and
+is almost identical to the plug-in manifest
+(plugin.xml), with the following two exceptions:</p>
+<ul>
+<li>The <code>class</code> attribute is gone since
+  fragments do not have a plug-in class. They
+  just follow their target's specification.</li>
+<li>There are no dependencies because the fragments have the same dependencies 
+      as their target plug-in.</li>
+</ul>
+<p>Manifests used to describe a national language
+fragment are typically quite simple, specifying
+only the <code>&lt;fragment&gt;</code> and <code>&lt;runtime&gt;/&lt;library&gt;</code> tags. Here's the example
+fragment manifest file in its entirety:</p>
+<a name="c6"><b>Listing 6. Fragment manifest file</b></a><table border="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#CCCCCC">
+<tr><td><pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;fragment
+   id=&quot;com.jumpstart.nls.example.helloworld.nl1&quot;
+   name=&quot;NLS Example Plugin NL Support&quot;
+   version=&quot;1.0.0&quot;
+   provider-name=&quot;IBM&quot;
+   plugin-id=&quot;com.jumpstart.nls.example&quot;
+   plugin-version=&quot;1.0.0&quot;&gt;
+&lt;runtime&gt;
+   &lt;library name=&quot;nl1.jar&quot; type=&quot;resource&quot;/&gt;
+   &lt;library name=&quot;$nl$/&quot;/&gt;
+&lt;/runtime&gt;
+&lt;/fragment&gt;
+</code></pre></td></tr>
+</table>
+<p>The <code>&lt;fragment&gt;</code> tag attributes are:</p>
+<ul>
+<li>
+<b>
+<code>name</code>
+</b> -- User-displayable name for the extension.</li>
+<li>
+<b>
+<code>id</code>
+</b> -- Identifier for this fragment configuration.
+Used to uniquely identify this fragment instance.</li>
+<li>
+<b>
+<code>plugin-id</code>
+</b> -- Reference to the target extension point. This plug-in fragment merges with this target extension.</li>
+<li>
+<b>
+<code>plugin-version</code>
+</b> -- Version of the fragment plug-in. </li>
+<li>
+<b>
+<code>version</code>
+</b> -- Version specification in major.minor.service
+format.</li>
+        <li><B><CODE>type</CODE></B> -- The default is '&quot;code&quot;. Specifying &quot;resource&quot; indicates the library includes resource files and no code. This improves overall performance significantly because resource-only libraries are skipped when loading code.</li>
+      </ul>
+<p>The <code>&lt;runtime&gt;</code> section contains a definition of one or more libraries that make up the
+plug-in fragment runtime. The referenced libraries are used by the platform
+execution mechanisms where the plug-in loads, merges, and executes the
+correct code required by the plug-in. The <CODE>name</CODE> attribute accepts a library name (&quot;nl1.jar&quot; above) or directory
+containing resources. A directory reference must contain a trailing path
+separator. Optionally, the specification may include a substitution variable.
+In the example above, the second library includes a variable substitution
+<CODE>$nl$</CODE> based on the locale; it is used above to add a language/region specific
+folder to the library search path (e.g., a locale of &quot;it&quot; = Italy,
+&quot;fr&quot; = France, or &quot;de&quot; = Germany, etc. would add the
+corresponding plug-in subdirectory <CODE>it/</CODE>, <CODE>fr/</CODE>, or <CODE>de/</CODE> to the list of searched paths). The value of the <CODE>nl</CODE>, <CODE>os</CODE>, <CODE>ws</CODE>, and <CODE>arch</CODE> substitutions variables can be displayed and modified on the <B>Window &gt; Preferences &gt; Plug-in Development &gt; Target Environment</B> page. The <CODE>nl</CODE> substitution variable is used in those cases where it is not possible or practical to suffix files with the locale name.</p>
+<p>
+<b>Building a fragment</b>
+<br />
+The Eclipse Workbench comes with a tool used
+in plug-in development: <i>the Plug-in Development Environment
+(PDE)</i>. The PDE contains support for developing
+plug-in fragments.</p>
+<p>Let's now examine how to build a fragment
+for national language translations using
+the PDE. There is no practical limit to the
+number of languages in a given fragment.
+The fragment then is the basis of our "Language
+Pack" containing one or more language
+translations. However, in this example, we'll
+confine our language pack to the German translation.</p>
+<p>To build a plug-in fragment, start the New
+Project wizard (<b>File</b> &gt; <b>New</b> &gt; <b>Project...</b>), select the <b>Plug-in Development</b> category, then <b>Fragment Project</b> type. On the first page of the New Fragment
+Wizard, type the project name. Keep in mind
+that the project name will also become the
+fragment ID. For example, starting a project
+adding national language support to the HelloWorld
+example, we would name our project "com.jumpstart.nls.example.helloworld.nl1".
+The trailing ".nl1" is not required,
+but does help distinguish fragments that
+represent "language packs" from
+fragments that add additional code and functionality.</p>
+<p>
+<a name="f7"><b>Figure 7. Starting a fragment project</b></a><br /><IMG src="images/fraggen1.jpg" border="0" width="500" height="500" alt="Starting a fragment project" />
+</p>
+<p>Press <b>Next</b>. We see the default values for the project's
+source folder and runtime library on the
+second page:</p>
+<p>
+<a name="f8"><b>Figure 8. Defining fragment folders</b></a><br /><IMG src="images/fraggen2.jpg" border="0" width="500" height="500" alt="Defining fragment folders" />
+</p>
+<p>These values seem reasonable, so pressing
+<b>Next</b> again, we arrive at the "Fragment Code
+Generators" page. Select the second
+radio button to indicate we want to create
+the fragment manifest file from a template,
+then select the <b>Default Fragment Generator</b> wizard from the list.</p>
+<p>
+<a name="f9"><b>Figure 9. Selecting the default wizard</b></a><br /><IMG src="images/fraggen3.jpg" border="0" width="500" height="500" alt="Selecting the default wizard" />
+</p>
+<p>After pressing <b>Next</b>, we see the "Simple Fragment Content"
+page. This page has two entries used to target
+our fragment on an existing plug-in. We must
+supply the plug-in target id and version.
+We can use the <b>Browse</b> button to select the plug-in that we want
+to extend.</p>
+<p>
+<a name="f10"><b>Figure 10. Targeting the fragment</b></a><br /><IMG src="images/image23.jpg" border="0" width="500" height="500" alt="Targeting the fragment" />
+</p>
+<p>Now let's proceed to the fragment manifest editor, which is similar to the plug-in manifest editor in that
+it is a multi-page editor with Overview,
+Runtime, Extensions, Extension Points, and
+Source pages.</p>
+<p>
+<a name="f11"><b>Figure 11. Fragment manifest editor</b></a><br /><IMG src="images/image24.jpg" border="0" width="518" height="492" alt="Fragment manifest editor" />
+</p>
+<p>Notice the tabbed pages corresponding to
+sections of the fragment xml file. We will
+be using the <b>Runtime</b> page to point the fragment
+classpath at the libraries containing our
+translations.</p>
+<p>We specified the nl1.jar in the new fragment wizard so that library is already 
+  included in the classpath of this fragment. What is missing at this point is 
+  the inclusion of the locale-specific folder. You can add new runtime libraries 
+  by selecting <b>More</b> from the Runtime Libraries section of the Overview 
+  page, or by turning to the Runtime page, selecting <b>New...</b>, then entering 
+  $nl$/.</p>
+<p>
+<a name="f12"><b>Figure 12. Fragment runtime information</b></a><br /><IMG src="images/image25.jpg" border="0" width="502" height="317" alt="Fragment runtime information" />
+</p>
+<p>Taking a look at the Source page of the fragment
+manifest editor, we see that the PDE generates
+all the XML necessary to describe our plug-in
+fragment.</p>
+<p>
+<a name="f13"><b>Figure 13. Fragment source</b></a><br /><IMG src="images/image26.jpg" border="0" width="444" height="374" alt="Fragment source" />
+</p>
+<H4><a name="step6">Step 6. Prepare and send domestic language materials for translation</a></H4>
+<p><br />
+Producing correct translations requires specific skills, which you must purchase. (Unfortunately, your four years 
+of high school German classes do not qualify you!)  There are many 
+companies that will gladly produce professional-quality translations.</p>
+<p>For the Eclipse Platform, this step was accomplished
+in two phases. The first phase involved sending
+all the externalized text to a translation
+center. This first-pass translation is done
+"out of context." The translator
+does not see the running product, nor do
+they have product-specific experience. They
+have tools at their disposal to help speed
+the translations and assure consistency,
+but ultimately they rely on translation testers
+to validate the running product in the target
+language (the second phase).</p>
+<p>The risk and consequences of performing an
+out-of-context translation, the results of
+which are sometimes quite amusing, are 
+discussed in the follow-on article <a href="http://eclipse.org/articles/Article-TVT/how2TestI18n.html">How To Test your Internationalized Eclipse Plug-in</a>.</p>
+<H4><a name="step7">Step 7. Repackage and validate translated materials</a></H4>
+<p>Now having the translated files, we reassemble
+them in their appropriate directories/JAR
+files as described in step 5, <a href="#step5">Create initial translated plug-in fragment</a>. The NL1 Fragment folder contains
+language versions of the plugin.properties
+file. After translating the HelloWorld.properties
+file to German, we rename it to HelloWorld_de.properties
+and store it in the NL1 Fragment 
+source folder. Note that the nl\de (German)
+folder is new and is created manually, not
+by the PDE. These language-specific folders
+segregate the versions of non-properties
+files (such as hello.xml shown
+below) as we add translations over time.</p>
+<p>
+<a name="f14"><b>Figure 14. Reassembled fragment project</b></a><br /><IMG src="images/nav3.jpg" border="0" width="326" height="323" alt="Reassembled fragment project" />
+</p>
+<p>Be aware that the translated properties files will very likely contain accented 
+  characters that are codepage dependent, so properties files must be converted 
+  to the ISO 8859-1 codepage expected by the <a href="http://java.sun.com/j2se/1.3/docs/api/java/util/PropertyResourceBundle.html">PropertyResourceBundle</a> 
+  class. The native2ascii utility will handle codepage conversions and insert 
+  any necessary Unicode escapes.</p>
+<p>The term <i>Unicode escape</i> deserves a bit more explanation.
+The native2ascii conversion utility, included
+with the Java SDK, accepts a source encoding
+and produces output encoded in ISO 8859-1,
+plus it transforms characters outside this
+codepage to the notation known as Unicode
+escapes. This notation is \udddd, where dddd
+= the codepoint of the desired character
+in the Unicode codepage.</p>
+<p>Here's an example. Consider
+the French phrase "Son p&#232;re est
+all&#233;&nbsp;&#224; l'h&#244;tel"
+(his father went to the hotel). This contains
+four accented characters that
+are not part of the Latin-1 codepage. Transforming
+this phrase with the native2ascii utility
+yields:
+<br />
+<br />
+<code>Son p\u00e8re est all\u00e9 \u00e0 h\u00f4tel</code>
+</p>
+<p>There are no longer any accented characters, and the resulting string is
+composed entirely of characters having codepoints that are found in ISO
+8859-1. But what are the <code>\u00e8</code>,
+<code>\u00e9</code>, <code>\u00e0</code>, and <code>\u00f4</code> that were substituted?
+They are the Unicode codepoints of the accented
+characters in \udddd notation.</p>
+<p>A little caveat when using the native2ascii utility:
+It assumes that the source encoding is the
+same as the active codepage of the machine
+that executes it. However, translators typically
+save the translations in their default country
+codepage, and this codepage is different
+in each country and each operating system.
+So the person responsible for integrating
+the translations will need to either (a)
+know in which codepage that the translators
+save their files, or (b) ask that they save
+it in a common codepage. You can specify
+the source encoding when invoking native2ascii
+with the<code>-encoding</code> parameter.</p>
+<p> <i>Tip:</i> If you are uncertain of the source codepage, you can spot-check 
+  the output of native2ascii against <a href="#unicode_table">Unicode codepoints 
+  of common accented Latin characters</a> table later in this article. If you 
+  find \udddd notations in your converted files that are not in this table (such 
+  as \u0205), it is likely that you specified the incorrect source encoding. There 
+  is no equivalent spotcheck for DBCS languages, where practically all the characters 
+  in the converted files are Unicode escapes. You simply have to be careful and 
+  validate against the running product.</p>
+<p>Testing the translation merits its own article. The follow-on article <a href="http://eclipse.org/articles/Article-TVT/how2TestI18n.html">How to Test your Internationalized Eclipse Plug-in</a> describes the process and lessons learned during the recent translation verification of the Eclipse Platform, and includes a view (an Eclipse plug-in, of course!) for performing a quick check of property file translations.</p>
+<H4><a name="step8">Step 8. Deploy fragments</a></H4>
+<p>Fragment sources, similar to plug-in sources,
+may be packaged in a JAR file. Using the
+PDE to generate the JAR package, select the
+"fragment.xml" file and choose
+"<b>Create Fragment JARs...</b>&quot; from the pop-up menu. A wizard will guide you in creating a build script to produce all the required JARs for your fragment. If your <CODE>fragment.xml</CODE> file includes translatable strings, separate them into a <CODE>plugin.properties</CODE> file (just as you would for a plugin.xml file, i.e., there is no such thing as a &quot;fragment.properties&quot; file). This works because fragments are an extension of a plug-in and therefore inherits it dependencies, including its <CODE>plugin.properties</CODE> file values.</p>
+<p>
+<a name="f15"><b>Figure 15. Selecting the fragment.xml file</b></a><br /><IMG src="images/image28.jpg" border="0" width="320" height="241" alt="Selecting the fragment.xml file" />
+</p>
+<p>To deploy this example fragment, copy the fragment.xml, the \nl directory,
+and JAR to the com.jumpstart.example.helloworld.nl1 subdirectory in the
+plugins directory. This completes our example and the steps for internationalization.</p>
+<H3><a name="summary">Summary</a></H3>
+<p>Enabling your product for the world market simply makes economic sense. And 
+  the steps above show that the process is relatively straightforward. Now here's 
+  that quiz we mentioned in the introduction:</p>
+<blockquote>True or False: The majority of IBM's worldwide
+software sales revenue is within the United
+States.</blockquote>
+<p>
+False. Indeed, more than 50% of IBM software revenue
+comes from outside the United States.</p>
+<p>Fortunately,
+those developers with products based on the Eclipse platform
+benefit from having ready translations of
+the base product. All that is left is to
+follow the clear steps outlined in this article
+to open your Eclipse-based product to a worldwide
+market!</p>
+<H4><a name="glossary">Glossary</a></H4>
+<p>
+<i>Codepoint</i>
+<br />
+  Characters can be represented by one or more bytes of information. Codepoints 
+  are the hexadecimal values assigned to each graphic character.</p>
+<p>
+<i>Codepage</i>
+<br />
+  A codepage is a specification of code points for each graphic character in 
+  a set, or in a collection of graphic character sets. Within a given codepage, 
+  a codepoint can have only one specific meaning. You can display the active 
+  codepage on the Windows&#174; operating system with the CHCP command (only one codepage is active at any given moment).</p>
+<p>
+<i>Encoding</i>
+<br />
+  The codepage associated with a given piece of data. A file is said to be "encoded" 
+  in a given code page; for example, Notepad will encode its data in code page 
+  437 on a US-English machine by default. The <b>Save As</b> dialog allows the 
+  user to select several other possible encodings, Unicode and UTF-8 most notable 
+  among them.</p>
+<p>
+<i>Internationalization (sometimes abbreviated "I18N")</i>
+<br />
+  Internationalization refers to the process of developing programs without prior 
+  knowledge of the language, cultural data, or character encoding schemes they 
+  are expected to handle. In system terms, it refers to the provision of interfaces 
+  that enable internationalized programs to change their behavior at run time 
+  for specific language operation.</p>
+<p>
+<i>Single-Byte Coded Character Set (SBCS)</i>
+<br />
+  In a single-byte coded character set, a one-byte codepoint represents 
+  each character in the set. Typically, SBCS is used to represent the characters 
+  of the English language, the European languages, the Cyrillic languages, the 
+  Arabic language, and the Hebrew language, to name a few.</p>
+<p>
+<i>Double-Byte Coded Character Set (DBCS)</i>
+<br />
+  In a double-byte coded character set (DBCS), a two-byte codepoint represents 
+  each character in the set. Languages that are ideographic in nature, such as 
+  Japanese, Chinese, and Korean, have more characters than can be represented 
+  internally by 256 code points and thus require double-byte coded character sets.</p>
+<p>
+<i>Localization (sometimes abbreviated "L10N")</i>
+<br />
+  Localization refers to the process of establishing information within a computer 
+  system specific to each supported language, cultural data, and coded character 
+  set combination.</p>
+<p>
+<i>Mixed-Byte Character Set</i>
+<br />
+  A mixed-byte coded character set is a set of characters containing both single-byte 
+  characters and double-byte characters. On the MBCS, each byte of data must be 
+  examined to see if it is the first byte of a double-byte or single-byte character. 
+  If the byte is in a certain range (greater than X'80', for example), then it 
+  is the first byte of a double-byte character.</p>
+<p>
+<i>NLS</i>
+<br />
+  National Language Support.</p>
+<p>
+<i>Unicode</i>
+<br />
+  Directly from <A href="http://www.unicode.org">http://www.unicode.org</A>: "Unicode 
+  provides a unique number for every character, no matter what the platform, no 
+  matter what the program, no matter what the language."
+<br />Note: While it is true that Java text manipulation classes are Unicode-centric, 
+  this is often not the case for data stored outside of your program's auspices. 
+  Java programmers must take into consideration the data encoding by performing 
+  local codepage-to-Unicode transformations where necessary.</p>
+<H4><a name="unicode_table">Unicode codepoints of common accented Latin characters</a></H4>
+<table width="39%" border="1" cellpadding="0" cellspacing="0">
+  
+    
+    <tr bgcolor="#CCCCCC"> 
+    <td colspan="2"> 
+      <div align="center"><b>Characters</b></div>
+    </td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00e0 </td>
+    <td width="52%">a grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00e1</td>
+    <td width="52%"> a acute</td>
+  </tr>
+  <tr>
+    <td width="48%">\u00c0 </td>
+    <td width="52%">A grave</td>
+  </tr>
+  <tr>
+    <td width="48%">\u00c1 </td>
+    <td width="52%">A acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00c2 </td>
+    <td width="52%">A circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00e2</td>
+    <td width="52%">a circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00c3 </td>
+    <td width="52%">A tilde</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00e4 </td>
+    <td width="52%">a dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00c4 </td>
+    <td width="52%">A dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00e8 </td>
+    <td width="52%">e grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00c8 </td>
+    <td width="52%">E grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00e9 </td>
+    <td width="52%">e acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00c9 </td>
+    <td width="52%">E acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ea </td>
+    <td width="52%">e circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00eb </td>
+    <td width="52%">e dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00cb </td>
+    <td width="52%">E dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ea </td>
+    <td width="52%">e circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ca </td>
+    <td width="52%">E circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ef </td>
+    <td width="52%">i dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ec</td>
+    <td width="52%"> i grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ed </td>
+    <td width="52%">i acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00cc</td>
+    <td width="52%"> I grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00cd </td>
+    <td width="52%">I acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ee </td>
+    <td width="52%">i circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ce </td>
+    <td width="52%">I circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00f6 </td>
+    <td width="52%">o dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00d6 </td>
+    <td width="52%">O dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00e3 </td>
+    <td width="52%">a tilde</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00f4 </td>
+    <td width="52%">o circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00d4 </td>
+    <td width="52%">O circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00f2 </td>
+    <td width="52%">o grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00d2 </td>
+    <td width="52%">O grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00f3 </td>
+    <td width="52%">o acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00d3 </td>
+    <td width="52%">O acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00f5 </td>
+    <td width="52%">o tilde</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00d5 </td>
+    <td width="52%">O tilde</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00f1 </td>
+    <td width="52%">n tilde</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00d1 </td>
+    <td width="52%">N tilde</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00f9 </td>
+    <td width="52%">u grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00d9 </td>
+    <td width="52%">U grave</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00fa </td>
+    <td width="52%">u acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00da </td>
+    <td width="52%">U acute</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00fb </td>
+    <td width="52%">u circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00db </td>
+    <td width="52%">U circumflex</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00fc </td>
+    <td width="52%">u dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00dc </td>
+    <td width="52%">U dieresis</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00df </td>
+    <td width="52%">s sharp</td>
+  </tr>
+  <tr bgcolor="#CCCCCC"> 
+    <td colspan="2"> 
+      <div align="center"><b>Special symbols</b></div>
+    </td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ba </td>
+    <td width="52%">masculine ordinal indicator</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00a7 </td>
+    <td width="52%">section sign</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00aa </td>
+    <td width="52%">feminine ordinal indicator</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00ac </td>
+    <td width="52%">not sign</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00b9 </td>
+    <td width="52%">1 superscript</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00b2 </td>
+    <td width="52%">2 superscript</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00b3 </td>
+    <td width="52%">3 superscript</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00a3 </td>
+    <td width="52%">pound sign</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00a2 </td>
+    <td width="52%">cents sign</td>
+  </tr>
+  <tr> 
+    <td width="48%">\u00b0 </td>
+    <td width="52%">degree sign</td>
+  </tr>
+
+
+</table>
+<h3><A name="authors" />About the authors</A><A name="authors" /><BR><BR>
+</A></H3>
+<P><A name="authors" /><B>Dan Kehn</B> is a Senior Software Engineer at IBM in
+      Research Triangle Park, North Carolina.
+      His
+      interests in object-oriented programming
+      go back to 1985, long before it enjoyed
+      the
+      acceptance it has today. He has a broad
+      range
+      of software experience, having worked
+      on
+      development tools like VisualAge for
+      Smalltalk,
+      operating system performance and memory
+      analysis,
+      and user interface design. Dan worked
+      as
+      a consultant for object-oriented development
+      projects throughout the U.S. as well
+      as four
+      years in Europe. His recent interests
+      include
+      object-oriented analysis/design, programming
+      tools, and Web programming with the
+      WebSphere
+      Application Server. Last year he joined
+      the
+      Eclipse Jumpstart team, whose primary
+      goal
+      is to help ISVs to create commercial
+      offerings
+      based on the Eclipse Platform. In another
+      life, Dan authored several articles
+      about
+      diverse Smalltalk topics like meta-programming,
+      team development, and memory analysis.
+      You
+      can find them on</A>
+<A href="http://www.ibm.com/software/ad/smalltalk/discussion/index.html">Eye on SmallTalk</A>.
+
+<P><B>Scott Fairbrother</B> works on the Eclipse Jumpstart team at IBM in Research Triangle Park,
+North Carolina. He is a software developer with over 20 years of experience.
+He has developed object-oriented application frameworks for business process
+management. He has written specifications for IBM middleware on Windows
+2000 and has also authored on the subject of Microsoft Visual Studio .NET.</P>
+<P><A name="authors" /><B>Cam-Thu Le</B> joined IBM in 1983. Cam's experience spans
+      many aspects of software creation:
+development,
+      testing, and National Language Support
+(NLS)
+      planning and coordination. Cam has
+led the
+      National Language versions of IBM products
+      to worldwide concurrent general availability,
+      including the 4690 Point of Sales product
+      and VisualAge for Smalltalk. Cam joined
+the
+      Eclipse Project last year as the NLS
+focal
+      point. Cam coordinated the building
+and testing
+      of the NL versions of the Eclipse Workbench
+      and WebSphere Studio Workbench.</A>
+
+
+</BODY>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Eric Bordeau">
+<link rel="stylesheet" href="../default_style.css">
+<title>Using Native Drag and Drop with GEF</title>
+</head>
+
+<body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+
+<div align="right">
+	<font face="Times New Roman, Times, serif"><font size="-1">Copyright © 2003 International Business 
+	Machines Corp.</font></font></div>
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+	<tr>
+		<td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b><font face="Arial,Helvetica" 
+  color="#ffffff">Eclipse Corner Article</font></b></td>
+	</tr>
+</table>
+<div align="left">
+	<h1><img src="../images/Idea.jpg" height="86" width="120" align="middle"></h1>
+</div>
+<p>&nbsp;</p>
+<h1 align="center">Using Native Drag and Drop with GEF</h1>
+<blockquote>
+	<b>Summary</b> <br>
+	Native drag and drop provides the ability to drag data from one GUI object to another GUI 
+	object, which could potentially be in another application. GEF allows access to the operating 
+	system's underlying drag and drop infrastructure through SWT. This article will provide an in-depth look at GEF&#39;s drag and drop functionality and show some simple 
+	examples of how to take advantage of this API.<p><b>Eric Bordeau, IBM</b> <br>
+    August 25, 2003</p>
+</blockquote>
+<hr width="100%">
+<h2>Introduction</h2>
+<p>Native drag and drop means the operating system&#39;s underlying drag and drop mechanism is used. This is 
+different from when you drag EditParts around inside a single viewer. By using native drag and drop, 
+you can transfer items between views, editors, windows and even between different applications (providing 
+both applications support the transfer of that particular type of object). But not only will you be able to 
+utilize other plug-ins&#39; and applications&#39; drag and drop capabilities, the opposite is also true. By using 
+native drag and drop, you open the door for other plug-ins and applications to interact with your application 
+in ways you may not have envisioned.
+</p>
+<h2>An SWT Example</h2>
+<p>In order to access the operating system&#39;s drag and drop facilities, GEF 
+  uses SWT&#39;s DragSource and DropTarget API. (If you would like more information 
+  on how SWT's drag and drop mechanism works, see Veronika Irvine's <a href="../Article-SWT-DND/DND-in-SWT.html">SWT 
+  drag and drop article</a>.) To use SWT's drag and drop support, you need to 
+  create a DragSource and/or DropTarget for your control. Then you can add DragSourceListeners 
+  and/or DropTargetListeners to handle the drag and drop events. Here's a simple 
+  drag and drop example that allows you to drag from a tree and drop the tree 
+  item into a text field, changing the text field's text to that of the tree item. 
+</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td>
+		<pre>import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.*;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.*;
+
+public class DNDExample {
+
+ public static void main(String[] args) {
+   Shell shell = new Shell();
+   shell.setBackground(new Color(null, 200, 200, 200));
+   shell.setLayout(new GridLayout(2, false));
+
+   // Create the tree and some tree items
+   final Tree tree = new Tree(shell, SWT.NONE);
+   TreeItem item1 = new TreeItem(tree, SWT.NONE);
+   item1.setText(&quot;Item 1&quot;);
+   TreeItem item2 = new TreeItem(tree, SWT.NONE);
+   item2.setText(&quot;Item 2&quot;);
+
+   // Create the drag source on the tree
+   DragSource ds = new DragSource(tree, DND.DROP_MOVE);
+   ds.setTransfer(new Transfer[] {TextTransfer.getInstance()});
+   ds.addDragListener(new DragSourceAdapter() {
+      public void dragSetData(DragSourceEvent event) {
+         // Set the data to be the first selected item's text
+         event.data = tree.getSelection()[0].getText();
+      }
+   });
+
+   // Create the text field
+   final Text text = new Text(shell, SWT.NONE);
+
+   // Create the drop target on the text field
+   DropTarget dt = new DropTarget(text, DND.DROP_MOVE);
+   dt.setTransfer(new Transfer[] {TextTransfer.getInstance()});
+   dt.addDropListener(new DropTargetAdapter() {
+      public void drop(DropTargetEvent event) {
+         // Set the text field's text to the text being dropped
+         text.setText((String)event.data);
+      }
+   });
+
+   shell.pack();
+   shell.open();
+   Display display = Display.getDefault();
+   while (!shell.isDisposed())
+      if (!display.readAndDispatch())
+         display.sleep();
+   display.dispose();
+ }
+}</pre></td></tr></table>
+<p>The DragSourceListener needs to set the data being dragged during 
+the dragSetData event and the DropTargetListener needs to do something with that data during the 
+drop event.<p>GEF uses SWT's DragSource and DropTarget to facilitate its drag and drop function. When adding a drag listener to your EditPartViewer, a DragSource gets created and hooked into the 
+underlying control. And similarly, a DropTarget gets created when adding a drop listener. But instead 
+of adding your listener directly to the DragSource or DropTarget, the viewer creates a DelegatingDragSourceAdapter 
+or DelegatingDropTargetAdapter, respectively, and adds them to their corresponding widget. Then, your 
+listener gets added to the delegating adapter. When events are dispatched by the DragSource or DropTarget, 
+the corresponding delegating adapter gets notified and it in turn delegates the event to the proper 
+listener.</p>
+<p>One of the advantages of delegating the drag and drop events in this way is to ease the separation 
+of listeners by Transfer type. Code is simpler to read because each listener is only concerned with 
+one type of transfer. And extension of drag and drop functionality is simplified since all 
+that needs to be done is to add a new listener. Delegation of drag and drop events allows for a 
+consensus of all the available listeners -- if one listener can handle the drag, it's allowed to do 
+so, instead of letting the last listener determine whether the drag will be aborted or not. SWT lets you add 
+multiple listeners but doesn't achieve the same effect. Delegating allows for easier 
+maintainability of code and extension by third-party plug-ins.</p>
+<h2>Adding a Listener to a Graphical Editor</h2>
+<p>Let&#39;s just get started with some code. I'll be describing how to add drop functionality to the logic editor 
+(available from our <a href="http://download.eclipse.org/tools/gef/downloads/">download page</a>). 
+This will 
+allow the user to drag files from the Navigator or Package Explorer (or any file explorer that 
+supports dragging files) and drop them onto the logic editor. 
+The editor will respond by creating a new label with the file name as its text. First off, you need 
+a TransferDropTargetListener (GEF provides you with AbstractTransferDropTargetListener for you to subclass). 
+Create a subclass called FileTransferDropTargetListener:
+</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>package org.eclipse.gef.examples.logicdesigner.dnd;
+
+import org.eclipse.swt.dnd.FileTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.gef.EditPartViewer;
+import org.eclipse.gef.dnd.AbstractTransferDropTargetListener;
+
+public class FileTransferDropTargetListener 
+   extends AbstractTransferDropTargetListener 
+{
+
+   public FileTransferDropTargetListener(EditPartViewer viewer, Transfer xfer) {
+      super(viewer, xfer);
+   }
+
+   public FileTransferDropTargetListener(EditPartViewer viewer) {
+      super(viewer, FileTransfer.getInstance());
+   }
+
+   protected void updateTargetRequest() {}
+
+}</pre></td>
+	</tr>
+</table>
+<p>The first thing you need to do is override createTargetRequest() to create the appropriate request. 
+CreateRequest should be used so that a new label will be created when a file is dropped on the editor. 
+The CreateRequest needs a CreationFactory to create the new object that will be passed to the command. 
+You should implement your own factory that will create a new LogicLabel based on the file name (which you will 
+set later during the drop event).</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>package org.eclipse.gef.examples.logicdesigner.dnd;
+
+import org.eclipse.gef.requests.CreationFactory;
+import org.eclipse.gef.examples.logicdesigner.model.LogicLabel;
+
+public class FileLabelFactory implements CreationFactory {
+
+   private String text = &quot;&quot;;
+
+   public Object getNewObject() {
+      LogicLabel label = new LogicLabel();
+      label.setLabelContents(text);
+      return label;
+   }
+
+   public Object getObjectType() {
+      return LogicLabel.class;
+   }
+
+   public void setText(String s) {
+      text = s;
+   }
+}</pre></td></tr></table>
+<p>Now that we&#39;ve got our factory, we can add a field to our drop listener to store this factory...</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>private FileLabelFactory factory = new FileLabelFactory();</pre></td>
+	</tr>
+</table>
+<p>and set the factory on the CreateRequest during createTargetRequest()...</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>protected Request createTargetRequest() {
+   CreateRequest request = new CreateRequest();
+   request.setFactory(factory);
+   return request;
+}</pre></td>
+	</tr>
+</table>
+<p>Next, implement updateTargetRequest() by setting the current drop location on the request.</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>protected void updateTargetRequest() {
+   ((CreateRequest)getTargetRequest()).setLocation(getDropLocation());
+}</pre></td>
+	</tr>
+</table>
+<p>
+Now since we&#39;ll be dragging files from the Navigator (or any file explorer), we want to ensure that 
+the file won&#39;t be deleted. To do this, override handleDragOver() and set the drop detail to DND.DROP_COPY. 
+If we leave it as the default (DND.DROP_MOVE), after the drop the drag source will assume the file 
+is somewhere else and remove the original. We want the file to stay right where it is.</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>protected void handleDragOver() {
+   getCurrentEvent().detail = DND.DROP_COPY;
+   super.handleDragOver();
+}</pre></td>
+	</tr>
+</table>
+<p>Finally, we need to implement handleDrop() to get the file name from 
+the current DropTargetEvent. The data field of the event is typed as Object but 
+the actual data type is dependent on the transfer type. For FileTransfers, the 
+data is a String array storing the full paths of the files being dragged. To make 
+this easier, we&#39;ll only be concerned with the first file in the list and we&#39;ll 
+only display the file name, not the full path. Once we extract this information 
+from the current event, set the text on the factory and the superclass will do 
+the rest.</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>protected void handleDrop() {
+   String s = ((String[])getCurrentEvent().data)[0];
+   String separator = System.getProperty("file.separator");
+   s = s.substring(s.lastIndexOf(separator) + 1);
+   factory.setText(s);
+   super.handleDrop();
+}</pre></td>
+	</tr>
+</table>
+<p>
+That&#39;s all we need to do to implement our drop listener. The superclass will take care obtaining a Command from the target edit part and executing it. All that&#39;s left 
+is to add the listener to our editor and see what happens. To do this, we need to change initializeGraphicalViewer() 
+in the LogicEditor class. Notice there are already 2 drop listeners being added -- a LogicTemplateTransferDropTargetListener, 
+which allows for dragging templates from the palette and dropping them onto the editor for creation; 
+and a TextTransferDropTargetListener, which allows the user to drag text (such as from a word 
+processor) and drop it on an already existing label 
+to change the label text to match the text being dragged. We need to add our listener to the viewer by 
+adding the following line to this method:</p>
+<table border cols="1" width="100%" bgcolor="#CCCCCC">
+	<tr>
+		<td><pre>getGraphicalViewer().addDropTargetListener(
+       new FileTransferDropTargetListener(getGraphicalViewer()));</pre></td>
+	</tr>
+</table>
+<h2>Behind The Scenes</h2>
+<p>For most people, all you need (or want) to know is that when you add a listener to a viewer, the 
+viewer creates a new DragSource or DropTarget, if one has not already been created. The viewer 
+also ensures the DragSource/DropTarget is aware of the Transfers from all of the listeners that have 
+been added. For those of you interested in a more intricate look at what's happening behind 
+the scenes, read on. (I'll be explaining how drop 
+listeners are added, but drag listeners work in a similar fashion.)
+</p>
+<p>When you add a TransferDropTargetListener to an EditPartViewer, the viewer adds the listener to the 
+DelegatingDropAdapter. Next, the DropTarget is refreshed. During the refresh, the viewer 
+checks to see if the DelegatingDropAdapter is empty (i.e. it has no listeners) and if so, sets the 
+DropTarget (an SWT widget) to null. This occurs because when there are no listeners to delegate the drop 
+events to, there's no reason to be notified of these drop events. When the first listener is 
+added to the DelegatingDropAdapter (in other words, the DelegatingDropAdapter is not empty but the 
+DropTarget is still null), the viewer creates a new DropTarget for the viewer's control and sets all 
+possible styles (DND.DROP_MOVE, DND.DROP_COPY, DND.DROP_LINK). This makes all styles available to 
+the delegated listeners, even if they don't use them. Finally, the viewer sets the Transfer types on 
+the DropTarget by getting them from the DelegatingDropAdapter. The DelegatingDropAdapter 
+obtains these transfer types by querying all of its listeners for their transfer types and adding 
+them all to an array. This completes the DropTarget setup and the DelegatingDropAdapter will now be 
+notified of DropTargetEvents. WARNING: You can't mix your own DropTarget with the DropTarget created 
+by the viewer. This is because, according to the DropTarget javadoc, &quot;there can only be a one 
+to one mapping between a Control and a DropTarget.&quot; If you try to create another DropTarget on the 
+same control, you'll get an error.</p>
+<p>The DelegatingDropAdapter chooses one listener to be active 
+(inactive listeners will not receive events) and refreshes the active listener before each event. To 
+be considered active, a listener must satisfy three conditions: 1) The transfer type of the listener 
+must match up with the transfer type 
+of the data being dragged. 2) There must be an EditPart under the mouse cursor that understands the 
+listeners request. 3) The listener must be the first listener in the list to satisfy the first two 
+conditions. The active listener could potentially change during each event, based on mouse location, 
+modifier keys pressed, etc. In AbstractTransferDropTargetListener.isEnabled(DropTargetEvent), the 
+listener tries to match its transfer type with one of the supported transfer types in the event. If 
+a match is found, the listener tries to find an EditPart at the current mouse location that 
+understands its target request. If a target edit part is found, the listener is enabled and 
+the DelegatingDropTargetAdapter stops looking for listeners to handle this event. Then the event is 
+actually delegated to the active listener. If the active listener changes, the old listener gets a 
+dragLeave() event and the new listener gets a dragEnter() event to ensure proper initialization and 
+clean-up is available.</p>
+<h2>Summary</h2>
+<p>Adding drag and drop support to an EditPartViewer is a fairly simple task. And by doing so, your GEF 
+application will be able to interact with other views, editors and applications by transferring data 
+at the OS level. All that is really needed is a subclass of AbstractTransferDragSourceListener or 
+AbstractTransferDropTargetListener added to the viewer with the appropriate Transfer type. In 
+this article, I introduced a very simple drop listener to demonstrate how easy it is to implement 
+such a feature. Real-world applications would most likely perform a more meaningful task, but 
+the overall process is the same.</p>
+<h2>Source Code</h2>
+<p>You can get the source code for the standalone SWT example <a href="DNDExample.java">here</a>.</p>
+<h2>Acknowledgements</h2>
+<p>The author would like to thank Randy Hudson, Daniel Lee, David Williams, and 
+  Nitin Dahyabhai for providing constructive comments on the article.</p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both.</small></p>
+
+</body>
+
+</html>

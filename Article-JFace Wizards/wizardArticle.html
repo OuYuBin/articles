@@ -1,0 +1,484 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>Creating JFace Wizards</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<LINK  href="../../default_style.css" rel=stylesheet>
+<META content="MSHTML 5.50.4915.500" name=GENERATOR></HEAD>
+<BODY vLink=#800080 link=#0000ff>
+<DIV align=right>&nbsp; <FONT face="Times New Roman, Times, serif" 
+size=2>Copyright 
+  &copy; 2002 International Business Machines Corp.</FONT> 
+<TABLE cellSpacing=0 cellPadding=2 width="100%" border=0>
+  <TBODY>
+  <TR>
+    <TD vAlign=top align=left bgColor=#0080c0 colSpan=2><B><FONT 
+      face=Arial,Helvetica><FONT color=#ffffff>&nbsp;Eclipse Corner 
+      Article</FONT></FONT></B></TD></TR></TBODY></TABLE></DIV>
+<DIV align=left>
+<H1><IMG height=86 src="wizards_files/Idea.jpg" width=120></H1></DIV>
+<P>&nbsp;</P>
+<H1 align=center>Creating JFace Wizards</H1>
+<BLOCKQUOTE><B>Summary</B> <BR>This article shows you how to implement a wizard using the JFace toolkit and how to contribute your wizard to the Eclipse workbench. A wizard whose page structure changes according to user input is implemented to demonstrate the flexibility of wizard support.<P><B>By Doina Klinger, IBM UK</B>(<FONT 
+  face=arial,helvetica,geneva size=-1>dklinger at 
+  uk.ibm.com)</FONT><BR>
+    <FONT size=-1>December 16, 2002</FONT> </P>
+</BLOCKQUOTE>
+<HR width="100%">
+
+<H2>Introduction</H2>
+<P>Wizards are used extensively throughout Eclipse. You can use wizards to create a new Java class or new  resources 
+like Projects, Folders or Files. A well designed wizard can considerably simplify user tasks and increase productivity.</P>
+<P> Wizards are meant to take the hassle out of standard, repetitive, or
+tedious user tasks.  For example, the Java New Class wizard can collect
+enough information to generate a skeleton implementation of a user's class,
+including package statements, constructors, inherited methods, and other
+details.    Of course, as the wizard developer, you must implement the code
+that makes the wizard useful for your domain.</P>
+
+
+<P>Not only does the platform contain many wizards, but there is a lot of
+support for writing your own.  The JFace wizard framework lets you
+concentrate on the specifics of your wizard implementation. You will need to use the <B>org.eclipse.jface.wizard</B> package of JFace. It is very easy to get started while the support is flexible enough to allow you to add more complex logic to your wizards.</P><H2>Wizard sample</H2>
+<P>Our sample wizard will gather some holiday travel choices from the user and collect more information based on the 
+user's initial choices. Information about the holiday is kept in a model data object which is manipulated by the wizard page. The user's  holiday data will be displayed in an information dialog upon completion of the wizard.</P>
+
+
+<H3>Running the wizard</H3>
+<P>To run the sample or view its source, unzip the <A href="wizardsPlugin.jar">wizardsPlugin.jar</A> 
+  into your eclipse root directory and restart the workbench. You can start the 
+  sample wizard from the New button or from File-&gt;New menu of the workbench 
+  (<A href="#NewMenu">Figure 5</A>). Alternatively, you can select the context 
+  menu of a folder (in any perspective) and start the wizard from there (<A href="#PopupMenu">Figure 
+  6</A>).</P>
+<P>
+Let's look at our sample wizard in detail before diving into details of implementing it. On the first page the users can  select the dates of travel, the type of transport for their holiday and enter the departure and destination locations:</P>
+<CENTER> <IMG border="0" src="wizards_files/mainPage.gif"><BR>
+Figure 1. Starting page of the wizard</CENTER>
+<P>The next page to be shown depends on the selected mode of transport. If the 
+  user has selected travel by plane the following page is displayed which shows 
+  the available flights. To keep the example code simple this information will 
+  be hard coded, rather than obtained from some database. The user can select 
+  the type of seat they want and to ask for the ticket price by pushing the &quot;Get 
+  price&quot; button. The base price is hard-coded as well. A discount is offered 
+  in conditions explained <A href="#Discount">below</A>.</P>
+<CENTER> <IMG border="0" src="wizards_files/plane.gif"><BR>
+Figure 2. Page displayed when the user has selected the plane</CENTER>
+<P>When the user has selected a flight and a type of seat the wizard can be finished.</P>
+<P>If the user has selected the car as mode of transport, a different page is 
+  shown. The user can select the name of a rental company. Based on the company 
+  name, the price of the rented car is displayed. Once again, the prices are hard-coded 
+  and depend only on the rental company selected but not on dates and destination. 
+  The user can select whether to buy insurance from the rental company.</P>
+
+<CENTER> <IMG border="0" src="wizards_files/car.gif"><BR>
+Figure 3. Page displayed when the user has selected the car.</CENTER>
+<P>When the user clicks Finish a message dialog is displayed summarizing the  holiday data collected from the user. The wizard 
+responds to various events and reports user errors.</P>
+<P>This article explains the following:</P>
+<UL>
+	<LI>how to create, add and initialize wizard pages</LI>
+	<LI>how to listen for events and control errors</LI>
+	<LI>how to change the page order</LI>
+	<LI>what to do on completion of a wizard</LI>
+	<LI>how to start a wizard</LI>
+</UL>
+
+
+<H2>Wizard pages</H2>
+<P>JFace provides the interfaces <B>org.eclipse.jface.wizard.IWizard</B> and <B>org.eclipse.jface.wizard.IWizardPage</B> to describe wizards and corresponding implementation 
+classes that handle many of the details of implementing wizards. Our wizard class HolidayWizard extends <B>org.eclipse.jface.wizard.Wizard</B>, which is a useful abstract class to extend. 
+Its main responsibilities are to create the pages inside the wizard and perform the work when the wizard is completed. 
+</P>
+
+
+<H3><FONT size="+1"><FONT size="+1">Adding pages to a wizard</FONT></FONT></H3>
+
+
+<P> Each page is instantiated and added to the wizard. The order in which we add the pages to the wizard is the default navigation order. The page which is added first will be the starting page when the wizard is
+opened. Later we will look at ways of changing these defaults. The corresponding method on the HolidayWizard class is shown below:</P>
+<BLOCKQUOTE><PRE><CODE>public void addPages()
+{
+     holidayPage = new HolidayMainPage(workbench, selection);
+     addPage(holidayPage);
+     planePage = new PlanePage(&quot;&quot;);
+     addPage(planePage);
+     carPage = new CarPage(&quot;&quot;);
+     addPage(carPage);
+}</CODE></PRE></BLOCKQUOTE>
+<P></P><H3><FONT size="+1">Creating the controls</FONT></H3>
+<P>First you need to decide which controls you want to use and then how they should appear on the wizard page. Here is a quick guideline on common widgets choices:</P>
+<UL>
+	<LI>text fields  : use them when you cannot predict what the user will enter. In our example, we let the users type in any holiday destination they want.</LI>
+	<LI>combo boxes : use them to indicate a single selection from several options. The user can select only one type of seat in the plane: window, aisle or center.</LI>
+	<LI>lists: use them to display many options from which one or more can be selected. We show the available flights in a list widget.</LI>
+	<LI>buttons: there are three styles of buttons in SWT.
+	<UL>
+		<LI>checkboxes: use them to show options with clear &quot;yes&quot; or &quot;no&quot; meaning. When you rent a car, you either take the insurance from the rental company or you don't.</LI>
+		<LI>radio buttons: use them when you want the user to select one options from two or more options. In our simplified model, you can either travel by car or by plane.</LI>
+		<LI>push buttons: use them to trigger an event. The button on the plane page retrieves the price for the flight.</LI>
+	</UL>
+	</LI>
+</UL>
+<P>Widgets of type <B>org.eclipse.swt.widgets.Composite</B> are used to hold other widgets. To create a widget of one of the types mentioned above, you call its
+constructor and pass the parent Composite and a mask of bits indicating the
+style. </P>
+
+<P>More information about various widgets can be found in the Javadoc for <strong>org.eclipse.swt.widgets</strong>, 
+  and <A 
+href="http://dev.eclipse.org/help20/content/help:/org.eclipse.platform.doc.isv/guide/swt.htm" target="_blank"> 
+  SWT documentation</A>. </P>
+
+<P>You will need to use <I style="mso-bidi-font-style: normal">layouts</I> to 
+  give your wizard page a specific look. A layout controls the position and size 
+  of children in a Composite. In our sample, we use <SPAN lang="EN-US" style="mso-ansi-language: EN-US"><B>org.eclipse.swt.layout.GridLayout</B>, 
+  which is one of the most flexible standard layouts. With a <I></I>GridLayout, 
+  the widget children of a Composite are laid out in a grid, left to right, top 
+  to bottom. The <I><B style="mso-bidi-font-weight: normal">numColumns</B></I> 
+  specifies the number of columns in the grid. GridData is the layout data object 
+  associated with GridLayout. With a GridData object you can control things like 
+  the widget's alignment, indent or span, horizontally and vertically. Use <I><B>setLayoutData</B></I> 
+  method to set the grid data of a widget</SPAN>. For more details on layouts 
+  see the <A href="http://www.eclipse.org/articles/Understanding%20Layouts/Understanding%20Layouts.htm" target="_blank">Understanding 
+  Layouts</A> article.</P>
+<P>We start by hand-drawing a rough sketch of each wizard page, to find out the number of columns of the grid and the general look of the page. For a better organization of the information on the page, we use horizontal rules to separate related groups of input fields.</P>
+<P>The place to create the page controls and arrange them on a page is the <I><B>createControl</B></I> method or each wizard page. The method is invoked once for each page when the wizard is first created with a parameter of type Composite. A typical implementation of this method is shown below.  It does the
+following tasks::</P>
+<UL>
+	<LI>create a composite using the specified parent (<IMG border="0" src="wizards_files/tag_1.gif">)</LI>
+	<LI>construct the widgets and, if necessary, their layout data objects (<IMG border="0" src="wizards_files/tag_2.gif">)</LI>
+	
+	<LI>construct the widgets and, if neccesary, their layout data objects(<IMG border="0" src="wizards_files/tag_3.gif">)</LI>
+	<LI>set the composite as the control associated with the wizard page (<IMG border="0" src="wizards_files/tag_4.gif">).</LI>
+</UL>
+<P>Here is a simplified implementation of the createControl method for the HolidayMainPage. Some details have been omitted for brevity.</P>
+<BLOCKQUOTE><PRE>public void createControl(Composite parent) {
+    // create the composite to hold the widgets   
+<IMG border="0" src="wizards_files/tag_1.gif">  Composite composite = new Composite(parent, SWT.NONE);
+    // create the desired layout for this wizard page
+<IMG border="0" src="wizards_files/tag_2.gif">  GridLayout gl = new GridLayout();
+    int ncol = 4;
+    gl.numColumns = ncol;
+    composite.setLayout(gl);		
+    // create the widgets  and their grid data objects 
+    // Date of travel
+<IMG border="0" src="wizards_files/tag_3.gif">  new Label (composite, SWT.NONE).setText("Travel on:");						
+    travelDate = new Combo(composite, SWT.BORDER | SWT.READ_ONLY);
+    GridData gd = new GridData();
+    gd.horizontalAlignment = GridData.BEGINNING;
+    gd.widthHint = 25;
+    travelDate.setLayoutData(gd);
+
+    travelMonth = new Combo(composite, SWT.BORDER | SWT.READ_ONLY);
+    travelMonth.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+    travelYear = new Combo(composite,  SWT.BORDER | SWT.READ_ONLY);
+    travelYear.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+    // Similar widgets are constructed for date of return ...
+    createLine(composite, ncol);
+    // Departure				
+    new Label (composite, SWT.NONE).setText("From:");				
+    fromText = new Text(composite, SWT.BORDER);
+    gd = new GridData(GridData.FILL_HORIZONTAL);
+    gd.horizontalSpan = ncol - 1;
+    fromText.setLayoutData(gd);
+
+    // Similar for Destination ...
+    createLine(composite, ncol);
+
+    // Travel by plane		
+    planeButton = new Button(composite, SWT.RADIO);
+    planeButton.setText("Take a plane");
+    gd = new GridData(GridData.FILL_HORIZONTAL);
+    gd.horizontalSpan = ncol;
+    planeButton.setLayoutData(gd);
+    planeButton.setSelection(true);
+
+   // Similar for carButton	...
+   // set the composite as the control for this page
+<IMG border="0" src="wizards_files/tag_4.gif"> setControl(composite);		
+}</PRE></BLOCKQUOTE>
+
+<H2><FONT size="+1">Events</FONT></H2>
+<P>Our wizard is not very useful if it is not able to respond to changes and user interaction. 
+The simplest way to register events on wizard controls is to use the addListener method to register the wizard page 
+itself as the handler of the events.The wizard page must implement the <B>org.eclipse.swt.widgets.Listener</B> interface with its
+handleEvent method.
+Classes which implement this interface are described within SWT as providing the 
+<EM>untyped listener</EM> API.  <CODE></CODE>The listeners implement a simple <B><I>handleEvent(...)</I></B> method 
+that is used internally by SWT to dispatch events. </P>
+<P>In our Plane page we want to know when the user interacts with the &quot;Get price&quot; button, with the list of flights and with the combo box that holds the seats choices. We add listeners in the createControl method for these widgets.The untyped event mechanism uses a constant to identify the type of event. In our case we are interested in Selection type events for the widgets.</P>
+
+<PRE><CODE><BLOCKQUOTE>
+public void createControl(Composite parent) {
+   // ...
+   // price button
+   priceButton = new Button(composite, SWT.PUSH);
+   priceButton.addListener(SWT.Selection, this);
+   // ...
+
+   // flights
+   flightsList = new List(composite, SWT.BORDER | SWT.READ_ONLY );
+   flightsList.addListener(SWT.Selection, this);
+   // ...
+
+   // seat choice		
+   seatCombo = new Combo(composite, SWT.BORDER | SWT.READ_ONLY);
+   seatCombo.addListener(SWT.Selection, this);
+   // ...
+}</BLOCKQUOTE></CODE></PRE>
+
+<P> When the specified event occurs, the handleEvent method is   invoked for each registered listener. The 
+listener, in our case the WizardPage, implements a "case style" listener in which we check for various fields of the event parameter (like its type or source) and respond accordingly. For the PlanePage, we do some special action if the priceButton has been selected, informing the user of the flight price. </P>
+<P><A name="getPrice"></A></P>
+<PRE><CODE><BLOCKQUOTE>public void handleEvent(Event e)
+{
+   if (e.widget == priceButton) {
+       if (flightsList.getSelectionCount() &gt;0) {
+         if (((HolidayWizard)getWizard()).model.discounted)
+            price *= discountRate;
+         MessageDialog.openInformation(this.getShell(),&quot;&quot;, &quot;Flight price &quot;+ price);
+       }
+   }
+   //...
+}</BLOCKQUOTE></CODE></PRE>
+<H1><FONT size="+1">Processing errors</FONT></H1>
+<P>The data entered by the user on a wizard page can have a number of errors caused by wrong choices or invalid values. 
+Where appropriate, we should disable the options which are not valid in order to prevent such errors. Where this is not possible, we need to inform the user of the error. When the user corrects it the error message needs to be cleared. </P>
+<P>In the sample we disallow destinations to be the same as the departures (not much of a holiday, is it?). No travel back in time is allowed either, so the date of return needs to be after the date of travel. We won't check that the dates are correct. Hopefully you will not find any flight on the 30th of February anyway.</P>
+<CENTER> <IMG border="0" src="wizards_files/error.gif"><BR>
+Figure 4. Reporting an error to the user.</CENTER>
+<P>You can use the <B><I>setMessage</I></B> and <B><I>setErrorMessage</I></B> methods to display information or error messages. The user can 
+interact with the controls in any order and, consequently, produce or clear various errors. 
+A common way to handle errors is to use a status variable for each possible type of event which can create an error, a 
+warning or an information message. </P>
+<P>The error handling for the first page is shown below. If the destination or departure fields have triggered the event <IMG border="0" src="wizards_files/tag_5.gif">, the the corresponding <B>org.eclipse.core.runtime.IStatus</B> variable, is either set with an error if the two are the same or cleared. If any of the date fields was modified <IMG border="0" src="wizards_files/tag_6.gif">, we set the timeStatus variable to the right value. At the end of each processing of an event <IMG border="0" src="wizards_files/tag_7.gif">, we update the page to display the most serious error message. This can be the first error or the first warning if there is no error or null if the page is correct. When the page is correct, we should see again the page description. This is how the sample code looks:</P>
+
+<BLOCKQUOTE><PRE><CODE>public void handleEvent(Event event) {
+     // Initialize a variable with the no error status
+     Status status = new Status(IStatus.OK, &quot;not_used&quot;, 0, &quot;&quot;, null);
+     // If the event is triggered by the destination or departure fields
+     // set the corresponding status variable to the right value
+<IMG border="0" src="wizards_files/tag_5.gif">   if ((event.widget == fromText) || (event.widget == toText)) {
+	 if (fromText.getText().equals(toText.getText()))
+	       status = new Status(IStatus.ERROR, &quot;not_used&quot;, 0, 
+	           &quot;Departure and destination cannot be the same&quot;, null);        
+	 destinationStatus = status;
+     }
+     // If the event is triggered by any of the date fields  set
+     // corresponding status variable to the right value
+<IMG border="0" src="wizards_files/tag_6.gif">  if ((event.widget == returnDate) || (event.widget == returnMonth)
+	  || (event.widget == returnYear) || (event.widget == travelDate)
+	  || (event.widget == travelMonth) || (event.widget == travelYear)) {
+	  if (isReturnDateSet() &amp;&amp; !validDates()) 
+	      status = new Status(IStatus.ERROR, &quot;not_used&quot;, 0, 
+	                &quot;Return date cannot be before the travel date&quot;, null);	                
+	  timeStatus = status;		
+      }
+
+      // Show the most serious error
+<IMG border="0" src="wizards_files/tag_7.gif">    applyToStatusLine(findMostSevere())
+      // ...
+}
+</CODE></PRE> </BLOCKQUOTE>
+
+<P> </P>
+<H2><FONT size="+1">Navigation buttons</FONT></H2>
+<P>Using the JFace wizard support we can easily manage the navigation buttons on the wizard pages. These buttons can be Finish and Cancel if the wizard has one page, otherwise  each wizard page has Back, Next, Finish and Cancel. By default, Next is enabled for all but the last page and Back for all pages but the first. .</P>
+<P>For correct navigation we need to:</P>
+<OL>
+	<LI>implement the <B><I>canFlipToNextPage</I></B> method on the page to return true when the user has selected/entered all the required information on the current page.
+	</LI>
+	<LI>overwrite the <I><B>canFinish</B></I> method of of the wizard to return true when the wizard can be completed</LI>
+	<LI>ensure that  the methods from above are called at the right moment to enable/disable the Next and Finish buttons</LI>
+</OL>
+<P>We look at each of these steps in a little more detail.</P>
+<OL>
+	<LI><P>To implement the canFlipToNextPage method  for the first page of our wizard, we first prevent the user from moving to the next page when the page has any errors. When there are no errors, the destination and departure fields are filled, the return date is set and a mode of transport is selected, the user can move to the next page.</P><PRE><CODE>
+public Boolean canFlipToNextPage(){
+   if (getErrorMessage() != null) return false;
+   if (isTextNonEmpty(fromText)&amp;&amp; isTextNonEmpty(toText) &amp;&amp; (planeButton.getSelection()
+	 || carButton.getSelection()) &amp;&amp; isReturnDateSet())
+        return true;
+    return false;
+}</CODE></PRE> 
+
+	</LI>
+	<LI>Overwriting the canFinish method on the wizard class is useful when some fields or entire pages are optional. When we have all the required information for the current path through the wizard, canFinish should true and the wizard can be completed at any moment after this. </LI>
+	<LI> You can  force  the update of the navigation buttons. The right moment for this depends on your problem and the implementation of canFlipToNextPage and canFinish methods. If we have registered listeners for all type of events that can affect the enabled/disabled status of Next and Finish button, then at the end of the event processing method we force the redraw of the buttons:<PRE><CODE>public void handleEvent(Event event) {
+    //...
+    getWizard().getContainer().updateButtons();
+}
+</CODE></PRE></LI>
+	
+</OL>
+
+
+<H1><FONT size="+1">Changing the page order</FONT></H1>
+<P>We can change the order of the wizard pages by overwriting the <B><I>getNextPage</I></B> method of any wizard page.Before leaving the page, we save in the model the values chosen by the user. In our example, depending on the choice of travel the user will next see either the page with flights or the page for travelling by car.</P>
+
+<BLOCKQUOTE><PRE> <CODE>
+<A name="initialize"></A>
+public IWizardPage getNextPage(){
+   saveDataToModel();		
+   if (planeButton.getSelection()) {
+       PlanePage page = ((HolidayWizard)getWizard()).planePage;
+<IMG border="0" src="wizards_files/tag_1.gif">     page.onEnterPage();
+       return page;
+   }
+   // Returns the next page depending on the selected button
+   if (carButton.getSelection()) { 
+	return ((HolidayWizard)getWizard()).carPage;
+   }
+   return null;
+}
+</CODE></PRE> </BLOCKQUOTE>
+<H1><FONT size="+1">Initializing widgets on wizard pages</FONT></H1>
+<P>The widgets can be initialized based on constants, values available on the start of the wizard or other user choices. We look at each case more closely. </P>
+<UL>
+	<LI>constants: the widgets can be initialized immediately after their creation. In the sample, we initialize the travel date with today's date.</LI>
+	<LI>values available at the start of the wizard.
+	<P><A name="Discount"></A>In our example, if the user starts the wizard when a folder called Discounts is selected, he will get 10% off the price of flights (You would want to get discounts this way, wouldn't you?). To achieve this, we need to overwrite the <B><I>init</I></B> method on the wizard<B></B> class. If the parameter representing the selection is the special folder, we know that we'll offer a discount so we cache this information. </P>
+	<PRE><CODE>
+public void init(IWorkbench workbench, IStructuredSelection selection) {
+   this.workbench = workbench;
+   this.selection = selection;
+   if (selection != null && !selection.isEmpty()) {
+      Object obj = selection.getFirstElement();
+      if (obj  instanceof IFolder) {
+          IFolder folder = (IFolder) obj;				
+          if (folder.getName().equals("Discounts"))
+              model.discounted = true;				
+          }
+      }
+}</CODE></PRE><P>In our example, we initialize the model data based on the selection field and use it when displaying the flight price, see <A href="#getPrice">above</A> . In other examples, we might need to initialize controls on the page with the selection values.The controls are not created when the init method is called, but we can initialize them as soon as they are created with the cached value.</P>
+	<P>For wizards which are started by defining a wizard contribution (see <A href="#startWizard">Starting a wizard</A> section), the init method is called by the platform, otherwise we need to call it explicitly.</P>
+	</LI>
+	<LI>
+	user choices</LI>
+	
+	
+	
+</UL>
+<P>We can initialize the values of some controls based on values for other controls as defined by the user at runtime. For example, in the CarPage we assign the value of the price field based on the rental company that was selected<BLOCKQUOTE><PRE> <CODE>
+public void handleEvent(Event e)
+{
+   if (e.widget == companyCombo) {
+     if (companyCombo.getSelectionIndex() &gt;=0)
+      priceText.setText(&quot;£&quot;+prices[companyCombo.getSelectionIndex()]);
+   }
+// ...
+}</CODE></PRE></BLOCKQUOTE>
+<P>In another example, the source widgets are on one page and the widgets
+whose values are initialized belong to subsequent page.  Such is the case
+in our example, where the departure and destination from the first page is
+used to show. </P>
+
+<P>We define a method to do this initialization for the PlanePage, onEnterPage and we invoke this method when moving to the PlanePage, that is in the <A href="#initialize">getNextPage (<IMG border="0" src="wizards_files/tag_1.gif">)</A> method for the first page.</P>
+<H1><FONT size="+2">Actions on completion of the wizard</FONT></H1>
+<P>To complete a wizard, the user can press either the Finish or the Cancel buttons. If the Cancel button is pressed, the 
+<B><I>performCancel</I></B> method is called and you should overwrite this to cleanup any resources allocated while running the wizard. 
+The real work is done in <B><I>performFinish</I></B>. In our case, this method is quite simple:</P>
+<BLOCKQUOTE><PRE> <CODE>
+public boolean performFinish() 
+{
+    String summary = model.toString();
+    MessageDialog.openInformation(workbench.getActiveWorkbenchWindow().getShell(), 
+	"Holiday info", summary);
+    return true;
+}
+</CODE></PRE></BLOCKQUOTE>
+
+
+<P>
+If possible, it is always best to subclass from an existing wizard or wizard page 
+which performs a similar task. 
+A good place to look for such wizards for subclassing are<B> org.eclipse.ui.newresource</B> package which provides standard wizards for creating files, folders, and projects in the workspace and <B>org.eclipse.ui.wizards.datatransfer</B> package for the standard Import and Export wizards for moving resources into and out of the workspace. &nbsp;</P>
+<P>For example, if we want to save the user choices in a file we would have the first page inherit from the class <B>org.eclipse.ui.dialogs.WizardNewFileCreationPage</B>, which is the standard main page for a wizard that creates a file resource. We would inherit the actual file creation from the parent class and could overwrite one of its method getInitialContents() to return the user choices to be saved in the file.</P>
+
+<P>The task to be completed at the end of the wizard could be a complex operation that modifies many workspace resources, 
+files, classes or projects. This sort of operation could take a relatively long time.  To keep the workbench responsive to 
+user input or to give the user the possibility to cancel the operation we might want to run it in a different thread. 
+To achieve all these, we create a runnable which performs the task and runs it in the context of the container of the 
+wizard.</P>
+<PRE>getContainer().run(forkable, canceleable, runnable);</PRE>
+<P>For more details on this subject see <A 
+href="http://dev.eclipse.org/help20/content/help:/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/operation/package-summary.html" target="_blank"> 
+  JFace operations documentation</A>. </P>
+<H2><A name="startWizard"></A>Starting a wizard</H2>
+<P>You can start a wizard either by defining a wizard contribution to the workbench or explicitly in your code. We will look at each of these methods in turn.</P>
+<H3>Defining a wizard contribution</H3>
+<P>You can contribute to the extension points for wizards that create new resources, import or export resources. When you select the new, import, or export menu or when you press the new wizard button, the workbench uses a wizard selection dialog to display all the wizards that have been contributed for that particular extension point.&nbsp;</P>
+<P><A name="NewMenu"></A></P>
+<CENTER>
+<P><IMG border="0" src="wizards_files/newWizard.gif"></P>
+Figure 5. Starting the wizard from the New</CENTER>
+<P>In our sample, we contribute to the new wizard extension point. The relevant fragment from plugin.xml is :</P>
+<BLOCKQUOTE><PRE><CODE>
+<P>&lt;extension id=&quot;com.xyz.article.wizards&quot;
+    name=&quot;Holiday&quot;
+   point=&quot;org.eclipse.ui.newWizards&quot;&gt;
+  &lt;category
+         name=&quot;Article Wizards&quot;
+         id=&quot;com.xyz.article.wizards.category1&quot;&gt;
+   &lt;/category&gt;
+   &lt;wizard
+         name=&quot;Holiday Document&quot;
+         icon=&quot;icons/create.gif&quot;
+         category=&quot;com.xyz.article.wizards.category1&quot;
+<IMG border="0" src="wizards_files/tag_1.gif">    class=&quot;com.xyz.article.wizards.HolidayDocumentWizard&quot;
+         id=&quot;com.xyz.article.wizards.wizard1&quot;&gt;
+        &lt;description&gt;
+               Creates a holiday document
+        &lt;/description&gt;
+   &lt;/wizard&gt;
+&lt;/extension&gt;</P></CODE></PRE></BLOCKQUOTE>
+<P>We define the category to which we add  our wizard, the name, description and icon that will be used. The most important entry in the extension point is the class field( <IMG border="0" src="wizards_files/tag_1.gif">) where we give the name of our wizard class. A class used in this way must implement the (empty) <B>org.eclipse.ui.INewWizard</B> interface. This is all we need to do in this case. Some details are handled by the workbench as we will see below.</P>
+<H3>Starting the wizard explicitly</H3>
+<P> You may want to launch your wizard as a result of some action that you have defined. Typically you use extension points that contribute to various menus and toolbars in the workbench and  want the wizard to be started when the user interacts with these, for example when pressing a button or selecting a menu option.</P>
+<P>In our example, we use the popupMenu extension point for a folder to start the wizard. </P>
+<P><A name="PopupMenu"></A></P><CENTER>
+<P><IMG border="0" src="wizards_files/popup.gif"></P>
+<P>Figure 6. Starting the wizard from the popup menu</P>
+</CENTER>
+<P>In the plugin.xml we have:</P><PRE><CODE>
+<P>        &lt;extension point=&quot;org.eclipse.ui.popupMenus&quot;&gt;
+                &lt;objectContribution
+<IMG border="0" src="wizards_files/tag_2.gif">              objectClass=&quot;org.eclipse.core.resources.IFolder&quot;
+                    id=&quot;com.xyz.article.wizards.popup1&quot;&gt;
+               &lt;action
+                        label=&quot;Create holiday document&quot;
+                        icon=&quot;icons/create.gif&quot;
+<IMG border="0" src="wizards_files/tag_3.gif">                   class=&quot;com.xyz.article.wizards.CreateWizardAction&quot;
+                        id=&quot;com.xyz.article.wizards.action1&quot;&gt;
+               &lt;/action&gt;
+               &lt;/objectContribution&gt;
+&lt;/extension&gt;</P></CODE></PRE><P>The objectClass entry (<IMG border="0" src="wizards_files/tag_2.gif">) defines the type of objects to which this popupMenu will be added to, in our case a Folder. The real work is done by the action class defined on <CODE><IMG border="0" src="wizards_files/tag_3.gif"></CODE>. Its run method is executed when the user selects this new item from the popup menu of a folder. The other two methods on the action class, <B><I>setActivePart</I></B> and <B><I>selectionChanged</I></B> cache the workbench part and the selection fields respectively for use when the wizard is started, see <IMG border="0" src="wizards_files/tag_4.gif"> below. For more details on the popup menu extension point see the documentation.</P>
+<P>When you are launching your own wizard, you need to wrap the wizard in a <A href=http://dev.eclipse.org/help20/content/help:/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/wizard/WizardDialog.html target="_blank"><B>org.eclipse.jface.wizard.WizardDialog</B></A>. 
+  A WizardDialog is a container that can host a wizard and display wizard pages. 
+  It has a standard layout: an area at the top containing the wizard's title, 
+  description, and image; the actual wizard page appears in the middle; below 
+  it is a progress indicator; and at the bottom is an area with a message line 
+  and a button bar containing Next, Back, Finish, Cancel, and Help buttons.</P>
+<P>The relevant code to start the wizard is:</P>
+<PRE>    // Instantiates and initializes the wizard
+    HolidayWizard wizard = new HolidayWizard();
+<IMG border="0" src="wizards_files/tag_4.gif">  wizard.init(part.getSite().getWorkbenchWindow().getWorkbench(),
+            (IStructuredSelection)selection);
+    // Instantiates the wizard container with the wizard and opens it
+    WizardDialog dialog = new WizardDialog(shell, wizard);
+    dialog.create();
+    dialog.open();</PRE>
+<H1><FONT size="+2">Resources</FONT></H1>
+<P>
+We have seen how to implement a wizard, initialize its contents, and
+perform actions on its completion.  For further information about wizards
+and controls, see the following resources:
+
+<P><A href="http://dev.eclipse.org/help20/content/help:/org.eclipse.platform.doc.isv/guide/swt.htm" target="_blank">Eclipse 
+  Platform Plug-in Developer Guide: Standard Widget Toolkit (SWT)</A><BR>
+  <A href="http://dev.eclipse.org/help20/content/help:/org.eclipse.platform.doc.isv/guide/jface.htm" target="_blank">Eclipse 
+  Platform Plug-in Developer Guide: JFace UI Framework</A><br>
+  <A href="http://www.eclipse.org/articles/Understanding%20Layouts/Understanding%20Layouts.htm" target="_blank">Article: 
+  Understanding Layouts in SWT (Revised for 2.0)</A><BR>
+  </P>
+</BODY></HTML>

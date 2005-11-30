@@ -1,0 +1,799 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=windows-1252">
+  <title>A small cup of SWT</title>
+  <link rel="stylesheet" href="../default_style.css">
+</head>
+<body link="#0000ff" vlink="#800080">
+<div align="right"><font face="Times New Roman, Times, serif" size="2">
+© Copyright International Business Machines Corporation, 2003. All rights reserved.</font>
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+  <tbody>
+    <tr>
+      <td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b><font
+ face="Arial,Helvetica"><font color="#ffffff"> Eclipse Corner
+Article</font></font></b></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div align="left">
+<h1 title="A small cup of SWT"><img src="images/Idea.jpg" height="86"
+ width="120" align="middle"> </h1>
+</div>
+<h1 align="center">A small cup of SWT</h1>
+<div align="center">A bag of hints, tricks and recipes <br>
+for developing SWT apps on the Pocket PC</div>
+<blockquote><b>Summary</b><br>
+  <br>
+Are you interested in developing applications for the Microsoft&reg; Pocket
+PC? Are
+you a desktop developer curious about embedded user interfaces? A
+well-built embedded application is both user and resource friendly.
+User expectations are high. Resources are very limited...<br>
+  <p><b> By Christophe Cornu, IBM OTI Labs</b><br>
+    <font size="-1">September 19, 2003</font></p>
+</blockquote>
+<hr width="100%">
+<h2>Introduction</h2>
+<p>In the first part of the article, we will list some common UI
+guidelines that are followed by native Pocket PC applications. We will
+show
+how they map to the SWT API. In the second part, we will look at ways
+to
+reduce the size of SWT applications. In the last part, we
+will examine how application startup time can be improved by writing an
+SWT application using the Connected Limited Device Configuration (CLDC) Java&trade; profile.</p>
+<h2><a name="section_1"></a> UI guidelines for the Pocket PC</h2>
+A native personal digital assistant (PDA) application follows the rules of its platform. These
+guidelines contribute to the end user experience. They define a common
+look and feel and make the best use of the limited resources. For
+example, PDAs often provide a small screen and
+no
+keyboard. The Pocket PC defines a few essential user interface patterns.
+<h3>Application bringing up a File dialog box</h3>
+On the Pocket PC, the main application window is always full screen.
+The bottom of the screen is reserved for the menu bar. There is no
+border or title. Instead, the title appears at the top of the screen
+along with the Start menu and the clock (Figure 1). Here is a small
+Java program
+that uses the SWT API to create a File dialog box.<br>
+<br>
+<div style="text-align: center;"><img src="images/ppc01.png"
+ alt="native full screen file dialog" border="1"
+ style="width: 240px; height: 320px;"
+ title="native full screen file dialog">&nbsp;</div>
+<div style="text-align: center;">Figure 1 - File dialog box
+</div>
+<br>
+<pre>
+import org.eclipse.swt.*;
+import org.eclipse.swt.widgets.*;
+
+public class FileDialogMain {
+
+public static void main(String[] args) {
+	Display display = new Display();
+<img src="images/tag_1.gif" alt="tag 1" style="width: 24px; height: 13px;" title="">	Shell shell = new Shell(display);
+<img src="images/tag_2.gif" alt="tag 2" style="width: 24px; height: 13px;" title="">	shell.setText("Main");
+	Menu menu = new Menu(shell, SWT.BAR);
+<img src="images/tag_3.gif" alt="tag 3" style="width: 24px; height: 13px;" title="">	shell.setMenuBar(menu);
+	shell.open();
+	FileDialog dialog = new FileDialog(shell, SWT.OPEN);
+	String name = dialog.open();
+	if (name != null) shell.setText(name);
+	while (!shell.isDisposed()) {
+		if (!display.readAndDispatch())
+			display.sleep();
+	}
+	display.dispose();
+}
+}
+</pre>
+Use <img src="images/tag_1.gif" alt="tag 1"
+ style="width: 24px; height: 13px;" title=""> to create
+your application window. Two other styles are commonly used by Pocket
+PC applications. If your application is dialog-based, as in Figure 3,
+you
+would invoke the constructor <code>Shell(display, SWT.CLOSE)</code>.
+The style <code>SWT.RESIZE</code> creates a Shell that is
+automatically resized when the virtual keyboard of the Pocket PC is
+used (Figure 4). No other Shell style is relevant to the Pocket PC. <br>
+<br>
+<b>Note about Pocket PC 2002</b> 
+The Shell created in <img src="images/tag_1.gif" alt="tag 1"
+ style="width: 24px; height: 13px;" title=""> contains a smart minimize
+button on Pocket PC 2002 (see Figure 2 - upper-right corner). The user
+can tap on the smart minimize button to hide (but not close) the
+current application and to return to the last application used. The
+application can then be restored through the system task list - a
+utility for managing applications currently running. To see the smart
+minimize button in Figure 2, run the previous example and click Cancel
+to close the File dialog.<br>
+<br>
+<div style="text-align: center;"><img src="images/ppc08.png"
+ alt="Pocket PC 2002 smart minimize" border="1"
+ style="width: 240px; height: 320px;"
+ title="Pocket PC 2002 smart minimize"><br>
+</div>
+<div style="text-align: center;">Figure 2 - Smart minimize on Pocket PC
+2002<br>
+</div>
+<br>
+<img src="images/tag_2.gif" alt="tag 2"
+ style="width: 24px; height: 13px;" title=""> <code>Shell.setText </code>specifies
+the text displayed in the navigation bar at the top of the screen
+(Figure 1). This text is also displayed in the system task list.<br>
+<br>
+There is one last important step to accomplish before we get a nice-looking 
+Pocket PC application....&nbsp; We need to create a menu bar and
+<img src="images/tag_3.gif" alt="tag 3"
+ style="width: 24px; height: 13px;" title=""> attach it to the Shell.
+The menu bar is a gray rectangular area at the very bottom of the
+screen (Figure 1). Any Pocket PC application must set a menu bar on the
+top-level Shell.<br>
+<br>
+<img src="images/tip.gif" alt="Tip" style="width: 62px; height: 13px;"
+ title=""> PDA users don't explicitly terminate an application prior
+to switching to a new one. Consequently, the menu bar never contains a
+Close menu item. This differs from desktop applications, which often
+define a File menu with a Close menu item.
+<h3>Dialog-based application</h3>
+On the Pocket PC, a dialog-based application is full screen and contains
+a small OK button (see Figure 3, upper-right corner). The following
+Java program creates an SWT-dialog-based application.<br>
+<br>
+<div style="text-align: center;"><img src="images/ppc07.png" alt="ok button" border="1" style="width: 240px; height: 320px;"
+ title="ok button"></div>
+<div style="text-align: center;">Figure 3 - OK button<br>
+</div>
+<pre>
+import org.eclipse.swt.*;
+import org.eclipse.swt.widgets.*;
+
+public class OkButton {
+
+public static void main(String[] args) {
+	Display display = new Display();
+<img src="images/tag_1.gif" alt="tag 1" style="width: 24px; height: 13px;" title="">	Shell shell = new Shell(display, SWT.CLOSE);
+	shell.setText("Main");
+	Menu menu = new Menu(shell, SWT.BAR);
+	shell.setMenuBar(menu);
+<img src="images/tag_2.gif" alt="tag 2" style="width: 24px; height: 13px;" title="">	shell.addListener(SWT.Close, new Listener() {
+		public void handleEvent(Event e) {
+<img src="images/tag_3.gif" alt="tag 3" style="width: 24px; height: 13px;" title="">			System.out.println("Ok button tapped");
+		}
+	});
+	shell.open();
+	while (!shell.isDisposed()) {
+		if (!display.readAndDispatch())
+			display.sleep();
+	}
+	display.dispose();
+}
+}
+</pre>
+The shell style <img src="images/tag_1.gif" alt="tag 1"
+ style="width: 24px; height: 13px;" title=""> <code>SWT.CLOSE </code>creates
+a dialog with a small OK button. The application <img
+ src="images/tag_2.gif" alt="tag 2" style="width: 24px; height: 13px;"
+ title=""> registers the<code> SWT.Close</code> event that is notified
+when the OK button is selected. The shell can then <img
+ src="images/tag_3.gif" alt="tag 3" style="width: 24px; height: 13px;"
+ title=""> process user data before closing.
+<h3>Application resizing when the virtual keyboard shows up</h3>
+The Pocket PC does not have a physical keyboard. Instead it provides an
+input panel (the exact name is soft input panel, or SIP). The input
+panel contains the
+image of a keyboard (see figure 5 - bottom part) or an area to
+interpret hand-written characters. The input panel is either hidden
+(Figure 4) or visible (Figure 5) as controlled by the SIP button
+(Figure 4 - the keyboard icon in the bottom-right corner). Here is a
+simple Java application that creates an SWT application that resizes
+automatically when the input panel is set visible or subsequently
+hidden.<br>
+<br>
+<table cellpadding="2" cellspacing="2" border="0"
+ style="text-align: left; width: 700px; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <div style="text-align: center;"> <img src="images/ppc03.png"
+ alt="hidden input window" border="1" style="width: 240px; height: 320px;"
+ title="hidden input window"><br>
+      </div>
+      <div style="text-align: center;">Figure 4 - Input panel
+hidden<br>
+      </div>
+      </td>
+      <td style="vertical-align: top; text-align: center;"><br>
+      </td>
+      <td style="vertical-align: top;">
+      <div style="text-align: center;"> <img src="images/ppc04.png"
+ alt="visible input window" border="1" style="width: 240px; height: 320px;"
+ title="visible input window"><br>
+      </div>
+      <div style="text-align: center;">Figure 5 - Input panel
+visible<br>
+      </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<pre>
+import org.eclipse.swt.*;
+import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.layout.*;
+
+public class SipResize {
+
+public static void main(String[] args) {
+	Display display = new Display();
+<img src="images/tag_1.gif" alt="tag 1" style="width: 24px; height: 13px;" title="">	Shell shell = new Shell(display, SWT.RESIZE);
+	shell.setLayout(new FillLayout());
+	shell.setText("Main");
+	Menu mb = new Menu(shell, SWT.BAR);
+	shell.setMenuBar(mb);
+<img src="images/tag_2.gif" alt="tag 2" style="width: 24px; height: 13px;" title="">	Text text = new Text(shell, SWT.MULTI | SWT.V_SCROLL);
+	String buffer = "";
+	for (int i = 0; i &lt; 100; i++) {
+		buffer += "This is line " + i + "\r\n";
+	}
+	text.setText(buffer);
+	shell.open();
+	while (!shell.isDisposed()) {
+		if (!display.readAndDispatch())
+			display.sleep();
+	}
+	display.dispose();
+}
+}
+</pre>
+The style <img src="images/tag_1.gif" alt="tag 1"
+ style="width: 24px; height: 13px;" title=""> <code>SWT.RESIZE</code>
+creates a full-screen shell that is
+resized automatically when the user shows or hides the input panel.
+The shell fills the space left between the navigation menu bar at the
+top
+and the input panel or the menu bar at the bottom (Figure 5). The
+sample adds <img src="images/tag_2.gif" alt="tag 2"
+ style="width: 24px; height: 13px;" title=""> widgets to make the
+transition more visual.<br>
+<br>
+<i><b><img src="images/tip.gif" alt="tip"
+ style="width: 62px; height: 13px;" title=""></b></i>A native Pocket PC
+application is expected to be "friendly" with the input panel. That
+implies:
+<ol>
+  <li>The user must be able to input data with the input panel - every
+time
+the application requires text entry. The input panel should not hide
+text widgets. The first solution is to layout text widgets in
+the first part of the screen. The second solution is to resize the
+window when the input panel is turned on - by using the shell style <code>SWT.RESIZE</code>, 
+as shown in the sample above.</li>
+  <li>The application should restore the input panel to the state the
+user left it in the last time this application was used. This state is
+automatically restored by SWT and requires no particular application
+handling.</li>
+</ol>
+<h3>Application using a pop-up menu</h3>
+The Pocket PC uses a
+stylus instead of a mouse. The traditional right-click button is
+replaced with the stylus hold gesture defined as follows. The user taps
+on
+the screen with the stylus and holds it down. The Pocket PC 2002
+provides a visual cue by drawing red circles
+around the stylus during this gesture (Figure 6). After a certain
+amount of time, a popup menu shows up (Figure 7). <br>
+<br>
+<table cellpadding="2" cellspacing="2" border="0"
+ style="text-align: left; width: 700px; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <div style="text-align: center;"> <img src="images/ppc05.png"
+ alt="stylus hold" border="1" style="width: 240px; height: 320px;"
+ title="stylus hold"> </div>
+      <div style="text-align: center;">Figure 6 - Stylus hold animation
+on Pocket PC 2002<br>
+      </div>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;">
+      <div style="text-align: center;"> <img src="images/ppc06.png"
+ alt="popup menu activated by stylus hold" border="1"
+ style="width: 240px; height: 320px;"
+ title="popup menu activated by stylus hold"> </div>
+      <div style="text-align: center;">Figure 7 - Pop-up menu activated<br>
+      </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<pre>
+import org.eclipse.swt.*;
+import org.eclipse.swt.widgets.*;
+
+public class StylusHold {
+
+public static void main(String[] args) {
+	Display display = new Display();
+	Shell shell = new Shell(display);
+	shell.setText("Main");
+	Menu mb = new Menu(shell, SWT.BAR);
+	shell.setMenuBar(mb);
+<img src="images/tag_1.gif" alt="tag 1" style="width: 24px; height: 13px;" title="">	Menu menu = new Menu(shell, SWT.POP_UP);
+	MenuItem item = new MenuItem(menu, SWT.CASCADE);
+	item.setText("item 1");
+	MenuItem item2 = new MenuItem(menu, SWT.CASCADE);
+	item2.setText("item 2");
+	shell.setMenu(menu);
+	shell.open();
+	while (!shell.isDisposed()) {
+		if (!display.readAndDispatch())
+			display.sleep();
+	}
+	display.dispose();
+}
+}
+</pre>
+The <img src="images/tag_1.gif" alt="tag 1"
+ style="width: 24px; height: 13px;" title=""> pop-up menu uses the same <code>SWT.POP_UP</code>
+style as on the desktop platform.<span style="font-weight: bold;"><br>
+<br>
+</span><i><b><img src="images/tip.gif" alt="tip"
+ style="width: 62px; height: 13px;" title=""></b></i>The event <code>SWT.MenuDetect</code>
+can be registered to detect the
+hold gesture
+on a Shell. The events <code>SWT.MOUSE_UP</code>, <code>SWT.MOUSE_DOWN</code>
+and <code>SWT.MOUSE_MOVE</code> map to the corresponding stylus
+actions on the Pocket PC.
+<h2><a name="section_2"></a> Memory and size</h2>
+This section discusses the size contributed by the SWT library on the
+Microsoft Windows &reg; desktop platform and on an embedded target (Pocket PC). The
+internal architecture of SWT allows parts of the API to be removed.
+Thus the SWT library can be customized to fit within the requirements of
+a
+particular target.
+<h3> Size of different SWT configurations</h3>
+<h4>Structure of the SWT API</h4>
+The full SWT API is divided into the following packages.
+<ul>
+  <li> org.eclipse.swt (constants)</li>
+  <li> org.eclipse.swt.widgets (native widgets)</li>
+  <li> org.eclipse.swt.events (event listeners)</li>
+  <li> org.eclipse.swt.graphics (graphics drawing, image decoders)</li>
+  <li> org.eclipse.swt.layout (layouts)</li>
+  <li> org.eclipse.swt.dnd (drag and drop)</li>
+  <li>org.eclipse.swt.ole (ole)</li>
+  <li> org.eclipse.swt.accessibility (accessibility)</li>
+  <li> org.eclipse.swt.custom (custom widgets)</li>
+  <li> org.eclipse.swt.printing (printing)</li>
+  <li> org.eclipse.swt.program (registry)</li>
+</ul>
+The SWT for Pocket PC supports the embedded SWT API. This
+represents a subset within the following packages.
+<ul>
+  <li> org.eclipse.swt</li>
+  <li>org.eclipse.swt.widgets</li>
+  <li>org.eclipse.swt.events</li>
+  <li>org.eclipse.swt.graphics</li>
+  <li>org.eclipse.swt.layout</li>
+</ul>
+The SWT JAR file provides the public API
+and its implementation for a
+particular platform. The SWT native library defines the mapping between
+internal SWT Java methods and the operating system. It also defines a
+number of callbacks that allow the operating system to call into Java.
+<br><br>
+The standard Windows SWT jar is about 994KB. The class file debug
+information accounts for about 30% (307KB). The full Windows SWT jar
+without debug information uses 687KB. In addition, the Windows SWT native
+shared library takes 276KB.<br>
+<br>
+The standard Pocket PC SWT jar supports a subset of the SWT API. It
+is about 436KB without debug information. In addition, the Pocket PC SWT
+native shared library (ARM processor)
+takes 133KB.<br>
+<br>
+Custom SWT jars and native libraries can be built with all or part of
+the SWT API. Figure 8 provides the size distribution for
+the standard Windows SWT jar library (as shipped with Eclipse 2.1).
+<br>
+<div style="text-align: center;"><img src="images/swtjar.png"
+ title="SWT windows jar" alt="SWT windows jar"
+ style="border: 1px solid ; width: 375px; height: 301px;"></div>
+<div style="text-align: center;">Figure 8 - SWT jar size distribution
+(Windows, SWT version 2.1)
+</div>
+<h3> Tips to reduce the size of the SWT library</h3>
+A custom SWT jar can be built to achieve a particular size requirement.
+The Eclipse Web site provides access to SWT libraries for different
+targets (see the <a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/faq.html#pocketpclibrary">SWT FAQ</a>). These different
+versions are built and customized automatically using Ant scripts.
+Follow these steps to build your own custom SWT jar. (The SWT source code is accessible from the Eclipse Web site.)
+<br>
+<ol>
+  <li>Import the two projects org.eclipse.swt and org.eclipse.swt.win32.wce_ppc.arm
+into your Eclipse workspace.</li>
+  <li>Locate the Ant script build_custom.xml. This file is located
+in the project org.eclipse.swt.win32.wce_ppc.arm.</li>
+  <li>Run this Ant script from within Eclipse. Modify the default
+Property targets according to the SWT API you require. The Ant script
+outputs the custom SWT jar to the folder org.eclipse.swt.win32.wce_ppc.arm/ws/win32.</li>
+</ol>
+<div style="text-align: center;"><img src="images/ant_script.png"
+ title="ant script to build custom SWT jar"
+ alt="ant script to build custom SWT jar"
+ style="height: 651px; width: 620px;"> <br>
+Figure 9 - Ant script used to build a custom SWT jar<br>
+</div>
+<br>The standard Pocket PC SWT jar is built with the Property targets
+checked on Figure 9. This configuration includes the first three
+reductions
+discussed below.
+<h4> Exclude Debug Information</h4>
+Excluding debug information is the single most useful optimization to
+be considered. The SWT jar is reduced by 30%. Numbers below assume the
+debug information has been excluded.
+<h4> Exclude Custom Widgets</h4>
+Custom widgets are about 150KB (representing 23% of the SWT JAR file). Write embedded SWT applications
+that only use native widgets (org.eclipse.swt.widgets). Avoid custom
+widgets. This trade-off reduces significantly the size of the SWT
+jar.
+<h4>Exclude Accessibility and DND</h4>
+This option excludes Accessibility and drag-and-drop which together account for about 117KB (or 17% of the SWT JAR file).
+<h4> Exclude Image Decoders</h4>
+The image decoders are 65KB (or 10% of the file). SWT uses run-time introspection
+to search for the available decoders. A decoder can be removed if it is
+not needed. Class file decoders currently reside in the internal
+package
+org.eclipse.swt.internal.image.
+<h4> Exclude Layouts</h4>
+Layouts are 10KB (less than 1% of the file).
+<h4> Use J2ME</h4>
+The J2ME CLDC API is a subset of the standard J2SE API. This option produces an 
+SWT jar that is compatible with the J2ME CLDC profile.<br><br>
+<img src="./images/tip.gif" alt="Tip" width="62" height="13"> Layouts,
+graphics and image decoders are very useful even in the context of an
+SWT embedded application. It is desirable to keep these packages
+unless
+size requirements are very tight.
+<h4> To go further</h4>
+Further fine-grained size reduction can be considered to fulfill
+extremely tight requirements.
+<ul>
+  <li> Unused SWT classes can simply be removed. For example, the
+class <code>org.eclipse.swt.widgets.Tree</code> can be removed if the
+SWT
+application is not using the tree widget. SWT is mostly implemented in
+Java. A tool - an obfuscator for example - can be used to exclude
+unused SWT classes.</li>
+  <li>Removing unused JNI OS calls can reduce the size of the native
+SWT library.
+Each JNI call is wrapped with a preprocessor directive <code>#ifndef
+OS_METHODNAME</code>. Special tools can determine which SWT native
+methods
+are not referenced through all possible execution paths of a
+particular SWT application. This information is used to build a header
+file with a list of native methods to exclude. A sample header file
+defines.h is available in the org.eclipse.swt project under the
+folder "Eclipse SWT PI"/win32/library.</li>
+</ul>
+Detailed description of these last two very specialized optimizations
+is beyond the scope of this article. Developers who are interested are invited
+to use the SWT newsgroup
+(<a href="news://news.eclipse.org/eclipse.platform.swt">news://news.eclipse.org/eclipse.platform.swt</a>).
+<h2><a name="section_3"></a> Startup time</h2>
+A PDA user tends to switch quickly between tasks. For instance: “Take a
+note. Update a
+meeting schedule. Read an email. Monitor the GPS position”. Application
+startup time must not interfere with this workflow. Startup time must
+be as short as possible. We will see in this section when an SWT
+application becomes visible on the Pocket PC screen and when it
+becomes responsive to user input. It is then possible to architect an
+SWT application so that lengthy processing code does not freeze the
+application on startup.<br>
+<br>
+Let’s consider a simple application called MyApp. This application
+uses some form of persistent storage (e.g. a local file, a database
+accessed wirelessly etc). Establishing that connection takes in the
+order of five seconds. The user starts the application, performs some
+queries using the UI, and modifies a record in the database. The
+demo goes very well. The application is deployed to the PDAs of each
+sales-person in the company. The team of developers receives hundreds
+of phone calls the next day. The application does not work. The PDA
+is broken. Some users have even hard reset their devices before the
+five-second initialization period ended. Back to the whiteboard…<br>
+<br>
+<i><b> Startup time - bad example with lengthy initialization code
+before the SWT event loop</b></i>
+<pre>
+import org.eclipse.swt.widgets.*;
+
+public class MyApp {
+
+static {
+<img src="images/tag_1.gif" alt="tag 1" width="24" height="13">	connectDataBase();
+}
+
+public static void main(String argv[]) {
+	Display display = new Display();
+	Shell shell = new Shell(display);
+	shell.setText("MyApp");
+<img src="images/tag_2.gif" alt="tag 2" width="24" height="13">	shell.open();
+<img src="images/tag_3.gif" alt="tag 3" width="24" height="13">	while (!shell.isDisposed()) {
+	if (!display.readAndDispatch())
+		display.sleep();
+	}
+	closeDataBase();
+	display.dispose();
+}
+
+static void connectDataBase() {
+	try {
+		Thread.sleep(5000);
+	} catch (Exception e) {}
+}
+
+static void closeDataBase() {
+	try {
+		Thread.sleep(5000);
+	} catch (Exception e) {}
+}
+}
+</pre>
+The application <code>MyApp</code> becomes visible on the Pocket PC
+when the Java
+virtual machine has opened the <img src="images/tag_2.gif" alt="tag 2"
+ width="24" height="13"> shell<code></code>. At this moment, a full-size window is
+opened. The title is visible in the navigation bar. The title
+also appears in the Pocket PC task list. <img src="images/tag_2.gif"
+ alt="tag 2" width="24" height="13"> is the first step providing visual
+feedback to the user. This application will be invisible for at least five
+seconds, time for the <img src="images/tag_1.gif" alt="tag 1"
+ style="width: 24px; height: 13px;" title=""> connection to the
+database to be realized. 
+The <img src="images/tag_3.gif" alt="tag 3" width="24" height="13">
+while loop encloses the SWT event loop. No user interaction occurs
+until
+the Java virtual machine (JVM) enters the event loop. No paint callback is
+processed and native widgets don’t draw until this happens. In summary,
+the user does not see the application prior to opening the shell<code></code>.
+The
+application is not usable prior to running the event loop.
+<h3>Reduce application code on startup</h3>
+The call to the method <code>connectDataBase()</code> should be
+executed after the
+<code>Shell</code> is opened and after the event loop is entered. One
+solution is to
+bring up a screen with a message asking the user to tap on a button to
+start the connection. The selection callback for the button is used to
+call <code>connectDataBase()</code>. The startup time is not impacted
+by
+lengthy initialization user code anymore.<br>
+<br>
+Be aware of what application code is actually executed before the event
+loop is entered. It is particularly important to pay attention to
+the application class initializers.<br>
+<br>
+<img src="images/tip.gif" alt="tip" width="62" height="13"> Before the
+event loop is entered:
+<ul>
+  <li> Invoke as few application classes as possible so that the JVM’s
+classloader does not have to resolve them on startup. If your main
+class inherits from a deep hierarchy, all the super classes must be
+resolved and initialized before the Main method actually gets to run.</li>
+  <li>Review each of your class initializers. Lengthy operations
+should not take place inside class initializers. Class initializers are
+often used to load resources and native libraries. This common Java
+idiom may cause here an unacceptable startup time.</li>
+</ul>
+<i><b>Refactoring – move lengthy initialization code to callbacks
+executed after the event loop has been entered</b></i><br>
+<pre>
+import org.eclipse.swt.*;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
+
+public class MyApp {
+
+public static void main(String argv[]) {
+	Display display = new Display();
+	Shell shell = new Shell(display);
+	shell.setText("MyApp");
+	shell.setLayout(new FillLayout());
+	final Button button = new Button(shell, SWT.PUSH);
+	button.setText("Connect");
+	button.addListener(SWT.Selection, new Listener() {
+		public void handleEvent(Event e) {
+			button.setText("Connecting");
+<img src="images/tag_1.gif" alt="tag 1" width="24" height="13">			connectDataBase();
+			button.setText("Connected");
+		}
+	});
+	shell.open();
+<img src="images/tag_2.gif" alt="tag 2" width="24" height="13">	while (!shell.isDisposed()) {
+		if (!display.readAndDispatch())
+			display.sleep();
+	}
+	closeDataBase();
+	display.dispose();
+}
+
+static void connectDataBase() {
+	try {
+		Thread.sleep(5000);
+	} catch (Exception e) {}}
+
+static void closeDataBase() {
+	try {
+		Thread.sleep(5000);
+	} catch (Exception e) {}
+}
+}
+</pre>
+The <img src="images/tag_1.gif" alt="tag 1" width="24" height="13">
+lengthy call to the <code>connectDataBase()</code> method has moved
+from the class
+constructor to an event callback. This event callback is executed after
+the<img src="images/tag_2.gif" alt="tag 2" width="24" height="13">
+event
+loop is entered. This refactoring improves the startup time of the
+application. This implementation is still very naive. It
+illustrates the need to avoid lengthy initialization code before
+running the event loop. A better solution may use a progress meter and
+a
+separate thread.
+<br>
+<br>
+<i><b><img src="images/tip.gif" alt="tip" width="62" height="13">
+Diagnose if an application runs too much initialization code</b></i><br>
+Follow these two easy steps to evaluate
+application initialization time.<br>
+<br>
+&nbsp;1. Add a line at the beginning of the Main class (If Main extends
+one of your classes, instrument this super class instead. This
+superclass is loaded first).
+<pre>static long start = System.currentTimeMillis();</pre>
+2. Add the following lines before entering the SWT event loop:
+<pre>
+long end = System.currentTimeMillis();
+System.out.println("User init time: " + (end - start));
+</pre>
+Then check the list of application classes loaded on startup by the
+JVM, as indicated below.<br>
+<br>
+Start the application with the Java console (e.g., java.exe instead of
+javaw.exe). Use the VM argument <code>-verbose</code>. Most JVMs
+output the list
+of Java classes as they get loaded. This can yield useful results
+and direct the effort for refactoring.<br>
+<br>
+If overall startup time remains too high, a lighter Java profile needs
+to be considered as discussed below.
+<h3>Reduce Java library code initialization on startup</h3>
+The JVM must resolve a certain number of core Java
+classes before it can execute the Main method of an application. The
+virtual machine must clearly resolve the base class <code>java.lang.Object</code>.
+The actual number of core Java classes depends on which Java profile
+the application runs against.
+The SWT Pocket PC port can be run against the familiar J2SE profile and
+the J2ME CLDC one.
+<h4> Startup time – J2SE</h4>
+This data was collected on a Pocket PC 2002 HP Jornada 565 (with a
+typical CPU ARM 206 Mhz). The JVM used is the IBM J9 VM for ARM Pocket
+PC. The
+program executed is the SWT HelloWorld for Pocket PC. <a
+ href="HelloWorld.java">Source for HelloWorld.java</a><br>
+The first run is used to collect the list of classes loaded by the
+VM until the application shows up. This information is simply obtained
+by passing the VM flag <code>-verbose</code> to the Java console.
+For the second run, the VM was executed without any <code>-verbose </code>flag
+and without console. The time was measured from the moment the
+application shortcut is tapped in the Pocket PC Windows Explorer and
+the moment the HelloWorld application comes up.<br>
+<br>
+Total number of classes loaded: 237 (<a href="class_load_j2se.txt">see
+detailed list</a>)<br>
+Number of core classes loaded prior to reaching the Main class: 197<br>
+Startup time: about 4.3 seconds
+<h4> Startup time – J2ME CLDC</h4>
+The same series of data is collected using the J2ME SWT Pocket PC
+jar. The VM used was the Pocket PC ARM J9 VM, with the J2ME CLDC class
+library. Note that the CLDC Java profile does not contain the Java API
+System.loadLibrary. The SWT jar for CLDC cannot load the native SWT
+library as a result. The IBM J9 VM is instructed to use the CLDC Java
+profile and to load the native SWT library swt-win32-3002.dll with the
+following VM command.
+<pre>-jcl:cldc:loadlibrary=swt-win32-3002</pre>
+
+Total number of classes loaded: 87 (<a href="class_load_j2me_cldc.txt">see
+detailed list</a>)<br>
+Number of core classes loaded prior to reaching the Main class: 48<br>
+Startup time: about 1.9 seconds
+<div style="text-align: center; font-weight: bold;"> </div>
+<div align="center"><img src="./images/profiles.png"
+ alt="Number of classes loaded J2SE versus CLDC"
+ style="border: 1px solid ; width: 421px; height: 239px;"
+ title="CLDC has a smaller overhead than J2SE" hspace="5" vspace="5"> <br>
+Figure 10 -
+Number of classes loaded (J2SE versus CLDC)
+</div>
+<br>
+The number of core classes loaded prior to reaching the Main class
+in the J2ME CLDC profile is about one fourth of the number the JVM needs to
+load for the same program when using the J2SE profile. The startup
+time is roughly cut in half in this example. Application classes
+represent the Main class of the user
+application and all classes subsequently loaded. SWT classes are
+included in this category. The number of application classes does not
+really vary with the Java profile in this example.<br>
+<br>
+The J2ME CLDC profile is a good choice for people developing embedded
+applications. It is possible to write an application that runs on
+either J2SE or J2ME CLDC profiles by following some simple rules.
+Profile-specific calls can be constrained to a particular
+class. This profile class encapsulates the required refactoring when
+porting a J2SE application to CLDC. For example, a stream opened using
+java.io.FileOutputStream in the J2SE profile could be implemented with
+the CLDC Connector.open API.<br>
+<br>
+Further startup time improvement may require using special deployment
+features specific to certain VMs and platforms. For example, the IBM J9
+VM
+can load classes under an optimized format called JXE. This format
+reduces the work required by the classloader at runtime.<br>
+<br>
+In summary, application startup time is dependent on two factors.
+<ul>
+  <li> User initialization code executed before the SWT event loop is
+executed.</li>
+  <li>The type of Java profile. A lightweight profile (which requires
+fewer core classes) is preferable. SWT for the Pocket PC can be used
+against the J2ME CLDC profile.</li>
+</ul>
+Further optimization can be achieved by using a custom deployment format
+such as the J9 JXE format. It is possible to approach the startup time
+of a native Pocket PC application by combining these techniques.
+<h2> Conclusion</h2>
+Each embedded platform presents unique characteristics. Common Pocket
+PC UI features have been reviewed. The examples can serve as a
+guide to write SWT applications that feel and look native on the
+Pocket PC. Storage resources vary greatly and can be very scarce. A
+custom SWT jar can be built with only the portions of the API used by
+an SWT application. Design choices can be made to balance between
+functionality and a size requirement. Application startup time is also an
+important factor of usability. Lengthy initialization code should be
+avoided before the SWT event loop is entered. Writing your SWT
+application over the CLDC Java profile allows you to benefit from the
+reduced overhead of this profile.
+<h2><a name="Quick_Reference"></a>Quick reference<br>
+</h2>
+<a
+ href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/faq.html#pocketpcstart">
+</a>
+<p><a
+ href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/faq.html#pocketpcstart">SWT
+FAQ - What do I need to do to run SWT on the PocketPC?</a><br>
+<a name="SWT_FAQ_2"></a><a
+ href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/platform-swt-home/faq.html#pocketpclibrary">SWT
+FAQ - Where is the SWT library for the PocketPC?</a>
+</p>
+<p><small>IBM is a registered trademark of International Business Machines
+Corporation in the United States, other countries, or both.</small></p>
+<p><small>Java and all Java-based trademarks are trademarks
+of Sun Microsystems, Inc. in the United
+States,
+other countries, or both.</small></p>
+<p><small>Microsoft and Windows are registered trademarks of Microsoft
+Corporation in the United States, other countries, or both.</small></p>
+<p><small>Other company, product, and service names may be trademarks
+or service marks of others.</small></p>
+</body>
+</html>

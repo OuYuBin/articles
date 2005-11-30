@@ -1,0 +1,812 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Mutatis mutandis - Using Preference Pages as Property Pages</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2003 Berthold Daum.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Mutatis mutandis - Using Preference Pages as Property Pages</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+A common problem in the implementation of applications is the implementation of
+project-specific properties that override workbench-wide preferences on project or file level. The
+naive approach is to implement these pages from scratch. However, writing the
+same code twice is a boring task and leads to increased maintenance efforts. In
+this article we show how existing preferences pages (with or without field
+editors) can be easily converted into pages that can act as both preference and
+property pages. We demonstrate this by implementing the abstract class <code> FieldEditorOverlayPage</code>
+providing the necessary functionality. 
+  <p><b>Berthold Daum, bdaum industrial communications</b> <br>
+    October 24, 2003 </p>
+</blockquote>
+
+<hr width="100%">
+<h2>The problem</h2>
+<p>Implementing <i>Preference Pages</i> for Eclipse plug-ins is not a difficult 
+  task, especially if you use field editors. Such preference pages are usually 
+  implemented as subclasses of <code>org.eclipse.jface.preference.PreferencePage</code> 
+  and <code>org.eclipse.jface.preference.FieldEditorPreferencePage</code>. There 
+  are already two excellent articles on <i> Eclipse Corner</i> dealing with this 
+  subject: <a href="../Article-Preferences/preferences.htm">Preferences in the 
+  Eclipse Workbench UI</a> by Tod Creasey and <a href="../Article-Field-Editors/field_editors.html">Simplifying 
+  Preference Pages with Field Editors</a> by Ryan Cooper. In this article I will 
+  not go into details with the implementation of preference pages but assume that 
+  you are already fairly familiar with standard implementation techniques of such 
+  pages.</p>
+<p>The problem that I want to discuss here begins after you already have implemented
+preference pages for your plug-in. At some stage you notice that some or all of your plug-in
+preferences should rather be project specific or even file specific. The usual
+way to implement such project or file specific settings are <i>Property Pages</i>,
+which usually are subclasses of <code>org.eclipse.ui.dialogs.PropertyPage</code>.
+The Eclipse workbench already contains some examples of how property pages are used to override workbench settings on project level. One example are the <i> Java
+Compiler</i> settings. These settings can be controlled in the workbench
+preferences but can be overridden for each
+Java project separately by project specific property pages.&nbsp;</p>
+<table border="0">
+  <tr>
+    <td width="50%"><img border="0" src="images/PreferencePage.GIF" width="441" height="380">
+      <p><i>The Java compiler settings in the workbench preferences</i>
+      <p><i>&nbsp;</i></td>
+  </tr>
+  <tr>
+    <td width="50%"><img border="0" src="images/PropertyPage.GIF" width="440" height="355">
+      <p><i>The Java compiler settings as a property page of a Java project</i></td>
+  </tr>
+</table>
+<p>As we see, both preference page and property page look, in fact, very similar. There are some differences, however,
+at the top of the page. Instead of the page description, the property page
+contains two radio buttons for toggling between workbench settings and project settings. It also features a button for direct access to the
+corresponding workbench preference page. But its main body (in this case the
+tabbed notebook) is identical with the main body of the corresponding preference
+page.</p>
+<h2>Possible solutions</h2>
+<p>An obvious solution to this problem is to implement both pages from scratch.
+However, since the main body of the both pages is identical, this would result
+in a large portion of duplicated code, code that is subject to later maintenance
+and thus increases maintenance costs. After all, object-oriented programming is
+about reuse, isn't it?</p>
+<p>Well, why don't we factor out the main body of both pages into a separate
+class? This is actually the way in which both pages shown above are implemented.
+(The tabbed notebook is implemented in JDT class <code>CompilerConfigurationBlock</code>.)
+But this technique is not trivial. What I did not tell you is that preference
+pages and property pages are based on different data models. Workbench preferences
+are usually stored in plug-in specific but workbench-wide preference stores. Properties,
+in contrast, are stored as resource related properties. The interface <code>org.eclipse.core.resources.IResource</code>
+provides the necessary access method. When a resource is deleted, also its
+properties cease to exist. This different way of data management would require
+us to implement two variants of access routines, if we want to use preference
+pages in the role of property pages. For property pages we would need to direct all field accesses
+to the respective resource (project or file), for preference pages we would need
+to direct all field accesses to the plug-in specific preference store. Unfortunately, this
+strategy is not possible for preference pages utilizing field editors. Field
+editors internally always access a preference store - we cannot tell them to
+access resource properties instead. So we would need to re-implement the whole
+property page - replacing the field editors with standard SWT widgets! Not very nice.</p>
+<p>Fortunately, there is another solution and it works for field editors, too.
+To get to this solution we have to look at the inheritance trees of both field
+editor preference pages and property pages. (We will deal with the problem of
+field editor preferences pages first and will discuss &quot;normal&quot;
+preference pages later.)</p>
+<table border="0">
+  <tr>
+    <td width="50%" valign="top"><img border="0" src="images/FieldEditorPreferenceHierarchy.GIF" width="225" height="169"></td>
+    <td width="50%" valign="top"><img border="0" src="images/PropertyHierarchy.GIF" width="220" height="181"></td>
+  </tr>
+</table>
+<p>Both types are extensions of the abstract class <code>PreferencePage</code>.
+The class <code>FieldEditorPreferencePage</code> implements, in addition, the
+interface <code>IPropertyChangeListener</code>, while the class <code>PropertyPage</code>
+additionally implements the interface <code>IWorkbenchPropertyPage</code>. Since
+the extension from <code>PreferencePage</code> to <code>PropertyPage</code> is
+minimal (the implementation of <code>IWorkbenchPropertyPage</code> is
+trivial), it makes sense to base our solution on class <code>FieldEditorPreferencePage</code>
+and simply add the implementation of <code>IWorkbenchPropertyPage</code>.</p>
+<p>But how do we deal with the problem of different data models for property
+pages and preference pages? Since field editors can only access preference
+stores, we simply create a temporary preference store (which we call <i>overlay store</i>
+within this article)
+when a property page is initialized. We implement this store by extending class <code>PreferenceStore</code>
+but provide different semantics to its access methods. In particular, when
+fetching a value from the store, we look into the resource properties first if
+we can find an identically named value there. Only if such a value is not found,
+we refer to the underlying workbench preference store. The <code>save()</code>
+methods of this store have different semantics, too: they must store the values
+contained in the overlay store into the resource properties instead of saving them as preferences. So,
+our field editors have only to deal with a preference store and are perfectly
+happy.</p>
+<h2>Implementing class PropertyStore</h2>
+<p>The class <code> PropertyStore</code> implements the overlay store and extends the class
+<code>PreferenceStore</code>. Each instance of <code>
+PropertyStore</code> represents the properties of a specific resource in context
+of a specific
+property page but as an incarnation of a property store. Because the store is
+resource and page specific, we pass the <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+resource and a <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+page identification in the constructor:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">class</font></b> PropertyStore <b><font COLOR="#7f0055">extends</font></b> PreferenceStore {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">private</font></b> IResource resource;
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">private</font></b> IPreferenceStore workbenchStore;
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">private</font></b> String pageId;</pre>
+<pre>	  <b><font COLOR="#7f0055">public</font></b> PropertyStore(IResource resource, 
+                               IPreferenceStore workbenchStore, 
+                               String pageId) {
+	    <font COLOR="#7f0055"><b>this</b></font>.resource = resource;
+	    <b><font COLOR="#7f0055">this</font></b>.workbenchStore = workbenchStore;
+	    <b><font COLOR="#7f0055">this</font></b>.pageId = pageId;
+	}</pre>
+<p>We also pass the underlying <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+workbench preference store. When a preference value is not available as a
+resource property value, we will route accesses through to this
+store.</p>
+<h5>Getters and Setters</h5>
+<p>Now, let's first discuss the <code>get...()</code> accessors. The class <code>PreferenceStore</code>
+has an awful lot of them, one for each primitive Java type and one for <code>java.lang.String</code>. Here, we show only
+the accessor for type <code>String</code> but leave the others to your
+imagination. Let's start with the accessor for the default values:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> String getDefaultString(String name) {
+	  <b><font COLOR="#7f0055">return</font></b> workbenchStore.getDefaultString(name);
+	}</pre>
+<p>Well, that was easy enough. Because we don't store any default values in <code>PropertyStore</code>
+we just fetch the default values from the workbench preference store. Next are
+the accessors for non-default values:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> String getString(String name) {
+	  insertValue(name);
+	  <font COLOR="#7f0055"><b>return</b></font> <b><font COLOR="#7f0055">super</font></b>.getString(name);
+	}</pre>
+<p>That seems easy enough, too, but what's in <code>insertValue()</code> ?</p>
+<pre>	<b><font COLOR="#7f0055">private</font></b> <b><font COLOR="#7f0055">boolean</font></b> inserting = <b><font COLOR="#7f0055">false</font></b>;</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> <b><font COLOR="#7f0055">synchronized</font></b> <b><font COLOR="#7f0055">void</font></b> insertValue(String name) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">if</font></b> (inserting)
+	    <b><font COLOR="#7f0055">return</font></b>;
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">if</font></b> (<b><font COLOR="#7f0055">super</font></b>.contains(name))
+	    <b><font COLOR="#7f0055">return</font></b>;
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  inserting = <b><font COLOR="#7f0055">true</font></b>;
+	  String prop = <b><font COLOR="#7f0055">null</font></b>;
+	  <b><font COLOR="#7f0055">try</font></b> {
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	    prop = getProperty(name);
+	  } <b><font COLOR="#7f0055">catch</font></b> (CoreException e) {
+	  }
+	  <font COLOR="#7f0055"><b>if</b></font> (prop == <b><font COLOR="#7f0055">null</font></b>)
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>	    prop = workbenchStore.getString(name);
+	  <font COLOR="#7f0055"><b>if</b></font> (prop != <b><font COLOR="#7f0055">null</font></b>)
+<img src="images/tag_5.gif" height=13 width=24 align=CENTER>	    setValue(name, prop);
+	  inserting = <b><font COLOR="#7f0055">false</font></b>;
+	}</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> String getProperty(String name) <b><font COLOR="#7f0055">
+                              throws</font></b> CoreException {
+<img src="images/tag_6.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">return</font></b> resource.getPersistentProperty(<b><font COLOR="#7f0055">
+                          new</font></b> QualifiedName(pageId, name));
+	}</pre>
+<p>Not easy at all! It starts with a synchronized method and a <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+semaphore (<code>inserting</code>). This is necessary to avoid recursions.
+Method calls inside the <code>insertValue()</code> body internally call <code>getString()</code>
+which would lead to unlimited recursion and a stack overflow. The semaphore
+inhibits just this. To make this logic thread safe we have declared this method
+as synchronized.</p>
+<p>After we have made sure that this is not a recursive call we first look if the value is already stored in the <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ local store instance. If yes, we do
+nothing. If not, we try to <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+read a property with the same name. We always <img src="images/tag_6.gif" height=13 width=24 align=CENTER>
+ qualify the names of properties with the page identification to avoid name clashes between
+properties from different property pages. If such a property value does not
+exist, we get the value from the <img src="images/tag_4.gif" height=13 width=24 align=CENTER>
+workbench preference store. Then we <img src="images/tag_5.gif" height=13 width=24 align=CENTER>
+cache this value in the local store.&nbsp;Sooner or later, the value of all
+fields in a given page will end up in this local core: all field editors will
+call a <code>get...()</code> method in order to display a value on the
+page.&nbsp;</p>
+<p>What about the corresponding <code>set...() </code>methods? Fortunately, we
+don't have to override these methods because all changes are applied directly to
+the local store. However, a few other <code>PreferenceStore</code> methods need
+consideration.</p>
+<h5>More methods</h5>
+<p>In particular, we have to modify the methods <code>contains()</code>, <code>isDefault()</code>
+and <code>setToDefault()</code>. Let's start with method <code>contains()</code>:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">boolean</font></b> contains(String name) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">return</font></b> workbenchStore.contains(name);
+	}</pre>
+<p>Here, we just <img src="images/tag_1.gif" height=13 width=24 align=CENTER> delegate to the workbench preference store assuming that
+the property page is an exact replica of the preference page.</p>
+<p>Default values need a bit more attention. Above, we had simply delegated <code>getDefault...()</code>
+calls to the workbench preference store. But what if we want to reset a
+property to its default value? Standard preference stores internally contain two
+sets of properties: one for the default values and one for the non-default
+values. The second set only contains a value if it is unequal to the default value.
+So, when a value is reset to its default value, it is sufficient to remove it
+from the set of non-default values. In our case, however, we need a different
+implementation. We must explicitly <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+store property values that equal the default value. So we are able to set
+resource level properties to their default while on workbench level they still
+have a non-default value:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">void</font></b> setToDefault(String name) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	    setValue(name, getDefaultString(name));
+	}</pre>
+<p>This has implications for the method <code>isDefault()</code>. The standard
+implementation just tests if the specified property name is contained in the set
+of non-default values. In our case, however, this is not sufficient because this
+value set may contain default values, too. We must therefore explicitly compare <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ non-default values with <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+default values:</p>
+<font>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">boolean</font></b> isDefault(String name) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  String defaultValue = getDefaultString(name);
+	  <font COLOR="#7f0055"><b>if</b></font> (defaultValue == <b><font COLOR="#7f0055">null</font></b>) <b><font COLOR="#7f0055">return</font></b> <b><font COLOR="#7f0055">false</font></b>;
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	  <font COLOR="#7f0055"><b>return</b></font> defaultValue.equals(getString(name));
+	}</pre>
+<h5>Updating Resource Properties</h5>
+<p>What remains to do is overriding both <code>save()</code>
+ methods of class <code>PreferenceStore</code>. In contrast to the standard save operation we write all
+cached values to
+the resource properties:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">void</font></b> save() <b><font COLOR="#7f0055">throws</font></b> IOException {
+	  writeProperties();
+	}</pre>
+<pre><font COLOR="#7f0055">	<b>public</b></font> <b><font COLOR="#7f0055">void</font></b> save(OutputStream out, String header) <b><font COLOR="#7f0055">
+                                         throws</font></b> IOException {
+	  writeProperties();
+	}</pre>
+<pre><font COLOR="#7f0055">	<b>private</b></font> <b><font COLOR="#7f0055">void</font></b> writeProperties() <b><font COLOR="#7f0055">throws</font></b> IOException {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  String[] preferences = <b><font COLOR="#7f0055">super</font></b>.preferenceNames();
+	  <b><font COLOR="#7f0055">for</font></b> (<b><font COLOR="#7f0055">int</font></b> i = 0; i &lt; preferences.length; i++) {
+	    String name = preferences[i];
+	    <font COLOR="#7f0055"><b>try</b></font> {
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	      setProperty(name, getString(name));
+	    } <b><font COLOR="#7f0055">catch</font></b> (CoreException e) {
+	      <b><font COLOR="#7f0055">throw</font></b> <b><font COLOR="#7f0055">new</font></b> IOException(<font COLOR="#2a00ff">
+                    &quot;Cannot write resource property &quot;</font> + name);
+	    }
+	  }
+	}</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> <b><font COLOR="#7f0055">void</font></b> setProperty(String name, String value) <b><font COLOR="#7f0055">
+                                         throws</font></b> CoreException {
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	  resource.setPersistentProperty(<b><font COLOR="#7f0055">
+                       new</font></b> QualifiedName(pageId, name), value);
+	}</pre>
+<p>Here, we first get the <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ names of all values in the local preference store. Then we <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ write each of them into the resource properties as shown above. Again, we need to <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+ qualify the property name with the page identification.</p>
+<p>We are now done with the implementation of class <code>PropertyStore</code>
+and turn our attention to GUI issues.</p>
+<h2>Implementing class FieldEditorOverlayPage</h2>
+<p>The class <code>FieldEditorOverlayPage</code> can act as a common superclass for all field editor preference pages that
+also
+want to behave as property pages.</p>
+<h5>A place in the type hierarchy</h5>
+<p> As we have already discussed above this
+class <img src="images/tag_1.gif" height=13 width=24 align=CENTER> extends class <code>FieldEditorPreferencePage</code> and additionally
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER> implements <code>IWorkbenchPropertyPage</code>.
+We
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER> replicate all constructors of class <code>FieldEditorPreferencePage</code> but
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>	     save the image passed in
+the third constructor for later use:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">abstract</font></b> <b><font COLOR="#7f0055">class</font></b> FieldEditorOverlayPage
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	                <font COLOR="#7f0055"><b>extends</b></font> FieldEditorPreferencePage
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>                     <b><font COLOR="#7f0055">implements</font></b> IWorkbenchPropertyPage</pre>
+<pre><img src="images/tag_3.gif" height=13 width=24 align=CENTER><b><font COLOR="#7f0055">	public</font></b> FieldEditorOverlayPage(<b><font COLOR="#7f0055">int</font></b> style) {
+	  <b><font COLOR="#7f0055">super</font></b>(style);
+	}</pre>
+<pre><b><font COLOR="#7f0055">	public</font></b> FieldEditorOverlayPage(String title, <b><font COLOR="#7f0055">int</font></b> style) {
+	  <b><font COLOR="#7f0055">super</font></b>(title, style);
+	}</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> ImageDescriptor image;</pre>
+<pre><b><font COLOR="#7f0055">	public</font></b> FieldEditorOverlayPage(String title, 
+                                      ImageDescriptor image, <b><font COLOR="#7f0055">
+                                      int</font></b> style) {
+	  <b><font COLOR="#7f0055">super</font></b>(title, image, style);
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">this</font></b>.image = image;
+	}</pre>
+<p>The implementation of interface <code>IWorkbenchPropertyPage</code>  is
+trivial, indeed:</p>
+<pre><img src="images/tag_1.gif" height=13 width=24 align=CENTER>	<b><font COLOR="#7f0055">private</font></b> IAdaptable element;</pre>
+<pre><img src="images/tag_2.gif" height=13 width=24 align=CENTER>	<font COLOR="#7f0055"><b>public</b></font> <b><font COLOR="#7f0055">void</font></b> setElement(IAdaptable element) {
+	  <b><font COLOR="#7f0055">this</font></b>.element = element;
+      	}</pre>
+<pre>   	<b><font COLOR="#7f0055">public</font></b> IAdaptable getElement() {
+	  <font COLOR="#7f0055"><b>return</b></font> element;
+      	}</pre>
+<p>The method <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+<code>setElement()</code> is called when a property page is opened. In our
+case, when the property page is called on a project, folder, or file, the <code>
+IAdaptable</code> that is passed as an argument is actually of type <code>IResource</code>.
+We simply store this element in an <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ instance variable. Obviously, when this variable is not <code>null</code>, the
+current instance of <code>FieldEditorOverlayPage</code>
+represents a property page, otherwise a preference page. We express this fact in
+the following method:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">boolean</font></b> isPropertyPage() {
+	  <b><font COLOR="#7f0055">return</font></b> element != <b><font COLOR="#7f0055">null</font></b>;
+	}</pre>
+<p>We can use this method, for example, in subclasses that want to vary the page
+content depending on if it is a property page or a preference page.</p>
+<h5>Additional GUI elements</h5>
+<p>Also the GUI elements of class <code>FieldEditorOverlayPage</code> are
+variable. If the page instance represents a property page, we want the button
+group for project/workbench selection at the top. If it is a preference page, we
+don't. Depending on the state of these buttons we must enable or
+disable the field editors, too.</p>
+<p>Let's start with this button group. To add these buttons to a property page we
+extend the method <code>createContents()</code>:</p>
+<pre><b><font COLOR="#7f0055">	public static</font></b> <b><font COLOR="#7f0055">final</font></b> String USEPROJECTSETTINGS = <font COLOR="#2a00ff">
+                                     &quot;useProjectSettings&quot;</font>;</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> Button useWorkspaceSettingsButton, 
+	               useProjectSettingsButton,
+	               configureButton;</pre>
+<pre><b><font COLOR="#7f0055">	protected</font></b> Control createContents(Composite parent) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  <font COLOR="#7f0055"><b>if</b></font> (isPropertyPage())
+	    createSelectionGroup(parent);
+	  <font COLOR="#7f0055"><b>return</b></font> <b><font COLOR="#7f0055">super</font></b>.createContents(parent);
+	}</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> void createSelectionGroup(Composite parent) {
+	  Composite comp = <b><font COLOR="#7f0055">new</font></b> Composite(parent, SWT.NONE);
+	  GridLayout layout = <b><font COLOR="#7f0055">new</font></b> GridLayout(2, <b><font COLOR="#7f0055">false</font></b>);
+	  layout.marginHeight = 0;
+	  layout.marginWidth = 0;
+	  comp.setLayoutData(<b><font COLOR="#7f0055">new</font></b> GridData(GridData.FILL_HORIZONTAL));
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	  Composite radioGroup = <b><font COLOR="#7f0055">new</font></b> Composite(comp, SWT.NONE);
+	  radioGroup.setLayout(<b><font COLOR="#7f0055">new</font></b> GridLayout());
+	  radioGroup.setLayoutData(<b><font COLOR="#7f0055">new</font></b> GridData(GridData.FILL_HORIZONTAL));
+	  useWorkspaceSettingsButton =
+	           createRadioButton(radioGroup, <font COLOR="#2a00ff">&quot;Use workspace settings&quot;</font>);
+	  useProjectSettingsButton =
+	           createRadioButton(radioGroup, <font COLOR="#2a00ff">&quot;Use project settings&quot;</font>);
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	  configureButton = <b><font COLOR="#7f0055">new</font></b> Button(comp, SWT.PUSH);
+	  configureButton.setText(<font COLOR="#2a00ff">&quot;Configure Workspace Settings ...&quot;</font>);
+	  configureButton.addSelectionListener(<b><font COLOR="#7f0055">new</font></b> SelectionAdapter() {
+	    <b><font COLOR="#7f0055">public</font></b> <b><font COLOR="#7f0055">void</font></b> widgetSelected(SelectionEvent e) {
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>	      configureWorkspaceSettings();
+	    }
+	  });
+<b><font COLOR="#7f0055">	  try</font></b> {
+<img src="images/tag_5.gif" height=13 width=24 align=CENTER>	    String use = ((IResource) element).getPersistentProperty(
+	                   <font COLOR="#7f0055"><b>new</b></font> QualifiedName(pageId, USEPROJECTSETTINGS));
+<img src="images/tag_6.gif" height=13 width=24 align=CENTER>	    <b><font COLOR="#7f0055">if</font></b> (&quot;true&quot;.equals(use)) {
+	      useProjectSettingsButton.setSelection(<b><font COLOR="#7f0055">true</font></b>);
+	      configureButton.setEnabled(<b><font COLOR="#7f0055">false</font></b>);
+	    } <b><font COLOR="#7f0055">else
+</font></b>	      useWorkspaceSettingsButton.setSelection(<b><font COLOR="#7f0055">true</font></b>);
+	  } <b><font COLOR="#7f0055">catch</font></b> (CoreException e) {
+	    useWorkspaceSettingsButton.setSelection(<b><font COLOR="#7f0055">true</font></b>);
+	  }
+	}</pre>
+<p>This code is straightforward. If the current instance is a <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+property page, we create a group of <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+two radio buttons and a <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+push button. When this button is pressed,
+the <img src="images/tag_4.gif" height=13 width=24 align=CENTER> method <code>configureWorkspaceSettings()</code>
+ is called for configuring the corresponding workspace settings. (We will discuss this method later.)&nbsp;</p>
+<p>After the controls have been created they are <img src="images/tag_6.gif" height=13 width=24 align=CENTER>
+initialized. To do so we <img src="images/tag_5.gif" height=13 width=24 align=CENTER>
+fetch the resource property <code>USEPROJECTSETTINGS</code>.
+Because this setting may be different for each single property page, we qualify
+the name of this property with the page identification.</p>
+<p>Both radio buttons are created via the convenience method <code>createRadioButton()</code>:</p>
+<pre><b><font COLOR="#7f0055">	private</font></b> Button createRadioButton(Composite parent, String label) {
+	  <font COLOR="#7f0055"><b>final</b></font> Button button = <b><font COLOR="#7f0055">new</font></b> Button(parent, SWT.RADIO);
+	  button.setText(label);
+	  button.addSelectionListener(<b><font COLOR="#7f0055">new</font></b> SelectionAdapter() {
+	    <b><font COLOR="#7f0055">public</font></b> <b><font COLOR="#7f0055">void</font></b> widgetSelected(SelectionEvent e) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	      configureButton.setEnabled(button == useWorkspaceSettingsButton);
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	      updateFieldEditors();
+	    }
+	  });
+	  <b><font COLOR="#7f0055">return</font></b> button;
+	}</pre>
+<p>When a radio button is pressed, we <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+enable or disable
+the button for the workbench configuration (enabled when we use the workbench
+settings), and we <img src="images/tag_2.gif" height=13 width=24 align=CENTER> enable or disable the field editors (disabled when the
+workbench settings are activated).&nbsp;</p>
+<p> However, this confronts us with a problem. We have to know
+the page's field editors. Our parent class <code>FieldEditorPreferencePage</code>
+has this knowledge, but unfortunately it keeps this knowledge close to itself.
+We must therefore keep track of the field editor ourselves. To do so, we
+override the method <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+<code>addField()</code> and add each field editor added to the page to a <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+list:</p>
+<pre><img src="images/tag_1.gif" height=13 width=24 align=CENTER><b><font COLOR="#7f0055">	</font><font COLOR="#7f0055">private</font></b> List editors = <b><font COLOR="#7f0055">new</font></b> ArrayList();</pre>
+<pre><img src="images/tag_2.gif" height=13 width=24 align=CENTER><b><font COLOR="#7f0055">	protected</font></b> <b><font COLOR="#7f0055">void</font></b> addField(FieldEditor editor) {
+	  editors.add(editor);
+	  <font COLOR="#7f0055"><b>super</b></font>.addField(editor);
+	}</pre>
+<p>Now, we can implement the method <code>updateFieldEditors()</code>:</p>
+<pre><b><font COLOR="#7f0055">	private</font></b> <b><font COLOR="#7f0055">void</font></b> updateFieldEditors() {
+	  <font COLOR="#7f0055"><b>boolean</b></font> enabled = useProjectSettingsButton.getSelection();
+	  updateFieldEditors(enabled);
+	}</pre>
+<pre><b><font COLOR="#7f0055">	protected</font></b> <b><font COLOR="#7f0055">void</font></b> updateFieldEditors(<b><font COLOR="#7f0055">boolean</font></b> enabled) {
+	  Composite parent = getFieldEditorParent();
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  Iterator it = editors.iterator();
+	  <font COLOR="#7f0055"><b>while</b></font> (it.hasNext()) {
+	    FieldEditor editor = (FieldEditor) it.next();
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	    editor.setEnabled(enabled, parent);
+	  }
+	}</pre>
+<p>We simply <img src="images/tag_1.gif" height=13 width=24 align=CENTER> 
+iterate through the list of field editors and
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ tell each field editor if it is enabled or not. Subclasses may override this
+method if special treatment is required. This may be the case when the
+enablement of field editors depends on the state of other field editors or on
+the current state of the application.</p>
+<h5>Modifying the access layer</h5>
+<p>We have nearly completed the GUI part of class <code>FieldEditorOverlayPage</code>.
+We only must enable or disable the field editors appropriately after they have
+been created. The best place to do this is the method <code>createControl()</code>
+where we <img src="images/tag_4.gif" height=13 width=24 align=CENTER> call <code>updateFieldEditors()</code>
+after the <img src="images/tag_3.gif" height=13 width=24 align=CENTER> complete
+page content has been created:</p>
+<pre><b><font COLOR="#7f0055">	private</font></b> IPreferenceStore overlayStore;</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> String pageId;</pre>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">void</font></b> createControl(Composite parent) {
+	  <b><font COLOR="#7f0055">if</font></b> (isPropertyPage()) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	    pageId = getPageId();
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	    overlayStore = <b><font COLOR="#7f0055">new</font></b> PropertyStore((IResource) getElement(), <b><font COLOR="#7f0055">
+                                             super</font></b>.getPreferenceStore(), 
+                                             pageId);
+	  }
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	  <font COLOR="#7f0055"><b>super</b></font>.createControl(parent);
+	  <b><font COLOR="#7f0055">if</font></b> (isPropertyPage())
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>	    updateFieldEditors();
+	}</pre>
+<pre><img src="images/tag_5.gif" height=13 width=24 align=CENTER><b><font COLOR="#7f0055">	protected</font></b> <b><font COLOR="#7f0055">abstract</font></b> String getPageId();</pre>
+<p>The method <code>createControl()</code> is also the best place to <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+create an instance of class <code>PropertyStore</code> (see above). This
+instance will act as our local overlay store. This <code>PropertyStore</code>
+instance is supplied with a <code>pageId</code> used for qualifying property
+names. We <img src="images/tag_1.gif" height=13 width=24 align=CENTER> obtain
+this value via the <img src="images/tag_5.gif" height=13 width=24 align=CENTER>
+method <code>getPageId()</code>. As this method is abstract, subclasses of <code>FieldEditorOverlayPage</code>
+are required to implement it.</p>
+<p>What remains to do is to inform clients about our overlay store. We do this
+by overriding the method <code>getPreferenceStore()</code>:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> IPreferenceStore getPreferenceStore() {
+	  <b><font COLOR="#7f0055">if</font></b> (isPropertyPage())
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	    <b><font COLOR="#7f0055">return</font></b> overlayStore;
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">return</font></b> <b><font COLOR="#7f0055">super</font></b>.getPreferenceStore();
+	}</pre>
+<p>If the page is a property page we return the <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+overlay store, otherwise we just return the <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+standard preference store. All clients that can work with preference stores
+(such as field editors) will be happy.</p>
+<h5>Handling button events</h5>
+<p>The button group from above, needs some special treatment when the <i>OK</i>
+button or the <i>Restore Defaults</i> button is pressed. When the <i>OK</i>
+button is pressed, we need to save the selection state of the radio buttons, and
+when the <i>Restore Defaults</i> button is pressed, we need to set the selection
+state of these buttons:</p>
+<p>To implement this <i> OK</i> button behavior, we override the method <code>performOk()</code>.
+Pay close attention here because things are getting a bit tricky:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">boolean</font></b> performOk() {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">boolean</font></b> result = <b><font COLOR="#7f0055">super</font></b>.performOk();
+	  <b><font COLOR="#7f0055">if</font></b> (result &amp;&amp; isPropertyPage()) {
+<font color="#3f7f5f">	    </font>IResource resource = (IResource) element;
+	    <b><font COLOR="#7f0055">try</font></b> {
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	      String value = (useProjectSettingsButton.getSelection()) ? 
+                             TRUE : FALSE;
+	      resource.setPersistentProperty(<font COLOR="#7f0055"><b>
+                    new</b></font> QualifiedName(pageId, USEPROJECTSETTINGS), value);
+            } <b><font COLOR="#7f0055">catch</font></b> (CoreException e) {
+            }
+	  }
+	  <font COLOR="#7f0055"><b>return</b></font> result;
+	}</pre>
+<p>In method <code>performOk()</code> we first <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+execute the <code>performOk()</code> method of the super class, then save <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ the state of the radio buttons into a resource property.</p>
+<pre><b><font COLOR="#7f0055">	protected</font></b> <b><font COLOR="#7f0055">void</font></b> performDefaults() {
+	  <b><font COLOR="#7f0055">if</font></b> (isPropertyPage()) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	    useWorkspaceSettingsButton.setSelection(<b><font COLOR="#7f0055">true</font></b>);
+	    useProjectSettingsButton.setSelection(<b><font COLOR="#7f0055">false</font></b>);
+	    configureButton.setEnabled(<b><font COLOR="#7f0055">true</font></b>);
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	    updateFieldEditors();
+	  }
+	  <font COLOR="#7f0055"><b>super</b></font>.performDefaults();
+	}</pre>
+<p>Here, we
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> reset all buttons
+to <i>Use workspace settings</i> and <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+invoke method <code>updateFieldEditors()</code> to disable the field editors,
+too.</p>
+<p>To conclude the definition of this class, we implement
+the invocation of the corresponding workbench preference page when the <i>Configure
+Workbench Settings...</i> button is pressed. This is done in method <code>configureWorkspaceSettings()</code>:</p>
+<pre><b><font COLOR="#7f0055">	protected</font></b> <b><font COLOR="#7f0055">void</font></b> configureWorkspaceSettings() {
+	  <font COLOR="#7f0055"><b>try</b></font> {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	    IPreferencePage page = 
+                   (IPreferencePage) <b><font COLOR="#7f0055">this</font></b>.getClass().newInstance();
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	    page.setTitle(getTitle());
+	    page.setImageDescriptor(image);
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	    showPreferencePage(pageId, page);
+	  } <b><font COLOR="#7f0055">catch</font></b> (InstantiationException e) {
+	    e.printStackTrace();
+	  } <b><font COLOR="#7f0055">catch</font></b> (IllegalAccessException e) {
+	    e.printStackTrace();
+	  }
+	}</pre>
+<p>This method first <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ creates a sibling of the current instance, <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ then completes its definition with title and image (remember, we had saved the
+required <code>ImageDescriptor</code> instance in one of the constructors), and <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+calls method <code>showPreferencePage()</code> on
+this new page:</p>
+<pre><b><font COLOR="#7f0055">	protected</font></b> <b><font COLOR="#7f0055">void</font></b> showPreferencePage(String id, IPreferencePage page) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">final</font></b> IPreferenceNode targetNode = <b><font COLOR="#7f0055">new</font></b> PreferenceNode(id, page);
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	  PreferenceManager manager = <b><font COLOR="#7f0055">new</font></b> PreferenceManager();
+	  manager.addToRoot(targetNode);
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	  <font COLOR="#7f0055"><b>final</b></font> PreferenceDialog dialog = <b><font COLOR="#7f0055">
+                new</font></b> PreferenceDialog(getControl().getShell(), manager);
+	  BusyIndicator.showWhile(getControl().getDisplay(), <b><font COLOR="#7f0055">new</font></b> Runnable() {
+	    <b><font COLOR="#7f0055">public</font></b> <b><font COLOR="#7f0055">void</font></b> run() {
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>	      dialog.create();
+	      dialog.setMessage(targetNode.getLabelText());
+<img src="images/tag_5.gif" height=13 width=24 align=CENTER>	      dialog.open();
+	    }
+	  });
+	}</pre>
+<p>The code for method <code>showPreferencePage()</code> is actually pinched from an existing
+workbench component (to be precise: from the property page implementation for the
+Java compiler settings). It <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ creates a solitary preference node, <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ adds it as the root object to a new preference manager, then constructs a <img src="images/tag_3.gif" height=13 width=24 align=CENTER> 
+new
+preference dialog with this manager. This dialog is then <img src="images/tag_4.gif" height=13 width=24 align=CENTER>
+ created and <img src="images/tag_5.gif" height=13 width=24 align=CENTER> opened.</p>
+<p>This concludes the definition of class <code>FieldEditorOverlayPage</code>.</p>
+<h2>Using class FieldEditorOverlayPage</h2>
+<p>Using (i.e. subclassing) this class is very simple. Let us assume that we
+already have implemented a subclass of class <code>FieldEditorPreferencePage</code>.
+All what we have to do is to:</p>
+<ol>
+  <li>modify the <code>extends</code> declaration of this subclass (exchange <code>FieldEditorPreferencePage</code>
+    against <code>FieldEditorOverlayPage</code>).</li>
+  <li>provide an implementation of method <code>getPageId()</code>.</li>
+  <li>optionally we may implement layout variations depending on the page type
+    (preference page or property page).</li>
+</ol>
+<p>Afterwards we can use this subclass in both roles: as a property page and as
+a preference page.</p>
+<p>Let us look at an example. Here is the original field editor preference page:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">class</font></b> DefaultSpellCheckerPreferencePage <b><font COLOR="#7f0055">
+	       extends</font></b> FieldEditorPreferencePage <b><font COLOR="#7f0055">
+               implements</font></b> IWorkbenchPreferencePage {</pre>
+<pre>	  <font COLOR="#7f0055"><b>public</b></font> DefaultSpellCheckerPreferencePage() {
+	    <b><font COLOR="#7f0055">super</font></b>(GRID);
+	  }</pre>
+<pre><b><font COLOR="#7f0055">	  public</font></b> IPreferenceStore doGetPreferenceStore() {
+	    <b><font COLOR="#7f0055">return</font></b> SpellCheckerPlugin.getDefault().getPreferenceStore();
+	  }</pre>
+<pre><b><font COLOR="#7f0055">	  public</font></b> <b><font COLOR="#7f0055">void</font></b> init(IWorkbench workbench) {
+	    setDescription(<font COLOR="#2a00ff">&quot;All changes will take effect ...&quot;</font>);
+	  }</pre>
+<pre><b><font COLOR="#7f0055">	  public</font></b> <b><font COLOR="#7f0055">void</font></b> createFieldEditors() {
+	    Composite composite = getFieldEditorParent();
+	    addField(<b><font COLOR="#7f0055">new</font></b> IntegerFieldEditor(
+	       Configuration.SPELL_THRESHOLD,
+	       <font COLOR="#2a00ff">&quot;Spell &amp;Threshold&quot;</font>,
+	       composite));
+	    addField(<b><font COLOR="#7f0055">new</font></b> BooleanFieldEditor(
+	       Configuration.SPELL_IGNOREDIGITWORDS,
+	       <font COLOR="#2a00ff">&quot;&amp;Ignore Numbers&quot;</font>,
+	       composite));
+	    ...
+	    addField(<b><font COLOR="#7f0055">new</font></b> BooleanFieldEditor(
+	       SpellCheckerPreferences.CHECKWHILETYPING,
+	       <font COLOR="#2a00ff">&quot;Check &amp;while Typing&quot;</font>,
+	       composite));
+	    ...
+	  }
+	}</pre>
+<p>And this is how we have to modify this class to be able using it as
+both a preference page and a property page. We have printed these changes in bold
+type:</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">class</font></b> DefaultSpellCheckerPreferencePage <b><font COLOR="#7f0055">
+	       extends</font></b> <b>FieldEditorOverlayPage</b> <b><font COLOR="#7f0055">
+               implements</font></b> IWorkbenchPreferencePage {</pre>
+<pre>	  <font COLOR="#7f0055"><b>public</b></font> DefaultSpellCheckerPreferencePage() {
+	    <b><font COLOR="#7f0055">super</font></b>(GRID);
+	  }</pre>
+<pre><b><font COLOR="#7f0055">	  public</font></b> IPreferenceStore doGetPreferenceStore() {
+	    <b><font COLOR="#7f0055">return</font></b> SpellCheckerPlugin.getDefault().getPreferenceStore();
+	  }</pre>
+<pre><b><font COLOR="#7f0055">	  public</font></b> <b><font COLOR="#7f0055">void</font></b> init(IWorkbench workbench) {
+	    setDescription(<font COLOR="#2a00ff">&quot;All changes will take effect ...&quot;</font>);
+	  }</pre>
+<pre><b><font COLOR="#7f0055">	  protected</font> String getPageId() {
+</b><img src="images/tag_1.gif" height=13 width=24 align=CENTER><b>	    <font COLOR="#7f0055">return</font> &quot;com.bdaum.SpellChecker.preferences.defaultPreferences&quot;;
+	  }</b></pre>
+<pre><b><font COLOR="#7f0055">	  public</font></b> <b><font COLOR="#7f0055">void</font></b> createFieldEditors() {
+	    Composite composite = getFieldEditorParent();
+	    addField(<b><font COLOR="#7f0055">new</font></b> IntegerFieldEditor(
+	       Configuration.SPELL_THRESHOLD,
+	       <font COLOR="#2a00ff">&quot;Spell &amp;Threshold&quot;</font>,
+	       composite));
+	    addField(<b><font COLOR="#7f0055">new</font></b> BooleanFieldEditor(
+	       Configuration.SPELL_IGNOREDIGITWORDS,
+	       <font COLOR="#2a00ff">&quot;&amp;Ignore Numbers&quot;</font>,
+	       composite));
+	    ...
+	    <b><font COLOR="#7f0055">if</font> (!isPropertyPage()) {</b>
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	      addField(<b><font COLOR="#7f0055">new</font></b> BooleanFieldEditor(
+	         SpellCheckerPreferences.CHECKWHILETYPING,
+	         <font COLOR="#2a00ff">&quot;Check &amp;while Typing&quot;</font>,
+	         composite));
+	      ...
+	    <b>}</b></pre>
+<p>Note, that we display the <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+last field editor only in preference pages, not in property pages.</p>
+<p>In the plug-in manifest file <code>plugin.xml</code> the
+necessary declarations could look like this:</p>
+<pre><img src="images/tag_3.gif" height=13 width=24 align=CENTER><font COLOR="#000080">	&lt;extension id=</font><font COLOR="#008000">&quot;com.bdaum.aoModeling.preferences&quot;</font><font COLOR="#000080">
+</font>		   <font COLOR="#000080">name=</font><font COLOR="#008000">&quot;SpellChecker Preferences&quot;
+</font>	           <font COLOR="#000080">point=</font><font COLOR="#008000">&quot;org.eclipse.ui.preferencePages&quot;</font><font COLOR="#000080">&gt;
+</font>	  <font COLOR="#000080">&lt;page name=</font><font COLOR="#008000">&quot;Spelling&quot; </font><font COLOR="#000080">class=</font><font COLOR="#008000">
+</font><img src="images/tag_4.gif" height=13 width=24 align=CENTER><font COLOR="#008000">   &quot;com.bdaum.SpellChecker.preferences.DefaultSpellCheckerPreferencePage&quot;
+</font><img src="images/tag_5.gif" height=13 width=24 align=CENTER>	        <font COLOR="#000080">id= </font><font COLOR="#008000">&quot;com.bdaum.SpellChecker.preferences.defaultPreferences&quot;</font><font COLOR="#000080">&gt;
+</font>	  <font COLOR="#000080">&lt;/page&gt;
+</font>	<font COLOR="#000080">&lt;/extension&gt;</font></pre>
+<pre><font COLOR="#000080">	&lt;extension id=</font><font COLOR="#008000">&quot;com.bdaum.aoModeling.properties&quot;
+</font>		   <font COLOR="#000080">name=</font><font COLOR="#008000">&quot;SpellChecker Properties&quot;
+</font>	           <font COLOR="#000080">point=</font><font COLOR="#008000">&quot;org.eclipse.ui.propertyPages&quot;</font><font COLOR="#000080">&gt;
+</font><img src="images/tag_6.gif" height=13 width=24 align=CENTER>	  <font COLOR="#000080">&lt;page objectClass=</font><font COLOR="#008000">&quot;org.eclipse.core.resources.IProject&quot;
+</font>	        <font COLOR="#000080">adaptable=</font><font COLOR="#008000">&quot;true&quot;
+</font>	        <font COLOR="#000080">name=</font><font COLOR="#008000">&quot;Spell Default&quot; </font><font COLOR="#000080">class=</font><font COLOR="#008000">
+</font><img src="images/tag_4.gif" height=13 width=24 align=CENTER><font COLOR="#008000">   &quot;com.bdaum.SpellChecker.preferences.DefaultSpellCheckerPreferencePage&quot;
+</font><img src="images/tag_7.gif" height=13 width=24 align=CENTER>	        <font COLOR="#000080">id=</font><font COLOR="#008000">&quot;com.bdaum.SpellChecker.propertyPage.project&quot;</font><font COLOR="#000080">&gt;
+</font>	  <font COLOR="#000080">&lt;/page&gt;
+</font>	<font COLOR="#000080">&lt;/extension&gt;</font></pre>
+<p>Note, that the page identification returned by <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ method <code>getPageId()</code> matches the <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+page identification specified in the preference page extension point. Note also, that we used the same
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER> page implementation in both
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER> the preference page extension point and
+<img src="images/tag_6.gif" height=13 width=24 align=CENTER> the property page extension point.
+(The <img src="images/tag_7.gif" height=13 width=24 align=CENTER>
+ identification of the property page actually may differ from the <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+preference page id.)</p>
+<table border="0">
+  <tr>
+    <td width="50%" valign="top"><img border="0" src="images/spellPreferences.GIF" width="452" height="383">
+      <p><i>Preferences page for a spell checker plug-in</i>
+      <p><i>&nbsp;</i></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img border="0" src="images/spellProperties.GIF" width="452" height="365">
+      <p><i>Corresponding properties page for the same plug-in. The last group
+      of widgets&nbsp;<br>
+        is deliberately suppressed for property pages by this page implementation.</i></td>
+  </tr>
+</table>
+<h2>Retrieving overlayed preference values</h2>
+<p>Reading such overlayed preference values is a multi-stage process. First we
+must <img src="images/tag_1.gif" height=13 width=24 align=CENTER> interrogate
+the resource, if this property page uses the project settings or the workbench
+settings. If it uses the project settings, we must <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+read the value from the resource properties, if not we fall back to the <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+values defined in the workbench preference store. Here again, we have to <img src="images/tag_4.gif" height=13 width=24 align=CENTER>
+qualify the field name with the page identification when we access the resource
+properties.</p>
+<pre><b><font COLOR="#7f0055">	public</font></b> <b><font COLOR="#7f0055">static</font></b> String getOverlayedPreferenceValue(
+                                             IPreferenceStore store, 
+                                             IResource resource, 
+                                             String pageId, 
+                                             String name) {
+	  IProject project = resource.getProject();
+	  String value = <b><font COLOR="#7f0055">null</font></b>;
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">if</font></b> (useProjectSettings(project, pageId)) {
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>	    value = getProperty(resource, pageId, key);
+	  }
+	  <font COLOR="#7f0055"><b>if</b></font> (value != <b><font COLOR="#7f0055">null</font></b>)
+	    <b><font COLOR="#7f0055">return</font></b> value;
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>	  <b><font COLOR="#7f0055">return</font></b> store.getString(key);
+	}</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> <b><font COLOR="#7f0055">static</font></b> <b><font COLOR="#7f0055">boolean</font></b> useProjectSettings(IResource resource, 
+                                                  String pageId) {
+	  String use = getProperty(
+                             resource, 
+                             pageId, 
+                             FieldEditorOverlayPage.USEPROJECTSETTINGS);
+	  <font COLOR="#7f0055"><b>return</b></font> <font COLOR="#2a00ff">&quot;true&quot;</font>.equals(use);
+	}</pre>
+<pre><b><font COLOR="#7f0055">	private</font></b> <b><font COLOR="#7f0055">static</font></b> String getProperty(IResource resource, 
+                                          String pageId, 
+                                          String key) {
+	  <font COLOR="#7f0055"><b>try</b></font> {
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>	    <font COLOR="#7f0055"><b>return</b></font> resource.getPersistentProperty(<b><font COLOR="#7f0055">
+                             new</font></b> QualifiedName(pageId, key));
+	  } <b><font COLOR="#7f0055">catch</font></b> (CoreException e) {
+	  }
+	  <b><font COLOR="#7f0055">return</font></b> <b><font COLOR="#7f0055">null</font></b>;
+	}</pre>
+<h2>Technology transfer</h2>
+<p>What works well for field editor preferences should also work for
+&quot;normal&quot; preference pages. However, some things are different when
+creating the class <code>OverlayPage</code>, since we now extend a <code>PreferencePage</code>
+and not a <code>FieldEditorPreferencePage</code>:</p>
+<ol>
+  <li>We can directly extend the class <code>PropertyPage</code> because
+    this class is a subclass of <code>PreferencePage</code>. This saves us from
+    implementing the interface <code>IWorkbenchPropertyPage</code> with its <code>getElement()</code>
+    and <code>setElement()</code> methods.<br>
+  </li>
+  <li>We need to modify the constructors (no <code>style</code>
+    parameter required).<br>
+  </li>
+  <li>We need a different implementation for method <code>createContents()</code>.
+    Since <code>PreferencePage</code> only defines this method as an abstract
+    method, we need to implement it from scratch. We do so by creating two
+    containers in the parent composite: One for our own button group and one for
+    the contents created by subclasses. We return this second container as the
+    method's result.<br>
+  </li>
+  <li>There is no <code>addField()</code> method that we can override to
+    keep track of field editors. In fact, there are no field editors at all.
+    Consequently, we cannot rely on the knowledge encapsulated in the field
+    editors. Therefore, we drop the methods <code>addField()</code> and <code>updateFieldEditors()</code>.
+    Instead, we implement a method <code>setControlsEnabled()</code>. This
+    method walks through the whole tree of child controls created by subclasses
+    enabling or disabling them. (We spare tabbed notebooks and the like to allow
+    for user navigation.) Again, subclasses may want to override this method
+    when the enablement of controls depends on the state of other controls or on
+    the state of the application.<br>
+  </li>
+  <li>Subclasses must play it safe: If they
+    override method <code>performOk()</code> they must invoke <code>super.performOk()</code>;
+    and the implementation of <code>createContents()</code> must invoke <code>super.createContents()</code>
+    and use the composite returned by this method as container for all controls
+    created in the subclass.</li>
+</ol>
+<p>At this point we leave it with these hints. For implementation details please 
+  see class <code>OverlayPage</code> in the <a href="overlayPages.zip"> source 
+  code zip</a>.</p>
+<h2>Summary</h2>
+<p>We have implemented two abstract classes <code>FieldEditorOverlayPage</code>
+and <code>OverlayPage</code>. Subclasses extending these classes can act as both
+preference pages and property pages leading to an improved application
+consistency and lower maintenance cost. With only minimal modifications, already
+existing preference pages can be made by extending&nbsp; <code>FieldEditorOverlayPage</code>
+or <code>OverlayPage</code> and can then be reused in the role of property
+pages. We achieved this by implementing an abstract access layer in form of
+class <code>PropertyStore</code> that encapsulates the properties of a resource
+but behaves as a preference store. In addition, both classes <code>FieldEditorOverlayPage</code>
+and <code>OverlayPage</code> provide the additional GUI elements required by
+property pages.</p>
+<h2>Source Code</h2>
+<p>To use these classes within your own plug-in, download the <a href="overlayPages.zip">source 
+  code zip</a> and import its contents of into the source folder of your Eclipse 
+  project.</p>
+
+<h2>About the author </h2>
+
+<p>Berthold Daum is an independent consultant and writer based in Germany. His 
+  best-selling book &quot;Java Entwicklung mit Eclipse 2&quot; (dpunkt verlag) 
+  will appear in an English version as &quot;Eclipse 2 for Java Developers&quot; 
+  in November 2003 (John Wiley &amp; Sons). </p>
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both.</small></p>
+
+</body>
+</html>

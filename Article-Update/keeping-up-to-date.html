@@ -1,0 +1,707 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>How To Keep Up to Date</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=iso-8859-1"><LINK 
+href="../default_style.css" rel=stylesheet>
+<META content="Microsoft FrontPage 5.0" name=GENERATOR></HEAD>
+<BODY vLink=#800080 link=#0000ff>
+<DIV align=right><FONT face="Times New Roman, Times, serif" size=2>Copyright © 
+2003 International Business Machines Corp.</FONT> 
+<TABLE cellSpacing=0 cellPadding=2 width="100%" border=0>
+  <TBODY>
+  <TR>
+    <TD vAlign=top align=left bgColor=#0080c0 colSpan=2><B><FONT 
+      face=Arial,Helvetica><FONT color=#ffffff>&nbsp;Eclipse Corner 
+      Article</FONT></FONT></B></TD></TR></TBODY></TABLE></DIV>
+<DIV align=left>
+<H1><IMG height=86 src="images/Idea.jpg" width=120 
+align=middle></H1></DIV>
+<P>&nbsp;</P>
+<H1 align=center>How To Keep Up To Date</H1>
+<BLOCKQUOTE><B>Summary</B><BR>This article shows you how to create and publish 
+  bundles of plug-ins (called features) to an update site so that customers can 
+  download and install them directly into Eclipse using the Eclipse update 
+  manager. This has many advantages over the low tech way of delivering new or 
+  updated plug-ins in a zip file that someone manually unzips into the directory 
+  where Eclipse is installed. 
+  <P><B>By Dejan Glozic, IBM and Dorian Birsan, IBM</B><BR>
+    August 27<FONT 
+  size=-1>, 2003 (Appendix added January 13, 2004)</FONT></P>
+</BLOCKQUOTE>
+<HR width="100%">
+
+<H2>Staying up to date</H2>
+<P>More often than not, software products are out of date as soon as they appear 
+on the market: new features and bug fixes are already available before the CD's 
+hit the shelves and web sites provide links for downloading. Eclipse based 
+products are no different. Over the course of a project, remember how many times 
+you exchanged plug-ins using email attachments with the suggestion 'just unzip 
+into the Eclipse directory'. Of course, it works. But would you sell a product 
+with 500 plug-ins for $2999, then send updates to customers by email with 
+similar instructions? Or post hundreds of zip files on a web site, along with 
+installation instructions ?</P>
+<P>In the real world where commercial products are built on top of Eclipse 
+technology, new plug-ins and updates to existing ones must be delivered in a 
+more convenient way. Another consequence of charging people for software is that 
+there are legal ramifications to reckon with. For this reason, Eclipse platform 
+has a component that deals with installing and updating plug-ins that is both 
+convenient and keeps your company's lawyers happy. </P>
+<H3>Plug-ins are too small (even the large ones)</H3>
+<P>We already know that the basic building block of Eclipse functionality is a 
+plug-in. Its manifest contains all the information required by Eclipse to 
+successfully load it, contribute into the application and run. However, it is 
+not particularly well suited for distribution. One reason is that a plug-in is 
+functionally too fine-grained. We always start small, but real production 
+quality plug-ins rarely come alone. A more realistic situation is to have 
+several plug-ins working together to perform a useful function. Example: Java 
+Tools consists of 9 plug-ins, PDE has 5 etc. These plug-ins require each other 
+and go together - their usefulness is limited in isolation.</P>
+<P>To represent a unit of useful functionality Eclipse has a notion of 
+<B>features</B>. Instead of saying 'take these 9 plug-ins that go together', you 
+should be able to say 'take Java Tools'. </P>
+<P>The role of features is to allow providers to make collections of plug-ins 
+that logically go together. These collections are made in such a way as to 
+provide for easy transport over the network, have necessary legal and security 
+mechanisms, and are modular to allow hierarchical product building.</P>
+<P>Features are designed to help in performing the three major tasks:</P>
+<OL>
+  <LI><B><A name=task1></A>Install new functionality into Eclipse products</B>. 
+  This task allows you to add things you didn't have before and make your 
+  product do more. 
+  <LI><B>Update the plug-ins you already have to the newer versions</B>. This 
+  task allows you to receive fixes and upgrades to the functionality you already 
+  have. Official fix packs and emergency fixes for the pesky bugs that make your 
+  life miserable all fall into this category. 
+  <LI><B>Control which plug-ins should run when Eclipse starts</B>. This task 
+  allows you to disable an entire group of plug-ins, thus making them invisible 
+  to Eclipse run-time (note that they are still physically present in the 
+  product). This comes in handy in large products where you have the whole slew 
+  of features you don't care about at the moment and want to get rid of the user 
+  interface artifacts you never use. </LI></OL>
+<P>Although features group plug-ins together, they are not containers. All the 
+plug-ins are installed in the 'plugins' directory in the Eclipse product 
+location. Features simply reference plug-ins (and fragments) that belong to 
+them. This important property plays a major role in optimizing performance when 
+downloading over the network. It allows Eclipse to download only the plug-ins 
+that have actually changed between the two feature versions. It is easy to 
+imagine why downloading 20 new plug-ins out of 500 makes a huge difference in 
+this scenario.</P>
+<H3>What's in the manifest?</H3>
+<P>As plug-ins have <B>plug-in manifests</B>, features have <B>feature 
+manifests</B>. The file name is feature.xml and it can contain the following 
+things (the full DTD can be found in the reference section of the <A 
+href="http://dev.eclipse.org/help21/topic/org.eclipse.platform.doc.isv/reference/misc/feature_archive.html">Eclipse 
+platform documentation</A>):</P>
+<UL>
+  <LI>Feature id, version, provider name, image to use in Eclipse 
+  <LI>Short description, URL to long description, license agreement, copyright 
+  statement 
+  <LI>References to other features (for building complex feature trees by 
+  inclusion) 
+  <LI>Dependencies (features can require presence of other plug-ins or features 
+  as a prerequisite for installation) 
+  <LI>List of plug-ins and fragments that belong to the feature 
+  <LI>List of data archives that belong to the feature (normally go together 
+  with the custom install handler) </LI></UL>
+<P>This list is not complete but is fairly representative. A manifest file can 
+contain translatable content but it is better to place it in 
+feature_&lt;NL&gt;.properties files that will be picked as Java resource bundles 
+based on the current locale. This is analogous to the way NL content is handled 
+for plug-ins.</P>
+<H3>Where features live</H3>
+<P>Features exist in two major places and incarnations: <B>installed</B> (in the 
+Eclipse product) and <B>packaged</B> (on the server as part of the update 
+site).</P>
+<P>Imagine for a second that Eclipse is completely empty i.e. has no plug-ins 
+and features. To get any functionality into it, you would need to download 
+features from the server (see <A 
+href="http://eclipse.org/articles/Article-Update/keeping-up-to-date.html#task1">task 
+#1</A> above). For this to happen, features must be published on a HTTP server 
+in the following way:</P>
+<UL>
+  <LI>All features must be packaged into the JAR archives (one per feature) and 
+  placed into the directory called 'features' 
+  <LI>All plug-ins must be packaged into the JAR archives (one per plug-in) and 
+  placed into the directory called 'plugins' 
+  <LI>An update site map (an XML file with the name 'site.xml') should be placed 
+  in the root of the update site (the folder that contains 'features' and 
+  'plugins') </LI></UL>
+<P>Features and plug-ins are packaged into archives for easy transportation over 
+the network. In addition, archives can be digitally signed. If you are charging 
+for your software and want to protect your customers as they download updates 
+from your site, it is a good idea to sign your archives using valid 
+certificates. If not, Eclipse Update will warn your users that they are about to 
+install an unsigned feature (a scary message indeed).</P>
+<P><IMG src="images/tip.gif" width="62" height="13"> Security issues with 
+features should not be underestimated. Eclipse allows users to download new 
+functionality from remote servers. A rogue plug-in can act as a perfect Trojan 
+horse. It can look innocent enough and provide useful function while spawning 
+threads in the background with full access to the local file system and the 
+Internet (if connected). Beware of installing features from update sites you do 
+not trust.</P>
+<P>By using Update Manager, we can connect to the update site and examine its 
+content (we will talk more about this later in the article). Once we find 
+features we want to install, we can bring up the install wizard and let it 
+complete the installation.</P>
+<P>After we restart Eclipse, features and their corresponding plug-ins will be 
+physically present in our product location. Features and plug-ins will not be 
+archives any more: they will now be <B>installed</B>. All the features will be 
+in the 'features' directory, and all the plug-ins in the 'plugins' 
+directory.</P>
+<P>Of course, Eclipse is never empty to begin with. Every Eclipse product starts 
+its life with a number of plug-ins and features. They were not installed using 
+Update Manager - they were placed there as a baseline content. Initial update 
+operations will be performed using this baseline as a reference.</P>
+<H3>Checking for updates</H3>
+<P>The easiest way to use Eclipse Update starting from a fresh Eclipse 
+installation is to see if there are new versions of currently installed features 
+available. Features typically have a URL to the site where updates can be found. 
+When <B>Help&gt;Software Updates&gt;New Updates</B> is selected, Eclipse will 
+connect to these update sites and try to find new versions of the already 
+installed features. If found, they will be presented in the installation wizard. 
+After accepting the license agreements, pressing <B>Finish</B> and completing 
+the installation, your Eclipse product will have the latest updates.</P>
+<P>It is important to note that this operation is performed by Eclipse product 
+customers - people that bought the product and want to have the latest service 
+update of it. If you are the product provider, it is your responsibility to 
+build the features and place them on the update site for your customers to find. 
+In the following sections, we will learn how.</P>
+<H2>Time to get our hands dirty</H2>
+<P>Now that we understand the basics of the Eclipse Update mechanism, it is time 
+to see it in action. We will use the 'Hello, World' plug-in, create a feature 
+for it, publish it on an update site and then install it into another Eclipse. 
+Since plug-in development is not the focus of this article, we will take 
+advantage of PDE to do it fast.</P>
+<P><IMG src="images/tip.gif" width="62" height="13"> The goal of our example is 
+to use one Eclipse product as a development environment, and publish a feature 
+that can be installed into another Eclipse product. In order to keep things 
+clean, we suggest you install two copies of Eclipse in your file system - one to 
+use for development, and another to act as a product. Download the 2.1.1 version 
+of Eclipse SDK from <A href="http://www.eclipse.org/downloads/">Eclipse.org</A> 
+and unzip it into the two different locations.</P>
+<H3>Creating a feature</H3>
+<P>We will start by making the plug-in project by selecting 
+<B>New&gt;Project&gt;Plug-in Development&gt;Plug-in Project</B>. We will choose 
+'com.example.xyz' for the project name (this will become our plug-in ID as 
+well). We will accept the defaults and select 'Hello, World' template from the 
+<B>Plug-in Code Generators</B> page.</P>
+<P>After pressing <B>Finish</B>, we should have the plug-in project created and 
+visible in the Package Explorer. Newly created manifest file will be opened for 
+editing in the PDE manifest editor. We should take this opportunity to test our 
+new plug-in by following the 'Run...' hyperlink from the <B>Welcome</B> editor 
+page. The test Eclipse instance that will appear should contain a tool bar 
+button that will greet us with a 'Hello, World' message box when pressed. Our 
+goal is to get our plug-in packaged, published and installed into another 
+Eclipse so that we can see the same message box there.</P>
+<P>Before we move on to creating a feature, we must perform one important step: 
+make sure all the files we need will end up in the packaged plug-in. An 
+important file controls how plug-ins and features are built: build.properties. 
+It has been created by PDE wizard automatically, but it may not contain all the 
+things we need. In our particular case, 'Hello, World' wizard created 
+<B>'</B>icons<B>'</B> directory that we need to include in the <FONT size=2>
+<IMG 
+src="images/tag_1.gif" align=middle width="24" height="13"> </FONT>bin.includes 
+variable as follows:</P><FONT size=2>
+<BLOCKQUOTE><PRE>bin.includes = 	plugin.xml,\<BR>		xyz.jar,\<BR>	    <IMG src="images/tag_1.gif" align=middle width="24" height="13">	icons/<BR>source.xyz.jar = src/</PRE></BLOCKQUOTE></FONT>
+<P>Once we have the plug-in, know that it is working and ready to build, we will 
+create a feature. To do so, select <B>New&gt;Project&gt;Plug-in 
+Development&gt;Feature Project</B>. We will use the same ID as for the plug-in 
+but change the project name to avoid name collision in the workspace. We will 
+choose 'com.example.xyz-feature'. After pressing <B>Next</B>, we will be able to 
+change the ID into 'com.example.xyz', name into 'XYZ Feature' and provider into 
+'XYZ Inc'. Pressing <B>Next</B> again will take us to the page where we can pick 
+plug-ins and fragments that should belong to the feature. We will select the 
+only plug-in available (com.example.xyz). At this point we can press 
+<B>Finish</B> to get our project created.</P>
+<P>The wizard operation is analogous to the one for plug-in projects in that it 
+creates the project and the necessary files, and opens the feature manifest for 
+editing. The manifest editor is the usual PDE variety which means that you don't 
+need to know the exact XML DTD to be productive - you can use form pages 
+exclusively.</P>
+<P>Feature manifests can get complex in some cases, but we don't need to use all 
+their capabilities for our little exercise. Our goal is to define the 
+following:</P>
+<UL>
+  <LI>Feature id, version, name and provider (<B>Overview</B> page - already set 
+  by the wizard) 
+  <LI>Short description, license agreement, copyright notice (<B>Information</B> 
+  page) 
+  <LI>Plug-ins and fragments that belong to the feature (<B>Content</B> page - 
+  already set by the wizard) </LI></UL>
+<P><IMG src="images/tryit.gif" width="61" height="13"> Switch to the Information 
+page and<BR></P>
+<DIV style="MARGIN-LEFT: 40px">
+<UL>
+  <LI>select the <SPAN style="FONT-WEIGHT: bold">Feature Description</SPAN> 
+  section and enter the following text: </LI></UL>
+<DIV style="MARGIN-LEFT: 40px"><SPAN style="FONT-STYLE: italic">This feature is 
+designed to allow us to make XYZ plug-in available for installation using 
+Eclipse Update Manager.</SPAN> </DIV>
+<DIV style="MARGIN-LEFT: 40px"><BR>
+  <IMG title="" alt="Feature Description" 
+src="images/feature-desc.jpg" width="547" height="327"><BR><BR><B>Figure 1:</B> 
+Setting the Feature Description </DIV></DIV>
+<DIV style="MARGIN-LEFT: 40px">
+<UL>
+  <LI>select the <SPAN style="FONT-WEIGHT: bold">Copyright Notice</SPAN> section 
+  and enter the following text: </LI></UL>
+<DIV style="MARGIN-LEFT: 40px"><SPAN style="FONT-STYLE: italic">2003 XYZ Inc. 
+All rights reserved.</SPAN></DIV>
+<DIV style="MARGIN-LEFT: 40px"><BR>
+  <IMG title="" alt="Feature Description" 
+src="images/copyright.jpg" width="544" height="325"><BR><BR><B>Figure 2:</B> 
+Setting the Copyright Notice </DIV></DIV>
+<DIV style="MARGIN-LEFT: 40px">
+<UL>
+  <LI>select the <SPAN style="FONT-WEIGHT: bold">License Agreement</SPAN> 
+  section and enter the following text: </LI></UL>
+<DIV style="MARGIN-LEFT: 40px; FONT-STYLE: italic">License Agreement<BR><BR>You 
+must accept this license agreement in order to install this<BR>feature into your 
+product.</DIV>
+<DIV style="MARGIN-LEFT: 40px"><BR>
+  <IMG title="" alt="Feature Description" 
+src="images/license.jpg" width="546" height="327"><BR><BR><B>Figure 3:</B> Setting 
+the Licence Agreement</DIV></DIV>
+<P>Now save the file, switch to the <B>Overview</B> page and select 
+<B>Preview</B> from the pop-up menu. This handy function taps into Eclipse 
+Update API to test if the feature we are creating will be liked by Update 
+Manager when packaged and deployed. If everything is fine, you should see the 
+<B>Preview</B> (part of the Update Manager) open, showing you the feature 
+properties. You should be able to see the description, follow the 'License' and 
+'Copyright' hyperlinks and see the correct name, provider and version (and above 
+all, this demonstrates that the manifest file is loaded without errors by the 
+Update XML parser):</P>
+<P align=center>
+<IMG src="images/feature-preview.jpg" 
+border=0 width="511" height="470"></P>
+<P align=center><B>Figure 4:</B> Preview of the feature as it is being designed 
+in the workspace.</P>Note that the actual size and location of the view will 
+depend on the perspective in which it was opened. We made the view in Figure 4 
+taller to allow you to see it without the scroll bars. In most perspectives it 
+opens stacked with the other views in the lower-right corner.<BR>
+<H3>Creating an update site</H3>
+<P>Having created a plug-in and a feature, we need to build them and make them 
+available on an Eclipse <B>update site</B>. The update site concept is very 
+powerful and flexible, but requires some advanced programming in order to tap 
+into that power. For this reason, Eclipse provides a default implementation of 
+the required interfaces that makes feature publishing easier and 
+programming-free.</P>
+<P>We said earlier that in order to build a site, we need a <B>site map</B> 
+(site.xml). In addition, we need to package features and plug-ins into JARs and 
+place them alongside the map in the 'features' and 'plugins' directories, 
+respectively. By placing these files and folders on an HTTP server connected to 
+the Internet, you are making the site visible to Eclipse users around the 
+world.</P>
+<P>There are many ways to build an update site. Large products with automated 
+builds can package features and plug-ins, upload them onto the server and update 
+site.xml automatically. For smaller projects and for experimentation, PDE 
+provides tooling for update site creation. It will come in handy for our example 
+as well.</P>
+<P><A name=siteLocation></A>We will start by creating an update site project by 
+selecting <B>New&gt;Project&gt;Plug-in Development&gt;Update Site Project</B>. 
+We will pick 'update-site' for a project name, but choose a non-default location 
+for the project for the following reasons:</P>
+<OL>
+  <LI>If your local machine is also a server or you have file system access to 
+  the server (e.g. shared drives), you can create the site project directly in 
+  the server root. Changes made to the server project resources will be 
+  instantly visible to everybody. 
+  <LI>Even if it isn't, by locating the update site outside of a workspace, you 
+  can share the site between several workspaces. This is important if you want 
+  to build <B>multiple versions</B> of features and plug-ins and place them in 
+  the same site (which is often the case). You must do it this way because when 
+  you are self-hosting in Eclipse, you can only work on one version of each 
+  plug-in at a time per workspace. </LI></OL>
+<P>Very predictably, the wizard creates a new site project, site map and opens 
+the file for editing in the usual PDE multi-page editor. </P>
+<P align=left>The first step is to connect the features in the workspace and our 
+site. The update site manifest editor is actually a combination of an editor and 
+a builder in that it keeps track of features in the workspace, builds them and 
+packages them in a format required by the Update Manager. The packaged files are 
+then placed directly into the site project in the required folders. To connect 
+features and the site, we need to switch to the <B>Build</B> page and press 
+<B>Add...</B> in <B>Features To Build</B> section. The wizard should contain 
+'com.example.xyz' feature (version 1.0.0) that is in our workspace. When we 
+choose it and press <B>Finish</B>, this feature project is now added to the 
+build map of this site.</P>
+<P align=left>Adding a feature project to the build map will not make it visible 
+to people that connect to our site. It is possible to have features in the 
+update site that are not visible. For example, if you build a complex feature 
+that includes several smaller ones, you only need to make the root visible in 
+the site. When users select your complex feature for installation, all the 
+children will be recursively downloaded as part of the process.</P>
+<P align=left>To make our XYZ feature visible, we need to select the checkbox in 
+the above mentioned section. You will notice that an entry appeared in the 
+<B>Outline</B> under <B>Features</B>. Indeed, if you switch to <B>Features</B> 
+page, you will see this entry in the list. What this means is that the feature 
+will be visible to users who connect to our site and browse it. Note how the 
+feature archive name is a combination of the feature ID and version. This way 
+you can place many different versions of the same feature side by side:</P>
+<P align=center>
+<IMG title="" alt="Features on update site" 
+src="images/feature-refs.jpg" width="581" height="399"></P>
+<P align=center><B>Figure 5</B>: Defining the features that will be visible when 
+connecting to the site.</P>
+<P align=left>Our site description is now ready to be built. To do so, we will 
+switch to the <B>Build</B> page and press the <B>Build</B> button. After the 
+build operation has finished, you should have a JAR in both the 'features' and 
+'plugins' directory. Check that you have the following content in your Navigator 
+or Package Explorer after the build operation. Note that Navigator shows all the 
+resources, so you will also see a folder where build information is kept 
+(.sitebuild). This folder is used by the site builder only and is hidden for a 
+reason. It is used at development time only and plays no role in a published 
+site.</P>
+<P align=center>
+<IMG src="images/explorer.jpg" 
+border=0 width="235" height="192"></P>
+<P align=center><B>Figure 6</B>: Package Explorer view after building the update 
+site.</P>
+<P align=center>
+<IMG src="images/tip.gif" align=left width="62" height="13"></P>
+<P align=left>You have probably noticed that there are two buttons in the 
+<B>Build</B> page: <B>Build</B> and <B>Rebuild All</B>. Why two? The later is 
+easy to understand: it unconditionally builds all the plug-ins and features in 
+the build map. In contrast, the former builds only features and plug-ins that 
+changed since the last build. Building features may take time if they reference 
+many plug-ins, so it definitely makes life easier. However, it is not as 
+fine-grain as incremental builders that run on resource changes, since the 
+expectation is that you will not need them as often.</P>
+<H3 align=left>Testing the site</H3>
+<P align=left>We can test our site without leaving the workspace. Update Manager 
+treats local and remote sites equally (the only exception being that remote 
+sites have an extra download step before you can access its files). We can use 
+this property to go to our site and verify that we can browse it correctly. If 
+we can, so will our users once we publish it on the server.</P>
+<P align=left>All you need to do is open Update Manager (<B>Help&gt;Software 
+Updates&gt;Update Manager</B>), locate icon <B>My Computer</B> in Feature 
+Updates and drill down into the location on the file system where our 
+'update-site' project folder is. You will notice that it is actually not 
+represented as a folder in the view. Instead, it shows a pink diamond icon (<IMG 
+title="" alt=site src="images/site_obj.gif" width="16" height="16">) used for 
+update sites. This is a good sign - it means that the view recognized that this 
+folder is in fact an update site and immediately switched into site browsing 
+mode. You can browse the site right there, but a better way is to bookmark it 
+(select it and choose <B>Bookmark Location...</B> from the pop-up menu). This 
+will bookmark the site so that you don't have to drill down in the future.</P>
+<P align=left>If everything is OK, you should see <SPAN 
+style="FONT-WEIGHT: bold">Other</SPAN> (the default category) with one feature 
+in it: XYZ Feature 1.0.0. When you select it, the feature properties should show 
+up in the <B>Preview</B>.</P>
+<P align=left>
+<IMG src="images/tip.gif" width="62" height="13"> When creating 
+more complex sites, you would first create a <B>category definition</B> to help 
+people accessing your site see features classified into logical groups. That 
+way, categorized features will not appear under the Other folder, but under 
+their category folder.</P>
+<P align=left>
+<IMG src="images/tip.gif" width="62" height="13"> As you are 
+testing your site over and over, remember to select <B>Refresh</B> from the 
+pop-up menu before making conclusions. Update Manager tries to be as efficient 
+as possible so it will not react to changes in the file system unless you force 
+it to drop the cached data and connect to the site anew.</P>
+<H3 align=left>Implanting the update URL</H3>
+<P align=left>There is one extra task we need to perform before publishing the 
+site. It represents our investment in the future. Although our users can use 
+Update Manager to navigate to the update site, find the new version and install 
+it, it requires more knowledge and work than is really necessary. By implanting 
+a URL that points at the update site, Eclipse can search for new updates 
+automatically, with minimal user intervention.</P>
+<P align=left>Embedding a URL that points to the site with updates is easy, but 
+you need to select the URL wisely. Once you ship the feature, the server must be 
+located where you said it will be. You can change this URL in the subsequent 
+versions of your feature, but do spend some time thinking about it - if you do, 
+you will not need to change it often. For example, Eclipse.org update site is <A 
+href="http://update.eclipse.org/updates/">http://update.eclipse.org/updates/</A> 
+and is unchanged since release 2.0.</P>
+<P align=left>Since in our example the site is local on the file system, we will 
+use file protocol for the update URL. All we need is to add the update URL to 
+our feature.xml:</P>
+<DIV align=left>
+<P align=left>
+<IMG title="" alt="" src="images/tryit.gif" width="61" height="13"> 
+<BR>On the <B>Overview</B> page of the feature manifest editor locate the 
+<B>Feature URLs</B> section. Choose <B>New&gt;Update URL</B> from the pop-up 
+menu and edit the object properties in the property sheet when created. /p&gt; 
+<P align=left>
+<IMG title="" alt="site url" 
+src="images/url.jpg" width="716" height="422"><BR><B>Figure 7</B>: Setting the 
+Update URL for a feature</P>
+<P>The URL path should match the directory where you defined your update site, 
+so make sure you change the following URL if you copy/paste it:</P><PRE><FONT color=#008000 size=2>file:D:/eclipse-sdk2.1/eclipse/update-area/update-site/</FONT></PRE>
+<P>
+<IMG title="" alt=propsheet 
+src="images/propsheet.jpg" width="379" height="165"></P><B>Figure 8</B>: Setting 
+the Update URL in the property sheet
+<P></P></DIV>
+<H3 align=left>Publishing the site to a server</H3>
+<P align=left>
+<IMG src="images/tip.gif" width="62" height="13"> This step is not 
+needed if you are directly updating a site on the local file system or on a 
+local server, as it was discussed when <A 
+href="#siteLocation">creating 
+the update site project</A>.</P>
+<P align=left>You can publish the site in many ways. If you do not have access 
+to a server, the simplest way to publish it is to export the site project into a 
+local directory, outside the Eclipse workspace. </P>
+<P align=left>A more powerful way to publish the site to a remote server is by 
+using the optional <B>Eclipse FTP and WebDAV Support</B> feature available as a 
+separate download from Eclipse.org. You can create a target for your update site 
+project on the server, and upload deltas using FTP or WebDAV protocols whenever 
+you rebuild the site. If your server is not enabled for FTP or WebDAV, then 
+you'll have to manually deploy the site to the server. In this example we assume 
+that your server is FTP-ready.</P>
+<P align=left>First, let's use the Update Manager to download the FTP and WebDAV 
+Support: switch to the Update Manager, add a bookmark to <A 
+href="http://update.eclipse.org/updates/">http://update.eclipse.org/updates/</A>, 
+expand it, expand <B>Eclipse SDK 2.1.0</B> category and find <B>Eclipse FTP and 
+WebDAV Support</B>. Select the feature and press <B>Install Now</B> button in 
+the <B>Preview</B>. It will download, install and configure this feature 
+automatically. Restart when asked and that's it.</P>
+<P align=left>Now that our Eclipse workbench can act as an FTP client, we can 
+prepare the site for publishing:</P>
+<OL>
+  <LI>Select the update site project and bring up the pop-up menu. 
+  <LI>Choose '<SPAN style="FONT-WEIGHT: bold">Team-&gt;Target Site</SPAN>'. The 
+  wizard will open. 
+  <LI>Select '<SPAN style="FONT-WEIGHT: bold">FTP</SPAN>' protocol and press 
+  'Next'. 
+  <LI>Select the FTP URL that includes the remote server and the path from the 
+  FTP root to the physical root of the site as defined by the HTTP server. 
+  <LI>Specify user name and password for the FTP account. Press Next. 
+  <LI>Specify the directory that will be the project root on the server (use the 
+  provided default that is the same as the project name). 
+  <LI>Press 'Finish'. </LI></OL>
+<P>You have now established the target site. Changes you make in the workspace 
+will be compared to the target and delta will be computed when upload is 
+needed.</P>
+<P>To upload, select the project and use 'Team-&gt;Synchronize with target' 
+option. This will bring the familiar 'Synchronize' view used with CVS 
+repositories. Select the desired branch or the root and 'Upload' the content to 
+the server.</P>
+<H3 align=left>The geek test</H3>
+<P align=left>Let's now pretend that our feature is published and that we were 
+told that there is this cool XYZ feature that is a 'must have'. To pretend 
+successfully, we need to install another copy of Eclipse 2.1.1 SDK in a 
+different location (to act as a product) and launch it. When it comes up, 
+immediately switch to the Update Manager and create a bookmark in Feature 
+Updates. If the site was published locally, drill down to the site location 
+using <B>My Computer</B> and create a bookmark for it. If the site was published 
+on a remote server, then create a Site bookmark to the appropriate site URL.</P>
+<P align=left>You should be able to expand this bookmark and see the same things 
+as before when we tested the site. This time, we will go all the way and press 
+the <B>Install Now</B> button. You should accept our fake license, accept the 
+default location and press <B>Finish</B>. After restarting Eclipse, our XYZ 
+Feature (and XYZ Plug-in) will be installed.</P>
+<P align=left>How to tell that everything went well? Check any of the 
+following:</P>
+<OL>
+  <LI>Switch to the <B>Resource</B> perspective and select <B>Window&gt;Reset 
+  Perspective</B> (this is required because perspective was created and 
+  persisted before we installed our plug-in, so we must reset it to see our 
+  contribution). A new tool bar button should show up, as well as <B>Sample 
+  Menu</B> with a <B>Sample Action</B> in the menu bar. Both the button and the 
+  action should open the 'Hello, World' message box, indicating that our plug-in 
+  is alive and well. 
+  <LI>Select <B>Help&gt;About&gt;Feature Details</B>. Our feature should be on 
+  the list. 
+  <LI>Switch to Update Manager and expand <B>Eclipse Platform</B> node in 
+  <B>Install Configuration</B>. Expand the install location object. It should 
+  show 'XYZ Feature 1.0.0'. </LI></OL>
+<H2>Providing feature updates</H2>
+<P>As it usually happens, after you successfully deploy the 1.0.0 version, it is 
+likely you will need to provide bug fixes to your customers.</P>
+<P>One very important thing to remember is that once you publish your plug-ins 
+and features, any changes to their code must cause version increments. After you 
+change one line of your code, it starts to differ from what people have 
+installed on their machines, which means it is not the same version. In Eclipse, 
+this is handled by creating a maintenance branch in the repository. This branch 
+is used for fixes of the shipped code base while further development goes on 
+unimpeded in the main development stream.</P>
+<H3>Creating an update</H3>
+<P>Since we found a bug, we will create a <B>bug fix release</B>. We started 
+with version 1.0.0, so we will make 1.0.1 this time (increment only service 
+portion of the version). We need to make a number of changes to the existing 
+plug-in and feature, so make sure the 1.0.0 versions are saved somewhere.</P>We 
+will start by editing plugin.xml of our plug-in project and incrementing its 
+version to 1.0.1. In addition, we will modify 
+com.example.xyz.actions.SampleAction.java file to show a different text in the 
+message box: 
+<BLOCKQUOTE><PRE>  <FONT color=#7f0055 size=2><B>public</B></FONT><FONT size=2> </FONT><FONT color=#7f0055 size=2><B>void</B></FONT><FONT size=2> run(IAction action) {<BR>     MessageDialog.openInformation(<BR>          window.getShell(),<BR>          </FONT><FONT color=#2a00ff size=2>"Xyz Plug-in"</FONT><FONT size=2>,<BR>          </FONT><FONT color=#2a00ff size=2>"Hello, UPDATED Eclipse world"</FONT><FONT size=2>);<BR>  }</FONT></PRE></BLOCKQUOTE>
+<P>This will take care of the plug-in. Next, we will handle the feature. First, 
+open feature.xml again. Since we changed plug-in version, we must repair the 
+broken reference in the feature: on the <SPAN style="FONT-WEIGHT: bold">Content 
+</SPAN>page remove the com.example.xyz plug-in and add it back (PDE will 
+automatically handle this in a future Eclipse release). In addition, we must 
+increment the feature version on the <SPAN style="FONT-WEIGHT: bold">Overview 
+</SPAN>page to 1.0.1, because Update compares feature versions when scanning for 
+new updates. Finally, we will change the description of the feature to say 
+something about the fix; add this text to the Feature Description section: <SPAN 
+style="FONT-STYLE: italic">This version contains a fix to a critical bug found 
+during writing of this article</SPAN>.</P>
+<H3>Building and publishing the update</H3>
+<P>Now that we updated the feature, we must rebuild everything and 
+republish.</P>
+<P>We will start by opening site.xml using the site map editor. When you switch 
+to the <B>Build</B> page, note how the icon for the 'XYZ Feature 1.0.0' is gray 
+and hollowed out. This indicates that we contain a reference to this feature but 
+cannot find it in the workspace. This is OK - since this is shared project, 
+there will always be features that we cannot find (because they are in other 
+workspaces). We need to add our modified XYZ Feature 1.0.1 to this list and 
+check the checkbox. This will add another feature entry to the site 
+manifest.</P>
+<P>When we switch to the <B>Features</B> page, we can indeed see this entry. 
+Repeating what we did before, we will select this entry and add it to our 
+category. After saving the file, we can select <B>Build</B> from the pop-up menu 
+(no need to switch back to the <B>Build</B> page). If everything went well, you 
+should now have TWO plug-ins in the 'plugins' folder and TWO features in the 
+'features' folder.</P>
+<P>As before, we can preview the site using Update Manager (this is where 
+bookmarking the site is paying off). You should now see two features (XYZ 
+Feature 1.0.0 and 1.0.1) and switching between them should show differences in 
+the description.</P>
+<H3>The geek test, updated</H3>
+<P>Finally, the fix is ready. This is where our decision to implant a URL that 
+points at our update site is paying off. All the users need to do is select 
+<B>Help&gt;Software Updates&gt;New Updates</B> and wait for the results.</P>
+<P><IMG src="images/tryit.gif" width="61" height="13"> So far, our 'pretend' 
+Eclipse product has 'XYZ Feature 1.0.0' installed. When we select this command, 
+a progress monitor will show up, searching for new updates. It is shortly 
+replaced with a wizard showing the results of the search:</P>
+<P align=center>
+<IMG src="images/one-click2.jpg" 
+border=0 width="600" height="500"></P>
+<P align=center><B>Figure 9:</B> Result of the update search.</P>
+<P>What happened? Eclipse checked currently installed features, connected to the 
+update sites using URLs in feature manifests, and searched for features with the 
+same ID but higher version. Since our site had a feature that matched this 
+description, it showed up in the wizard. We can now proceed with the 
+installation and the result will be the same as if we installed it from the 
+Update Manager, only with fewer mouse clicks.</P>
+<P>When you publish your features, you definitely want your users to follow this 
+path because it is the most straightforward way of bringing the updates in.</P>
+<P>
+<IMG title="" alt="" src="images/tip.gif" width="62" height="13"> After 
+installing a new feature or updating an existing feature it is possible to go 
+back to a previous configuration state. Do this from the Configuration History 
+node in the Install Configuration view.</P>
+<H2>Conclusion</H2>
+<P>We hope this article makes you think twice about sending more 'just unzip 
+...' notes with attachments. Instead, your next note should read:</P>
+<BLOCKQUOTE style="FONT-STYLE: italic">
+  <P>A new tool named XYZ Feature is now available for download from update 
+  site<BR>http://xyz.example.com/updates/</P></BLOCKQUOTE>
+<P>Each subsequent note should simply be:</P>
+<P><B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </B><SPAN 
+style="FONT-STYLE: italic">Version 1.0.1 of XYZ Feature is now available for 
+download from update site</SPAN><BR style="FONT-STYLE: italic"><SPAN 
+style="FONT-STYLE: italic">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; 
+http://xyz.example.com/updates/ </SPAN><BR style="FONT-STYLE: italic"><SPAN 
+style="FONT-STYLE: italic">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp; You can 
+install it directly by selecting the New Updates 
+action.</SPAN><B><BR></B>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp; <BR>More can be 
+done with Eclipse update. You can make a more complex feature by <SPAN 
+style="FONT-WEIGHT: bold">including </SPAN>several smaller ones, with some of 
+them <SPAN style="FONT-WEIGHT: bold">optional</SPAN>. By providing <SPAN 
+style="FONT-WEIGHT: bold">patches</SPAN>, you can update branches of the complex 
+feature hierarchy, not just the root feature. You can also create a 
+<B>branding</B> plug-in and associate it with a feature to make your feature 
+stand out in a number of places in the workbench. If your feature is <SPAN 
+style="FONT-WEIGHT: bold">primary</SPAN>, that plug-in can also contain a splash 
+screen that replaces the default Eclipse splash. Finally, you can package a set 
+of features and plug-ins that represent a significant function and add it to 
+other Eclipse products during installation using <B>linked extensions</B>.</P>
+<P>Our example only scratched the surface of update capabilities. As your code 
+grows in complexity, so will your software update needs.</P>
+<h2>&nbsp;</h2>
+<h2>Appendix: Update Manager Developer Tips</h2>
+<p><b>By Alexandre Junqueira, INMETRICS</b> <br>
+  <font size="-1">January 13, 2004</font> </p>
+<P>This appendix presents some real-world tips to avoid common mistakes during 
+  the creation and maintenance of Eclipse update sites. Creating an update-site 
+  is easy, but you need to adhere to some unwritten rules to get a well-functioning 
+  artifact.</P>
+<h3>Tip #1: Always remember trailing slash &quot;/&quot;</h3>
+<p style="margin-top: 0; margin-bottom: 0">One major pitfall when build Update 
+sites is that everything goes well until the final test. But then, even the most 
+simplistic site <b>doesn't work</b> in Update Manager (or Install/Update dialog 
+-- for those using Eclipse 3.0). </p>
+<p style="margin-top: 0; margin-bottom: 0">Then comes the &quot;bit-brushing&quot; work of 
+trying to get everything work by hand, since the &quot;update site&quot; is no more than a 
+bunch of XML and JAR files you've created with assistance of Eclipse wizards ...
+</p>
+<ol>
+  <li>
+  <p style="margin-top: 0; margin-bottom: 0">first, you try to check the HTTP 
+  access to the update site, and it works; </li>
+  <li>
+  <p style="margin-top: 0; margin-bottom: 0">then, you check file permissions to 
+  certifies that anyone can read them; they're also ok; </li>
+  <li>
+  <p style="margin-top: 0; margin-bottom: 0">come back to the Eclipse workbench 
+  and, surprisingly, it <b>doesn't work at all</b>; </li>
+</ol>
+<p style="margin-top: 0; margin-bottom: 0">You check, double-check, and even 
+triple-check the above steps, and then you give up on creating an update site 
+and deliver your brand new plug-in as a downloadable .zip file to the community, 
+so at least it could be <b>manually</b> installed. </p>
+<p style="margin-top: 0; margin-bottom: 0">This situation is common place for 
+you? If so, then you've probably ran in one of the most tricky behaviors of the 
+update manager. </p>
+<p style="margin-top: 0; margin-bottom: 0">The problem is: <b>you must put a 
+trailing slash (&quot;/&quot;) in the update site URL defined in &quot;feature.xml&quot; XML file.</b>
+</p>
+<p style="margin-top: 0; margin-bottom: 0">Go back to the Feature Editor (if 
+you're using Eclipse 3.x), or open &quot;feature.xml&quot; file you've created. Look for 
+the <b>&lt;url&gt;</b> tag. </p>
+<p style="margin-top: 0; margin-bottom: 0">This tag contains the reference to 
+the site where Update Manager will look for your plug-ins installation files. 
+BUT THIS URL MUST BE TERMINATED BY A SLASH CHARACTER. </p>
+<p style="margin-top: 0; margin-bottom: 0">Why such behavior? Because Eclipse's 
+Update Manager appends plug-in distribution file name to the URL you've set up 
+there, <b>without</b> pre-pending with &quot;/&quot; ... so, instead of getting something 
+like </p>
+<pre>&quot;http://your.site/update/plugin_1.0.0.jar&quot;</pre>
+<p>it gets </p>
+<pre>&quot;http://your.site/updateplugin_1.0.0.jar&quot;</pre>
+<p>which explains why, after all, Eclipse doesn't find your master piece. It's 
+looking for an inexistent URL!</p>
+<h3>Tip #2: Fill the blanks</h3>
+<p style="margin-top: 0; margin-bottom: 0">Another common pitfall when build 
+features to publish in update sites is to avoid writing copyright and license 
+notices. </p>
+<p style="margin-top: 0; margin-bottom: 0">It's specially true when building 
+your update site for the first time (you don't want to write a major legal act 
+-- you're just trying to make your work available, no?). </p>
+<p style="margin-top: 0; margin-bottom: 0">But Eclipse's Update Manager will 
+look for such disclaimers and doesn't allow you to install features that don't 
+provide such notices. </p>
+<p style="margin-top: 0; margin-bottom: 0">So, to avoid such pain in the 
+uttermost stage of deploying, write down at least a simple word in both fields.
+</p>
+<p style="margin-top: 0; margin-bottom: 0">The recommended way is to use a 
+template-based text for both fields, such as: </p>
+<dl>
+  <dt><b>copyright</b> </dt>
+  <dd>Copyright (c) 2004 by John Doe. All rights reserved </dd>
+  <dt><b>legal</b> </dt>
+  <dd>This work follows CPL/GPL/LGPL/BSD licensing schema. See
+  &lt;license-site&gt; for more details 
+  about usage and distribution. </dd>
+</dl>
+<h3>Tip #3: Be careful when using <i>build.xml</i></h3>
+<p style="word-spacing: 1; margin-top: 0; margin-bottom: 0">If you're the 
+developer of the plug-in been published, then you've almost certainly created 
+the <b>build.xml</b> using the &quot;Create build file&quot; (or &quot;Create ant build file&quot;) 
+pop-up menu option on plugin.xml. </p>
+<p style="word-spacing: 1; margin-top: 0; margin-bottom: 0">If you did so, and 
+specially, you've customized the file, then BE CAREFUL. </p>
+<p style="word-spacing: 1; margin-top: 0; margin-bottom: 0">Before creating and 
+building an update site project, create a backup of your <b>build.xml</b> file. 
+The update-site project build option will <b>erase</b> every <i>build.xml</i> it 
+finds in the features and plugins required by the site -- which leads to lost 
+work. </p>
+<p style="word-spacing: 1; margin-top: 0; margin-bottom: 0">To avoid this 
+problem, create another ant build-file to hold your customization and use it 
+instead of default the &quot;build.xml&quot;.</p>
+<P><SMALL>Java and all Java-based trademarks and logos are trademarks or 
+registered trademarks of Sun Microsystems, Inc. in the United States, other 
+countries, or both.</SMALL></P></BODY></HTML>

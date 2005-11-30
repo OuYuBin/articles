@@ -1,0 +1,831 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>A basic image viewer</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; Copyright 
+  &copy; 2004 Chengdong Li 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">A Basic Image Viewer</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+This article shows how to extend SWT <code>Canvas</code> to implement a mini image viewer plug-in using Java2D
+transforms. The
+extended image canvas can be used to scroll and zoom large images, and can also
+be extended to apply other transforms. The implementation is based on SWT and
+the non-UI portions of AWT. The plug-in has been tested on Windows, Linux GTK, and Mac
+OS X Carbon with Eclipse 2.1 or better.
+<p><b> By Chengdong
+Li (</b><a href="mailto:cdli@ccs.uky.edu">cdli@ccs.uky.edu</a><b>)
+Research in Computing for Humanities, University of Kentucky <br>
+</b>
+March 15, 2004</p>
+</blockquote>
+
+<hr width="100%">
+<h2>Contents</h2>
+<ul>
+  <li><a href="#Introduction">Introduction</a></li>
+  <li><a href="#Overview">Classes overview</a></li>
+  <li><a href="#Implement_Canvas">Canvas implementation</a>
+    <ul>
+      <li><a href="#Loading_image">Loading images</a></li>
+      <li><a href="#Extending_Canvas">Extending org.eclipse.swt.widgets.Canvas</a></li>
+      <li><a href="#Rendering_image">Rendering images</a></li>
+      <li><a href="#Transformation">Transformations</a></li>
+      <li><a href="#Synchronize_scrollbar">Scrollbar synchronization</a></li>
+    </ul>
+  </li>
+  <li><a href="#Rotating">Rotation</a></li>
+  <li><a href="#Plug-in_Implementation">Plug-in implementation</a>
+    <ul>
+      <li><a href="#Create_view_plug-in">Create view plug-in</a></li>
+      <li><a href="#Add_viewActions_extension">Add viewActions extension</a></li>
+    </ul>
+  </li>
+  <li><a href="#Summary">Summary</a></li>
+  <li><a href="#Acknowledge">Acknowledgements</a></li>
+  <li><a href="#Reference">References</a></li>
+</ul>
+<h2>Conventions &amp; Terms</h2>
+<p>The following typographic conventions are used in this article:</p>
+<p><i>Italic</i>:<br>
+&nbsp;&nbsp;&nbsp; Used for references to articles.</p>
+<code>Courier New:</code><br>
+&nbsp;&nbsp;&nbsp; Used for code or variable names.
+<p>The following terms are used in this article:</p>
+<p><b>client area<br>
+</b>&nbsp;&nbsp;&nbsp; The
+drawable area of canvas. Also called the <b>paint area</b> or <b>canvas domain</b>.<br>
+<b>source image</b><br>
+&nbsp;&nbsp;&nbsp; The image constructed directly from
+the original image data with the same width and height. Unlike image data, it is
+device dependent. It is the <code> sourceImage</code> in source
+code. Also called the <b>original image</b> or <b>image domain</b>.</p>
+<h2><a name="Introduction">Introduction</a></h2>
+<p> The goal of this article is to show you how to implement an image viewer with
+scrolling and zooming operations using affine transforms.
+If you are new to graphics in SWT, please read Joe Winchester's article <i><a href="http://www.eclipse.org/articles/Article-SWT-images/graphics-resources.html">Taking a look at SWT Images</a></i>.
+A screenshot of the image viewer is shown in Figure 1:</p>
+<p><img border="0" src="images/screen_shot.jpg" width="359" height="318"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Figure 1 - Image viewer</p>
+<p>The implementation here is different from the implementation of the Image Analyzer example
+that comes with Eclipse. This implementation uses affine transforms for scrolling and zooming.</p>
+<p>The advantages of this implementation are :</p>
+<ul>
+  <li>it offers unlimited zoom scale</li>
+  <li>it works well for large images</li>
+</ul>
+<p>In the following sections, we will first review the structure of the package
+and relationship of classes,
+then we will discuss how the image canvas works and how to implement a scrollable
+and zoom-able image canvas - <code> SWTImageCanvas</code>. We will use
+affine transforms to selectively render images and to generally simplify the implementation. After that, we will show
+briefly how to use the local toolbar to facilitate image&nbsp; manipulation.</p>
+<p>For the detailed steps on how to implement a view, Dave Springgay's
+ article: <i><a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html">Creating
+an Eclipse View</a></i>  is the most helpful one.</p>
+<p>You can compare this implementation with the Image Analyzer example by running both of
+them:</p>
+<ul>
+  <li>To run the example for this article unzip <a href="imageviewer.zip">
+imageviewer.zip</a> into your <i>eclipse/plugins/ </i>subdirectory and restart
+    Eclipse. To open the image
+viewer view, choose Window -&gt; Show View -&gt; Other -&gt; Sample Category -&gt;
+Image Viewer. The source plug-in project is imageviewersrc.zip which is included inside the <a href="imageviewer.zip">
+imageviewer.zip</a>.</li>
+  <li>To run the Image Analyzer example that comes with Eclipse, download the Example
+Plug-ins from <a href="http://www.eclipse.org/downloads/index.php">Eclipse.org</a>,
+and unzip to the <i>eclipse/plugins/</i> subdirectory and restart Eclipse. Then choose Window -&gt; Show
+View -&gt; Other -&gt; SWT Example Launcher -&gt; Standalone -&gt; Image
+Analyzer.</li>
+</ul>
+<p>To compile and run the image viewer from source code, unzip the imageviewersrc.zip
+file (inside <a href="imageviewer.zip">
+imageviewer.zip</a>), then import the existing project into the workspace, update the
+class path, compile, and run.</p>
+<h2><a name="Overview">Classes Overview</a></h2>
+<p>The following diagram (Figure 2) shows all classes in this demo plug-in. The <code> SWTImageCanvas</code> is a subclass of
+<code>org.eclipse.swt.widgets.Canvas</code>;
+it implements image loading, rendering, scrolling, and zooming. The <code> ImageView</code> class is a subclass of
+<code>
+org.eclipse.ui.part.ViewPart</code>; it has an <code> SWTImageCanvas</code> instance. The helper class
+<code>SWT2Dutil</code> holds utility
+functions. <code> PushActionDelegate</code> implements <code>
+org.eclipse.ui.IViewActionDelegate</code>; it delegates the toolbar button actions,
+and has an <code>ImageView</code>   instance. The <code>
+ImageViewerPlugin</code> extends <code> org.eclipse.ui.plugin.AbstractUIPlugin</code>
+(this class is PDE-generated).</p>
+<p><img border="0" src="images/all_classes.jpg" width="640" height="308"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Figure 2 - Class diagram ( The classes without package prefix are implemented
+in our approach. )</p>
+<p>A plug-in manifest file plugin.xml defines the runtime requirements and contributions (view and
+viewActions extensions) to
+Eclipse. Eclipse will create toolbar buttons
+for <code> ImageView</code> and delegate toolbar actions via <code> PushActionDelegate</code>.</p>
+<h2><a name="Implement_Canvas">Canvas implementation</a></h2>
+<p> <code> SWTImageCanvas</code>    handles image loading,
+painting, scrolling, and
+zooming. It saves a copy of the original SWT image (the <code> sourceImage</code>)
+in memory, and then translates and scales
+the image using <code>java.awt.geom.AffineTransform</code>. The
+rendering and transformation are applied only to the portion of the image
+visible on the
+screen, allowing it to operate on images of any size with good performance. The <code> AffineTransform</code>
+ gets applied changes as the user scrolls the window and pushes the toolbar buttons.</p>
+<h4><a name="Loading_image">Loading images</a>&nbsp;</h4>
+<p>First, let's have a look at how to load an image into memory. There are several ways to load an
+image:</p>
+<ul>
+  <li> load an image from the local file system.</li>
+  <li> load an image from the workspace.&nbsp;</li>
+  <li>load an image from a website.</li>
+</ul>
+<p>In this simple implementation, we only allow the user to choose an image from
+the local file
+system. To improve this, you could contribute to the <code>org.eclipse.ui.popupMenus</code>
+of the Navigator view for image files; that way, whenever an image file is selected, the menu item will be available and
+the user can choose to load the image
+from the workspace (you need add <code>nameFilters</code>, and you may also need to use workspace
+API). To see how to load an image from a URL, please refer to
+the Image Analyzer of SWT
+examples.</p>
+<p>The image loading process is as following (Figure 3):</p>
+<p align="left"><img border="0" src="images/open_activity.jpg" width="402" height="255"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Figure 3 - Image-loading diagram</p>
+<p>Now let's take a look at the code for loading images.&nbsp;</p>
+<p>SWT
+provides <code> ImageLoader</code> to load an image into memory.
+Image loading is done by using the <code>Image(Display,String)</code> constructor. To facilitate image loading, we provides a
+dialog to locate all image files supported by SWT <code> ImageLoader</code>.&nbsp;</p>
+<pre><b>public</b> <b>void</b> onFileOpen(){
+        FileDialog fileChooser = <b>new</b> FileDialog(getShell(), SWT.OPEN);
+        fileChooser.setText(&quot;Open image file&quot;);
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>     fileChooser.setFilterPath(currentDir);
+        fileChooser.setFilterExtensions(
+            <b>new</b> String[] { &quot;*.gif; *.jpg; *.png; *.ico; *.bmp&quot; });
+        fileChooser.setFilterNames{
+            <b>new</b> String[] { &quot;SWT image&quot; + &quot; (gif, jpeg, png, ico, bmp)&quot; });
+        String filename = fileChooser.open();
+        if (filename != <b>null</b>){
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>         loadImage(filename);
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>         currentDir = fileChooser.getFilterPath();
+        }
+}<b>
+public</b> Image loadImage(String filename) { 
+        <b>if</b>(sourceImage!=<b>null</b> &amp;&amp; !sourceImage.isDisposed()){
+            sourceImage.dispose();
+            sourceImage=<b>null</b>;
+        }
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>     sourceImage= <b>new</b> Image(getDisplay(),filename);
+<img src="images/tag_5.gif" height=13 width=24 align=CENTER>     showOriginal();
+        <b>return</b> sourceImage;
+}</pre>
+<p>We use <code>currentDir</code> in <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ and <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+to remember the directory for the file open dialog, so that the user can later open other files
+in the same directory.</p>
+<p>The <code>loadImage</code>  method (shown above) in <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+ disposes the old <code> sourceImage</code> and creates a new <code>sourceImage</code>,
+then it calls the <code>showOriginal()</code> to notify the canvas to
+paint new image. If loading fails, the canvas will clear the painting area
+and disable the scrollbar. Notice that we cannot see <code>ImageLoader</code>
+directly in the code above, however, when we call <code>Image(Display,
+String)</code> in
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>, Eclipse will call
+<code>ImageLoader.load()</code> to
+load the image into memory. <img src="images/tag_5.gif" height=13 width=24 align=CENTER>
+is used to show the image at its original size; we will
+discuss this in more detail <a href="#func_showOriginal">later</a>.</p>
+<p><img src="images/tip.gif" width="62" height="13">  In fact, the above two functions
+could be merged into one method. The reason why we separate them is we
+may invoke them separately from other functions; for example, we may get the image file
+name from the database, then we can reload the image by only calling <code>loadImage()</code>.</p>
+<h4><a name="Extending_Canvas">Extending org.eclipse.swt.widgets.Canvas</a></h4>
+<p>Now, let's see how to create a canvas to render the image and do some
+transformations.</p>
+<p>The <code>org.eclipse.swt.widgets.Canvas</code>
+ is suitable to be extended for rendering images. <code>SWTImageCanvas</code>
+extends it and adds scrollbars. This is done by setting the <code>SWT.V_SCROLL</code>
+and <code>SWT.H_SCROLL</code> style bits at the <code>Canvas</code>
+constructor:</p>
+<pre><b>public</b> SWTImageCanvas(<b>final</b> Composite parent, <b>int</b> style) {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> <b>super</b>(parent,style|SWT.BORDER|SWT.V_SCROLL|SWT.H_SCROLL
+                      |SWT.NO_BACKGROUND);
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER> addControlListener(<b>new</b> ControlAdapter() { <font color="#3f7f5f">/* resize listener */</font>
+        <b>public</b> <b>void</b> controlResized(ControlEvent event) {
+            syncScrollBars();
+        }
+    });
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER> addPaintListener(<b>new</b> PaintListener() { <font color="#3f7f5f">/* paint listener */</font>
+        <b>public</b> <b>void</b> paintControl(PaintEvent event) {
+            paint(event.gc);
+        }
+    });
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER> initScrollBars();
+}<b>
+private</b> <b>void</b> initScrollBars() {
+    ScrollBar horizontal = getHorizontalBar();
+    horizontal.setEnabled(<b>false</b>);
+    horizontal.addSelectionListener(<b>new</b> SelectionAdapter() {<b>
+        public</b> <b>void</b> widgetSelected(SelectionEvent event) {
+            scrollHorizontally((ScrollBar) event.widget);
+        }
+    });
+    ScrollBar vertical = getVerticalBar();
+    vertical.setEnabled(<b>false</b>);
+    vertical.addSelectionListener(<b>new</b> SelectionAdapter() {<b>
+        public</b> <b>void</b> widgetSelected(SelectionEvent event) {
+            scrollVertically((ScrollBar) event.widget);
+        }
+    });
+}</pre>
+<p><img src="images/tip.gif" width="62" height="13">      In order to speed up the
+rendering process and reduce flicker, we set the style to <code>SWT.NO_BACKGROUND</code>
+in <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+(and later we use <a href="#double-buffering">double buffering</a> to render) so that the background (client area) won't be cleared.
+The new image will be
+overlapped on the background. We need to fill the gaps between the new image and
+the background when the new image does not fully cover the background.</p>
+<p><img src="images/tag_2.gif" height=13 width=24 align=CENTER> registers a
+resize listener to synchronize the
+size and position of the scrollbar thumb to the image zoom scale and
+translation; <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+registers a paint listener (here it does <code>paint(GC gc)</code>)
+to render the image whenever the <code>PaintEvent</code>
+is fired; <img src="images/tag_4.gif" height=13 width=24 align=CENTER>
+registers the <code>SelectionListener</code>
+for each scrollbar,
+the <code>SelectionListener</code>
+ will notify <code>SWTImageCanvas</code> to scroll and zoom
+the image based on the current selection of scrollbars; another function of the <code>SelectionListener</code>
+ is to enable or disable the scrollbar based on the image size and zoom scale.&nbsp;</p>
+<h4><a name="Rendering_image">Rendering images</a></h4>
+<p>Whenever the SWT<code> PaintEvent</code> is fired, the paint listener (<code>paint(GC
+gc)</code>)
+will be called to paint the
+damaged area. In this article, we simply paint the whole client area of the
+canvas (see Figure 4).
+Since we support scrolling and zooming, we need to figure out which part of
+the original image should be drawn to which part of the client area. The painting process is as
+following:</p>
+<ol>
+  <li>Find a rectangle <code>imageRect</code> inside the source
+    image (<b>image domain</b>); the image inside this rectangle will be drawn to the client area of canvas (<b>canvas
+    domain</b>).</li>
+  <li>Map the <code>imageRect</code> to the client area and
+    get <code>destRect</code>.</li>
+  <li>Draw the source image within <code>imageRect</code> to <code>destRect</code>
+    (scaling it if the sizes are different).</li>
+  <li>Fill the gaps (shown as blue and green bands in the picture below) if
+    necessary.</li>
+</ol>
+<p><a name="Rendering_scenario_figure"></a><img border="0" src="images/render_model.jpg" width="656" height="426">&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Figure 4 - Rendering scenarios</p>
+<p>1) and 2) can be done based on <code>AffineTransform</code>, which we will discuss next.&nbsp;</p>
+<p>3) draws a part of the source image to the client area using GC's <code>drawImage</code>:<br>
+<code>    &nbsp;&nbsp;&nbsp; drawImage
+(Image&nbsp;image, int&nbsp;srcX, int&nbsp;srcY, int&nbsp;srcWidth, int&nbsp;srcHeight,
+int&nbsp;destX, int&nbsp;destY, int&nbsp;destWidth, int&nbsp;destHeight)</code></p>
+<p>which copies a rectangular area from the source image into a destination rectangular
+area and automatically scale the
+image if the source rectangular area has a different size from the destination
+rectangular area.</p>
+<p>If we draw the image directly on the screen, we need to calculate the gaps in
+4) and fill them. Here we make use of <a href="#double-buffering"> double
+buffering</a>, so the gaps will be filled
+automatically.</p>
+<p><img src="images/tip.gif" width="62" height="13">We use the following
+approach to render the image: We save only the source image. When the canvas needs to update the visible area,
+it copies the corresponding image area from the source image to the destination area on
+the canvas. This approach can
+offer a very large zoom scale and save the memory, since it does not
+need to save the whole big zoomed image. The drawing process is also speeded up.
+If the size of canvas is very huge, we could divide the canvas into several small
+grids, and render each grid using our approach; so this approach is to some extent scalable.</p>
+<p><img border="0" src="images/note.gif" width="62" height="13">The Image Analyzer example
+that comes with Eclipse draws the whole
+zoomed image, and scrolls the zoomed image (which is saved by system) to the right place based on the
+scrollbar positions. This implementation works well for small images, or when the zoom
+scale is not
+large. However,
+for large-sized images and zoom scale greater than 1, the scrolling becomes very
+slow since it has to operate on a very large zoomed image. This can be shown in
+Image Analyzer.</p>
+<p>Now let's look at the code used to find out the corresponding rectangles in the
+source image and the client area:</p>
+<pre><b>private</b> <b>void</b> paint(GC gc) {
+<b>1</b>   Rectangle clientRect = getClientArea(); <font color="#3f7f5f">/* canvas' painting area */</font>
+<b>2</b>   <b>if</b> (sourceImage != <b>null</b>) {
+<b>3</b>       Rectangle imageRect=SWT2Dutil.inverseTransformRect(transform, clientRect);
+<b>4</b>       
+<b>5</b>       <b>int</b> gap = 2; <font color="#3f7f5f">/* find a better start point to render. */</font>
+<b>6</b>       imageRect.x -= gap; imageRect.y -= gap;
+<b>7</b>       imageRect.width += 2 * gap; imageRect.height += 2 * gap;
+<b>8</b>
+<b>9       </b>Rectangle imageBound=sourceImage.getBounds();
+<b>10</b>      imageRect = imageRect.intersection(imageBound);
+<b>11</b>      Rectangle destRect = SWT2Dutil.<a href="#transformRect">transformRect</a>(transform, imageRect);
+<b>12</b>      
+<b>13</b>      <b>if</b> (screenImage != <b>null</b>){screenImage.dispose();}
+<b>14</b>      screenImage = <b>new</b> Image( getDisplay(),clientRect.width, clientRect.height);
+<b>15</b>      GC newGC = <b>new</b> GC(screenImage);
+<b>16</b>      newGC.setClipping(clientRect);
+<b>17</b>      newGC.drawImage( sourceImage,
+<b>18</b>            imageRect.x,
+<b>19</b>            imageRect.y,
+<b>20</b>            imageRect.width,
+<b>21</b>            imageRect.height,
+<b>22</b>            destRect.x,
+<b>23</b>            destRect.y,
+<b>24</b>            destRect.width,
+<b>25</b>            destRect.height);<b>
+26      </b>newGC.dispose();<b>
+27
+28</b>      gc.drawImage(screenImage, 0, 0);<b>
+29</b>  } <b>else</b> {
+<b>30</b>      gc.setClipping(clientRect);
+<b>31</b>      gc.fillRectangle(clientRect);
+<b>32</b>      initScrollBars();
+<b>33</b>  }
+}</pre>
+<p>Line 3 to line 10 are used to find a rectangle (<code>imageRect</code>) in the source image, the source image inside
+this rectangle will be drawn to the canvas. This is done by inverse
+transforming the canvas's client area to the image domain and intersecting it with the bounds of image. The
+<code>imageRect</code>
+of line 10 is the exact rectangle we need.
+Once we have got <code>imageRect</code>,
+we transform <code>imageRect</code>  back to the canvas domain in
+line 11 and get a rectangle <code>destRect</code> inside
+the client area. The source image inside the <code>imageRect</code> will be
+drawn to the client area inside <code>destRect</code>.</p>
+<p>After we get the <code>imageRect</code> of the source
+image and the corresponding <code>destRect</code> of the
+client area, we can draw just the part of image to be shown, and draw it in the right place.
+For convenience, here we use <a name="double-buffering"> double buffering</a> to ease the drawing process:
+we first create a <code>screenImage</code> and draw image to
+the <code>screenImage</code>, then copy the <code>screenImage</code>
+to the canvas.</p>
+<p>Line 30 to line 32 are used to clear the canvas and reset the scrollbar whenever the
+source image is set to null.</p>
+<p><img src="images/tip.gif" width="62" height="13">Line 5 to line 7 are used to
+find a better point to start drawing the rectangular image, since the transform may compress or
+enlarge the size of each pixel. To make the scrolling and zooming
+smoothly, we always draw the image from the beginning of a pixel. This also guarantee
+that the image always fills the canvas if it is larger than the canvas.</p>
+<p>The flowchart of rendering is as following (Figure 5):</p>
+<p><img border="0" src="images/render_flowchart.jpg" width="677" height="209"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Figure 5 - Rendering flowchart</p>
+<p>In the code above, we use <code>inverseTransformRect()</code>
+in line 3 and <code>transformRect()</code> in line 11 for
+transforming rectangles between different domain. We will discuss them in detail in
+the next section.</p>
+<h4><a name="Transformation">Transformations</a></h4>
+<p><img border="0" src="images/note.gif" width="62" height="13">  When we say scrolling in this
+section, we mean scrolling the image, not the scrollbar thumb (which actually moves
+in the opposite direction).</p>
+<p>Our primary goal is to develop a canvas with scrolling and zooming functions. To
+do
+that, we must solve the following problems:</p>
+<ul>
+  <li>How to save the scrolling and zooming parameters.</li>
+  <li>How to change the scrolling and zooming parameters.</li>
+  <li>How the scrolling and zooming parameters control the image rendering.</li>
+</ul>
+<p>Scrolling and zooming entails two transformations: translation and scaling (see
+Figure 6).
+Translation is used to change the horizontal and
+vertical position of the image; scrolling involves translating the image in the
+horizontal or vertical directions. Scaling is used to change the size of image;
+scale with a rate
+greater than 1 to zoom in; scale with a rate less than 1 to zoom out.</p>
+<p><img border="0" src="images/transform.jpg" width="333" height="145"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Figure 6 - Translation and scaling</p>
+<p><code>SWTImageCanvas</code> uses an <code> AffineTransform</code> to
+save the parameters of both the translation and
+the scaling. In this implementation, only translation and scaling are
+used. The basic idea of <code> AffineTransform</code> is to represent the transform as a matrix and
+then merge several transforms into one by matrix multiplication. For
+example, a scaling <b>S</b>  followed by a translation <b>T </b>can be merged into
+a transform like: <b>T</b>*<b>S</b>. By merging first and then
+transforming, we can reduce times for transforming
+and speed up the process.</p>
+<p><code>SWTImageCanvas</code>  has an <code>AffineTransform</code>
+instance transform:</p>
+<pre><b>    private</b> AffineTransform transform;</pre>
+<p><code>AffineTransform</code>  provides
+methods to access the translation and scaling parameters of an affine
+transform:</p>
+<pre>    <b>public double</b> getTranslateX();
+    <b>public double</b> getTranslateY();
+    <b>public double</b> getScaleX();
+    <b>public double</b> getScaleY();</pre>
+<p>To change the <code>AffineTransform</code>, we can either reconstruct an <code>AffineTransform</code> 
+by merging itself
+and another transform, or start from scratch. <code>AffineTransform</code> provides
+<code>preConcatenate()</code> and <code>concatenate()</code>
+ methods, which can merge two <code>AffineTransform</code>s
+into one. Using these two methods, each time the user scrolls or
+zooms the image, we can create a new transform based on the changes (scrolling
+changes translation and zooming changes scaling) and the transform itself. The
+merge operation is matrix multiplication. Since 2D <code>AffineTransform</code> uses&nbsp;a 3x3 matrix, so the computation is very cheap.</p>
+<p> For
+example, when the user scrolls the image by <b>tx</b>  in the x direction and<b>
+ty </b> in the y
+direction:</p>
+<pre>&nbsp;&nbsp;&nbsp; newTransform = oldTransform.preconcatenate(AffineTransform.getTranslateInstance(<b>tx</b>,<b>ty</b>));&nbsp;</pre>
+<p>To construct a scaling or translation transform from scratch:</p>
+<pre>    <b>static</b> AffineTransform getScaleInstance(sx, sy);
+    <b>static</b> AffineTransform getTranslateInstance(tx,ty);</pre>
+<p>    Once you have an <code>AffineTransform</code>, the transformation can be easily done.
+To transform a point:</p>
+<pre>&nbsp;&nbsp;&nbsp; <b>public static</b> Point transformPoint(AffineTransform af, Point pt) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Point2D src = <b>new</b> Point2D.Float(pt.x, pt.y);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Point2D dest= af.transform(src, <b>null</b>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Point point=<b>new</b> Point((int)Math.floor(dest.getX()),(int)Math.floor(dest.getY()));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>return</b> point;
+&nbsp;&nbsp;&nbsp; }</pre>
+<p>To get the inverse transform of a point:</p>
+<pre>    <b>static</b> Point2D inverseTransform(Point2D&nbsp;ptSrc, Point2D&nbsp;ptDst);</pre>
+<p>Since we use only translation and scaling in our implementation,
+transforming a rectangle can be done by first transforming the top-left point,
+and then scaling the width and height. To do that, we need to convert an arbitrary
+rectangle to a rectangle with positive width and length. The following code
+shows how to transform an arbitrary rectangle using <code>AffineTransform</code>
+(the inverse transform is almost the same):</p>
+<pre><b>1</b>&nbsp;&nbsp; <b>public static</b> Rectangle <a name="transformRect">transformRect</a>(AffineTransform af, Rectangle src){
+<b>2</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rectangle dest= <b>new</b> Rectangle(0,0,0,0);
+<b>3</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; src=absRect(src);
+<b>4</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Point p1=<b>new</b> Point(src.x,src.y);
+<b>5</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; p1=transformPoint(af,p1);
+<b>6</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dest.x=p1.x; dest.y=p1.y;
+<b>7</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dest.width=(<b>int</b>)(src.width*af.getScaleX());
+<b>8</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dest.height=(<b>int</b>)(src.height*af.getScaleY());
+<b>9</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>return</b> dest;
+<b>10</b> &nbsp;}</pre>
+<p>The <code>absRect()</code> function in line 3 is used to
+convert an arbitrary rectangle to a rectangle with positive width and height.</p>
+<p>For more detail about <code>AffineTransform</code>, you can
+read <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/awt/geom/AffineTransform.html"> the
+Java API document from SUN website</a>.</p>
+<p><img src="images/tip.gif" width="62" height="13">  <code>AffineTransform</code>
+also supports shear and rotation. In this
+article, we only need translation and scaling. <code> AffineTransform</code> is widely used in the AWT's
+image packages, and it has no relation with UI event loop, so it can be used in
+SWT. (Even if <code>AffineTransform</code> were unavailable,&nbsp; we could easily replace or rewrite it since we only use the translation and
+scaling).</p>
+<p>We have seen how we save the scrolling and scaling parameters in <code>AffineTransform</code>,
+and how we can change them. But how do they control the image rendering?</p>
+<p><img border="0" src="images/scroll_zoom_activity.jpg" width="540" height="149"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Figure 7 - Scrolling and zooming diagram</p>
+<p>The basic idea is shown in Figure 7. When the user interacts with GUI
+(scrollbars and toolbar buttons), her/his action will be caught by Eclipse, Eclipse will
+invoke the listeners (for scrollbars) or delegates (for toolbar buttons) to change the parameters in
+the transform,
+then the canvas will update the status of scrollbars based on the transform,
+and finally it will notify itself to repaint the image. The painter
+will consider the updated transform when it
+repaints the image. For
+example, it will use transform to find out the corresponding rectangle in the source
+image to the visible
+area on the canvas, and copy
+the source image inside the rectangle to the canvas with scaling.</p>
+<p>Let's take a look at some methods which use <code>AffineTransform</code>
+to translate and zoom images.</p>
+<p>First let's see how to show an image at its original size:</p>
+<pre><b><a name="func_showOriginal"></a>public</b> <b>void</b> showOriginal() {<b>
+</b><img src="images/tag_1.gif" height=13 width=24 align=CENTER><b> </b>transform=<b>new</b> AffineTransform();
+    syncScrollBars();
+}</pre>
+<p>Here we first change transform in <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ (defaults to a scaling rate of 1, and no translation), and then call <code>syncScrollBars()</code> to update the
+scrollbar and repaint the canvas. It's that simple.</p>
+<p>Now let's try another one - zooming. When we zoom the image, we will zoom it around the center of
+the client
+area (centered zooming). The procedure for centered zooming is:</p>
+<ol>
+  <li>Find the center of client area: (x,y).</li>
+  <li>Translate the image by (-x,-y), so that (x,y) is at the origin.</li>
+  <li>Scale the image.</li>
+  <li>Translate the image by (x,y).</li>
+</ol>
+<p>The <a href="#func_syncScrollBars">syncScrollBars</a>()
+ (see next section) guarantees that the image will be centered in the client
+area if it is smaller than the client area.</p>
+<p>Steps 2-4 can be used to scale images around an arbitrary point (dx,dy).
+Since the same steps will be used by many other methods, we put them in the method
+<code>centerZoom(dx,dy,scale,af)</code>:&nbsp;</p>
+<pre><b>public</b> <b>void</b> centerZoom(<b>double</b> dx,<b>double</b> dy,<b>double</b> scale,AffineTransform af) {
+    af.preConcatenate(AffineTransform.getTranslateInstance(-dx, -dy));
+    af.preConcatenate(AffineTransform.getScaleInstance(scale, scale));
+    af.preConcatenate(AffineTransform.getTranslateInstance(dx, dy));
+    transform=af;
+    syncScrollBars();
+}</pre>
+<p> Now the code for <code>zoomIn</code>
+is:</p>
+<pre><b>public</b> <b>void</b> zoomIn() {
+    <b>if</b> (sourceImage == <b>null</b>) <b>return</b>;
+    Rectangle rect = getClientArea();<b>
+</b>    <b>int</b> w = rect.width, h = rect.height;
+    <font color="#3f7f5f">/* zooming center */</font>
+    <b>double</b> dx = ((<b>double</b>) w) / 2;
+    <b>double</b> dy = ((<b>double</b>) h) / 2;
+    centerZoom(dx, dy, ZOOMIN_RATE, transform);
+}</pre>
+<p>Here the (<code>dx</code>,<code>dy</code>) is the zooming center, <code>ZOOMIN_RATE</code>
+is a constant for incremental zooming in. <code>centerZoom()</code> will also call
+<code>syncScrollBars()</code>
+to update the scrollbar and repaint the canvas.</p>
+<h4><a name="Synchronize_scrollbar">Scrollbar synchronization</a></h4>
+<p>Each time user zooms or scrolls the image, the scrollbars need to update
+themselves to synchronize with the state of image. This includes adjusting the position and the size of the
+thumbs,
+enabling or disabling the scrollbars, changing the range of the scrollbars, and
+finally notifying the canvas to repaint the client area. We use <code>syncScrollBars()</code>
+to do this:</p>
+<pre><b><a name="func_syncScrollBars"></a>public</b> <b>void</b> syncScrollBars() {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> <b>if</b> (sourceImage == <b>null</b>){
+        redraw();
+        <b>return</b>;
+    }
+    AffineTransform af = transform;<b>
+</b>    <b>double</b> sx = af.getScaleX(), sy = af.getScaleY();
+    <b>double</b> tx = af.getTranslateX(), ty = af.getTranslateY();
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER> <b>if</b> (tx &gt; 0) tx = 0; <b>if</b> (ty &gt; 0) ty = 0;
+ 
+    ScrollBar horizontal = getHorizontalBar();
+    horizontal.setIncrement((<b>int</b>)(getClientArea().width/100));
+    horizontal.setPageIncrement(getClientArea().width);<b>
+</b>    Rectangle imageBound = swtImage.getBounds();<b>
+</b>    <b>int</b> cw = getClientArea().width, ch = getClientArea().height;
+    <b>if</b> (imageBound.width * sx &gt; cw) { <font color="#3f7f5f">/* image is wider than client area */</font>
+        horizontal.setMaximum((<b>int</b>) (imageBound.width * sx));
+        horizontal.setEnabled(<b>true</b>);
+        <b>if</b> (((<b>int</b>) - tx) &gt; horizontal.getMaximum()-cw) {
+            tx = -horizontal.getMaximum()+cw;
+        }
+    } <b>else</b> { <font color="#3f7f5f">/* image is narrower than client area */</font>
+        horizontal.setEnabled(<b>false</b>);
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>     tx = (cw - imageBound.width * sx) / 2;
+    }
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER> horizontal.setSelection((<b>int</b>) (-tx));
+<img src="images/tag_5.gif" height=13 width=24 align=CENTER> horizontal.setThumb((<b>int</b>)(getClientArea().width));
+
+    <font color="#3f7f5f">/* update vertical scrollbar, same as above. */</font>
+    ScrollBar vertical = getVerticalBar();
+    ....
+    <font color="#3f7f5f">/* update transform. */</font>
+<img src="images/tag_6.gif" height=13 width=24 align=CENTER> af = AffineTransform.getScaleInstance(sx, sy);
+    af.preConcatenate(AffineTransform.getTranslateInstance(tx, ty));
+    transform=af;
+
+<img src="images/tag_7.gif" height=13 width=24 align=CENTER> redraw();
+}</pre>
+<p>If there is no image, the paint listener will be
+notified to clear the client area in <img src="images/tag_1.gif" height=13 width=24 align=CENTER>.</p>
+<p>If there is an image to show, we correct the current translation to make sure it's legal (&lt;=0).
+The
+point (<code>tx</code>,<code>ty</code>)  in <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+corresponds to the bottom-left corner of the zoomed image (see the right-hand
+image in <a href="#Rendering_scenario_figure">Figure 4</a>), so it's
+reasonable to make it no larger than zero (the bottom-left corner of the canvas
+client area is (0,0)) except if the zoomed image is smaller than the client
+area. In such a situation, we correct the transform in <img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+so that it will translate the
+image to the center of client area. We change the selection in <img src="images/tag_4.gif" height=13 width=24 align=CENTER>
+and the thumb size in <img src="images/tag_5.gif" height=13 width=24 align=CENTER>,
+so that the horizontal scrollbar will show the relative position to the whole
+image exactly.
+The other lines between&nbsp;<img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+and <img src="images/tag_5.gif" height=13 width=24 align=CENTER>
+set the GUI parameters for the horizontal scrollbar, you can change them to
+control the scrolling increment. The
+process for the vertical scrollbar is exactly the same, so we don't show
+it here. Lines between
+<img src="images/tag_6.gif" height=13 width=24 align=CENTER>
+and <img src="images/tag_7.gif" height=13 width=24 align=CENTER>
+create a new transform based on the corrected translation and
+the scaling and update the old transform. Finally, line <img src="images/tag_7.gif" height=13 width=24 align=CENTER>
+notifies the canvas to repaint itself.</p>
+<h2><a name="Rotating">Rotation</a></h2>
+<p>Joe Winchester's <i><a href="http://www.eclipse.org/articles/Article-SWT-images/graphics-resources.html">Taking a look at SWT Images</a></i>
+explains pixel manipulation in
+great detail. Here
+we will show how to rearrange the pixels to get a 90<sup>0 </sup>counter-clockwise
+rotation. In order to demonstrate how other
+classes can interact with <code>SWTImageCanvas</code>, we put
+the implementation in the <code>PushActionDelegate</code>            class. The basic steps for our rotation are:</p>
+<ul>
+  <li>Get image data from <code>SWTImageCanvas</code>.</li>
+  <li> Create new image data and rearrange the pixels.</li>
+  <li>Set new image data back to <code>SWTImageCanvas</code>.</li>
+</ul>
+<p>The code in <code>PushActionDelegate</code>
+for rotation is:</p>
+<pre>    ImageData src=imageCanvas.getImageData();
+    <b>if</b>(src==<b>null</b>) <b>return</b>;
+    PaletteData srcPal=src.palette;
+    PaletteData destPal;
+    ImageData dest;
+
+    <font color="#3f7f5f">/* construct a new ImageData */</font>
+    <b>if</b>(srcPal.isDirect){
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>     destPal=<b>new</b> PaletteData(srcPal.redMask,srcPal.greenMask,srcPal.blueMask);
+    }<b>else</b>{
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>     destPal=<b>new</b> PaletteData(srcPal.getRGBs());
+    }
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER> dest=<b>new</b> ImageData(src.height,src.width,src.depth,destPal);
+    <font color="#3f7f5f">/* rotate by rearranging the pixels */</font>
+    <b>for</b>(<b>int</b> i=0;i&lt;src.width;i++){<b>
+</b>        <b>for</b>(<b>int</b> j=0;j&lt;src.height;j++){
+            <b>int</b> pixel=src.getPixel(i,j);
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>         dest.setPixel(j,src.width-1-i,pixel);
+        }
+    }
+<img src="images/tag_5.gif" height=13 width=24 align=CENTER> imageCanvas.setImageData(dest);</pre>
+<p>The code for <code>setImageData()</code>  is:</p>
+<pre><b>public</b> <b>void</b> setImageData(ImageData data) {
+    <b>if</b> (sourceImage != <b>null</b>) sourceImage.dispose();
+    <b>if</b>(data!=<b>null</b>)
+       sourceImage = <b>new</b> Image(getDisplay(), data);
+    syncScrollBars();
+}</pre>
+<p>Since we won't change the pixel value, we needn't care about
+the RGB  of each pixel. However, we must reconstruct a new <code>ImageData</code> object with different dimension. This
+needs different <code>PaletteData</code> in <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+and <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+for different image formats.&nbsp;<img src="images/tag_3.gif" height=13 width=24 align=CENTER>
+creates a new <code>ImageData</code> and <img src="images/tag_4.gif" height=13 width=24 align=CENTER>
+sets the value of each pixel. <code>setImageData()</code> in <img src="images/tag_5.gif" height=13 width=24 align=CENTER>
+ will dispose the previous <code>sourceImage</code>
+and reconstruct <code>sourceImage</code>
+based on the new <code>ImageData</code>, then update the scrollbars
+and repaint the canvas. We put <code>setImageData()</code>
+inside <code>SWTImageCanvas</code> so it could be used
+by other methods in the future.</p>
+<h2><a name="Plug-in_Implementation">Plug-in Implementation</a></h2>
+<p>We have known how the image canvas works. Now, let's talk briefly about how to implement the plug-in.</p>
+<h3><a name="Create_view_plug-in">Step 1. Create view plug-in</a></h3>
+<p>Follow the steps 1-3 in <a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html"><i>Creating
+an Eclipse View</i></a>, we can create a plug-in with a
+single view. The plugin.xml is:</p>
+<pre>&lt;plugin id=&quot;uky.article.imageviewer&quot;
+        name=&quot;image viewer Plug-in&quot;
+        version=&quot;1.0.0&quot;
+        provider-name=&quot;Chengdong Li&quot;
+        class=&quot;uky.article.imageviewer.ImageViewerPlugin&quot;&gt;
+        &lt;runtime&gt;
+                &lt;library name=&quot;imageviewer.jar&quot;/&gt;
+        &lt;/runtime&gt;
+        &lt;requires&gt;
+                &lt;import plugin=&quot;org.eclipse.ui&quot;/&gt;
+        &lt;/requires&gt;
+
+        &lt;extension point=&quot;org.eclipse.ui.views&quot;&gt;
+                &lt;category name=&quot;Sample Category&quot;
+                          id=&quot;uky.article.imageviewer&quot;&gt;
+                &lt;/category&gt;
+                &lt;view name=&quot;Image Viewer&quot;
+                      icon=&quot;icons/sample.gif&quot;
+                      category=&quot;uky.article.imageviewer&quot;
+                      class=&quot;uky.article.imageviewer.views.ImageView&quot;
+                      id=&quot;uky.article.imageviewer.views.ImageView&quot;&gt;
+                &lt;/view&gt;
+        &lt;/extension&gt;
+&lt;/plugin&gt;</pre>
+<p>The <code>ImageViewerPlugin</code>
+and <code>ImageView</code>
+ are as following:</p>
+<b>
+<pre>public class </b>ImageViewerPlugin<b> extends </b>AbstractUIPlugin {
+<b>    public </b>ImageViewerPlugin(IPluginDescriptor descriptor) {
+        <b>super</b>(descriptor);
+    }
+}
+<b>
+public</b> <b>class</b> ImageView <b>extends</b> ViewPart {
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>     <b>public</b> SWTImageCanvas imageCanvas;<b>
+        public</b> ImageView() {} <b>
+        public</b> <b>void</b> createPartControl(Composite frame) {
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>             imageCanvas=<b>new</b> SWTImageCanvas(frame); 
+        }
+        <b>public</b> <b>void</b> setFocus() {
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>             imageCanvas.setFocus();
+        }
+        <b>public</b> <b>void</b> dispose() {
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>             imageCanvas.dispose();
+                <b>super</b>.dispose();
+        }
+}</pre>
+<p><img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ declares an instance variable <code>imageCanvas</code>
+to point to an instance of <code>SWTImageCanvas</code>,
+so that other methods can use it. <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+creates an <code>SWTImageCanvas</code> to show the image.
+When the view gets focus, it will set focus to <code>imageCanvas</code>
+in <img src="images/tag_3.gif" height=13 width=24 align=CENTER>.
+The dispose method of <code>SWTImageCanvas</code>
+ will be automatically called in&nbsp;<img src="images/tag_4.gif" height=13 width=24 align=CENTER>
+whenever the view is disposed.</p>
+<h3><a name="Add_viewActions_extension">Step 2. Add viewActions extension</a></h3>
+<p>The image viewer view has five local toolbar buttons: <img border="0" src="images/buttons.jpg" width="138" height="22">. To
+take the advantage of Eclipse, we&nbsp;contribute to the <code>org.eclipse.ui.viewActions</code>
+extension point by adding the following lines to plugin.xml:</p>
+<pre>&lt;extension point=&quot;org.eclipse.ui.viewActions&quot;&gt;
+    &lt;viewContribution
+        targetID=&quot;uky.article.imageviewer.views.ImageView&quot;
+        id=&quot;uky.article.imageviewer.views.ImageView.pushbutton&quot;&gt;
+    &lt;action label=&quot;open&quot;
+            icon=&quot;icons/Open16.gif&quot;
+            tooltip=&quot;Open image&quot;
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>         class=&quot;uky.article.imageviewer.actions.PushActionDelegate&quot;
+            toolbarPath=&quot;push_group&quot;
+            enablesFor=&quot;*&quot;
+            id=&quot;toolbar.open&quot;&gt;
+    &lt;/action&gt;
+    .....
+&lt;/viewContribution&gt;</pre>
+<p>The delegate class <code>PushActionDelegate</code>
+ in <img src="images/tag_1.gif" height=13 width=24 align=CENTER>
+ will process all the actions from the
+toolbar buttons. It is defined as following:</p>
+<b>
+<pre>public</b> <b>class</b> PushActionDelegate <b>implements</b> IViewActionDelegate {
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER>     <b>public</b> ImageView view;<b>
+</b>        <b>public</b> <b>void</b> init(IViewPart viewPart) {
+            <b>if</b>(viewPart <b>instanceof</b> ImageView){
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER>              <b>this</b>.view=(ImageView)viewPart;
+            }
+        }<b>
+        public</b> <b>void</b> run(IAction action) {
+            String id=action.getId();
+<img src="images/tag_4.gif" height=13 width=24 align=CENTER>         SWTImageCanvas imageCanvas=view.imageCanvas;
+            <b>if</b>(id.equals(&quot;toolbar.open&quot;)){
+                imageCanvas.onFileOpen();
+                <b>return</b>;
+            }
+            ....
+<b>            if</b>(id.equals(&quot;toolbar.zoomin&quot;)){
+                ....
+            }
+        }
+}</pre>
+<p>This class implements the <code>IViewActionDelegate</code> interface. It has a view instance in <img src="images/tag_2.gif" height=13 width=24 align=CENTER>.
+It gets the view instance during the initialization period<img src="images/tag_3.gif" height=13 width=24 align=CENTER>,
+and later in <img src="images/tag_4.gif" height=13 width=24 align=CENTER>         
+it uses the view instance to interact with the <code>SWTImageCanvas</code>.&nbsp;</p>
+<h2><a name="Summary">Summary</a></h2>
+<p>We have shown the detail on how to implement a simple image viewer plug-in for
+Eclipse. The <code>SWTImageCanvas</code> supports scrolling
+and zooming functions by using AWT's <code>AffineTransform</code>. It supports unlimited
+zoom scale and smooth scrolling even for large images.</p>
+<p>Compared with the implementation of Image Analyzer example, this implementation is
+both memory
+efficient and fast.</p>
+<p>The <code>SWTImageCanvas</code> can be used as a base
+class for rendering, scrolling, and scaling image.</p>
+<p>Shortcut keys are a must for usable image viewers. In the interest of space, we did not show
+this here; however, they can be easily added.</p>
+<h2><a name="Acknowledge">Acknowledgements</a></h2>
+<p>I appreciate the help I received from the <a href="http://dev.eclipse.org/newslists/news.eclipse.platform.swt/msg00951.html"> Eclipse mailing
+list</a>; the Eclipse
+team's help in reviewing&nbsp; the article; Pengtao Li's photo picture; and
+finally the support from <a href="http://www.rch.uky.edu">RCH</a>  lab at the
+University of Kentucky.</p>
+<h2><a name="Reference">Reference</a>s</h2>
+<p><a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html">Creating
+an Eclipse View</a>.   Dave Springgay, 2001 <a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html"><br>
+</a>
+<a href="http://www.eclipse.org/articles/Article-SWT-images/graphics-resources.html">Taking a look at SWT
+Images</a>.     Joe Winchester, 2003  <a href="http://www.eclipse.org/articles/Article-SWT-images/graphics-resources.html"><br>
+</a>
+<a href="http://www.amazon.com/exec/obidos/tg/detail/-/0321159640/103-6992553-2927029?v=glance">
+The Java Developer's Guide to ECLIPSE</a>. Sherry Shavor, Jim D'Anjou, Scott
+Fairbrother, Dan Kehn, John Kellerman, Pat McCarthy. Addison-Wesley, 2003
+
+</body>
+</html>

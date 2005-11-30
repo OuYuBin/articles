@@ -1,0 +1,614 @@
+<html xmlns:o>
+	<head>
+		<title>Modeling Rule-Based Systems with EMF</title>
+		<meta content="True" name="vs_showGrid">
+		<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+		<LINK href="../default_style.css" rel="stylesheet"></head>
+	<body vLink="#800080" link="#0000ff">
+		<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+				© 2004&nbsp;Chaur G. Wu. All rights reserved.</font>&nbsp;
+			<table cellSpacing="0" cellPadding="2" width="100%" border="0">
+				<tr>
+					<td vAlign="top" align="left" bgColor="#0080c0" colSpan="2"><b><font face="Arial,Helvetica"><font color="#ffffff">&nbsp;Eclipse 
+									Corner Article</font></font></b></td>
+				</tr>
+			</table>
+		</div>
+		<div align="left">
+			<h1><IMG height="86" src="images/Idea.jpg" width="120" align="center"></h1>
+		</div>
+		<p>&nbsp;</p>
+		<h1 align="center">Modeling Rule-Based Systems with EMF</h1>
+		<blockquote>
+			<P><b>Summary</b></P>
+			<P>There are examples of meta-models defined in ECore for modeling objects and 
+				relational data. However, not much has been said about how to model rules. This 
+				article will define a meta-model in ECore for modeling rule-based systems. We 
+				will then use the meta-model to model the solution of a logical problem. Then 
+				we will compose some JET templates and generate code from the model, run the 
+				generated code through a rule engine and see that the logical problem is 
+				correctly solved.
+			</P>
+			
+  <p><b>By Chaur G. Wu, Independent Consultant</b> (cha_urwu@hotmail.com)<br>
+    <font size="-1">November 30, 2004</font> </p>
+		</blockquote>
+		<hr width="100%">
+		<P>Before we look at this article’s example, let’s set the stage by going through 
+			some&nbsp;background information and make clear some terms that we will use 
+			throughout the&nbsp;article. In this part, we will give very brief introduction 
+			of rule-based systems and meta-modeling.
+		</P>
+		<H2>Rule-Based Systems</H2>
+		<P>
+			So what do we mean by rule-based? In the evolution course of computing, a field 
+			called artificial intelligence was developed in the 70s&nbsp;and 80s with an 
+			aim to make computers reason like human beings. Rule-based programming paradigm 
+			emerged at that time as&nbsp;ways to implement systems that appear to think and 
+			reason like human beings. Examples of rule-based systems are expert systems 
+			that have the knowledge of a doctor or a tax advisor and can answer complex 
+			questions&nbsp;people would normally ask those professionals.
+		</P>
+		<P>The idea of rule-based programming is to represent a domain expert’s knowledge 
+			in a form called rules. That’s why it’s called rule-based. Besides rules, 
+			another important ingredient in a rule-based system is facts. Here’s an 
+			example. Say John is a weather reporter who gives advice to people on TV 
+			channels based on weather conditions. Here’s John’s knowledge about weather:
+		</P>
+		<ol>
+			<li>
+			If it’s a rainy day, advise people to bring umbrellas when they go out.
+			<li>
+				If it’s a rainy day, the road would be slippery because of the rain and hence 
+				warn people to drive more carefully.
+			</li>
+		</ol>
+		<P>How do we represent the knowledge in a rule-based system? We represent it as 
+			rules and facts like this:
+		</P>
+		<pre>  Rule 1: If it’s a rainy day, advise people to bring umbrellas when they go out. 
+  Rule 2: If the road is slippery, warn people to drive more carefully. 
+  Rule 3: If it’s a rainy day, road is slippery.</pre>
+		<PRE>  Fact 1: It’s a rainy day. 
+  Fact 2: Road is slippery.</PRE>
+		<P>Here’s how our imaginary expert system mimics the reasoning capability of 
+			weather reporter John. If by looking out of the window, we see it’s raining, we 
+			tell our expert system that it’s raining by asserting fact number 1. 
+			Immediately the expert system tries to match the asserted fact with its three 
+			rules. Rules 1 and 3 are fired because the asserted fact satisfies their 
+			conditions (the <EM>if</EM> clause). When rule one is fired (a more accurate 
+			term is activated), the system advises people to bring umbrella as if it were a 
+			real weather reporter. Firing rule 3 asserts fact 2. And because fact 2 
+			satisfies the conditions of rule 2, rule 2 is fired and the system advises 
+			people to drive more carefully. All these chain reactions happen in sequence as 
+			the result of asserting fact number 1.
+		</P>
+		<P>Although the example is nowhere close to the complexity of a practical 
+			rule-based system, it shows the following key points:
+		</P>
+		<ol>
+			<li>
+			A rule-based system consists mainly of&nbsp;three things: facts, rules and an 
+			engine that acts on them.
+			<li>
+				Rules represent knowledge and facts represent data. A rule-based system solves 
+				problems by applying rules on facts (i.e. matching facts with rules’ <EM>if</EM>
+			clauses).&nbsp;
+			<li>
+				A rule consists of two parts: conditions (<EM>if</EM>
+			clauses) and actions.&nbsp;
+			<li>
+				The action part of a rule might assert new facts that fire other rules.
+			</li>
+		</ol>
+		<P>Among the most popular rule engines, <STRONG>JESS (Java Expert System Shell)</STRONG>
+			is probably of the most interest to Java developers. It is&nbsp;the reference 
+			implementation of JSR 094 Java Rule Engine API and it has&nbsp;plug-ins to 
+			support development of rule systems in Eclipse. Therefore, the rule code we 
+			will see&nbsp;in this article will be&nbsp;in JESS's&nbsp;syntax. Before we 
+			leave this section, it’s helpful to introduce JESS&nbsp;and take a glimpse of 
+			its programming syntax. JESS is software that interprets rules and facts 
+			expressed in its programming language. Just as Java is a language for 
+			expressing objects and Java compiler is software that interprets Java code, 
+			JESS has a language for expressing rules and facts and a compiler to interpret 
+			the code. JESS is developed in Java by Ernest Friedman-Hill at Sandia National 
+			Laboratories. Here’s what the rules and facts in our weather example look like 
+			in JESS code.</P>
+		<PRE>(defrule rule-1 (rainy-day) = &gt; (advise-people bring-umbrella))
+(defrule rule-2 (road-slippery) =&gt; (advise-people drive-carefully)) 
+(defrule rule-3 (rainy-day) =&gt; (assert road-slippery))
+(road-slippery)
+(rainy-day)</PRE>
+		<P>The last two lines in the list above are the two facts. The first three lines 
+			are the three rules. Rules in&nbsp;JESS&nbsp;take this form: <b><CODE>(defrule 
+					rule-name conditions =&gt; actions)</CODE></b> Rules are defined using 
+			the <code>defrule</code> construct. <code>rule-1</code>, <code>rule-2</code>, 
+			and <code>rule-3</code> are the names of the rules respectively. <code>rule-1</code>
+			has a condition: <code>(rainy-day)</code>. In this case, <code>(rainy-day)</code>
+			is also called a <b>pattern</b>.&nbsp;It&nbsp;is so called&nbsp;because the 
+			rule engine&nbsp;treats it as a pattern for matching facts. The pattern <code>(rainy-day)</code>
+			in <code>rule-1</code> will match only one fact: the <code>(rainy-day)</code> fact 
+			in the last line of the code list. When it's matched, the action <code>(advise-people 
+				bring-umbrella)</code> of <code>rule-1</code> will be executed.</P>
+		<P>There are a lot more to the syntax of&nbsp;a rule&nbsp;language like JESS. We 
+			will only explain those necessary for following along this article. For 
+			more&nbsp;details, you can refer to the documentation that comes with JESS.</P>
+		<H2>Model, Meta-model, Meta-metamodel
+		</H2>
+		<P>Sometimes it’s helpful to the discussion if we categorize models into different 
+			levels. We call a model a <b>meta-model</b> if it is used to define models. We 
+			call a model a <b>meta-metamodel</b> if it is used to define meta-models.
+		</P>
+		<P>For example, ECore is a model. It can be a meta-model or a meta-metamodel 
+			depending on how we use it. When we use ECore to define models of a purchase 
+			order system, it plays the role of a meta-model. The Rule Meta Model we will 
+			develop later in this article is another example of meta-model. It is a 
+			meta-model because we will use it to define a model for a logical problem.
+		</P>
+		<P>The Rule Meta Model we will develop later is defined in ECore. In this sense, 
+			ECore is a meta-metamodel because it is used to define a meta-model. Another 
+			example of ECore as a meta-metamodel is EMF’s Gen Model. EMF’s Gen Model is a 
+			meta-model that defines models concerning how code is generated. ECore is the 
+			meta-metamodel that defines Gen Model.
+		</P>
+		<P>When we say model A defines model B, in a practical sense, we mean that all 
+			model elements in B are instances of model elements in A. We will see this in 
+			effect later when we reach the article’s example. For the purpose of this 
+			article, the important facts to note are:
+		</P>
+		<ol>
+			<li>
+			Categorization of meta levels is not absolute.
+			<li>
+			We will use ECore as a meta-metamodel to define the Rule Meta Model.
+			<li>
+			Model elements in the Rule Meta Model will be instances of model elements in 
+			ECore.
+			<li>
+			We will use the Rule Meta Model to define a model for a logical problem. 
+			Elements in the model will be instances of model elements in the Rule Meta 
+			Model.
+			<LI>
+				Meta-metamodels are also referred to as M3 models; meta-models as M2 models; 
+				models like a bank application model as M1 models.
+			</LI>
+		</ol>
+		<H2>Problem Statement
+		</H2>
+		<P>The logical problem&nbsp;we will solve with this article’s Rule Meta Model is 
+			this:
+		</P>
+		<P>There are four boxes, labeled from 1 to 4. We have four balls in four colors: 
+			red, blue, green and yellow. Our task is to put one ball in each box according 
+			to the following three constraints.
+		</P>
+		<ol>
+			<li>
+			If red ball is in box 1, blue ball must be in box 3.
+			<li>
+			If yellow ball is not in box 2, green ball must be in box 3.
+			<li>
+				Green ball cannot be in box 4 and Red ball cannot be in box 2.
+			</li>
+		</ol>
+		<H2>Set up Environment and Run the Example Code
+		</H2>
+		
+<P>The solution to the problem is in <A href="RuleMetaModel.zip">RuleMetaModel.zip</A> 
+  and <A href="BallPlacementRuleModel.zip">BallPlacementRuleModel.zip</A> that come 
+  with this article. The code in the zip files requires the following software. 
+</P>
+		
+<PRE>Java Runtime or SDK (The one I use is Java SDK 1.4.2 from Sun Microsystems) 
+Eclipse (The version I use is Eclipse SDK 3.0) 
+EMF (The version I use is EMF SDK 2.0.1 RC2)
+JESS 7.0a1</PRE>
+		
+<P>Installing JESS is simple.&nbsp;You can download JESS&nbsp;from <A href="http://herzberg.ca.sandia.gov/jess/download.shtml" target="_blank"> 
+  http://herzberg.ca.sandia.gov/jess/download.shtml</A>. Then unzip the downloaded&nbsp;file 
+  to a folder, add jess.jar to your java classpath and you are ready to go. JESS 
+  is not free software. After clicking the link above, you’ll be asked to enter 
+  your name, company and email. After that, you’ll be taken to the page where 
+  you can download various versions of JESS. The one to download for this article 
+  is trial version 7.01a1. This version of JESS comes with some Eclipse plug-ins 
+  for editing JESS code in the Eclipse IDE. Those plug-ins are not needed for 
+  running the code of this article. Installing them is optional. </P>
+		
+<P>To install and run the example for this article, unzip <A href="RuleMetaModel.zip">RuleMetaModel.zip</A> 
+  into your <I>plugins/ </I>subdirectory. This zip&nbsp;file contains three plug-ins. 
+  They are the model, edit, editor plug-ins EMF generates for our Rule Meta Model. 
+  The other zip file, <A href="BallPlacementRuleModel.zip">BallPlacementRuleModel.zip</A>, 
+  contains two files: <code>BallPlacement.rulemetamodel</code> and <code>BallPlacement.clp</code>. 
+  <code>BallPlacement.rulemetamodel</code> is the model that models our logical 
+  problem. It is defined using Rule Meta Model. The other file <code>BallPlacement.clp</code> 
+  is JESS code generated from <code>BallPlacement.rulemetamodel</code>. Below 
+  is a pictorial view of all the components in the two zip files and how they 
+  relate to EMF and rule engine.</P>
+		<P><b>Figure 1. Overall picture of the example code.</b></P>
+		<P><IMG alt="" src="images/Overall.gif"></P>
+		<P>
+		</P>
+		
+<P>We will explain each component as we go along. For now, since we already have 
+  JESS rule engine set up, let's run <code>BallPlacement.clp</code> through the 
+  JESS rule engine (the yellow part in Figure 1). Assume that you unzipped the 
+  two files in <code>BallPlacementRuleModel.zip</code> to <code>C:\</code> and 
+  that <code> jess.jar</code> is in your java classpath. Here is the command to 
+  run <code>BallPlacement.clp</code> through the JESS rule engine: </P>
+		<P><IMG height="13" src="images/tryit.gif" width="61"> <code>java jess.Main 
+				C:\BallPlacement.clp</code></P>
+		<P>The result you will see in the command console will look like the screenshot 
+			below. Dumping the result to a console window like this is not pretty but it 
+			serves our purpose just fine. The last four&nbsp;facts listed in the screenshot 
+			are solutions to the logical problem. That is, out of the 24 possible 
+			placements of the balls in the boxes, only&nbsp;four placements satisfy the 
+			three constraints posed by our problem.&nbsp;&nbsp;</P>
+		<P><IMG alt="" src="images/BallPlacementResult.gif"></P>
+		<H2>BallPlacement.clp
+		</H2>
+		<P>Before we look more closely at the Rule Meta Model and Ball Placement Model, 
+			let’s see what constitutes a rule language by taking a look at <code>BallPlacement.clp</code>
+			first. This knowledge will help us make sense of the meta-model and model 
+			later. <code>BallPlacement.clp</code> defines two fact templates: <IMG height="13" src="images/tag_1.gif" width="24" align="center">&nbsp;<code>placement</code>
+			and <IMG height="13" src="images/tag_2.gif" width="24" align="center">&nbsp;<code>ball</code>.&nbsp;
+		</P>
+		<PRE><IMG height=13 src="images/tag_1.gif" width=24 align=center>(deftemplate placement 
+	(slot box_one)
+	(slot box_two)
+	(slot box_three)
+	(slot box_four)) 
+	
+<IMG height=13 src="images/tag_2.gif" width=24 align=center>(deftemplate ball (slot color))</PRE>
+		<P>A <b>fact template</b> as its name suggests is a template of facts and is 
+			defined by the <code>deftemplate</code> construct in JESS. Earlier we wrote the 
+			weather fact like this: <code>(rainy-day)</code>. If we want to specify 
+			temperature in addition to weather, we’ll probably write a fact like this: <code>(rainy-day 
+				50F)</code>. Facts like these are called <b>ordered facts</b> because they 
+			require their elements to be in a specific order. <code>(rainy-day 50F)</code> is 
+			a different fact from <code>(50F rainy-day)</code> because the elements are in 
+			a different order. Sometimes it’s desirable to have some structure in the way 
+			we state facts so that we can express elements in a fact regardless of their 
+			positions. This is where fact templates come into play. With fact templates, we 
+			can state facts like this: <code>(weather-report (weather rainy-day) (temperature 
+				50F))</code>. We say that the <code>weather-report</code> fact has two <b>slots</b>:
+			<code>weather</code> and <code>temperature</code>. Slot <code>weather</code> has 
+			a value of <code>rainy-day</code> and slot <code>temperature</code> has a value 
+			of <code>50F</code>. It doesn’t matter if you put the <code>temperature</code> slot 
+			before or after the <code>weather</code> slot. Facts like this are called <b>unordered 
+				facts</b> because the order of their elements is not relevant.
+		</P>
+		<P>In our example, the <code>placement</code> fact template defines four slots, one 
+			for each box. The <code>ball</code> fact template defines one slot: <code>color</code>. 
+			With these two fact templates, we can state the fact that "green ball is in box 
+			one"&nbsp;in JESS language like this: <code>(placement (box_one Green))</code>. 
+			Besides fact templates, <code>BallPlacement.clp</code> has&nbsp;a 
+			few&nbsp;rules. Here's the rule that describes the first constraint about ball 
+			placement.</P>
+		<pre>(defrule placement_constraint1 
+<IMG height=13 src="images/tag_1.gif" width=24 align=center>	?placement &lt;-  (placement (box_one ?box_one) (box_two ?box_two) (box_three ?box_three) (box_four ?box_four))  
+<IMG height=13 src="images/tag_2.gif" width=24 align=center>	(and (placement (box_one ?box_one&amp;Red) (box_two ?box_two) (box_three ?box_three) (box_four ?box_four))  
+	(placement (box_one ?box_one) (box_two ?box_two) (box_three ?box_three&amp;~Blue) (box_four ?box_four))) 
+=&gt; 
+<IMG height=13 src="images/tag_3.gif" width=24 align=center> 
+	(retract ?placement))</pre>
+		<P>
+			We have seen rules in the weather report metaphor.&nbsp;We know <code>placement_constraint1</code>
+			is the name of the&nbsp;rule. <IMG height="13" src="images/tag_1.gif" width="24" align="center">&nbsp;<IMG height="13" src="images/tag_2.gif" width="24" align="center">&nbsp;are 
+			the conditions of the rule and <IMG height="13" src="images/tag_3.gif" width="24" align="center">&nbsp;is 
+			the action. Condition <IMG height="13" src="images/tag_1.gif" width="24" align="center">&nbsp;assigns&nbsp;what 
+			looks like a&nbsp;pattern to the <code>?placement</code> variable. In fact, 
+			what actually gets assigned to the <code>?placement</code> variable is a fact 
+			that matches the pattern. In JESS, variable names start with <EM>?</EM> . <code>?box_one</code>,
+			<code>?box_two</code> in the code list above&nbsp;are all variables. Variables 
+			are not typed. You can assign strings, integers, facts and values of other data 
+			types to them. Assigning a value to a variable is usually done through the <code>bind</code>
+			function like this:
+		</P>
+		<P><code>(bind ?variable "some string value")</code></P>
+		<P>However, using <code>bind</code> function to assign a value to a variable is an 
+			action not a condition.&nbsp;That's why in&nbsp;<IMG height="13" src="images/tag_1.gif" width="24" align="center">,&nbsp;instead 
+			of using the <code>bind</code> function in the condition part of a rule, we 
+			use&nbsp;a special form called <b>pattern binding</b> <code>&lt;-</code> to 
+			assign a fact to the <code>?placement</code> variable.&nbsp;
+		</P>
+		<P>Condition <IMG height="13" src="images/tag_2.gif" width="24" align="center">&nbsp;has 
+			two fact matching patterns enclosed in a logical <code>and</code>. The logical <code>
+				and</code> is called a <b>conditional element</b> in a rule 
+			language.&nbsp;Don't worry if the two conditions&nbsp;still look cryptic. Let's 
+			mimic the reasoning process of a rule engine and you will see how&nbsp;the 
+			conditions&nbsp;function.&nbsp;Let's see what happens if we put&nbsp;the 
+			following fact in the rule engine:</P>
+		<P><code>(placement (box_one Red) (box_two Blue) (box_three Green) (box_four Yellow))</code></P>
+		<P>The rule engine tries to see if the fact satisfies the two conditions of <code>placement_constraint1</code>. 
+			It first tries to match the fact with the pattern in <IMG height="13" src="images/tag_1.gif" width="24" align="center">.&nbsp;The 
+			pattern in <IMG height="13" src="images/tag_1.gif" width="24" align="center">&nbsp;has 
+			one variable in each of the four slots of&nbsp;the <code>placement</code> fact.&nbsp;That 
+			means the pattern matches any value in those four slots.&nbsp;So the fact 
+			satisfies the first condition and <code>Red</code> is assigned to <code>?box_one</code>,
+			<code>Blue</code> to <code>?box_two</code>, <code>Green</code> to <code>?box_three</code>
+			and <code>Yellow</code> to <code>?box_four</code>.
+		</P>
+		<P>But this is not enough to trigger the execution of <code>placement_constraint1</code>'s 
+			action. The rule engine sees that there's a second condition in the rule. So it 
+			tries to see if the same fact matches the second condition's patterns. The 
+			first pattern in&nbsp;<IMG height="13" src="images/tag_2.gif" width="24" align="center">&nbsp;says 
+			that <code>box_one</code> must be&nbsp;<code>?box_one</code> and <code>Red</code>
+			(<code>?box_one&amp;Red</code>) and the other three slots can have any values 
+			that are assigned to the three variables <code>?box_two</code>, <code>?box_three</code>
+			and <code>?box_four</code> respectively. The rule engine already knows from the 
+			first condition that <code>?box_one</code> is <code>Red</code>. So <code>(?box_one&amp;Red)</code>
+			is no contradiction (Red is Red). The fact satisfies the first pattern of <IMG height="13" src="images/tag_2.gif" width="24" align="center">. 
+			Because of the <code>and</code> conditional element, the&nbsp;second pattern 
+			in&nbsp;<IMG height="13" src="images/tag_2.gif" width="24" align="center">&nbsp;needs 
+			to&nbsp;match the fact&nbsp;too for the whole condition to be considered 
+			satisfied. The second pattern in <IMG height="13" src="images/tag_2.gif" width="24" align="center">&nbsp;says 
+			that <code>box_three</code> must be&nbsp;<code>?box_three</code> and not <code>Blue</code>
+			(<code>?box_three&amp;~Blue</code>) and the other three slots can have any 
+			values that are assigned to&nbsp;the three variables <code>?box_one</code>, <code>?box_two</code>
+			and <code>?box_four</code> respectively. The rule engine already know from the 
+			first condition that <code>?box_three</code> is <code>Green</code>. So <code>(?box_three&amp;~Blue)</code>
+			is no contradiction (Green is not Blue). The fact satisfies the&nbsp;second 
+			pattern of <IMG height="13" src="images/tag_2.gif" width="24" align="center">&nbsp;as 
+			well.</P>
+		<P>So all conditions are satisfied. The action of <code>placement_constraint1</code>
+			will execute because of the assertion of the fact. What the action does is 
+			remove the matching fact from the rule engine. Why? Because all placement facts 
+			that satisfy the conditions of any one of the three constraint rules in <code>BallPlacement.clp</code>
+			are not solutions to our logical problem. We remove them from the rule engine's 
+			fact list so that the ones remaining will be our solutions.</P>
+		<H2>Rule Meta Model
+		</H2>
+		<P>Now that we know the basic constructs such as <EM>patterns</EM>, <EM>actions</EM>,
+			<EM>rules</EM>, <EM>facts</EM> of a rule language, it's time to see how we 
+			model them in a meta-model; that is, the blue part in Figure 1. Our Rule Meta 
+			Model consists of a package, a few data types, enumerations and classes. As we 
+			said earlier,&nbsp;Rule Meta Model is defined in ECore and by that we mean all 
+			model elements in&nbsp;Rule Meta Model are instances of model elements in 
+			ECore. The one and only package in the Rule Meta Model is an instance of 
+			ECore’s <code>EPackage</code>; the data types instances of ECore’s <code>EDataType</code>; 
+			the enumerations instances of ECore’s <code>EEnum</code> and the classes 
+			instances of ECore’s <code>EClass</code>.
+		</P>
+		<P>Below is a screenshot of how Rule Meta Model looks like in Eclipse. In the 
+			following sections, we'll go through the data types, enumerations and classes 
+			one by one.&nbsp;
+		</P>
+		<P><b>Figure 2. Rule Meta Model.</b></P>
+		<P><IMG alt="" src="images/RuleMetaModel.gif"></P>
+		<H4>Data Types
+		</H4>
+		<P>
+			Unlike Java, a rule language is untyped. In the code&nbsp;excerpt of <code>BallPlacement.clp</code>
+			in previous section, we don’t see the types of <code>ball</code>, <code>color</code>, 
+			and <code>placement</code>. Although the language itself is untyped, underneath 
+			the language in the rule engine, things are still typed. For example, <code>ball</code>,
+			<code>color</code>, <code>placement</code> are of a type called <code>Symbol</code>. 
+			Values like <code>"something"</code> are of type <code>String</code> and values 
+			like <code>2.3</code> are of type <code>Float</code>. Types like <code>Symbol</code>,
+			<code>String</code>, and <code>Float</code> are called <b>primitive types</b> or
+			<b>data types</b>. Most rule languages support a common set of primitive types. 
+			However, there are types available in one language but you don’t see them in 
+			others. It's&nbsp;important&nbsp;not to confuse data types like <code>String</code>
+			and <code>Float</code> in a rule language&nbsp;with similar data types <code>java.lang.String</code>
+			and <code>java.lang.Float</code> in java. They are totally different types used 
+			in different languages interpreted by different virtual machines. Types in a 
+			rule language are interpreted by a rule engine whereas java types are 
+			interpreted by a Java virtual machine. This is why when we model these data 
+			types in the Rule Meta model, we cannot simply use <code>java.lang.String</code>
+			or <code>java.lang.Float</code> but need to implement our own types.
+		</P>
+		<P>
+			There are six data types in Rule Meta Model. Each of them corresponds to a java 
+			class. You can tell which java class a data type corresponds to by 
+			looking&nbsp;at the screenshot in Figure 2 or at the <code>Instance Class Name</code>
+			property of the <code>EDataType</code> instance that defines the data type. The 
+			table below summarizes the correspondences.
+		</P>
+		<P>
+			<TABLE id="Table1" height="66" cellSpacing="1" cellPadding="1" width="646" border="1">
+				<TR>
+					<TD width="111"><b>data type</b></TD>
+					<TD><b>implementing java class</b></TD>
+				</TR>
+				<TR>
+					<TD width="111">RSymbol</TD>
+					<TD>com.example.rule.ecore.rulemetamodel.RSymbol</TD>
+				</TR>
+				<TR>
+					<TD width="111">RFactAddress</TD>
+					<TD>com.example.rule.ecore.rulemetamodel.RFactAddress</TD>
+				</TR>
+				<TR>
+					<TD width="111">RInteger</TD>
+					<TD>com.example.rule.ecore.rulemetamodel.RInteger</TD>
+				</TR>
+				<TR>
+					<TD width="111">RFloat</TD>
+					<TD>com.example.rule.ecore.rulemetamodel.RFloat</TD>
+				</TR>
+				<TR>
+					<TD width="111">RDataType</TD>
+					<TD>com.example.rule.ecore.rulemetamodel.RDataType</TD>
+				</TR>
+				<TR>
+					<TD width="111">RMultiField</TD>
+					<TD>com.example.rule.ecore.rulemetamodel.RMultiField</TD>
+				</TR>
+			</TABLE>
+		</P>
+		<P>When defining&nbsp;data types, besides implementing corresponding java classes, 
+			it's often appropriate and necessary to&nbsp;overwrite the generated code 
+			for&nbsp;converting strings&nbsp;to and from&nbsp;instances of the data types. 
+			In our example, we overwrite <code>createRSymbolFromString()</code> in <code>com.example.rule.ecore.rulemetamodel.impl.RulemetamodelFactoryImpl.java</code>
+			for <code>RSymbol</code> and other five similar methods in the same file for 
+			the other five data types.
+		</P>
+		<P>A meta model like ours should be as platform independent as possible. We don't 
+			want&nbsp;to tailor &nbsp;Rule Meta Model too much to a rule language that 
+			models conforming to the Rule Meta Model can only generate code for&nbsp;that 
+			specific language.&nbsp;A complete Rule Meta Model should&nbsp;model data 
+			types&nbsp;common to most popular rule languages. Data types proprietary to a 
+			specific rule language can be modeled at M1 level. Because the example code for 
+			this article is more a demonstration than a full-fledged product, the set of 
+			data types we model here is&nbsp;by no means&nbsp;complete for a rule language, 
+			nor are the&nbsp;java classes implementing those data types.
+		</P>
+		<H4>Enumerations,&nbsp;Classes
+		</H4>
+		<P>There are three enumerations in the Rule Meta Model: <code>RRuleType</code>, <code>RFunctionType</code>,
+			<code>RCondElemEnum</code>. The&nbsp;three enumerations and six data types are 
+			used in the definition of classes in Rule Meta Model. For example, the 
+			following diagram shows that class <code>RFactTemplate</code> has one attribute <code>
+				factName</code> whose type is <code>RSymbol</code>, one of the data types 
+			we just defined. Besides attribute <code>factName</code>, <code>RFactTemplate</code>
+			also has a containment reference to zero or multiple instances of <code>RFactSlot</code>.
+			<code>RFactTemplate</code> models fact templates in a rule language. The class 
+			definition we see here is in line with our previous knowledge of fact 
+			templates: a fact template has a name&nbsp;and defines zero or multiple slots. 
+			As to <code>RFactSlot</code>, it models slots in fact templates. It has an 
+			attribute <code>slotName</code> of type <code>RSymbol</code> and an attribute <code>
+				slotValueRange</code> of type <code>RMultiField</code>. We know from 
+			previous section that a slot has a name. What we didn't mention is that some 
+			rule languages allow you to specify the legitimate values&nbsp;of a slot, which 
+			is what <code>slotValueRange</code> is for.
+		</P>
+		<P><IMG alt="" src="images/ClassDiagram2.gif"></P>
+		<p>The diagram below shows some more classes and their relations to&nbsp;each 
+			other. Class <code>RRule</code> models rules. It has an attribute <code>ruleName</code>
+			that represents the name of a rule; a containment reference <code>condition</code>
+			that represents conditional elements in a rule's condition part; a containment 
+			reference <code>ceMatchPattern</code> that represents patterns in a rule's 
+			condition part but not enclosed in conditional elements; and a reference <code>actions</code>
+			that represents a rule's action part.</p>
+		<P>Class <code>RCondElem</code> models conditional elements. A conditional element 
+			can contain match patterns or more conditional elements. That's why&nbsp;our 
+			definition of <code>RCondElem</code> has one containment reference to itself 
+			and one containment reference to <code>RPattern</code>. The <code>ceName</code> 
+			attribute of <code>RCondElem</code> denotes what conditional element (<code>and</code>,
+			<code>or</code>, <code>not</code>, etc) an instance of <code>RCondElem</code> is. 
+			If you look at <code>RCondElemEnum</code>, the type of the <code>ceName</code> attribute, 
+			you will see that there are three enumeration literals there: <code>and</code>, <code>
+				or</code>, <code>not</code>. For the same reason we don't define a complete 
+			set of data types, the list of conditional elements in <code>RCondElemEnum</code>
+			is not complete and in a more complete meta-model,&nbsp;<code>RCondElemEnum</code>
+			should include conditional elements&nbsp;common in most popular rule languages.</P>
+		<P>Class <code>RFunction</code> models functions.&nbsp;A function like <code>(retract 
+				(?placement))</code> we saw earlier has a name and takes zero or 
+			multiple&nbsp;instances of primitive data types as parameters. In this case, <code>retract</code>
+			is the name of the function and <code>?placement</code> is a parameter. 
+			Although not visible, the <code>retract</code> function returns a value. In 
+			JESS, it returns the symbol <code>TRUE</code> if it successfully removes a 
+			fact. In our definition of <code>RFunction</code>, we have an attribute <code>functionName</code>
+			to represent the name of a function; an attribute <code>returnValue</code> of 
+			type <code>RDataType</code> to represent a function's return value; a reference 
+			to instances of <code>RDataType</code> to represent a function's parameters. 
+			The <code>functionType</code> attribute in <code>RFunction</code> denotes 
+			whether the function is provided by the rule engine or defined by users.</P>
+		<P><IMG alt="" src="images/ClassDiagram1.gif"></P>
+		<H2>Ball Placement Rule Model</H2>
+		<P>
+			With the three plug-ins of Rule Meta Model&nbsp;in place,&nbsp;we can now use 
+			it to model our logical problem. Let's&nbsp;launch Eclipse and create a new 
+			project. Select <code>File -&gt; New -&gt; Project</code> and in the popup 
+			dialog, select <code>Simple -&gt; Project</code> Click <code>Next</code> button 
+			and name the project <code>Test</code> or anything you like. With a project in 
+			place, we can now create a rule model or import <code>BallPlacement.rulemetamodel</code>
+			that comes with this article's example code.</P>
+		<P>To creat the model from scratch, right click on the project we just created and 
+			in the popup context menu, select <code>New -&gt; Other</code>. And then in the 
+			popup window, select <code>Example EMF Model Creation Wizards -&gt; Rulemetamodel 
+				Model</code> and click the <code>Next</code> button. In the next screen, 
+			name the model whatever you like&nbsp;but keep&nbsp;the file extension&nbsp;as <code>
+				.rulemetamodel</code>.&nbsp;Click the <code>Next</code> button to go to the 
+			next screen, and select <code>RModule</code> from the top dropdown box. Then 
+			click the <code>Finish</code> button.</P>
+		<P>To import <code>BallPlacement.rulemetamodel</code>,&nbsp;right click on&nbsp;the 
+			project we just created and in the popup context menu, select <code>Import</code>. 
+			In the popup dialog window, select <code>File System</code> and click <code>Next</code>
+			button. The <code>Import</code> dialog window will show up. Use the <code>browse</code>
+			button in the dialog window to select the folder where 
+			you&nbsp;unzipped&nbsp;the files in <code>BallPlacementRuleModel.zip</code>. A 
+			list of files in that folder will show up in the <code>Import</code> dialog 
+			window. Check <code>BallPlacement.rulemetamodel</code> in the list and click 
+			the <code>Finish</code> button.
+		</P>
+		<P>If you create the model from scratch, you can refer to <code>BallPlacement.rulemetamodel</code>
+			for details of&nbsp;the model's elements. Below is a screenshot of how the 
+			model looks like in Eclipse. It has two fact templates: <code>placement</code> and
+			<code>ball</code>. It has three&nbsp;rules for the three&nbsp;constraints posed 
+			in the logical problem. It&nbsp;has two&nbsp;other rules for putting initial 
+			facts into rule engine. Without facts,&nbsp;the rule engine will have nothing 
+			to apply the three constraint rules to. The model also has some&nbsp;functions. 
+			They are used in&nbsp;the action part of the rules.&nbsp;</P>
+		<P><IMG alt="" src="images/RuleModel.gif"></P>
+		<P><STRONG><FONT size="3"><STRONG><FONT size="3">Code Generation with JET Template</FONT></STRONG></FONT></STRONG></P>
+		<P>If you select the <code>RModule</code> node in <code>BallPlacement.rulemetamodel</code> and 
+			see its property view, you'll see that there's property called <code>Output File 
+				Path</code>. The value of this property is where the model puts the 
+			generated code. Please change its value to an appropriate location on your 
+			computer and then right click on the <code>RModule</code> node. In the popup 
+			context menu, select <code>Generate</code> and check your file system to see if 
+			a file by the name you specified in the <code>Output File Path</code> property 
+			is generated. The generated file should be the same as <code>BallPlacement.clp</code>
+			in <code>BallPlacementRuleModel.zip</code>.</P>
+		<P>The logic for generating rule language code from a rule model is in a JET (Java 
+			Emitter Templates) template and a java helper class. The JET template file is <code>
+				Module.clpjet</code> in the <code>templates</code> folder of <code>com.example.rule.ecore</code>
+			project, which can be&nbsp;unzipped from <code>RuleMetaModel.zip</code>. The 
+			java helper class is <code>com.example.rule.ecore.templates.ModuleHelper.java</code>. 
+			Readers unfamiliar with JET can refer to <A href="../Article-JET/jet_tutorial1.html">
+				JET Tutorial Part 1 (Introduction to JET)</A> and <A href="../Article-JET2/jet_tutorial2.html">
+				JET Tutorial Part 2 (Write Code that Writes Code)</A> for an excellent and 
+			very readable guide.</P>
+		<P>Practically, a generation model might be necessary for storing complex settings 
+			that govern the generation of rule language code from a rule model just like 
+			EMF's Gen Model for generating code from ECore models. For simplicity, we 
+			modified the editor plug-in EMF generated from our Rule Meta Model and provide 
+			a menu option in the context menu that pops up when you right click&nbsp;the <code>RModule</code>
+			node.
+		</P>
+		<H2>Conclusion</H2>
+		<P>We have demonstrated how to define a meta-model with EMF, use the meta-model to 
+			define a model for a logical problem and use JET to generate rule language code 
+			from the model. We have also seen that the generated code correctly solves the 
+			non-trivial logical problem. The flexibility of EMF as well as Eclipse makes 
+			all the work a breeze. The EMF framework has all modeling foundation there and 
+			thanks to that, most of our time is spent in understanding&nbsp;rule languages 
+			and how rule engine works.&nbsp;</P>
+		<P>The example code for this article is a demonstration. There are many things to 
+			improve. Modeling rule-based systems is still a field in progress. There are 
+			standards bodies working on specifications. In the Reference section at the end 
+			of this article, we provide some pointers to relevant OMG&nbsp;standards in 
+			progress&nbsp;such as Production Rule Representation RFP and Sridhar Iyengar's 
+			response to OMG's Business Rules in Models RFI. Also listed in the Reference 
+			section is a very popular rule engine called CLIPS, of which JESS and many 
+			other rule engines are variations.</P>
+		<H2>Reference</H2>
+		<p>Frank Budinsky, David Steinberg, Ed Merks, Raymond Ellersick, Timothy J. Grose, "Eclipse Modeling Framework", Addison Wesley, ISBN 0-1314-2542-0</p>
+		
+<P>Production Rule Representation RFP <A href="http://www.omg.org/cgi-bin/doc?br/2003-9-3" target="_blank"> 
+  http://www.omg.org/cgi-bin/doc?br/2003-9-3</A></P>
+		
+<P>Business Semantics of Business Rules RFP <A href="http://www.omg.org/cgi-bin/doc?br/2003-6-3" target="_blank"> 
+  http://www.omg.org/cgi-bin/doc?br/2003-6-3</A></P>
+		
+<P>Business Rules Management RFI <A href="http://www.omg.org/cgi-bin/doc?bei/2004-6-3" target="_blank">http://www.omg.org/cgi-bin/doc?bei/2004-6-3</A></P>
+		
+<P>Java Specification Request 94, Java Rule Engine API <A href="http://www.jcp.org/jsr/detail/94.jsp" target="_blank"> 
+  http://www.jcp.org/jsr/detail/94.jsp</A></P>
+		
+<P>Business Rules in Models <A href="http://www.omg.org/technology/documents/Business_Rules_in_Models_RFI.htm" target="_blank"> 
+  http://www.omg.org/technology/documents/Business_Rules_in_Models_RFI.htm</A> 
+</P>
+		
+<P>Sridhar Iyengar's response to&nbsp;OMG's Business Rules in Models RFI <A href="http://www.omg.org/cgi-bin/doc?ad/03-01-25" target="_blank"> 
+  http://www.omg.org/cgi-bin/doc?ad/03-01-25</A></P>
+		
+<P>CLIPS 6.2 <A href="http://www.ghg.net/clips/CLIPS.html" target="_blank">http://www.ghg.net/clips/CLIPS.html</A></P>
+		<P>&nbsp;</P>
+		<h3></h3>
+		<dl>
+			<dt></dt>
+		</dl>
+	</body>
+</html>

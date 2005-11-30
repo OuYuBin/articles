@@ -1,0 +1,412 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Take control of your properties</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body link="#0000ff" vlink="#800080">
+
+<div align="right">
+  &nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright © 2003
+  Broadvision Corp.</font>
+  <table border="0" cellspacing="0" cellpadding="2" width="100%">
+    <tr>
+      <td align="LEFT" valign="TOP" colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left">
+  <h1><img src="images/Idea.jpg" height="86" width="120" align="CENTER"></h1>
+</div>
+<h1 align="CENTER">Take control of your properties</h1>
+<blockquote>
+  <b>Summary</b><br>
+  The Eclipse workbench provides a properties view which is used to view (and/or
+  edit) properties of a selected item. In this article, you will learn how to
+  use the properties view to dynamically modify the properties of a GUI button.
+  <p><b>By Dicky Johan, Broadvision, dicky.johan@broadvision.com</b><br>
+  <font size="-1">May 20, 2003</font></p>
+</blockquote>
+<hr width="100%">
+<h2>Introduction</h2>
+<p>The Eclipse workbench provides a lot of views, but one of the highly
+extensible views is the properties view. It provides a way for you, as a plug-in
+developer, to display the properties of a selected item. The properties view can
+display read-only information, such as the properties of a file resource. Or it
+can display information that can be edited, such as the properties of an
+extension point in a plugin.xml file.</p>
+<p>The properties view can display properties for various kinds of items. An
+item may be a directory resource, a file resource, or an element within a
+resource (such as an extension in a plugin.xml file). The items may reside in
+different views within the Eclipse workbench, and the properties view can be
+triggered from different views or editors to display the properties of a
+selected item.</p>
+<p>In this article, I will show you how to control the different properties of a
+GUI resource using the properties view. Using a button as a sample GUI resource,
+I will create a button, a view containing that button, and a list of editable
+and complex properties. I will show how the button responses to changes of its
+properties thru the property view.</p>
+<h2>Installation</h2>
+<p>To run the sample, please unzip <a href="propertyviewsample.zip">propertyviewsample.zip</a>
+into your <i>eclipse</i> subdirectory. Restart eclipse as necessary.</p>
+<h2>Running the sample</h2>
+<p><img src="images/tryit.gif" width="61" height="13"> Switch to the Resource
+perspective, Window&gt;Open Perspective&gt;Resource. Next open the properties
+view, Window&gt;Show View&gt;Other... and select<br>
+Basic&gt;Properties. Now goto Go to Window&gt;Show View&gt;Other... and select
+&quot;Sample Category/Sample1 View&quot; and you should see the view being shown
+below.&nbsp;</p>
+<p>When you select the &quot;Button&quot; in the view, notice that the
+properties view is changed to display the current properties of the button. You
+can modify the properties and see how the button changes! Cool!</p>
+<p><img border="0" src="properties-view.jpg" width="486" height="220"></p>
+<p>Now the excitement is over, let's get on with the details!</p>
+<h2>Connecting our view to the Properties View</h2>
+<p>The properties view is designed to respond to workbench selection changes.
+The workbench selection is determined by the selection provider (implements <code>ISelectionProvider</code>)
+for the currently active workbench part (view or editor).</p>
+<p>Every workbench part has a <code>IWorkbenchPartSite</code>, and one can set
+the selection provider for this site. When I created our sample view, I
+instantiated a <code>ListViewer</code>, which implements <code>ISelectionProvider</code>.
+I pass this <code>ListViewer</code> to the <code>IWorkbenchPartSite</code>
+object via <img src="images/tag_1.gif" width="24" height="13"><code>setSelectionProvider</code>.
+This enables the property view to be informed of selection changes in our list
+when our view is the active workbench part.</p>
+<pre><font color="#4444cc">   // configure the viewer
+   viewer.setContentProvider(new ListContentProvider());
+   viewer.setLabelProvider(new LabelProvider() {
+      public String getText(Object element) {
+         return ((ButtonElement)element).getName();
+      }
+   });			
+   viewer.setInput(input);
+   <img src="images/tag_1.gif" width="24" height="13">getSite().setSelectionProvider(viewer);
+</font></pre>
+<h2>Creating the IAdaptable item</h2>
+<p>When the properties view is notified of a workbench selection change, the
+selected item will be queried for a property source. There are two ways to
+provide a property source for a particular selection:</p>
+<ul>
+  <li>The selected item can implement the <code>IPropertySource</code> interface
+    and provide the properties.</li>
+  <li>The selected item can implement the <code>IAdaptable</code> interface and
+    return an <code>IPropertySource</code> object when <code>getAdapter</code>
+    is called.</li>
+</ul>
+<p>We will use the latter approach. The first thing we need to do is to create
+our own custom item. In this case, it is a element used to store a GUI button.</p>
+<pre><font color="#4444cc">public class ButtonElement implements <img src="images/tag_1.gif" width="24" height="13">IAdaptable {
+
+   private Button button;
+   private String name;
+
+      /**
+       * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+       */
+      public Object getAdapter(Class adapter) {
+		 if (adapter == IPropertySource.class) {
+			<img src="images/tag_2.gif" width="24" height="13">if (btnElPS == null) {
+				// cache the buttonelementpropertysource
+				btnElPS = new ButtonElementPropertySource(this,name);
+			}
+			return btnElPS;
+		 }
+         return null;
+      }</font></pre>
+<p>Notice that this class implements <img src="images/tag_1.gif" width="24" height="13"><code>IAdaptable</code>,
+which is used to query for a property source. When <code>getAdapter</code> is
+called with the <code>IPropertySource.class</code> argument, it will create an
+instance of the class <img src="images/tag_2.gif" width="24" height="13"><code>ButtonElementPropertySource</code>
+that describes the button's properties. We cache this instance in the class for
+two reasons. One is for performance (since for every call, we are creating
+similar objects), and the other is for tracking property changes as you will see
+later.</p>
+<h2>Creating the Property Source object</h2>
+<p>The <code>ButtonElementPropertySource</code> class implements <code>IPropertySource</code>,
+which is an interface that provides a description of an item's properties. In
+our example, I am storing the button control within the element, and since I
+will be modifying the properties of the button in real time, I want to gain
+access to its handle within the <code>ButtonElementPropertySource</code> object.
+Thus <img src="images/tag_1.gif" width="24" height="13">the constructor of <code>ButtonElementPropertySource</code>
+takes a <code>ButtonElement</code> object. It also takes on a defaultText
+string, this is used for storing the default value of the button text.</p>
+<pre> 
+<font color="#4444cc">   /**
+    * This class provides property sheet properties
+    * for ButtonElement. 
+    */
+   public class ButtonElementPropertySource implements IPropertySource {
+		 		
+      private static final String PROPERTY_FONT = &quot;mview.views.font&quot;; 	
+      private static final String PROPERTY_SIZE = &quot;mview.views.size&quot;;	
+      private static final String PROPERTY_TEXT = &quot;mview.views.text&quot;;	
+      private final Button button;
+      private final SizePropertySource sizePropertySource = new SizePropertySource();
+
+      private String defText;
+	
+      private IPropertyDescriptor[] propertyDescriptors;
+	
+      /**
+       * Creates a new ButtonElementPropertySource.
+       *
+       * @param element  the element whose properties this instance represents
+       */
+      public <img src="images/tag_1.gif" width="24" height="13">ButtonElementPropertySource(ButtonElement element, String defaultText) {
+         button = element.getControl();
+         defText = defaultText;
+      }
+	
+      /**
+       * @see org.eclipse.ui.views.properties.IPropertySource#getPropertyDescriptors()
+       */
+      public IPropertyDescriptor[] getPropertyDescriptors() {
+         if (propertyDescriptors == null) {
+            // Create a descriptor and set a category
+            PropertyDescriptor fontDescriptor = new FontDataPropertyDescriptor(PROPERTY_FONT, &quot;Font&quot;);
+            <img src="images/tag_2.gif" width="24" height="13">fontDescriptor.setCategory(&quot;Label&quot;);
+
+            PropertyDescriptor sizeDescriptor = new PropertyDescriptor(PROPERTY_SIZE, &quot;Size&quot;);
+            // set a custom label provider for a point
+            sizeDescriptor.setLabelProvider(new LabelProvider() {
+               public String getText(Object element) {
+                  Point point = (Point)element;
+                  StringBuffer buf = new StringBuffer();
+                  buf.append(&quot;Height:&quot;);
+                  buf.append(point.y);
+                  buf.append(&quot;  &quot;);
+                  buf.append(&quot;Width:&quot;);
+                  buf.append(point.x);
+	              return buf.toString();
+               }
+            });
+            sizeDescriptor.setCategory(&quot;Button&quot;);
+			
+            PropertyDescriptor textDescriptor = new TextPropertyDescriptor(PROPERTY_TEXT,&quot;Text&quot;);
+            textDescriptor.setCategory(&quot;Label&quot;);
+
+            <img src="images/tag_3.gif" width="24" height="13">propertyDescriptors = new IPropertyDescriptor[] {
+               fontDescriptor,
+               sizeDescriptor,   // Read-only (instance of PropertyDescriptor)
+               textDescriptor};
+            }
+            return propertyDescriptors;
+      }</font></pre>
+<p>Every property needs to be described by a property descriptor. You can create
+your own custom property descriptor, I will show you an example of this later,
+or you can use some standard ones that are already included:</p>
+<ul>
+  <li><code>PropertyDescriptor</code> - read-only property</li>
+  <li><code>TextPropertyDescriptor </code>- edits with a <code>TextCellEditor</code></li>
+  <li><code>CheckboxPropertyDescriptor</code> - edits with a <code>CheckboxCellEditor</code></li>
+  <li><code>ComboBoxPropertyDescriptor </code>- edits with a <code>ComboBoxCellEditor</code></li>
+  <li><code>ColorPropertyDescriptor </code>- edits with a <code>ColorCellEditor</code></li>
+</ul>
+<p>Two property descriptors are categorized under <img src="images/tag_2.gif" width="24" height="13">
+&quot;Label&quot;, the other under &quot;Button&quot;. Notice how these
+categories show up in the properties view when the &quot;Show Categories&quot;
+button is pressed in the view's local toolbar. Altogether, I created three <img src="images/tag_3.gif" width="24" height="13">
+property descriptors.</p>
+<h2>Creating a custom property descriptor</h2>
+<p>It would be too boring to only display a button with a plain vanilla default
+font. I decided to spice it up by providing an editable font property. Checking
+out the list of default property descriptors, I cannot find any font related
+property descriptor. So, let's try to be a bit adventurous and create our own.</p>
+<pre><font color="#4444cc">   public class FontDataPropertyDescriptor extends PropertyDescriptor {
+      /**
+       * Creates a property descriptor with the given id and display name.
+       * 
+       * @param id the id of the property
+       * @param displayName the name to display for the property
+       */
+      public FontPropertyDescriptor(Object id, String displayName) {
+         super(id, displayName);
+         setLabelProvider(new FontDataLabelProvider());
+      }
+
+      /**
+       * @see org.eclipse.ui.views.properties.IPropertyDescriptor#createPropertyEditor(Composite)
+       */
+      public CellEditor createPropertyEditor(Composite parent) {
+         CellEditor editor = <img src="images/tag_1.gif" width="24" height="13">new FontDataDialogCellEditor(parent);
+         if (getValidator() != null)
+            editor.setValidator(getValidator());
+         return editor;
+      }
+   }</font></pre>
+<p>I derive the <code>FontDataPropertyDescriptor</code> class from the default <code>PropertyDescriptor</code>.
+When <code>createPropertyEditor</code> is called, I need to instantiate our own <img src="images/tag_1.gif" width="24" height="13"><code>FontDataDialogCellEditor</code>.</p>
+<p>The <code>FontDialogCellEditor </code>needs to instantiate a dialog, and thus
+behaves like a <code>DialogCellEditor</code>. So, I derive from it.</p>
+<pre><font color="#4444cc">   public class FontDataDialogCellEditor extends DialogCellEditor {
+      /**
+       * Creates a new Font dialog cell editor parented under the given control.
+       * The cell editor value is &lt;code&gt;null&lt;/code&gt; initially, and has no 
+       * validator.
+       *
+       * @param parent the parent control
+       */
+      protected FontDataDialogCellEditor(Composite parent) {
+         super(parent);
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.DialogCellEditor#openDialogBox(Control)
+       */
+      protected Object openDialogBox(Control cellEditorWindow) {
+         <img src="images/tag_2.gif" width="24" height="13">FontDialog ftDialog = new FontDialog(cellEditorWindow.getShell());
+         String value = (String) getValue();
+
+         if (getValue() != null) {
+            ftDialog.setFontData((FontData)getValue());
+         }
+         FontData fData = ftDialog.open();
+			
+         if (fData != null) {
+  	    <img src="images/tag_3.gif" width="24" height="13">return fData;
+         }
+         return getValue();
+      }
+   }</font></pre>
+Exploring the rich UI functionality provided by Eclipse, I find out that SWT
+provides the system <code>FontDialog</code>. How handy! So, I just use that to <img src="images/tag_2.gif" width="24" height="13">instantiate
+our font dialog. SWT uses a <code>FontData</code> to represent the font and this
+is what we use as the <img src="images/tag_3.gif" width="24" height="13">property's
+value. After setting the font, I need to present its value as a human readable
+string in the properties view. A <code>FontDataLabelProvider</code> is used for
+this purpose. Using a few simple classes, I have created a custom property
+descriptor.
+<h2>Implementing complex property descriptors</h2>
+<p>From time to time, we encounter properties that are quite complex, i.e. their
+values are not simple objects such as strings or integers. As an example,
+consider the size property of a <code>Button</code>. It expects and returns a <code>Point</code>
+object. But if you look closer, a point object is really comprised of two simple
+integer values. Thus we can describe the size using a <code>SizePropertySource</code>
+which has &quot;width&quot; and &quot;height&quot; properties.</p>
+<pre><font color="#4444cc">   /**
+    * @see org.eclipse.ui.views.properties.IPropertySource#getPropertyValue(Object)
+    */
+   public Object getPropertyValue(Object name) {
+      ...
+      if (name.equals(PROPERTY_SIZE)) {
+         // By returning a property source for the value, this property
+	 // will have &quot;child properties&quot; in the view.
+	 // These child properties are determined by the property source
+	 // we return here
+	 sizePropertySource.setPoint(button.getSize());
+	<img src="images/tag_1.gif" width="24" height="13">return sizePropertySource;
+      }
+      ...
+   }
+
+   /**
+    * @see org.eclipse.ui.views.properties.IPropertySource#setPropertyValue(Object, Object)
+    */
+   public void setPropertyValue(Object name, Object value) {
+      ...
+      if (name.equals(PROPERTY_SIZE)) {
+         // We returned a SizePropertySource as the value for PROPERTY_SIZE
+         // The SizePropertySource's editValue will be set as the value
+	 // for PROPERTY_SIZE here
+	 <img src="images/tag_2.gif" width="24" height="13">button.setSize((Point)value);
+      }
+      ...
+   }</font>
+</pre>
+<p>The Eclipse workbench supports the notion of nested properties (good job in
+thinking ahead!). When <code>getProperty</code> is called on the <code>ButtonElementPropertySource</code>,
+we return an <img src="images/tag_1.gif" width="24" height="13"><code>IPropertySource</code>
+object instead of a value. In this case, I created the <code>SizePropertySource</code>
+class for describing the size property. <code>SizePropertySource</code> is
+similar to <code>ButtonElementPropertySource</code>, so I would not elaborate on
+it further.&nbsp;Note that when an <code>IPropertySource</code> is used as a
+property value, its <code>getEditValue</code> is used by the properties view to <img src="images/tag_2.gif" width="24" height="13">set
+the property value.</p>
+<h2>Controlling the button</h2>
+<p>In order to update the button once a property has been changed, I make a call
+to the button within the <code>setPropertyValue</code> function of the <code>ButtonElementPropertySource</code>
+class. Since I hold the <code>ButtonElement</code> handle within the <code>ButtonElementPropertySource</code>
+object, I can set the properties of the element's button control directly.</p>
+<h2>Default Properties</h2>
+<p>The IPropertySource interface also provides a means of implementing default
+values for properties. This is accomplished via two methods on the
+IPropertySource interface: <code>isPropertySet</code> and <code>resetPropertyValue</code>.
+In the diagram shown below, there is a default button that the user can press.
+If the function &lt;resetPropertyValue&gt; is implemented, it will cause the the
+property value to reset to its default.</p>
+<p><img src="images/default.jpg" width="165" height="60"></p>
+<p>Whenever the Default button is clicked, the isPropertySet will be called for
+the property that is being selected. If isPropertySet returns true, then it will
+call resetPropertyValue to reset the property to a specified default value. In
+the sample code that is enclosed, I only show how to reset the text property,
+but you can apply the same concept to the other properties.</p>
+<p>I store the default Name for the button text in a member variable of the <code>ButtonElementPropertySource</code>
+class. The default Name is <font color="#4444cc"><img src="images/tag_1.gif" width="24" height="13"></font>set
+during construction time. In the <code>isPropertySet</code> call, <font color="#4444cc"><img src="images/tag_2.gif" width="24" height="13"></font>a
+check is made between the current text property and the default text property.
+If they are different, then the <code>resetPropertyValue</code> method will be
+invoked, and in there, I made the call to <code><font color="#4444cc"><img src="images/tag_3.gif" width="24" height="13"></font>setPropertyValue</code>
+method with the default text value.</p>
+<pre><font color="#4444cc">/**
+  * Creates a new ButtonElementPropertySource.
+  *
+  * @param element  the element whose properties this instance represents
+  * @param defaultText  the default text of the button
+  */
+	public ButtonElementPropertySource(ButtonElement element, String defaultText) {
+		btnEl = element;
+		button = element.getControl();
+		<img src="images/tag_1.gif" width="24" height="13">defText = defaultText;
+	}
+
+...
+ 
+/**
+  * @see org.eclipse.ui.views.properties.IPropertySource#isPropertySet(Object)
+  */
+
+  public boolean isPropertySet(Object id) {
+     if (id.equals(PROPERTY_TEXT)) {
+        <img src="images/tag_2.gif" width="24" height="13">	String curName = (String)getPropertyValue(id);
+			return !curName.equals(defText);
+     }
+     // other properties are not supported currently
+     return false;
+  }
+
+/**
+  * @see org.eclipse.ui.views.properties.IPropertySource#resetPropertyValue(Object)
+  */
+
+  public void resetPropertyValue(Object id) {
+     // tracks the text property only
+     if (id.equals(PROPERTY_TEXT)) {
+		<img src="images/tag_3.gif" width="24" height="13">setPropertyValue(id,defText);
+     }
+  }</font></pre>
+<h2>Summary</h2>
+<p>I have discussed how to register a workbench selection provider so that a
+selection will be passed to the properties view. I demonstrated creating a
+property source and its property descriptors. I showed how a descriptor supports
+the display and editing of a property.</p>
+<p>There are several other advanced properties view topics that have not been
+discussed. For example, the properties view supports having more than one item
+selected and showing only those properties which are common to all the selected
+items. The workbench also provides a mechanism for workbench parts to provide
+their own custom &quot;page&quot; for the properties view (by asking the part
+for an <code>IPropertySheetPage</code> via <code>getAdapter</code>). Such a
+custom page can be an instance of <code>PropertySheetPage</code> configured with
+an <code>IPropertySourceProvider</code> or a custom root <code>IPropertySheetEntry</code>
+or the custom page can be an independent implementation of <code>IPropertySheetPage</code>.
+This mechanism allows the properties view to work with non-<code>IPropertySource</code>
+items.&nbsp;</p>
+<p>Now that you have discovered some of the magic of the properties view, I hope
+that you can make good use of it.</p>
+</body>
+
+</html>

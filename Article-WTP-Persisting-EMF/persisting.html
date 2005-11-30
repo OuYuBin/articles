@@ -1,0 +1,475 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type"
+	CONTENT="text/html; charset=windows-1252">
+<title>Persisting EMF models with WTP</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif"
+	size="2">Copyright &copy; 2005 Daniel Rohe</font>
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+	<tr>
+		<td align="LEFT" valign="TOP" colspan="2" bgcolor="#0080C0"><b><font
+			face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse Corner
+		Article</font></font></b></td>
+	</tr>
+</table>
+</div>
+<div align="left">
+<h1><img src="images/Idea.jpg" height="86" width="120" align="CENTER"
+	alt=""></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Persisting EMF models with WTP</h1>
+
+<blockquote><b>Summary</b> <br>
+This article will guide you through an example where an EMF model is
+created without serialization and the serialization is done with the
+framework from the WTP plugin <em>org.eclipse.wst.common.emf</em>.
+<p><b>Daniel Rohe</b><br>
+<font size="-1">October 10, 2005</font></p>
+</blockquote>
+
+<hr width="100%">
+<h2>Introduction</h2>
+<p>The WTP project provides a huge collection of plug-ins for developing
+web applications. For developing J2EE applications, the developers of
+the WTP have created EMF models for the deployment descriptors like
+ejb-jar.xml or web.xml. These EMF models work with different versions of
+these deployment descriptors and provide a single API to access and edit
+the descriptors. Using this API, several tools that work with these
+descriptors have been developed.</p>
+<p>WTP includes a framework to serialize the EMF model, but
+unfortunately it is not very well documented. It provides a facility to
+load and store EMF models into XML documents that have slightly
+different document type definitions. In this article I will explain the
+use of this framework for serialization of an EMF model based on
+different versions of an XML document. I hope my article helps you to
+understand the framework so you can use it with your own model.</p>
+<h2>EMF model</h2>
+<p>The EMF model used in this article is created from the latest version
+of the Document Type Definition (DTD) of the Apache Struts configuration
+file. The EMF model contains classes that reflect the main DOM elements
+from the DTD. The following pictures illustrate the different DTDs and
+the single EMF model. The first three pictures contain a graphical
+notation of the three DTDs, whereas the last picture contains a class
+diagram with classes and data types from the EMF model.</p>
+<table width="100%" border="0">
+	<tr align="center" valign="middle">
+		<td><a href="images/struts-config_1_0.png"><img
+			src="images/thumb-struts-config_1_0.png" width="160" height="141"
+			border="0" alt="" /></a></td>
+		<td><a href="images/struts-config_1_1.png"><img
+			src="images/thumb-struts-config_1_1.png" width="160" height="241"
+			border="0" alt="" /></a></td>
+		<td><a href="images/struts-config_1_2.png"><img
+			src="images/thumb-struts-config_1_2.png" width="160" height="252"
+			border="0" alt="" /></a></td>
+	</tr>
+</table>
+<p><a href="images/strutsconfig.png"><img
+	src="images/thumb-strutsconfig.png" width="640" height="417" border="0"
+	alt="" /></a></p>
+<p>As you can see in the first three pictures, each version differs
+slightly from the others. The EMF model reflects the latest version by
+containing the elements from all previous DTD versions. In the EMF model
+I've extracted some base functionality in abstract classes. So the
+Configurable class contains only a reference to the SetPropertyType
+class which represents a set-property element. The other change is the
+introduction of the class Visualizable that contains the properties
+necessary for displaying the element in a graphical editor. Another
+important object to note here is the class StrutsConfigType. This class
+represents the struts-config element from the configuration file. The
+StrutsConfigType class is the root element in the containment hierarchy
+like the struts-config element in the DOM-tree.</p>
+<p>There are two alternatives to create the EMF model from the DTDs. The
+first one is to convert the DTD into an XML Schema Definition (XSD)
+which is the input for the EMF import wizard. The wizard creates the EMF
+model based on the XSD. It also creates constraints used for validation
+based on the constraints defined in the XSD. The other alternative is
+the handcrafted way. Here you create the model with an editor by hand.
+The next step is to create the generator model (GenModel). This model
+contains the information for transforming the EMF model into Java. In
+this model it is important to set the resource type property of the root
+package to &quot;None&quot;. Otherwise the handwritten classes will be
+overwritten by regeneration. After setting the property a right mouse
+click on the root element in this model and choosing generate model code
+from the context menu generates the Java code from the model.</p>
+<h2>Mapping of EMF classes to DOM elements</h2>
+<p>This section describes the mapping framework introduced with the WTP
+project in the plug-in org.eclipse.wst.common.emf. The framework helps
+to translate EMF models into XML documents and vice-versa. To translate
+an EMF model into a XML document you need some mapping definitions and a
+renderer capable of reading from and writing to the XML document using
+the mapping definitions. The plug-in provides two renderers. The first
+one (EMF2SAXRenderer) uses SAX to load and a Transformer to store the
+EMF model. The second renderer (EMF2DOMRenderer) uses DOM for
+serialization of the EMF model. This renderer also creates an adapter
+that synchronizes the DOM tree and the model after any change is made
+either one. These classes can all be used as provided. All that you have
+to do is to implement the mappings for serialization. This is done by
+means of the Translator class and its subclasses.</p>
+<p>The Translator class stores information about a model object and its
+representation in the DOM tree of the XML document. The style integer in
+the Translator class contains the mapping information. It contains Bits
+that represent different mapping styles that affect how the model object
+is stored and how it is read from XML. Not all style bits are
+documented, therefore I will give a short description of each bit in the
+following table.</p>
+<table width="100%" border="0">
+	<tr>
+		<td valign="top">DOM_ATTRIBUTE</td>
+		<td>indicates that the EMF model object is rendered as attribute of a
+		XML element</td>
+	</tr>
+	<tr>
+		<td valign="top">EMPTY_TAG</td>
+		<td>indicates that the attribute or reference is rendered as empty tag</td>
+	</tr>
+	<tr>
+		<td valign="top">CDATA_CONTENT</td>
+		<td>indicates that the EMF model object is rendered as CDATA in XML</td>
+	</tr>
+	<tr>
+		<td valign="top">END_TAG_NO_INDENT</td>
+		<td>indicates that the end tag should not be indented</td>
+	</tr>
+	<tr>
+		<td valign="top">BOOLEAN_LOWERCASE</td>
+		<td>indicates that the boolean attribute of a model object is rendered
+		with a lowercase string and not with "True" or "False"</td>
+	</tr>
+	<tr>
+		<td valign="top">ENUM_FEATURE_WITH_HYPHENS</td>
+		<td>indicates that the model object is an enum that contains hyphens;
+		the hyphens are converted to underscores</td>
+	</tr>
+	<tr>
+		<td valign="top">EMPTY_CONTENT_IS_SIGNIFICANT</td>
+		<td>just as the name says, indicates that empty content is significant</td>
+	</tr>
+	<tr>
+		<td valign="top">COMMENT_FEATURE</td>
+		<td>indicates that the content of the EMF feature is in the first XML
+		comment node in front of the XML element of the EMF model object</td>
+	</tr>
+	<tr>
+		<td valign="top">UNSET_IF_NULL</td>
+		<td>unsets the model object if the value is null</td>
+	</tr>
+</table>
+<p>To map an EMF class to a XML element you have to define a translator.
+The renderer uses the translator for mapping the EMF object into an XML
+element. For simplicity the next code listing shows the definition of a
+translator for an attribute of an EMF class mapped to an attribute of an
+XML element.</p>
+<pre>new Translator(&quot;property&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STRUTS_CONFIG_PACKAGE.getSetPropertyType_Property(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Translator.DOM_ATTRIBUTE)</pre>
+<p>This listing defines a single translator that maps the attribute
+property of an XML element to the EMF attribute property of the EMF
+class SetPropertyType. This mapping is the simplest one because it does
+not define any containment hierarchy. The mapping says nothing about
+what XML element contains the attribute property or which EMF class
+contains the instance of the EMF class SetPropertyType. The plug-in
+provides a very generic implementation for the mapping with the class
+GenericTranslator. This translator should be used for mapping EMF
+classes to XML elements. The next listing shows an example that uses an
+instance of GenericTranslator to map an XML element with attributes to
+an EMF class.</p>
+<pre>GenericTranslator translator = new GenericTranslator(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;set-property&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STRUTS_CONFIG_PACKAGE.getConfigurable_SetProperty());
+
+translator.setChildren(new Translator[] { IDTranslator.INSTANCE,
+&nbsp;&nbsp;&nbsp; new Translator(&quot;property&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STRUTS_CONFIG_PACKAGE.getSetPropertyType_Property(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Translator.DOM_ATTRIBUTE),
+&nbsp;&nbsp;&nbsp; new Translator(&quot;value&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STRUTS_CONFIG_PACKAGE.getSetPropertyType_Value(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Translator.DOM_ATTRIBUTE) });</pre>
+<p>The first three lines define the generic translator for the EMF class
+SetPropertyType. The first parameter (set-property) of the constructor
+defines the name of the XML element that is mapped to the EMF class. The
+second parameter defines the reference containing an object of the
+SetPropertyType class. The rest of the listing shows the creation of the
+mappings for the EMF attributes. These mappings are added as children to
+the translator for mapping the SetPropertyType class. This translator
+can then be used as a child translator elsewhere. In the example the
+translator is used for each Configurable subclass.</p>
+<p>An important aspect is the possibility of using paths for referencing
+XML elements. In the Visualizable class are two paths used for the EMF
+attribute smallIcon and largeIcon. They both are mapped to the XML
+element small-icon and large-icon which are children of the XML element
+icon. The next listing shows the mapping of the EMF attribute largeIcon
+to a XML element large-icon.</p>
+<pre>protected static Translator LARGE_ICON_TRANSLATOR = new Translator(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;icon/large-icon&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STRUTS_CONFIG_PACKAGE.getVisualizable_LargeIcon());</pre>
+<p>Another important aspect is extension of the RootTranslator class.
+This abstract class is used for mapping the root XML element to an EMF
+class. The constructor of the class RootTranslator takes two arguments.
+The first defines the root XML element and the second the EMF class. In
+the listing below the XML element struts-config is mapped to the EMF
+class StrutsConfigType, the root in the containment hierarchy in our
+model.</p>
+<pre>public StrutsConfigTranslator() {
+&nbsp;&nbsp;&nbsp; super(&quot;struts-config&quot;, STRUTS_CONFIG_PACKAGE.getStrutsConfigType());
+}</pre>
+<p>This class has a method getChildren() which returns the children of
+the root translator. The method has two arguments. The first contains
+the element to be mapped into XML and the second is a version identifier
+for the XML document. The method must be overriden to provide the child
+mappings of the root translator. The next listing shows the overridden
+method. It returns the child translators based on the version
+identifier.</p>
+<pre>public Translator[] getChildren(Object target, int versionID) {
+&nbsp;&nbsp;&nbsp; switch (versionID) {
+&nbsp;&nbsp;&nbsp; case StrutsConfigConstants.VERSION_1_0_ID:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (children10 == null) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; children10 = create10Children();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return children10;
+&nbsp;&nbsp;&nbsp; case StrutsConfigConstants.VERSION_1_1_ID:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (children11 == null) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; children11 = create11Children();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return children11;
+&nbsp;&nbsp;&nbsp; case StrutsConfigConstants.VERSION_1_2_ID:
+&nbsp;&nbsp;&nbsp; default:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (children12 == null) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; children12 = create12Children();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return children12;
+&nbsp;&nbsp;&nbsp; }
+}</pre>
+<p>The listing shows a switch statement for creation of the child
+mappings. The create methods creates the mappings starting from the root
+mapping. The first parameter of the getChildren method could also be
+used to create mappings for specific elements. The next listing shows
+the create method for the version 1.2 which returns an array of
+translators for each child XML element of the root element.</p>
+<pre>protected Translator[] create12Children() {
+&nbsp;&nbsp;&nbsp; return new Translator[] { IDTranslator.INSTANCE,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; new Translator(StrutsConfigXmlMapping.DISPLAY_NAME,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STRUTS_CONFIG_PACKAGE.getStrutsConfigType_DisplayName()),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; new Translator(StrutsConfigXmlMapping.DESCRIPTION,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STRUTS_CONFIG_PACKAGE.getStrutsConfigType_Description()),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createDataSourcesTranslator(StrutsConfigConstants.VERSION_1_2_ID),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createFormBeansTranslator(StrutsConfigConstants.VERSION_1_2_ID),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createGlobalExceptionsTranslator(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createGlobalForwardsTranslator(StrutsConfigConstants.VERSION_1_2_ID),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createActionMappingsTranslator(StrutsConfigConstants.VERSION_1_2_ID),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createControllerTranslator(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createMessageResourcesTranslator(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; createPlugInTranslator() };
+}</pre>
+<p>For more mapping examples or the complete root translator look at the
+source code of the StrutsBox project.</p>
+<h2>Integrating Translators into EMF Resource</h2>
+<p>In this section I will show how the mappings should be integrated into
+EMF resource handling. For this purpose, an abstract EMF resource
+<pre>public StrutsConfigResourceImpl(Renderer renderer) {
+&nbsp;&nbsp;&nbsp; super(renderer);
+}
+
+public StrutsConfigResourceImpl(URI uri, Renderer renderer) {
+&nbsp;&nbsp;&nbsp; super(uri, renderer);
+}</pre>
+<p>These two constructors are used to create the resource. The original
+resource constructor is deprecated because the given renderer is used
+for the translation of the XML document to the EMF model.</p>
+<pre>protected String getDefaultSystemId() {
+&nbsp;&nbsp;&nbsp; return StrutsConfigConstants.STRUTS_CONFIG_SYSTEM_ID_1_2;
+}
+
+protected String getDefaultPublicId() {
+&nbsp;&nbsp;&nbsp; return StrutsConfigConstants.STRUTS_CONFIG_PUBLIC_ID_1_2;
+}
+
+protected int getDefaultVersionID() {
+&nbsp;&nbsp;&nbsp; return StrutsConfigConstants.VERSION_1_2_ID;
+}</pre>
+<p>These three methods return the default properties after the resource
+is loaded. The first two methods are for the XML document type
+definition and the last one is used for retrieving the version
+identifier used by the translator to create the mappings.</p>
+<pre>public Translator getRootTranslator() {
+&nbsp;&nbsp;&nbsp; return StrutsConfigTranslator.getInstance();
+}</pre>
+<p>This method connects the resource with the translator. To retrieve
+the correct mappings, this method is called from the renderer during
+serialization.</p>
+<pre>public String getDoctype() {
+&nbsp;&nbsp;&nbsp; return StrutsConfigXmlMapping.STRUTS_CONFIG;
+}</pre>
+<p>The method returns the name of the root XML element in the document.</p>
+<pre>public void setDoctypeValues(String publicId, String systemId) {
+&nbsp;&nbsp;&nbsp; super.setDoctypeValues(publicId, systemId);
+&nbsp;&nbsp;&nbsp; // here we decide based on the given public id which
+&nbsp;&nbsp;&nbsp; // struts-config version gets loaded
+&nbsp;&nbsp;&nbsp; int version = StrutsConfigConstants.VERSION_1_2_ID;
+&nbsp;&nbsp;&nbsp; if (StrutsConfigConstants.STRUTS_CONFIG_PUBLIC_ID_1_0.equals(publicId)) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; version = StrutsConfigConstants.VERSION_1_0_ID;
+&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp; if (StrutsConfigConstants.STRUTS_CONFIG_PUBLIC_ID_1_1.equals(publicId)) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; version = StrutsConfigConstants.VERSION_1_1_ID;
+&nbsp;&nbsp;&nbsp; }
+
+&nbsp;&nbsp;&nbsp; setVersionID(version);
+}</pre>
+<p>This method is called after the XML document type definition is read
+from the XML document. It determines the version identifier used to
+retrieve the correct mappings from the root translator.</p>
+<p>There is also an adapter which sets the version attribute of the root
+object in the EMF model. The version attribute is taken from the version
+identifier determined from the document type definition. The code for
+this adapter is shown in the following listing.</p>
+<pre>private class RootVersionAdapter extends AdapterImpl {
+
+&nbsp;&nbsp;&nbsp; public boolean isAdapterForType(Object type) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return super.isAdapterForType(type);
+&nbsp;&nbsp;&nbsp; }
+
+&nbsp;&nbsp;&nbsp; public void notifyChanged(Notification msg) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (msg.getFeatureID(null) == RESOURCE__CONTENTS
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;&amp; msg.getEventType() == Notification.ADD) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ((StrutsConfigResourceImpl) msg.getNotifier()).syncVersionOfRootObject();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ((Notifier) msg.getNotifier()).eAdapters().remove(this);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp; }
+
+}
+
+public String getVersionString() {
+&nbsp;&nbsp;&nbsp; switch (getVersionID()) {
+&nbsp;&nbsp;&nbsp; case StrutsConfigConstants.VERSION_1_0_ID:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return StrutsConfigConstants.VERSION_1_0_TEXT;
+&nbsp;&nbsp;&nbsp; case StrutsConfigConstants.VERSION_1_1_ID:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return StrutsConfigConstants.VERSION_1_1_TEXT;
+&nbsp;&nbsp;&nbsp; case StrutsConfigConstants.VERSION_1_2_ID:
+&nbsp;&nbsp;&nbsp; default:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return StrutsConfigConstants.VERSION_1_2_TEXT;
+&nbsp;&nbsp;&nbsp; }
+}
+
+protected void syncVersionOfRootObject() {
+&nbsp;&nbsp;&nbsp; StrutsConfigType strutsConfig = (StrutsConfigType) getRootObject();
+&nbsp;&nbsp;&nbsp; if (strutsConfig != null) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; String version = strutsConfig.getVersion();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; String newVersion = getVersionString();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!newVersion.equals(version)) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strutsConfig.setVersion(newVersion);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp; }
+}
+
+protected void initializeContents() {
+&nbsp;&nbsp;&nbsp; super.initializeContents();
+&nbsp;&nbsp;&nbsp; eAdapters().add(new RootVersionAdapter());
+}</pre>
+<p>The adapter class synchronizes the version attribute of the root
+object after it is added to the resource. To synchronize the version
+attribute during initialization, the class is added to the adapters of
+the resource in the method initializeContents. After the root object is
+added to the resource the adapter is notified. Then it calls the method
+syncVersionOfRootObject, where the version string is determined by the
+version identifier. The version string is then set as version attribute
+of the root object.</p>
+<p>Normally a resource factory creates a resource in the EMF framework.
+So the next step is to create the resource factory. The factory class is
+very simple. It extends TranslatorResourceFactory and implements a
+single method for resource creation. The following listing shows the
+resource factory from the example.</p>
+<pre>public class StrutsConfigResourceFactoryImpl extends TranslatorResourceFactory {
+
+&nbsp;&nbsp;&nbsp; public StrutsConfigResourceFactoryImpl() {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; super(EMF2DOMRendererFactoryDefaultHandler.INSTANCE
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; .getDefaultRendererFactory());
+&nbsp;&nbsp;&nbsp; }
+
+&nbsp;&nbsp;&nbsp; protected TranslatorResource createResource(URI uri, Renderer aRenderer) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return new StrutsConfigResourceImpl(uri, aRenderer);
+&nbsp;&nbsp;&nbsp; }
+
+}</pre>
+<h2>Using the model in an editor</h2>
+<p>The model editor can be generated from the GenModel. After the editor
+has been generated, the constructor must be changed. The resource
+factory must be added to the resource set of the editing domain for a
+specific file extension.</p>
+<pre>public StrutsConfigEditor() {
+&nbsp;&nbsp;&nbsp; super();
+
+&nbsp;&nbsp;&nbsp; ...
+
+&nbsp;&nbsp;&nbsp; // Create the editing domain with a special command stack.
+&nbsp;&nbsp;&nbsp; //
+&nbsp;&nbsp;&nbsp; editingDomain = new AdapterFactoryEditingDomain(adapterFactory,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; commandStack, new HashMap());
+&nbsp;&nbsp;&nbsp; editingDomain.getResourceSet()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; .getResourceFactoryRegistry().getExtensionToFactoryMap()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; .put(&quot;xml&quot;, new StrutsConfigResourceFactoryImpl());
+}</pre>
+<p>After changing, the editing domain creates our resource factory for
+files with the extension xml. Now the editor must be registered for this
+file extension in the Eclipse extension registry. To achieve this goal,
+you have to set the extensions attribute of the editor extension to
+&quot;xml&quot;.</p>
+<p><a href="images/editor_extension.jpg"><img
+	src="images/thumb-editor_extension.jpg" width="640" height="542"
+	border="0" alt="" /></a></p>
+<h2>References</h2>
+<ul>
+	<li>StrutsBox &ndash; Professional Struts Development Toolkit for
+	Eclipse (<a href="http://www.strutsbox.de">www.strutsbox.de</a>)
+	<ul>
+		<li>Source code from plug-ins:
+		<ul>
+			<li>de.strutsbox.strutsconfig</li>
+		</ul>
+		</li>
+	</ul>
+	</li>
+	<li>EMF (<a href="http://www.eclipse.org/emf">www.eclipse.org/emf</a>)
+	<ul>
+		<li>The Eclipse Modeling Framework Overview</li>
+	</ul>
+	</li>
+	<li>WTP (<a href="http://www.eclipse.org/webtools">www.eclipse.org/webtools)</a>
+	<ul>
+		<li>The J2EE Deployment Descriptor Models</li>
+		<li>J2EE Module Operations (module creation, import wizards) API</li>
+		<li>Source code from plug-ins:
+		<ul>
+			<li>org.eclipse.wst.common.emf</li>
+			<li>org.eclipse.jst.j2ee.core</li>
+		</ul>
+		</li>
+	</ul>
+	</li>
+</ul>
+<p>The executable plug-ins with source code could be downloaded from <a
+	href="strutsbox.strutsconfig.zip">here</a>.</p>
+
+
+<p>To discuss or report problems in this article see <a
+	href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=100762">bug 100762</a>.</p>
+
+<p><small>IBM is trademark of International Business Machines
+Corporation in the United States, other countries, or both.</small></p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or
+registered trademarks of Sun Microsystems, Inc. in the United States,
+other countries, or both.</small></p>
+<p><small>Microsoft and Windows are trademarks of Microsoft Corporation
+in the United States, other countries, or both.</small></p>
+<p><small>Other company, product, and service names may be trademarks or
+service marks of others.</small></p>
+
+
+</body>
+</html>

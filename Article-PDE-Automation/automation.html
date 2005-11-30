@@ -1,0 +1,1568 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+  <head>
+    <meta name="generator" content="HTML Tidy, see www.w3.org">
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+    <title>Build and Test Automation for plug-ins and features</title>
+    <link type="text/css" rel="stylesheet" href="../default_style.css">
+    <link type="text/css" rel="stylesheet" href="automation_style.css">
+  </head>
+
+  <body link="#0000ff" vlink="#800080">
+    <div align="right">
+      &nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright
+      &copy; 2005 Markus Barchfeld</font> 
+
+      <table border="0" cellpadding="2" cellspacing="0" width="100%">
+        <tbody>
+          <tr>
+            <td colspan="2" align="left" bgcolor="#0080c0" valign="top">
+            <b><font face="Arial,Helvetica"><font color="#ffffff">&nbsp;Eclipse
+            Corner Article</font></font></b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div align="left">
+      <h1><img src="../images/Idea.jpg" align="middle" height="86" width=
+      "120"></h1>
+    </div>
+
+    <p>&nbsp;</p>
+
+    <h1 align="center">Build and Test Automation for plug-ins and features</h1>
+
+    <blockquote>
+      <p><b>Summary</b><br>
+       Eclipse offers the possibility to build plug-ins automatically outside
+      the Eclipse IDE, which is called "headless build". Eclipse itself is
+      built headless and since Eclipse is an assembly of plug-ins, this feature
+      is also available for any other plug-in. Although the set up of automatic
+      building and testing requires only a couple of files, it can be tedious
+      work to do nonetheless. This article shares the experiences and lessons
+      learned while setting up automatic building and testing for an
+      Open-Source Eclipse plug-in called RDT, Ruby Development Tools.</p>
+
+      <p><b>By Markus Barchfeld, Zuehlke Engineering</b><br>
+       <font size="-1">May 29, 2005</font></p>
+    </blockquote>
+    <hr width="100%">
+
+    <h3>Environment</h3>
+
+    <p>All the techniques, examples and screen shots covered in this article
+    refer to Eclipse 3.0. If you want to follow the examples, you will need an
+    Eclipse 3.0.x installation. They might work with Eclipse 3.1 as well, but
+    it is untested.</p>
+
+    <p>The first part of this article gives an overview of the building steps
+    and artifacts of the headless build and introduces the required files to
+    build RDT as example. The second part shows how the Eclipse Test Framework
+    can be leveraged to extend the automatic build by running a suite of test
+    cases on the built plug-ins.</p>
+
+    <h2>Part 1 - Automated Build</h2>
+
+    <h3>Build a feature using PDE GUI Tools</h3>
+
+    <p>Starting the development of a plug-in is quite easy with the PDE
+    environment. There are tutorials and examples available which create sample
+    plug-in projects in the workspace. Compilation is done automatically from
+    the IDE and running the project can be easily achieved with starting a
+    runtime workbench, thanks to the self hosting feature of Eclipse.</p>
+
+    <p>For deployment you need to create a zip file which contains at least the
+    plugin.xml and a jar file with the classes of the plug-in. The inclusion of
+    further files (e.g. html files, images) can be controlled with the
+    build.properties file, the PDE (Plug-in Development Environment) provides
+    the "Build Properties Editor" for convenient editing of the file. <a href=
+    "#pdeHelpBuildProperties">[1]</a> explains the content of build.properties.
+    Fig. 1 shows the menu entry for the creation of an Ant build file. The
+    build file will be called build.xml and be located in the same directory as
+    the plugin.xml. The build file creation can be controlled with
+    build.properties. Some of the properties are described in <a href=
+    "#pdeHelpGenAnt">[2]</a>, see also Fig. 5. If you have the need to
+    customize the build process beyond the possibilities of build.properties, a
+    custom build file can be provided. Of course, the custom build file must
+    provide the same "interface" as the generated build file has, i.e. there
+    are some mandatory targets, which are explained in <a href=
+    "#usingPDEBuild">[12]</a>.</p>
+
+    <div class="figure">
+      <img style="width: 441px; height: 113px;" alt="Create Ant Build File"
+      src="createAntBuildFile.png"> 
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 1</span>. Create Ant Build file<br>
+      </div>
+    </div>
+    <br>
+     <br>
+     
+
+    <p>The simplest method of deployment is to choose a zip file as the
+    deliverable and then to unzip the build output into the plugins directory
+    of your target Eclipse installation. More sophisticated deployment options
+    are update sites and product extensions. If the project grows then you may
+    to split it up into several plug-in projects, at least plug-in projects
+    which contain GUI components and Core plug-in projects which do not contain
+    GUI components. They can still be built and deployed separately, but having
+    an Eclipse feature provides additional advantages and so you probably want
+    to wrap up the plug-ins with a feature project.</p>
+
+    <p>Fig. 2 shows the Feature Manifest Editor. The Export... button opens the
+    Feature Export Dialog (Fig. 3) with which you can create the deliverable:
+    either a single zip file or the file structure for an update site. Behind
+    the scenes the feature build process just builds every contained plug-in as
+    described above and then collects the results. All the generated build
+    files are temporary and will be deleted after the build has finished. The
+    build file generation for every contained plug-in works in exactly the same
+    way as if called from the "Create Ant Build File" menu entry, which also
+    means that the build.properties file of every plug-in is considered in the
+    same way as if the plug-in would be built standalone.</p>
+
+    <p>Additionally there is a build.xml file created for the feature project.
+    Like the plug-ins build file, the build.xml for the feature can be created
+    with the PDE Tools-&gt;Create Ant Build File context menu on the
+    feature.xml file. Similar to the plug-ins, there is a build.properties file
+    for the feature which can be used to customize the build process. E.g: the
+    files you choose to include into a binary build are defined in the
+    bin.includes property in build.properties. Some of the properties of
+    build.properties can be conveniently set with the Feature Manifest Editor.
+    E.g the bin.includes property can be assembled on the "Build" tab with a
+    tree control and check boxes.</p>
+
+    <p>Although the Feature Export Dialog allows storing the build-action in a
+    single build script, it is not yet the solution for a fully automated build
+    process, because this script can not be run outside of an Eclipse
+    workbench. Its purpose is to save the settings chosen in the Feature Export
+    Dialog and conveniently rerun the same export function again by choosing
+    Run-&gt;Ant Build (<a href="#bugsHeadlessInvokation">[3]</a>). For building
+    outside of Eclipse, PDE provides some Ant tasks which are explained in <a
+    href="#pdeHelpGenCommandLine">[4]</a>. But In order to use them you don't
+    have to create Ant scripts from scratch. There is already an infrastructure
+    for headless builds, which can be leveraged.</p>
+
+    <div class="figure">
+      <img src="featureManifestEditor.png" height="421" width="518"> 
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 2</span>. Feature Manifest Editor
+      </div>
+    </div>
+
+    <p>&nbsp;</p>
+
+    <div class="figure">
+      <img src="exportFeaturesDialog.png" height="487" width="378"> 
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 3</span>. Export Features Dialog
+      </div>
+    </div>
+
+    <h3>Build headless</h3>
+
+    <p>There are many reasons for creating a batch build process such as
+    providing a nightly or continuous build. This requires a fully automatic
+    build which can even start with the retrieval of the sources from CVS.
+    Eclipse itself is built in that way and because "everything is a plug-in"
+    the mechanisms can also be applied for the build of arbitrary plug-ins.
+    However it is necessary to bundle your plug-ins into a feature project if
+    you want to use headless build. If there is no real need to deploy your
+    plug-in(s) using a feature, a feature project can also be used for the
+    build process only. In this case there will be no feature manifest added to
+    the deliverable.</p>
+
+    <p>The infrastructure is provided by the PDE and the RelEng (Release
+    Engineering) plug-ins. The org.eclipse.releng.basebuilder plug-in contains
+    a complete Eclipse installation for the build, but any Eclipse-SDK is
+    sufficient. The org.eclipse.releng.eclipsebuilder plug-in contains control
+    files for the build of parts like JDT, PDE, and all the other plug-ins
+    which are part of the Eclipse distribution.</p>
+
+    <p>Although the build.xml provided in org.eclipse.releng.eclipsebuilder
+    looks like a plain Ant build file, there are Ant-Tasks required which are
+    provided from the PDE. Therefore the script must be executed in an Eclipse
+    environment. Because it would not be suitable for batch processing to start
+    up the Eclipse workbench, there is a "headless" startup mode provided,
+    which means that Eclipse is started without loading GUI plug-ins. To start
+    up a headless Eclipse instance which then executes an Ant build file,
+    Eclipse must be started as AntRunner application. An example is given in
+    Fig. 10.</p>
+
+    <h4>Building sdk.examples headless</h4>
+
+    <p>As an example, let's build one of the Eclipse deliverables headless. The
+    feature sdk.examples is chosen, because it is quite small, the deliverable
+    is about 1.8 Mb (<a href="#eclipsExamples">[5])</a>. The headless build
+    takes about 10 minutes on my 1.6Ghz Win XP laptop, most of the time used
+    for fetching the sources via a 64k internet connection. In addition to an
+    Eclipse installation there are two prerequisites for the headless
+    build:</p>
+
+    <ul>
+      <li><a target="extra" href="http://www.cvshome.org/">CVS</a> client
+      version 1.10 or higher on system path.</li>
+
+      <li><a target="extra" href=
+      "http://www.info-zip.org/pub/infozip/">Info-Zip</a> zip and unzip
+      executables on system path.</li>
+    </ul>
+
+    <p>The first step is to get org.eclipse.releng.eclipsebuilder:</p>
+<pre>
+D:\build&gt;cvs -d :pserver:anonymous@dev.eclipse.org:/home/eclipse export -r R3_0_2 org.eclipse.releng.eclipsebuilder
+</pre>
+
+    <p>The readme.html in org.eclipse.releng.eclipsebuilder (<a href=
+    "#eclipsebuilderReadme">[6])</a> describes how to build a component. By
+    default, components are built with an Eclipse instance (build host) defined
+    in org.eclipse.releng.basebuilder. But because the basebuilder is rather
+    large, we can also use an existing Eclipse-3.0.2 installation as build
+    host. Because it is not assured that the Eclipse-3.0.2 host can compile the
+    current Eclipse components, we use the 3.0.2 version of eclipsebuilder in
+    this example. In order to fetch the 3.0.2 version of sdk.examples instead
+    of the HEAD version, we have to modify
+    org.eclipse.releng.eclipsebuilder/sdk.examples/build.properties and set the
+    property mapVersionTag appropriately:</p>
+<pre>
+mapVersionTag=R3_0_2
+</pre>
+
+    <p>Now the build can be started from the command line:</p>
+<pre>
+D:\build\org.eclipse.releng.eclipsebuilder&gt;set ECLIPSE_HOME=D:\eclipse\eclipse-3.0.2
+D:\build\org.eclipse.releng.eclipsebuilder&gt;java -cp %ECLIPSE_HOME%\startup.jar org.eclipse.core.launcher.Main
+ -application org.eclipse.ant.core.antRunner -buildfile build.xml 
+ -Dcomponent=sdk.examples -Dconfigs="*,*,*" -Dbaseos=win32 -Dbasews=win32 -Dbasearch=x86 -Djavacfailonerror=true
+ -Dpde.build.scripts=%ECLIPSE_HOME%/plugins/org.eclipse.pde.build_3.0.1/scripts -DbaseLocation=%ECLIPSE_HOME%
+</pre>
+
+    <p>The property "component" is used to define that the files in the
+    sdk.examples subdirectory are used in the headless build, which are
+    build.properties and customTargets.xml. The build takes place in
+    D:\build\org.eclipse.releng.eclipsebuilder\src by default. This can be
+    changed with the property buildDirectory. Either by adding
+    -DbuildDirectory=${basedir}/newDirectory to the command above or by
+    changing buildDirectory in
+    org.eclipse.releng.eclipsebuilder/sdk.examples/build.properties.</p>
+
+    <p>After the build has finished, the deliverable and compile logs can be
+    found in the build output directory, a subdirectory of the build directory.
+    The name of the output directory is defined by the buildLabel property. By
+    default it starts with "I-" and includes the time stamp of the build
+    time.</p>
+
+    <p>The baseLocation is used during the build to provide missing plug-ins,
+    i.e., plug-ins which are not part of the deliverable to build and have
+    therefore not been fetched from CVS. After the plug-ins have been fetched,
+    PDE reads in the plug-ins and creates a build time Eclipse host. If
+    baseLocation is given, the Eclipse installation at baseLocation is added to
+    the build time Eclipse host. In our case this is necessary, because
+    sdk.examples depends on the plug-ins in the Eclipse SDK and can therefore
+    not be built standalone. Note that the baseLocation is independent of the
+    build host and therefore the build host can be another version of Eclipse.
+    In the example we could use Eclipse 3.0.2 as build host and Eclipse 3.0 as
+    baseLocation. The baseLocation may not contain any of the plug-ins to be
+    built. If the baseLocation contained the sdk.examples, an error would
+    occur.</p>
+
+    <p>The next section looks behind the scenes of the headless build.</p>
+
+    <h3>Build Phases</h3>
+
+    <p>Fig. 4 shows the files which drive the build process. While build.xml
+    and genericTargets.xml are provided from the PDE feature, there are two
+    files to be provided by the plugin to be built: the customTargets.xml and
+    build.properties. Examples for these two files can be found in
+    org.eclipse.releng.eclipsebuilder\sdk.examples, if you did not download
+    org.eclipse.releng.eclipsebuilder in the last section, see <a href=
+    "#eclipsebuilderReadme">[7]</a>. The build.properties file allows
+    customizing various build parameters, for a reference see Fig. 5. Fig. 6
+    shows the interaction of three build files, build.xml, genericTargets.xml
+    and customTargets.xml, which accomplishes the build. The main phases of the
+    build process are declared in build.xml: PreBuild, Fetch, Generate,
+    Process, Assemble and PostBuild.</p>
+
+    <div class="figure">
+      <table class="contentTable" cellspacing="2">
+        <tbody>
+          <tr>
+            <th>File name</th>
+
+            <th>Location</th>
+
+            <th>Description</th>
+          </tr>
+
+          <tr>
+            <td><b>build.xml</b></td>
+
+            <td>org.eclipse.pde.build_&lt;version&gt;/scripts</td>
+
+            <td>This is the main build script and provides a skeleton for the
+            build process: from prebuild to postbuild targets</td>
+          </tr>
+
+          <tr>
+            <td><b>genericTargets.xml</b></td>
+
+            <td>org.eclipse.pde.build_&lt;version&gt;/scripts</td>
+
+            <td>Contains targets like fetchElement, generateScript,
+            processElement, assembleElement</td>
+          </tr>
+
+          <tr>
+            <td><b>customTargets.xml</b></td>
+
+            <td>value of property <i>builder</i></td>
+
+            <td>This build script resides in the location specified by the
+            property <i>builder</i>. It is included from the main build.xml
+            file and delegates to targets in genericTargets. The main
+            responsibilities are in defining the features to build and to fetch
+            the map files.</td>
+          </tr>
+
+          <tr>
+            <td><b>build.properties</b></td>
+
+            <td>value of property <i>builder</i></td>
+
+            <td>This build script resides in the location specified by the
+            property <i>builder</i>. It contains properties for fetching the
+            sources, building and compiling.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 4</span>. Files for controlling the
+        build process
+      </div>
+    </div>
+    <br>
+     <br>
+     
+
+    <div class="figure">
+      <table class="contentTable" cellspacing="2">
+        <tbody>
+          <tr>
+            <th>Category</th>
+
+            <th>Name</th>
+
+            <th>Description</th>
+          </tr>
+
+          <tr>
+            <td rowspan="3">Build folder</td>
+
+            <td>buildDirectory</td>
+
+            <td>The relative path to a directory where the source for the build
+            will be exported, where scripts will be generated and where the end
+            products of the build will be located. On Windows systems, this
+            directory should be close to the drive root to avoid path length
+            limitations particularly at compile time.</td>
+          </tr>
+
+          <tr>
+            <td>baseLocation</td>
+
+            <td>A directory separate from ${buildDirectory} which contains
+            pre-built plug-ins against which to compile. ${baseLocation} must
+            not contain any features, plug-ins or fragments which are already
+            or will be located in ${buildDirectory}.</td>
+          </tr>
+
+          <tr>
+            <td>baseos,basews,basearch,basenl</td>
+
+            <td>The os, ws, arch and nl values of the pre-built Eclipse found
+            in ${baseLocation}.</td>
+          </tr>
+
+          <tr>
+            <td rowspan="7">Build target (what is being built)</td>
+
+            <td>configs</td>
+
+            <td>An ampersand separated list of configurations to build for an
+            element where a configuration is specified as
+            &lt;os&gt;,&lt;ws&gt;,&lt;arch&gt;.<br>
+             ie.configs="win32,win32,x86 &amp; linux, motif, x86 &amp; linux,
+            gtk, x86". Typically used to build a feature that is os, ws, arch
+            specific. A non-platform specific configuration is specified with
+            "*,*,*".</td>
+          </tr>
+
+          <tr>
+            <td>collectingFolder</td>
+
+            <td>The directory in which built features and plug-ins are
+            gathered. This is typically set to "eclipse".</td>
+          </tr>
+
+          <tr>
+            <td>archivePrefix</td>
+
+            <td>The top level directory in assembled distribution. This is
+            typically set to "eclipse".</td>
+          </tr>
+
+          <tr>
+            <td>buildType</td>
+
+            <td>A letter "I, N, S, R or M" used to identify builds as being one
+            of the following:<br>
+             <br>
+             I - Integration<br>
+             N - Nightly<br>
+             S - Stable<br>
+             R - Release<br>
+             M - Maintenance<br>
+             </td>
+          </tr>
+
+          <tr>
+            <td>buildId</td>
+
+            <td>The build name. Default set to "build" in template
+            build.properties.</td>
+          </tr>
+
+          <tr>
+            <td>buildLabel</td>
+
+            <td>Refers to the name of the directory which will contain the end
+            result of the build. Set to ${buildType}.${buildId} in template
+            build.properties. This directory will be created in the
+            ${buildDirectory}.</td>
+          </tr>
+
+          <tr>
+            <td>timestamp</td>
+
+            <td>A timestamp used to fill in value for buildid in about.mappings
+            files. Also used to name build output directory, i.e.
+            I-build-&lt;timestamp&gt;.</td>
+          </tr>
+
+          <tr>
+            <td rowspan="2">Repository</td>
+
+            <td>mapVersionTag</td>
+
+            <td>Sets the tag attribute in a call to the <a target="extra" href=
+            "http://ant.apache.org/manual/CoreTasks/cvs.html">Ant &lt;cvs&gt;
+            task</a> to check out the map file project.</td>
+          </tr>
+
+          <tr>
+            <td>fetchTag</td>
+
+            <td>Sets the tag or branch when exporting modules used in the
+            build. For example, setting fetchTag=HEAD will fetch the HEAD
+            stream of the source for all features, plug-ins and fragments
+            listed in the map files instead of fetching the tag specified in
+            the map entry for that element. For example this is being used in
+            the eclipse build process to produce the nightly build.</td>
+          </tr>
+
+          <tr>
+            <td rowspan="6">Java Compiler</td>
+
+            <td>bootclasspath</td>
+
+            <td>Sets the value for the attribute "bootclasspath" in calls to
+            the <a target="extra" href=
+            "http://ant.apache.org/manual/CoreTasks/javac.html">Ant
+            &lt;javac&gt; task</a> in a plug-in's build.xml.</td>
+          </tr>
+
+          <tr>
+            <td>javacDebugInfo</td>
+
+            <td>Sets the value for the attribute "debug" in calls to the <a
+            target="extra" href=
+            "http://ant.apache.org/manual/CoreTasks/javac.html">Ant
+            &lt;javac&gt; task</a> in a plug-in's build.xml. Determines if
+            debug info is included in the output jars. Set to on in template
+            build.properties.</td>
+          </tr>
+
+          <tr>
+            <td>javacFailOnError</td>
+
+            <td>Sets the value for the attribute "failonerror" in calls to the
+            <a target="extra" href=
+            "http://ant.apache.org/manual/CoreTasks/javac.html">Ant
+            &lt;javac&gt; task</a> in a plug-in's build.xml. Build will
+            continue even if there are compilation errors when this is set to
+            false.</td>
+          </tr>
+
+          <tr>
+            <td>javacSource</td>
+
+            <td>Sets the value for the attribute "source" in calls to the <a
+            target="extra" href=
+            "http://ant.apache.org/manual/CoreTasks/javac.html">Ant
+            &lt;javac&gt; task</a> in a plug-in's build.xml. Sets the value of
+            the -source command line switch for javac version 1.4. Used when
+            compiling the jars for the plug-ins. Default set to 1.3 in
+            generated build.xml for plug-ins and fragments.</td>
+          </tr>
+
+          <tr>
+            <td>javacTarget</td>
+
+            <td>Sets the value for the attribute "target" in calls to the <a
+            target="extra" href=
+            "http://ant.apache.org/manual/CoreTasks/javac.html">Ant
+            &lt;javac&gt; task</a> in a plug-in's build.xml. Sets the value of
+            the -target command line switch for javac. Used when compiling the
+            jars for the plug-ins. Default set to 1.1 in generated build.xml
+            for plug-ins and fragments.</td>
+          </tr>
+
+          <tr>
+            <td>javacVerbose</td>
+
+            <td>Sets the value for the attribute "verbose" in calls to the <a
+            target="extra" href=
+            "http://ant.apache.org/manual/CoreTasks/javac.html">Ant
+            &lt;javac&gt; task</a> in a plug-in's build.xml. Asks the compiler
+            for verbose output. Default set to true.</td>
+          </tr>
+
+          <tr>
+            <td>misc</td>
+
+            <td>zipargs</td>
+
+            <td>Arguments to send to the zip executable. Setting it to -y on
+            Linux preserves symbolic links.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 5</span>. build.properties
+      </div>
+    </div>
+    <br>
+     <br>
+     
+
+    <div class="figure">
+      <img src="buildInteractionDiagram.png"> 
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 6</span>. Script interaction for the
+        build process<br>
+      </div>
+    </div>
+
+    <h4>PreBuild and Fetch phase</h4>
+
+    <p>Fig. 7 gives an overview of the main activities and the files created
+    from these activities for the complete build process. The getMapFiles and
+    concatenate activities are part of the PreBuild phase; fetch and getFromCVS
+    are part of the Fetch phase.</p>
+
+    <p>The most important task in the PreBuild phase is to retrieve map files,
+    which is implemented in the getMapFiles target in customTargets.xml.
+    Usually the getMapFiles target consists of a CVS command to fetch the map
+    files. A map file is a java property file which contains mappings of
+    elements to their CVS locations and access methods. It consists of one map
+    file entry for each feature being built, its &lt;plugin&gt; elements, and
+    its &lt;includes&gt; elements (i.e. nested features and their plug-ins).
+    Adding a plug-in or fragment to a feature therefore requires updating the
+    map files with the new element.</p>
+
+    <p>Map file entries use the following format:</p>
+<pre>
+feature|fragment|plugin@elementId=&lt;cvs tag&gt;,&lt;access method&gt;:&lt;cvsuser&gt;@&lt;cvs repository&gt;,&lt;cvs password&gt;[,&lt;repository path&gt; (no starting slash) ]
+</pre>
+
+    <p>The &lt;repository path&gt; is only required when the module (or
+    directory) containing the source for the element does not match the
+    elementId or if the directory is not at the root of the repository. Because
+    all the map files are concatenated into a single file called Directory.txt
+    after getMapFiles has finished, the format of directory.txt described in <a
+    href="#pdeHelpGenCommandLine">[4]</a> applies also to the format of a map
+    file.</p>
+
+    <p>The fetch phase starts with the creation of an ant script called
+    retrieve.xml, which contains a build target for fetching the feature.xml.
+    Then this target will be executed and the information about the provided
+    plug-ins of the feature is read in. For every provided plug-in a
+    corresponding build target will be added to the fetch build script. Both
+    files (retrieve.xml and feature.xml) are only temporary. They will be
+    deleted after the fetch build script has been generated.</p>
+
+    <p>The fetch build script is named fetch_&lt;element_id&gt;.xml, where
+    &lt;element_id&gt; is substituted with the feature id read from the
+    feature.xml file (not the property "id" given in customTargets.xml).
+    Running the default target "fetch" of this build script calls the target
+    getFromCVS for the feature itself and all included plug-ins. The sources of
+    the plugins are not fetched again in the case of an existing plugin.xml.
+    So, if you run the full build twice in the same directory, the sources for
+    the plug-ins are not fetched twice. But you need to have a working CVS
+    connection nonetheless, because the retrieve.xml file is created and
+    executed in any case. Therefore you would end up with an incomplete
+    fetch_&lt;element_id&gt;.xml file if you run the fetch phase and did not
+    have CVS connection.</p>
+    <br>
+     <br>
+     
+
+    <div class="figure">
+      <img src="fetchProcessActivity.png" height="780" width="464"> 
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 7</span>. File flow of the build
+        process
+      </div>
+    </div>
+
+    <h4>Generate Phase</h4>
+
+    <p>After the feature and plug-ins have been copied to the build target
+    directory, the build scripts are generated in the same way as they would be
+    with the PDE GUI (see above). The created files are:</p>
+
+    <ul>
+      <li>a build file in every plug-in directory (unless custom build files
+      are used)</li>
+
+      <li>a build file in the feature directory</li>
+
+      <li>assemble_&lt;element_id&gt;.all.xml and
+      assemble_&lt;element_id&gt;.all.xml</li>
+    </ul>
+
+    <h4>Process and Assemble Phase</h4>
+
+    <p>At this point of the build process the build files are in place and the
+    compilation is started from a call to processElement in genericTargets.xml.
+    This in turn calls the target build.jars in the build.xml file in the
+    feature directory. There the compilation starts and the warning and error
+    messages of the java compiler are collected separately for each jar file.
+    The files are named &lt;jarFileName&gt;.bin.log and reside in a
+    subdirectory "temp.folder". Later these files are gathered and copied to
+    the build output directory.</p>
+
+    <p>The assembly is started from the assembleElement target in
+    genericTargets.xml which then calls a target named assemble.${id} in
+    customTargets.xml. This gives the chance to do some work before or after
+    the assembly, but the main part of the work can just be delegated to the
+    assemble.${id}.all.xml in the build target directory.</p>
+
+    <p>The assemble script copies all the build results to a temporary
+    subdirectory in the build target directory and finally zips them up. The
+    files being collected are feature manifest files (feature.xml), plug-in
+    manifest files (plugin.xml) and the built jar files. The inclusion of
+    arbitrary files can be specified with the bin.includes property of the
+    plug-in's build.properties file <a href=
+    "#pdeHelpBuildProperties">([1]</a>).</p>
+
+    <h4>PostBuild Phase</h4>
+
+    <p>This is a build hook which is empty per default and allows performing
+    actions with the build output. We will use this later for test
+    automation.</p>
+
+    <blockquote>
+      <p><img src="../images/tip.gif" height="13" width="62"> After
+      modifications to the build files you can save time if you run only a
+      particular phase of the build process. E.g. if you changed a property
+      which only affects the process phase, you can run this phase alone by
+      appending process to the -buildfile argument in the command line:</p>
+<pre>
+java org.eclipse.core.launcher.Main -application org.eclipse.ant.core.antRunner -buildfile %buildfile% process
+</pre>
+    </blockquote>
+
+    <h3>How to build your Plug-In</h3>
+
+    <p>Now we have built sdk.examples headless and have an overview of the
+    build process. Build automation for your plug-in is not far away anymore
+    with one constraint: you need to provide a feature project if you want to
+    fully leverage the headless build as you have seen it for sdk.examples. So,
+    if you don't have a feature project created yet, now is the time. With the
+    IDE you can create a feature project with
+    File-&gt;New-&gt;Project...-&gt;Plug-in Development-&gt;Feature Project. In
+    the wizard which opens enter a feature name and then select all the
+    plug-ins you want to include in your build. If you do not want to deploy
+    your plug-in(s) as a feature, you can configure the feature project so that
+    it is only be used to drive the build process but will not be included in
+    the deliverable. Therefore just remove the bin.includes property from the
+    build.properties file of the feature project.</p>
+
+    <p>Using the feature there need to be 4 files defined in order to provide a
+    one step build:</p>
+
+    <ul>
+      <li>a map file for fetching the sources</li>
+
+      <li>customTargets.xml</li>
+
+      <li>build.properties</li>
+
+      <li>a shell script, which starts an Eclipse instance as AntRunner</li>
+    </ul>
+
+    <p>Fig. 8 shows a part of the map file for RDT. The CVS method used is ext,
+    which allows to configure access parameters like user name, password or SSH
+    proxy locally. In the case that pserver should be used, the getMapFiles
+    target of customTargets.xml replaces ext with pserver.</p>
+
+    <div class="figure" style="text-align: left;">
+<pre>
+ feature@org.rubypeople.rdt=HEAD,:ext:cvs.sf.net:/cvsroot/rubyeclipse,,org.rubypeople.rdt-feature
+ plugin@org.kxml2=HEAD,:ext:cvs.sf.net:/cvsroot/rubyeclipse,
+ plugin@org.rubypeople.rdt=HEAD,:ext:cvs.sf.net:/cvsroot/rubyeclipse,
+ plugin@org.rubypeople.rdt.core=HEAD,:ext:cvs.sf.net:/cvsroot/rubyeclipse,
+</pre>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 8</span>. A section from rdt.map
+      </div>
+    </div>
+
+    <p>As seen above customTargets.xml is the build file which provides hooks
+    to customize the build process. A template for customTargets.xml can be
+    found in <a href="#pdeScripts">[9]</a>. Fig. 9 shows the parts of the
+    customTargets.xml file which have to be modified as a minimum for the build
+    process:</p>
+
+    <ol>
+      <li>Define the Feature to be built in the allElements target. The given
+      id is not the Feature id as defined in the feature manifest but only an
+      identifier for the lookup in the map file.</li>
+
+      <li>Retrieve map files in the getMapFiles target. Usually the map files
+      are fetched from CVS and copied to the maps subdirectory of
+      ${buildDirectory}.</li>
+
+      <li>Provide a target called assemble.&lt;id&gt;. This can just delegate
+      to the assemble script which has been created in the generate phase of
+      the build process.</li>
+    </ol>
+
+    <div class="figure">
+      <div style="text-align: left;">
+<pre>
+&lt;target name="allElements"&gt;
+  &lt;ant antfile="${genericTargets}" target="${target}" &gt;
+ &lt;property name="type" value="feature" /&gt;
+  &lt;property name="id" value="org.rubypeople.rdt" /&gt;
+ &lt;/ant&gt;
+&lt;/target&gt;
+&lt;target name="getMapFiles"&gt;
+    &lt;property name="cvsRoot" value=":ext:cvs.sf.net:/cvsroot/rubyeclipse" /&gt;
+  &lt;cvs cvsroot="${cvsRoot}"
+    dest="${buildDirectory}/maps"
+   command="export -r ${mapVersionTag} org.rubypeople.rdt.build/map"/&gt;
+&lt;/target&gt;
+&lt;target name="assemble.org.rubypeople.rdt"&gt;
+  &lt;ant antfile="${assembleScriptName}" dir="${buildDirectory}"&gt;
+ &lt;property name="zipargs" value="" /&gt;
+  &lt;/ant&gt;
+&lt;/target&gt;
+</pre>
+      </div>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 9</span>. Mandatory changes in
+        customTargets.xml
+      </div>
+    </div>
+
+    <h4>Build RDT as example</h4>
+
+    <p>All the files which configure the headless build for RDT can be found in
+    <a href="#buildBootstrapFilesRdt">[10]</a>. In order to build RDT, you must
+    have an Eclipse 3.0.x installation, CVS installed and CVS access to the
+    internet (firewall!). The sources will be fetched from cvs.sf.net, which
+    provides anonymous access.</p>
+
+    <p>First we need to get the bootstrap for the headless build:</p>
+<pre>
+cvs -d :pserver:anonymous@cvs.sf.net:/cvsroot/rubyeclipse export -r R0_5_0 org.rubypeople.rdt.build/bootstrap
+</pre>
+
+    <p>After a successful retrieval you will find the following files: README,
+    run.bat, run.sh, customTargets.xml and build.properties. The map file
+    defines to fetch the HEAD version of all plug-ins. In order to get stable
+    sources, the property fetchTag is set in build.properties and overwrites
+    the settings from the map file. See <a href="#pdeScripts">[9]</a> for a
+    description of the build file options. Now change the variables in the run
+    script (run.bat on windows or run.sh on UNIX) so that they reflect your PCs
+    environment.</p>
+
+    <ul>
+      <li>Adapt eclipseDir and pdeBuildPluginVersion to the Eclipse
+      installation you want to use for the build</li>
+
+      <li>Set the buildDirectory&nbsp;</li>
+
+      <li>The variable docbook.root can be commented out</li>
+
+      <li>The variable pluginAutomaticBuildDir must be set to the absolute path
+      of the bootstrap directory</li>
+
+      <li>If java 1.4.x is not available on the classpath, vm must be set to
+      the location of a java 1.4.x executable.&nbsp;</li>
+    </ul>
+
+    <p>Now the execution of the run script should build RDT. If it does not,
+    test your skills in handling the lengthy Ant stack traces.</p>
+
+    <blockquote>
+      <p><img src="../images/tip.gif" height="13" width="62">The
+      build.properties file which is provided as template in <a href=
+      "#pdeScripts">[9]</a> builds a result zip file which contains paths with
+      "eclipse" prefix, e.g. "eclipse/feature/...". This is inconvenient if the
+      zip file should be extracted into a renamed Eclipse installation
+      directory, e.g. eclipse-3.0.2. Therefore the archive path names should be
+      relative to the eclipse installation directory, which can be achieved by
+      setting the properties collectingFolder and archivePrefix to ".".</p>
+    </blockquote>
+
+    <h4>Debug the Build Process</h4>
+
+    <p>If you reach a point where the error messages during the build are more
+    confusing than helpful, you can debug the build run. A first measure to
+    take is to set the AntRunner to verbose mode: add a "-verbose" behind the
+    AntRunner argument in the java command line. This gives detailed
+    information about which Ant targets are executed. It is particularly useful
+    for debugging problems with accessing CVS. If that does not help, the build
+    run itself can be debugged. Instead of starting the build host from a shell
+    script (.sh or .bat) you can start the build host from the Eclipse IDE with
+    a Run Configuration. The custom Ant Tasks which PDE provides reside in the
+    org.eclipse.pde.build plug-in project and set breakpoints or catch
+    exceptions. Here is a step-by-step guide on how to set up an AntRunner
+    Run-time Workbench:</p>
+
+    <ol>
+      <li>Start Eclipse and switch to an empty workspace</li>
+
+      <li>File&gt;Import, External plug-ins and Fragments</li>
+
+      <li>Select "Projects with source folders"</li>
+
+      <li>Add all plug-ins with org.eclipse.pde.*</li>
+
+      <li>
+        Create a Run-time Workbench run configuration (Run-&gt;Run..., Run-time
+        Workbench) 
+
+        <ol>
+          <li>Choose "org.eclipse.ant.core.antRunner" as "Run an
+          application"</li>
+
+          <li>
+            Add Program Arguments: 
+
+            <ol>
+              <li>-Dbuilder=$builder, where $builder is the directory where
+              your customTargets.xml is located</li>
+
+              <li>-DbaseLocation=$baseLocation, where $baseLocation is the
+              directory of your Eclipse installation (see above)</li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+
+      <li>Add a breakpoint, e.g. in the method "generate" in
+      org.eclipse.pde.build/src-pdebuild/org.eclipse.pde.internal.build.FetchScriptGenerator</li>
+
+      <li>Start the debug session</li>
+    </ol>
+
+    <div class="figure">
+      <img style="width: 794px; height: 605px;" alt=
+      "Run Configuration for building sdk.examples" src=
+      "buildRunConfiguration.png"><br>
+       
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 10</span>. Run configuration for
+        building sdk.examples<br>
+      </div>
+    </div>
+
+    <p>Fig. 10 shows the Run configuration dialog for building sdk.examples,
+    which we have built from command line above. The full Program Arguments
+    are:</p>
+<pre>
+-buildfile "D:\build\org.eclipse.releng.eclipsebuilder\build.xml" -Dcomponent=sdk.examples -Dconfigs="*,*,*"
+-Dbaseos=win32 -Dbasews=win32 -Dbasearch=x86 -Djavacfailonerror=true
+-Dpde.build.scripts=D:/eclipse/eclipse-3.0.2/plugins/org.eclipse.pde.build_3.0.1/scripts -DbaseLocation=D:\eclipse\eclipse-3.0.2
+</pre>
+
+    <p>Note the location of the build workspace. The log file in
+    D:\build\build-workspace\.metadata\.log often provides useful information
+    if a build fails.</p>
+
+    <h4>Include sources</h4>
+
+    <p>Unfortunately the headless build does not support all of the settings as
+    they are provided by the Feature Export Dialog (Fig. 3). For example, the
+    inclusion of source jar files is not possible. This lack can be
+    circumvented by using a source feature or plug-in. Building a source
+    feature is quite convenient and needs only two entries to be added:</p>
+
+    <ol>
+      <li>
+        Add a Line to build.properties of your feature project: 
+<pre>
+generate.feature@org.rubypeople.rdt.source=org.rubypeople.rdt
+</pre>
+      </li>
+
+      <li>
+        Add an xml element to feature.xml: 
+<pre>
+&lt;includes id="org.rubypeople.rdt.source" version="0.0.0"/&gt;
+</pre>
+        If the version is set to 0.0.0, the version of the containing plug-in
+        will be used.
+      </li>
+    </ol>
+
+    <p>Further customization of the source feature generation can be achieved
+    by creating the subdirectories "sourceTemplatePlugin" and
+    "sourceTemplateFeature" in your feature project. These directories should
+    contain the files that are included in the root of the generated source
+    feature and plug-in. The feature.xml and plugin.xml files are not required
+    since these are generated. A build.properties is required in the
+    sourceTemplatePlugin directory. This should contain a "bin.includes"
+    setting as well as the entry "sourcePlugin = true". The plugin.xml file and
+    src/ directory should be listed in bin.includes.</p>
+
+    <blockquote>
+      <p><img src="../images/tip.gif" height="13" width="62"> If there is an
+      includes tag in feature.xml, building with the Export... button from the
+      Feature Manifest Editor fails (<a href=
+      "#generateSourceFeatureBug">[16]</a>). As a workaround the feature.xml of
+      the RDT project contains only an xml comment. The comment will be
+      replaced with the includes tag in the postFetch target in
+      customTargets.xml. The generate.feature property must be treated in a
+      similar way.</p>
+    </blockquote>
+
+    <h4>Build for Update Site</h4>
+
+    <p>If you want to build files for an update site customTargets.xml can be
+    modified to call the build.update.jar target of the feature build file. The
+    results can then be copied to the update site location. Fig. 11 shows the
+    changes in customTargets.xml, following the idea in <a href=
+    "#discussionUpdateSiteBuild">[11]</a>.</p>
+
+    <div class="figure">
+      <div style="text-align: left;">
+<pre>
+&lt;target name="postBuild"&gt;
+  &lt;property name="UpdateSiteStagingLocation" value="${buildDirectory}/updateSite"/&gt;
+  &lt;property name="sitePackagePrefix" value="org.rubypeople.updatesite"/&gt;
+  &lt;antcall target="generateUpdateSite"/&gt;
+&lt;/target&gt;
+&lt;target name="generateUpdateSite"&gt;
+  &lt;!-- Create the directory structure --&gt;
+  &lt;mkdir dir="${UpdateSiteStagingLocation}"/&gt;
+  &lt;mkdir dir="${UpdateSiteStagingLocation}/features"/&gt;
+  &lt;mkdir dir="${UpdateSiteStagingLocation}/plugins"/&gt;
+  &lt;!-- Build the jar files --&gt;
+  &lt;antcall target="allElements"&gt;
+    &lt;param name="genericTargets" value="${builder}/customTargets.xml"/&gt;
+    &lt;param name="target" value="updateSiteExport"/&gt;
+  &lt;/antcall&gt;
+  &lt;antcall target="copySiteXmlFromCvs"/&gt;
+  &lt;antcall target="createNightlyBuildSiteXml"/&gt;
+&lt;/target&gt;
+&lt;target name="updateSiteExport"&gt;
+  &lt;ant antfile="build.xml" dir="${buildDirectory}/features/${id}/" target="build.update.jar"&gt;
+    &lt;property name="feature.destination" value="${UpdateSiteStagingLocation}/features"/&gt;
+    &lt;property name="plugin.destination" value="${UpdateSiteStagingLocation}/plugins"/&gt;
+  &lt;/ant&gt;
+&lt;/target&gt;
+&lt;target name="copySiteXmlFromCvs" unless="isNightlyBuild"&gt;
+  &lt;!-- connect to CVS and fetch site.xml, copy to ${UpdateSiteStagingLocation}/site.xml afterwards --&gt;
+&lt;/target&gt;
+&lt;target name="createNightlyBuildSiteXml" if="isNightlyBuild"&gt;
+  &lt;!-- create ${UpdateSiteStagingLocation}/site.xml which contains only the nighlty build version --&gt;
+&lt;/target&gt;
+</pre>
+      </div>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 11</span>. Building for update site
+      </div>
+    </div>
+
+    <h2>Part 2 - Automated Tests</h2>
+
+    <p>After the deliverable has been created the wish may arise to deploy it
+    and to run a test suite with unit and integration tests. The reasons to do
+    this automatically as well and present the results along with the
+    deliverable are manifold:</p>
+
+    <ul>
+      <li>find integration errors, run the tests in different
+      configurations</li>
+
+      <li>give a hint on the quality of the code, particularly useful for
+      nightly builds</li>
+
+      <li>run the tests in a defined environment as opposed to the workbench of
+      the developer</li>
+    </ul>
+
+    <p>Fortunately, Eclipse provides a framework for test automation, which can
+    also be leveraged for test automation of arbitrary Eclipse features. The
+    test results of every Eclipse build are publicly available in the Eclipse
+    download directories; see <a href="#discussionUpdateSiteBuild">13</a> for
+    the test results of the 3.0.2 build.</p>
+
+    <h3>Eclipse Test Framework</h3>
+
+    <p>For running the tests on your PC, get the
+    eclipse-Automated-Tests-&lt;version&gt;.zip, which contains a zip file with
+    the unit tests (eclipse-junit-tests-&lt;version&gt;.zip), shell scripts,
+    build files and documentation. The steps for running the tests are
+    described in the file testFramework.html (<a href="#testFramework">14</a>).
+    Basically the shell script runtests starts up a new AntRunner Eclipse
+    instance which executes one of the targets of the test.xml build file.
+    Therefore an eclipse installation must exist in the eclipse subdirectory,
+    which is called the build host in the following. If there is no build host
+    installation, the script tries to unzip an SDK zip which it assumes to be
+    the same directory. In addition to that the script extracts the
+    org.eclipse.test plug-in from the eclipse-junit-tests-&lt;version&gt;.zip
+    into the build host installation.<br>
+    <br>
+     In order to run the some of the tests of the JDT, the following steps are
+    necessary:</p>
+
+    <ol>
+      <li>Download eclipse-Automated-Tests-3.0.2.zip (<a href=
+      "#eclipseAutomatedTests">15</a>) and unzip to
+      $ECLIPSE_AUTOMATED_TESTS</li>
+
+      <li>Copy eclipse-SDK-3.0.2 to $ECLIPSE_AUTOMATED_TESTS</li>
+
+      <li>cd to $ECLIPSE_AUTOMATED_TESTS and type "runtests.bat jdtui"</li>
+    </ol>
+
+    <p>The last step executes the non-interactive UI tests for the JDT (there
+    are also interactive UI Tests which require the interaction of a test
+    person to assure the layout and interactive behaviour of dialogs for
+    example). Although the tests are non-interactive you will watch a workbench
+    come up and during the execution of the test suite you can witness projects
+    being created and closed, editors being opened and so on. After the test
+    run has finished, the test results will be placed in
+    $ECLIPSE_AUTOMATED_TESTS/results in html and xml format.<br>
+    <br>
+     While the tests run, we can have look behind the scenes. Fig. 12 lists the
+    build files for test automation; Fig. 13 shows the interaction between
+    them. At first the runtests script creates the build host and launches an
+    Eclipse instance as AntRunner. The AntRunner executes the jdt target of
+    test.xml. During the process another eclipse-installation will take place
+    in $ECLIPSE_AUTOMATED_TESTS/test-eclipse, called the test host in the
+    following. The test host also consists of the provided SDK and the full
+    content of eclipse-junit-tests-3.0.2.zip. A test host instance is then
+    launched, with the application type org.eclipse.test.uitestapplication
+    (target uitest in library.xml, see below). The class name of the test suite
+    is passed to the uitestapplication. After the test suite has completed, the
+    test results can be found in $ECLIPSE_AUTOMATED_TESTS/results.</p>
+
+    <div class="figure">
+      <center style="margin-bottom: 1em;">
+        <table class="contentTable" cellspacing="2">
+          <tbody>
+            <tr>
+              <th>file name</th>
+
+              <th>location</th>
+
+              <th>description</th>
+            </tr>
+
+            <tr>
+              <td><b>test.xml</b></td>
+
+              <td>unzip location of eclipse-Automated-Tests.zip</td>
+
+              <td>This script provides the entry point for testing, the
+              runtests target</td>
+            </tr>
+
+            <tr>
+              <td><b>test.xml</b></td>
+
+              <td>plug-in directory of the test suite to be run</td>
+
+              <td>Must provide a run target. Main purpose is to set properties
+              and delegate to the ui-test target in library.xml. After the
+              tests have run the collect target in library is called to create
+              the result files. A skeleton can be found in <a href=
+              "#testFramework">14.</a> </td>
+            </tr>
+
+            <tr>
+              <td><b>library.xml</b></td>
+
+              <td>plugins/org.eclipse.test, delivered in
+              eclipse-junit-tests-&lt;version&gt;.zip, which itself is part of
+              eclipse-Automated-Tests-&lt;version&gt;.zip</td>
+
+              <td>This build script contains the eclipse-test target which
+              launches a new eclipse instance within which the tests will be
+              executed. Tests can be run with or without UI.</td>
+            </tr>
+          </tbody>
+        </table>
+      </center>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 12</span>. Files for controlling the
+        test process
+      </div>
+    </div>
+    <br>
+     <br>
+     <br>
+     
+
+    <div class="figure">
+      <img style="width: 861px; height: 554px;" alt=
+      "Interaction Diagram for the test process" src=
+      "runTestsInteractionDiagram.png"><br>
+       
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 13</span>. Script interaction for the
+        test process
+      </div>
+    </div>
+
+    <h3>Automate Tests for your Plug-In</h3>
+
+    <p>Now it is time to think about the effort to automate the tests for your
+    plug-in. At the time I automated the tests for RDT, the tests resided in
+    extra plug-ins and there was an AllTests suite, which gathered all the
+    tests. With these preconditions, there were 3 steps on the road to test
+    automation:</p>
+
+    <ul>
+      <li>Build a deployable which includes the tests</li>
+
+      <li>Add a test.xml file in the plug-in, which contains the AllTests
+      suite</li>
+
+      <li>Add post-build behavior in customTargets.xml</li>
+    </ul>
+
+    <h4>Build a deployable which includes the tests</h4>
+
+    <p>Because the deliverable for your plug-in (the zip file or update site
+    files) should not contain the tests, another zip file for the tests must be
+    created, called test deliverable in the following. If you followed the
+    pattern of the Eclipse plug-ins and created a tests plug-in project for
+    each of your plug-ins, this can easily be achieved. If there is more than
+    one test plug-in project, a test feature can be created to bundle them.
+    Therefore you can add a feature project. Alternatively, if you want to keep
+    the number of projects small and do not have the need to create the feature
+    interactively from the feature manifest file, you can add a subdirectory to
+    the existing feature project. The map file can then be used to customize
+    the fetch process to create a feature directory with the content of the
+    subdirectory. An example is given in the first line of Fig. 14.</p>
+
+    <div class="fileContent">
+      feature@org.rubypeople.rdt-tests=HEAD,:ext:cvs.sf.net:/cvsroot/rubyeclipse,,org.rubypeople.rdt-feature/unit-tests-feature<br>
+
+       plugin@org.rubypeople.rdt.ui.tests=HEAD,:ext:cvs.sf.net:/cvsroot/rubyeclipse,<br>
+
+       plugin@org.rubypeople.rdt.debug.core.tests=HEAD,:ext:cvs.sf.net:/cvsroot/rubyeclipse,<br>
+
+       ...<br>
+       
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 14</span>. Section from rdt.map for
+        test feature
+      </div>
+    </div>
+
+    <p>Building the test deliverable is identical to building the deliverable
+    itself. If you can use the same build properties as for the deliverable,
+    just add an additional entry to the allElements target in
+    customTargets.xml. Fig. 15 shows how the allElements target is adapted for
+    RDT in order to create the deliverable and test deliverable in one
+    step.</p>
+
+    <div class="fileContent">
+<pre>
+&lt;target name="allElements"&gt;&lt;target name="allElements"&gt;
+
+  ...
+ 
+  &lt;ant antfile="${genericTargets}" target="${target}" &gt;
+    &lt;property name="type" value="feature" /&gt;
+    &lt;property name="id" value="org.rubypeople.rdt-tests" /&gt;
+  &lt;/ant&gt; 
+&lt;/target&gt;
+&lt;target name="postBuild"&gt; 
+  &lt;antcall target="test"&gt;&lt;/antcall&gt;
+&lt;/target&gt;
+
+&lt;target name="test"&gt;
+  &lt;echo message="Setting up tests in ${eclipseAutomatedTestHome}"/&gt;
+    
+  &lt;copy file="${buildDirectory}/${buildLabel}/org.rubypeople.rdt-${buildId}.zip" tofile="${eclipseAutomatedTestHome}/eclipse-SDK-RDT-${buildId}.zip" /&gt;
+  &lt;copy file="${buildDirectory}/${buildLabel}/org.rubypeople.rdt-tests-${buildId}.zip" tofile="${eclipseAutomatedTestHome}/eclipse-junit-tests-rdt-${buildId}.zip" /&gt;
+
+  &lt;ant antfile="${eclipseAutomatedTestHome}/test.xml" target="runtests" dir="${eclipseAutomatedTestHome}"&gt; 
+    &lt;property name="os" value="${baseos}" /&gt;
+    &lt;property name="ws" value="${basews}" /&gt;
+    &lt;property name="arch" value="${basearch}" /&gt;
+    &lt;property name="testPlugin" value="org.rubypeople.rdt.tests.all_0.5.0" /&gt; 
+    &lt;property name="report" value="org.rubypeople.rdt.tests.all" /&gt; 
+  &lt;/ant&gt; 
+&lt;/target&gt;
+</pre>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 15</span>. Targets from
+        customTargets.xml for testing
+      </div>
+    </div>
+
+    <h4>Add a test.xml</h4>
+
+    <p>A test.xml file must exist for every test plug-in you want to run.
+    Because every test run starts up a new eclipse instance, it is convenient
+    to have a plug-in which bundles all the tests into a single AllTests suite.
+    Then there is only one test run and there must only be one test.xml file
+    maintained. A template for such a test.xml file can be found in <a href=
+    "#testFramework">14</a>. Fig. 16 shows important targets of the test.xml
+    for the RDT plug-in containing the AllTests suite. The entry point is the
+    run target, which is called from ${eclipseAutomatedTestHome}/test.xml. Its
+    prerequisites are init, suite and cleanup. The suite target calls ui-test
+    in library.xml with the necessary properties to start up the test host and
+    run TS_RdtAllTests.</p>
+
+    <div class="fileContent">
+<pre>
+ &lt;target name="init"&gt;
+    &lt;tstamp/&gt;
+    &lt;delete&gt;
+      &lt;fileset dir="${eclipse-home}" includes="org*.xml"/&gt;
+    &lt;/delete&gt;
+  &lt;/target&gt;
+      
+  &lt;!-- This target defines the tests that need to be run. --&gt;
+  &lt;target name="suite"&gt;
+    &lt;property name="rdt-folder" value="${eclipse-home}/rdt_folder"/&gt;
+    &lt;delete dir="${rdt-tests-workspace}" quiet="true"/&gt;
+    &lt;ant target="ui-test" antfile="${library-file}" dir="${eclipse-home}"&gt;
+      &lt;property name="data-dir" value="${rdt-tests-workspace}"/&gt;
+      &lt;property name="plugin-name" value="${plugin-name}"/&gt;
+      &lt;property name="classname" value="org.rubypeople.rdt.tests.all.TS_RdtAllTests"/&gt;   
+
+      &lt;property name="vmargs" value="-Drdt.rubyInterpreter=&amp;quot;${rdt.rubyInterpreter}&amp;quot;"/&gt;
+
+    &lt;/ant&gt;
+  &lt;/target&gt;
+      
+ 
+  &lt;!-- This target holds code to cleanup the testing environment after --&gt;
+  &lt;!-- after all of the tests have been run. You can use this target to --&gt;
+  &lt;!-- delete temporary files that have been created. --&gt;
+  &lt;target name="cleanup"&gt;
+  &lt;/target&gt;
+      
+  &lt;!-- This target runs the test suite. Any actions that need to happen --&gt;
+  &lt;!-- after all the tests have been run should go here. --&gt;
+  &lt;target name="run" depends="init,suite,cleanup"&gt;
+    &lt;ant target="collect" antfile="${library-file}" dir="${eclipse-home}"&gt;
+      &lt;property name="includes" value="org*.xml"/&gt;
+      &lt;property name="output-file" value="${plugin-name}.xml"/&gt;
+    &lt;/ant&gt;
+  &lt;/target&gt;
+</pre>
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 16</span>. Important targets of
+        org.rubypeople.rdt.tests.all/test.xml<br>
+      </div>
+    </div>
+
+    <h4>Add post-build behavior in customTargets.xml</h4>
+
+    <p>Fig. 15 shows the test target of customTargets.xml, which is executed in
+    the PostBuild phase of the build process. The property
+    eclipseAutomatedTestHome is set to the directory into which
+    eclipse-Automated-Tests-&lt;version&gt;.zip has been extracted. The first
+    step in the test target is to copy the two deliverables into this
+    directory, following a naming schema which is given in
+    ${eclipseAutomatedTestHome}/test.xml. By using these names, the runtests
+    target of test.xml extracts the deliverables into the test host
+    installation (in ${eclipseAutomatedTestHome}/test-eclipse/eclipse). The
+    second step is to call the runtests target of
+    ${eclipseAutomatedTestHome}/test.xml. The property testPlugin defines which
+    tests to run and the report property defines the name of the generated
+    report.</p>
+
+    <p>Compared to the example above, where we ran the tests jdt ui, there is
+    no need to create the build host in $ECLIPSE_AUTOMATED_TESTS/eclipse,
+    because the target runtests in test.xml is directly called from the
+    postbuild target in customTargets.xml. So the build host for the automatic
+    build is reused as build host for the automatic tests. Fig. 17 shows the
+    difference compared to Fig. 13.</p>
+
+    <div class="figure">
+      <img alt="Interaction Diagram for the test process" src=
+      "runTestsRdtInteractionDiagram.png"><br>
+       
+
+      <div class="figure-caption">
+        <span class="figure-number">Fig 17</span>. Script interaction for the
+        test process<br>
+      </div>
+    </div>
+
+    <blockquote>
+      <p><img src="../images/tip.gif" height="13" width="62">PDE JUnit tests
+      open up a workbench window. If you run your tests on a remote *nix box,
+      you can use Xvfb (X virtual frame buffer) to provide a dummy environment
+      for displaying windows.</p>
+    </blockquote>
+
+    <h4>Run the RDT tests</h4>
+
+    <p>If you want to run the RDT tests, follow the instructions above for
+    building RDT and set the following additional properties in run.bat or
+    run.sh:</p>
+
+    <ul>
+      <li>unset dontRunTests</li>
+
+      <li>set eclipseAutomatedTestHome to the directory into which you
+      extracted eclipse-Automated-Tests-3.0.2.zip</li>
+
+      <li>unset rubyInterpreter if you don't have ruby installed (which will
+      result in failed tests)</li>
+    </ul>
+
+    <p>After you call run.bat or run.sh the tests will be executed in the
+    postBuild phase. If you want to run the tests separately, you can insert
+    the build target after the -build property in the antRunner command
+    line:</p>
+<pre>
+%vm% -cp %eclipseDir%\startup.jar ... org.eclipse.core.launcher.Main -application org.eclipse.ant.core.antRunner -buildfile %buildfile% postBuild -data ...
+</pre>
+
+    <h1>Conclusion</h1>
+
+    <p>Hopefully this article could help you in setting up project automation
+    for your Eclipse plug-in project. It has shown the automation mechanisms
+    used in building Eclipse itself and how they are leveraged to build and
+    test arbitrary plug-ins automatically with a single command. Further
+    project automation can be achieved from the inside or from the outside:
+    From the inside by using the hooks provided in the build files for
+    activities like enhanced reporting. From the outside by calling the build
+    command as part of a broader build process from tools like CruiseControl or
+    Maven.<br>
+     For the discussion of questions about this article and experiences with
+    Eclipse build and test automation in general, I'd like to invite you to the
+    RDT developer wiki [<a href="#feedbackPage">17</a>] or to e-mail me [<a
+    href="#mbarchfeContact">18]</a>.</p>
+
+    <h1>Acknowledgments</h1>
+
+    <p>I would like to thank Sonia Dimitrov and Pascal Rapicault for their
+    article draft, which I have weaved into this article. Many thanks also to
+    Pat McCarthy for his valuable comments.</p>
+
+    <h3>Reference</h3>
+
+    <table>
+      <tbody>
+        <tr>
+          <td valign="top"><a name="pdeHelpBuildProperties">[1]</a> </td>
+
+          <td><a href=
+          "http://help.eclipse.org/help30/topic/org.eclipse.pde.doc.user/guide/pde_feature_generating_build.htm"
+           class="referenceLink">PDE Help on build.properties</a>, Eclipse 3.0
+          Help</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="pdeHelpGenAnt">[2]</a> </td>
+
+          <td><a href=
+          "http://help.eclipse.org/help30/topic/org.eclipse.pde.doc.user/guide/pde_feature_generating_ant.htm"
+           class="referenceLink">PDE Help on Generating Build Files</a>,
+          Eclipse 3.0 Help</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="bugsHeadlessInvokation">[3]</a> </td>
+
+          <td><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=65146"
+          class="referenceLink">Generated feature build scripts and headless
+          invokation</a> , Eclipse Bugs</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="pdeHelpGenCommandLine">[4]</a> </td>
+
+          <td><a href=
+          "http://help.eclipse.org/help30/index.jsp?topic=/org.eclipse.pde.doc.user/guide/pde_feature_generating_antcommandline.htm"
+           class="referenceLink">PDE Help on headless build</a> , Eclipse 3.0
+          Help</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="eclipsExamples">[5]</a> </td>
+
+          <td><a href=
+          "http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops/R-3.0-200406251208/eclipse-examples-3.0-win32.zip"
+           class="referenceLink">eclipse-examples-3.0-win32.zip</a> , Eclipse
+          Download Area</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="eclipsebuilderReadme">[6]</a> </td>
+
+          <td><a href=
+          "http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.releng.eclipsebuilder/readme.html?rev=1.24"
+           class=
+          "referenceLink">org.eclipse.releng.eclipsebuilder/readme.html</a> ,
+          Eclipse CVS</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="sdkExamplesBuildFiles">[7]</a> </td>
+
+          <td><a href=
+          "http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.releng.eclipsebuilder/sdk.examples"
+           class=
+          "referenceLink">org.eclipse.releng.eclipsebuilder/sdk.examples</a>,
+          Eclipse CVS</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="jdtFeature">[8]</a> </td>
+
+          <td><a href=
+          "http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt-feature/"
+          class="referenceLink">JDT feature</a> , Eclipse CVS</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="pdeScripts">[9]</a> </td>
+
+          <td><a href=
+          "http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.pde.build/scripts"
+           class="referenceLink">org.eclipse.pde.build/scripts</a>, Eclipse
+          CVS</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="buildBootstrapFilesRdt">[10]</a> </td>
+
+          <td><a href=
+          "http://cvs.sourceforge.net/viewcvs.py/rubyeclipse/org.rubypeople.rdt.build/bootstrap/">
+          RDT bootstrap files for headless build</a>, RDT CVS</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="discussionUpdateSiteBuild">[11]</a> </td>
+
+          <td><a href=
+          "http://dev.eclipse.org/newslists/news.eclipse.platform/msg25629.html"
+           class="referenceLink">Way to automatically build for update
+          site?</a> , Eclipse News</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="usingPDEBuild">[12]</a> </td>
+
+          <td><a href=
+          "http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.pde.build/notes/usingPDEBuild.html?rev=1.8"
+           class="referenceLink">Using PDE Build</a>, Eclipse CVS</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="eclipseTestResults">[13]</a> </td>
+
+          <td><a href=
+          "ftp://download.eclipse.org/R-3.0.2-200503110845/testresults" class=
+          "referenceLink">Eclipse Test Results for 3.0.2</a>, Eclipse Download
+          Area</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="testFramework">[14]</a> </td>
+
+          <td><a href=
+          "ftp://download.eclipse.org/R-3.0.2-200503110845/testframework.html"
+          class="referenceLink">testframework.html</a>, Eclipse Download
+          Area</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="eclipseAutomatedTests">[15]</a> </td>
+
+          <td><a href=
+          "http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops/R-3.0-200406251208/eclipse-Automated-Tests-3.0.zip"
+           class="referenceLink">eclipse-Automated-Tests-3.0.2.zip</a>, Eclipse
+          Download Area</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="generateSourceFeatureBug">[16]</a> </td>
+
+          <td><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=86299"
+          class="referenceLink">generate.feature and building using export
+          button in feature.xml</a> , Eclipse Bugs</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="feedbackPage">[17]</a> </td>
+
+          <td><a href="http://213.203.244.123/wiki/Automatic_Build.wiki.phtml"
+          class="referenceLink">feedback page</a>, RDT developer wiki</td>
+        </tr>
+
+        <tr>
+          <td valign="top"><a name="mbarchfeContact">[18]</a> </td>
+
+          <td><a href="http://sourceforge.net/users/mbarchfe/" class=
+          "referenceLink">contact</a>, user page at sf.net</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><small>ref: <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=87151">bug
+    87151</a></small></p>
+
+    <p><small>Java and all Java-based trademarks and logos are trademarks or
+    registered trademarks of Sun Microsystems, Inc. in the United States, other
+    countries, or both.</small></p>
+  </body>
+</html>
+

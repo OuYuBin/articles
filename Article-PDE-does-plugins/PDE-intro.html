@@ -1,0 +1,359 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>PDE Does Plug-ins</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right"><font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2003 International Business Machines Corporation. All rights reserved</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+
+<h1 ALIGN="CENTER">PDE Does Plug-ins</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  <font face="Arial">The Plug-in Development Environment (PDE) provides a set 
+  of tools that assist the developer in every stage of plug-in development from 
+  genesis to deployment. This article chronicles the creation, development, testing, 
+  building, and deployment of a simple &quot;Hello World&quot; plug-in using a 
+  subset of these tools.</font> 
+  <p><b> By Wassim Melhem and Dejan Glozic, IBM Canada Ltd.</b><br>
+    <font size="-1">September 8, 2003</font></p>
+</blockquote>
+
+<hr width="100%">
+<h2>Why PDE?</h2>
+<p>A plug-in is the fundamental building block of the Eclipse platform. Eclipse 
+  is the sum of its constituent plug-ins, where each plug-in contributes functionality 
+  to the platform and is activated when the functionality it provides is needed. 
+  Structurally, each plug-in resides in a subdirectory called eclipse/plugins 
+  in the Eclipse installation, and contains a manifest (plugin.xml) file that 
+  describes its content to the Eclipse runtime. A plug-in may also include a Java&trade; 
+  code library and other resource files it needs, such as icons, properties files, 
+  etc.</p>
+<p align="center">
+<img border="0" src="images/directory.gif" width="575" height="369"></p>
+<p align="left"> Writing an Eclipse plug-in is straight forward, but not exactly 
+  trivial. The task entails creating a manifest file, writing Java source code, 
+  compiling the code into a library, testing it and packaging the plug-in into 
+  a form that is suitable for deployment. This task can be quite intricate, depending 
+  on the complexity of the plug-in and the developer's Eclipse expertise. Enter 
+  PDE.</p>
+<p>The Plug-in Development Environment (PDE) is a set of tools designed to assist 
+  the Eclipse developer in developing, testing, debugging, building, and deploying 
+  Eclipse plug-ins while working inside the Eclipse workbench. Keeping with 
+  Eclipse's philosophy of seamless integration of components, PDE is not a separately 
+  launched tool. PDE integrates itself in the workbench by providing platform 
+  contributions, such as editors, wizards, views and a launcher, which users can 
+  easily access from any perspective without interrupting their work flow. </p>
+<p>This article showcases a subset of PDE tools that are available in Eclipse 
+  2.1 by chronicling the journey of one plug-in from genesis to deployment. The 
+  plug-in will contribute to the Eclipse workbench a menu containing a single 
+  item which, when selected, will pop up a dialog containing the phrase &quot;Hello, 
+  world!&quot;</p>
+<h2>Configuring PDE</h2>
+<p>In order for PDE to provide a development environment that is identical to 
+the runtime environment in which the plug-in will be later deployed, one needs 
+to specify the <b>Target</b> <b>Platform</b>. Target<b> </b>platform refers to the set of plug-ins with which the plug-in 
+being developed will be deployed. At runtime, most plug-ins require other plug-ins to be on their class path in order to 
+run properly. At development time, a plug-in, which is 
+represented as a project in the workspace, similarly requires that all the libraries for its required 
+plug-ins be on its build path in order for its code to compile without errors. </p>
+<p>Libraries for required plug-ins can be easily made available to the workspace 
+plug-in by simply specifying the installation location of the target platform. 
+PDE scans and lists all the plug-ins found at that location, but only the 
+plug-ins explicitly selected by the user will constitute the target platform and 
+can be used by plug-ins in the workspace; the rest are ignored.</p>
+<p align="center">
+<img border="0" src="images/target_platform.gif" width="586" height="478" ></p>
+<p align="left">
+<img src="images/tip.gif" width="62" height="13"> Plug-ins from the target 
+platform are 
+not part of the workspace, and their contents therefore cannot be browsed in Eclipse's Navigator 
+and Package 
+Explorer views. PDE thus provides a <b>Plug-ins </b>
+view where the directory structure of these external plug-ins can be browsed and 
+external files can be opened (in read-only mode, of course).</p>
+<h2>Creating a New Plug-in Project</h2>
+<p>In the workspace, a plug-in is encapsulated in a single project. At its 
+top level, the project must contain a manifest file, describing the plug-in 
+content, and a  build.properties file, containing information that is used 
+to guide the build process. To create a plug-in project, 
+PDE provides a <b>New Plug-in Project </b>wizard, which can be found under the
+<b>Plug-in Development</b> category in the <b>New Project</b> creation wizard. 
+This wizard not only creates the plug-in project, it also gives the developer a quick 
+start by generating the two essential plug-in files and, optionally, some Java 
+code.</p>
+<p align="center">
+<img border="0" src="images/plugin_project_1.gif" width="500" height="500" ></p>
+<p align="left">Most plug-ins, including the &quot;Hello World&quot; plug-in, are meant 
+to contain executable Java code and must therefore be housed in a Java project. 
+In such cases,  one can specify the source folder that will contain 
+the plug-in code during development, and the library where the compiled code 
+will be packaged.  PDE maps the library name to the source 
+folder and saves that information in the plug-in project's build.properties 
+file, so that it can be used later during the build process. One can 
+also specify the output folder, where the Java compiler will place the compiled 
+*.class files of the project. When launching a runtime workbench instance to run 
+or debug the plug-in, PDE will put this output folder on the plug-in 
+runtime classpath, thus allowing the runtime class loader to locate and load the 
+freshly generated  class files.</p>
+<p align="left"> <img src="images/tip.gif" width="62" height="13"> Not all plug-ins contain Java code. 
+Plug-ins such as documentation plug-ins contain only non-Java resources, and 
+can therefore be sufficiently contained in simple projects. In fact, it is 
+desirable to create simple projects for such plug-ins, so that they would not 
+unnecessarily be subjected to Java builders.</p>
+<p align="center">
+<img border="0" src="images/plugin_project_2.gif" width="500" height="500" ></p>
+<p align="left">
+The ability to create a plug-in with a ready-to-run extension is appealing, 
+particularly to novice Eclipse developers. Therefore, templates for 
+Eclipse's more popular extensions are available during the plug-in project 
+creation process. Writing an Eclipse extension always 
+involves adding markup to the manifest file, and if required, accompanying Java 
+code that gets executed upon the invocation of the extension. The 
+code generation wizards generate all the markup and code needed to produce a 
+customizable and fully-functioning extension. </p>
+<p>Selecting the &quot;Hello, World&quot; template wizard from the list above 
+  results in the creation of a &quot;Hello World&quot; plug-in that is ready to 
+  run. That is great, but would make this paper extremely short. In 
+  this example, we will create a blank plug-in project, so that we can demonstrate 
+  how to write a plug-in from scratch.</p>
+<p>As a result of our selections, the wizard generates the plug-in project, the 
+  manifest file, the build.properties file and initializes the content of these 
+  two files based on the data entered in the wizard. Let us now proceed with the 
+  implementation of the plug-in, starting with the editing of the manifest file.</p>
+<p align="center">
+<img border="0" src="images/project.gif" width="295" height="180"></p>
+<h2>Editing the Plug-in Manifest File</h2>
+<p>The manifest file describes the content of the plug-in to the Eclipse runtime. 
+  In addition to basic plug-in information such as plug-in identifier, version, 
+  etc., this file contains four main sections:</p>
+<ol>
+  <li>A Dependencies section listing all the plug-ins required by the plug-in.
+  A plug-in must list as dependencies all the plug-ins needed for its code to 
+  compile and all the plug-ins contributing extension points that it is using.</li>
+  <li>An Extensions section declaring all the functionalities that this plug-in 
+  contributes to the platform by extending other plug-ins' extension points.</li>
+  <li>A Runtime section declaring the libraries where the plug-in code is 
+  packaged. At runtime, the class loader searches these libraries when 
+  loading the plug-in's classes.</li>
+  <li>An Extension Points section declaring new function points defined by this 
+    plug-in which other plug-ins can extend (i.e., provide an implementation for). 
+    For example, the Platform UI plug-in provides an editor extension point, which 
+    other plug-ins can extend to implement and contribute a new editor to the 
+    platform.</li>
+</ol>
+<p>Let us now edit the different sections of the plug-in 
+manifest file using the PDE multi-page UI editor, the default editor for manifest 
+files in Eclipse.</p>
+<h3 align="left">Dependencies</h3>
+<p>Contributing a menu to the workbench requires extending the <i>actionSets</i> 
+  extension point that is defined by the <i>org.eclipse.ui</i> plug-in. Therefore, 
+  the &quot;Hello World&quot; plug-in must declare this plug-in as a dependency. 
+  By doing so, in addition to providing access to the extension point, the libraries 
+  of <i> org.eclipse.ui</i> will be on the plug-in's runtime classpath.</p>
+<p align="center">
+<img border="0" src="images/dependencies_page.gif" width="532" height="380"></p>
+<p>The list of required plug-ins solely determines the libraries that will be 
+  on the plug-in's runtime classpath. PDE takes charge of the vital task of computing 
+  the plug-in project's classpath during development time, so that it accurately 
+  reflects the runtime classpath. Upon saving the manifest file, PDE automatically 
+  updates the project's classpath to reflect changes made to the dependency list, 
+  if any. This feature is an invaluable utility because the alternative, i.e., 
+  computing the classpath manually, is tedious and error-prone.</p>
+<p>The list of required plug-ins should not contain unused entries. An incomplete list of dependencies is easy to spot at development 
+time because the plug-in's code will not compile in the workspace. 
+Extraneous entries, on the other hand, are harder to spot because they are 
+benign at development time, but can slow down class loading at runtime as extra 
+libraries on the plug-in's runtime classpath will unnecessarily be searched. PDE, therefore, provides a <b>
+Find Unused Dependencies</b> utility as an item in the required plug-ins list's 
+context menu, which scans the dependency list for extraneous entries and offers 
+to remove them.</p>
+<p> <img src="images/tip.gif" width="61" height="13"> The plug-ins <i>
+org.eclipse.core.boot</i> and <i>org.eclipse.core.runtime</i> are implicitly 
+available for all plug-ins at runtime, and therefore need not be explicitly 
+listed as required plug-ins.</p>
+<h3>Extensions</h3>
+<p style="font-family: arial, helvetica, geneva; font-size: 10pt">A plug-in can 
+contribute new functionality to the platform by adding an extension to extension 
+points declared by other plug-ins. The extension declaration must follow the schema 
+defined by the extension point it contributes to. The schema  can be as simple or as complex as the author of the 
+extension point defines it to be. </p>
+<p style="font-family: arial, helvetica, geneva; font-size: 10pt">Adding a new 
+  extension on the Extensions page of the manifest editor involves creating nested 
+  elements using the context menu, and setting attribute values for these elements 
+  in the Properties view. When adding a new extension, PDE uses the grammar of 
+  the extension point to fill the context menu with valid element names and populate 
+  the property view with the legal attributes for the selected element.</p>
+<p style="font-family: arial, helvetica, geneva; font-size: 10pt">Menus and menu 
+  items, which, along with toolbar actions, are collectively referred to as action 
+  sets, can be added to the workbench by contributing to the <i>org.eclipse.ui.actionSets</i> 
+  extension point. The top-level element of this extension is an 'actionSet' 
+  element specifying its unique internal identifier, as well as its label and 
+  visibility in the workbench. When the attribute 'visible' is set to 'true', 
+  the action set will be visible in all perspectives; otherwise, the action set 
+  will have to be manually added to a perspective by choosing <b>Window &gt; Customize 
+  Perspective... &gt; Other</b>.</p>
+<p align="center">
+<img border="0" src="images/extensions.gif" width="602" height="233"></p>
+<p align="left">
+The 'menu' element specifies the label of the menu as it will appear in the 
+workbench and the internal identifier of the menu.</p>
+<p align="center">
+<img border="0" src="images/extensions2.gif" width="523" height="230"></p>
+<p align="left">
+The 'separator' element creates a menu separator that also serves as a group to 
+which the menu item will be added.</p>
+<p align="center">
+<img border="0" src="images/extensions3.gif" width="502" height="232"></p>
+<p align="left"> The 'action' element specifies the actual menu item. Using 
+  the menu's identifier and the separator's name, the 'menubarPath' attribute 
+  indicates the slot where the item is to be placed. When the menu action 
+  is selected, the class that will be executed to display the &quot;Hello, world!&quot; 
+  message is the one specified by the 'class' attribute. The schema indicates 
+  that this class must implement the interface <i>org.eclipse.ui.IWorkbenchWindowActionDelegate</i>; 
+  PDE therefore customizes the value field for the 'class' property to allow one 
+  to specify and generates on the spot a Java class that implements the specified 
+  interface.</p>
+<p align="center">
+<img border="0" src="images/extensions4.gif" width="682" height="381"></p>
+<p align="left"> PDE generates the class, complete with the stubs for all the 
+  required methods. The init(..) and run(..) method need to be manually 
+  fleshed out as below:</p>
+<p>
+<img border="0" src="images/sample_action_code.gif" width="588" height="502"></p>
+<h3>Runtime</h3>
+<p>During the plug-in project creation process, we had specified that the code is to be packaged in a library named 'helloworld.jar'. 
+The library's type, visibility, and content can be set 
+on the <b>Runtime</b> page of the manifest editor.</p>
+<p align="center">
+<img border="0" src="images/runtime_page.gif" width="495" height="555" ></p>
+<p>A library's <b>type</b> plays an important role at runtime. If a library is 
+  declared to contain both code and resources, accessing a resource or a class 
+  file from such a library results in the activation of the plug-in. On the other 
+  hand, accessing a resource from a library that is declared to contain only resources, 
+  e.g., libraries that only contain NL-*.properties files, does not activate the 
+  plug-in. </p>
+<p>In order to speed up class loading, one should always declare the package 
+prefixes that are found in each library. A library will not be searched 
+during class loading unless its list of package prefixes contains a prefix for 
+the fully qualified name of the class being searched for. Libraries that 
+do not declare a list of package prefixes will be searched during the loading of 
+every class.</p>
+<p>During development, the library JAR has not been created yet.  The <b>Library Content</b> section lists the source folders 
+that will be compiled into the selected library during the build process. 
+Whenever the user modifies this list, PDE automatically updates the appropriate entries in the plug-in 
+project's build.properties file.</p>
+<h3>Extension Points</h3>
+<p>Defining a new extension point requires the writing of a schema, which all 
+clients of the extension point must then follow in order to be processed 
+correctly at runtime. PDE provides an editor for the composition of such a 
+schema. However, since the &quot;Hello World&quot; plug-in does not contribute new 
+extension points, we will leave the discussion of extension points and schemas 
+for a future article.</p>
+<h2>Testing the Plug-in</h2>
+<p>PDE contributes to the platform a launcher that allows one to test and debug 
+plug-ins. One can create and run a runtime workbench launch configuration 
+to spawn a second (runtime) workbench instance, whose constituent plug-ins are 
+the workspace plug-ins and all selected external plug-ins in the target platform. The 
+runtime workbench instance thus previews the behavior of the plug-ins in the 
+environment in which they will later be deployed.</p>
+<p>The runtime workbench instance is launched in development mode (i.e., with 
+  the <i>-dev</i> option), so the output folder of the plug-in project is put 
+  on the runtime classpath of the corresponding plug-in. This allows the runtime 
+  class loader to always locate and load the plug-in's freshest class files. All 
+  other execution options and settings with which to launch the runtime workbench 
+  are set in the launch configuration itself. These settings include the JRE, 
+  VM arguments, and all the program execution options supported by the Eclipse 
+  platform. The workspace location for the runtime workbench is also specified 
+  in the configuration, and must be different from the workspace location of the 
+  host platform as one definitely needs to test their plug-in in a sandbox. One 
+  may create multiple configurations to test their plug-ins under different conditions.</p>
+<p align="center">
+<img border="0" src="images/launcher_1.gif" width="671" height="525"></p>
+<p> <img src="images/tip.gif" width="61" height="13"> PDE uses the values specified 
+  on the <b>Plug-in Development &gt; Target Environment</b> preference page to 
+  set the default values for the -<i>os</i>, -<i>ws</i>, -<i>arch</i> and -<i>nl</i> 
+  arguments in the configuration. Changes made to these values in the configuration 
+  are local to that configuration. Changes made to values on the preference page 
+  affect the defaults for all configurations that are created thereafter.</p>
+<p align="left"> When the launch configuration in our example is run, the runtime 
+  workbench will appear within seconds. The &quot;Hello World Menu&quot; menu 
+  will appear at the top, containing one item &quot;Hello World Action&quot;. 
+  When this item is selected, a dialog pops us to greet the world.</p>
+<p align="center">
+<img border="0" src="images/dialog.gif" width="497" height="235"></p>
+<h2>Exporting the Plug-in into a Deployable Zip</h2>
+<p>The last stage in the life cycle of a workspace plug-in is its packaging in 
+a format that will make it easily deployable in any Eclipse-based product.</p>
+<p>The process of packaging a plug-in project is driven by the build.properties 
+  configuration file. This file is structured as a set of key-value pairs, where 
+  the keys are defined by Eclipse's build process, and provides information about 
+  the mapping of source folder to jars, what files to include in the packaged 
+  plug-in, what files to exclude, etc.</p>
+<p>Two of these keys are used in the building 
+of the &quot;Hello World&quot; plug-in:</p>
+<ul>
+  <li><b><font face="Arial">source.&lt;library&gt;</font></b> - The value is a 
+    comma-separated list of the source folders to be compiled into the library 
+    specified. This key is maintained up-to-date by PDE using the data entered 
+    on the Runtime page of the manifest editor.</li>
+  <li><b><font face="Arial">bin.includes</font></b> - The value is a comma-separated 
+    list of the files and folders to include in the binary build. While an initial 
+    value for this key is set by PDE during the plug-in project creation process, 
+    it is up to the developer to maintain this key and explicitly specify all 
+    the files and folders to be included in the packaged plug-in. For this sample 
+    plug-in, plugin.xml and helloworld.jar are the only two files to be included 
+    in the build.</li>
+</ul>
+<p>To package and export the plug-in, the <b>Deployable Plug-ins and Fragments
+</b>export wizard is used.</p>
+<p align="center">
+<img border="0" src="images/export_wizard.gif" width="563" height="550"></p>
+<p align="left">The zip file generated then simply needs to be unzipped into the installation 
+directory of any Eclipse-based product and the plug-in becomes part of that 
+product.</p>
+<p align="center">
+<img border="0" src="images/deploy.gif" width="570" height="295"></p>
+<h2 align="left">Conclusion</h2>
+<p align="left">Using a simple &quot;Hello World&quot; plug-in as an example, 
+  this article demonstrates how PDE provides all the tools necessary to develop 
+  an Eclipse plug-in more easily and more quickly. The plug-in project creation 
+  wizard gives a quick start by generating the project along with the plugin.xml 
+  and build.properties files. The code generation wizards generate code 
+  and markup for Eclipse's more popular extension points, so that a novice Eclipse 
+  developer can get their first plug-in up and running in a few minutes. 
+  The manifest editor generates a syntactically and semantically valid manifest 
+  file. The runtime workbench launcher allows the testing and debugging 
+  of the plug-in in an environment that is identical to the runtime environment 
+  in which it will be deployed. Finally, the plug-in export wizard turns 
+  the tedious build and packaging process into a simple one-step operation.</p>
+<p align="left">While plug-ins seem to take center stage in the Eclipse architecture, 
+  other components such as fragments, features and update sites play an important 
+  role in the development of Eclipse products. In future articles we will discuss 
+  the PDE tools available for the development of these components, as well as 
+  take a detailed look at how to define new extension points.</p>
+
+<p><small>IBM is a registered trademark of International Business Machines Corporation 
+  in the United States, other countries, or both.</small></p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered 
+  trademarks of Sun Microsystems, Inc. in the United States, other countries, 
+  or both.</small></p>
+
+</body>
+</html>

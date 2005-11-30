@@ -1,0 +1,935 @@
+<html>
+
+  <head>
+    <meta http-equiv="Content-Type"
+	 content="text/html; charset=windows-1252"/>
+
+    <title>Plugging into SourceForge.net</title>
+
+    <link href="../default_style.css" rel="stylesheet"/>
+
+    <meta content="David J. Biesack (david_biesack@users.sourceforge.net)"
+     name="author"/>
+
+    <meta content="pombredanne@nexb.com"
+     name="editor"/>
+
+    <meta content="Describes how you can publish your open source Eclipse Plug-In on SourceForge.net"
+     name="description"/>
+
+    <meta content="https://bugs.eclipse.org/bugs/show_bug.cgi?id=94940"
+     name="bugzilla"/>
+
+  </head>
+
+  <body>
+
+    <div align="right">
+
+      Copyright © 2005 by David J. Biesack
+      <table border="0" cellpadding="2" cellspacing="0" width="100%">
+
+        <tbody>
+
+          <tr>
+
+            <td align="left" bgcolor="#0080c0" colspan="2" valign="top">
+            <font color="#ffffff"><b>  Eclipse Corner
+            Article</b></font></td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div align="left">
+
+      <h1><img align="middle" alt="" height="86" src="../images/Idea.jpg"
+       width="120"/></h1>
+
+    </div>
+
+    <h1 style="align: center;">Plugging into SourceForge.net</h1>
+
+    <blockquote>
+
+      <p><b>Summary</b></p>
+
+      <p>Congratulations on taking the plunge and writing an open source
+      plug-in for the Eclipse platform.
+      SourceForge.net can provide a good home your plug-in, but
+      information on how best to set up an Eclipse project there is sparse.
+      This article is an introduction to SourceForge for the Eclipse
+      developer. You will learn the features available to the
+      SourceForge.net open source developer community and be guided
+      through the process, from creating a SourceForge project to
+      hosting your Eclipse Update site.</p>
+
+      <p><b>By David Biesack, SAS</b></p>
+
+      <p>October 15, 2005</p>
+
+    </blockquote>
+
+    <hr />
+
+    <h3>SourceForge: A site for everything open source and nothing in
+    particular</h3>
+
+    <div><img align="right" alt="SourceForge.net logo"
+     src="images/SourceForge.net.png"
+     style="margin:5px; width: 210px; height: 62px;" title="SourceForge.net"/></div>
+
+    <p><a href="http://www.sourceforge.net/">SourceForge.net</a> (or
+    simply SourceForge) is the world's largest open source
+    software repository and developer resource. Just as Eclipse is an
+    &quot;<a href="http://www.eclipse.org/articles/Article-UI-Guidelines/v200202/Contents.html"
+    >IDE for everything and nothing in particular</a>&quot;,
+    SourceForge is a developer site for everything open source and
+    nothing in particular. Similar to how an Eclipse plug-in plugs into
+    the Eclipse framework through extensions of well-known extension
+    points, open source projects &quot;plug into&quot; the rich
+    collaboration community hosted by SourceForge.</p>
+
+    <p>SourceForge is language and platform agnostic &mdash;
+    it may be Java, .Net, Perl,
+    Ruby, PHP, or any other software project. For each project, regardless of
+    language or platform, a wide array of services is freely
+    available. The project 'extension points' include server
+    space for a project web site, your own project sub-domain, a CVS
+    server, file release management, GNU Mailman mailing lists, project
+    categorization, on-line discussion forums, bug tracking, secure
+    login shell and FTP, a compile farm, task lists and even an on-line
+    financial donation management.</p>
+
+    <div><img align="right"
+     alt="SFPDE - SourceForge Plug-In Development Environment"
+     src="images/sfpde-med.png" style="margin: 5px;width: 360px; height: 265px;"
+     title="SFPDE - SourceForge Plug-In Development Environment"/></div>
+
+    <p>There are too many services available to cover in this article,
+    so I present one common scenario &mdash; the creation of a new project
+    &mdash; and I introduce features as they come into play in the life
+    cycle of developing, publishing, and supporting an open source
+    plug-in for Eclipse.</p>
+
+    <p>You will see how SourceForge extends the Eclipse Plug-in
+    Development Environment (PDE) to create what I refer to as the
+    SourceForge <strong>Plug-in Development Environment</strong>
+    (SFPDE). Eclipse provides the coding, testing, debugging, and
+    packaging aspects of Plug-in development. The SFPDE adds the source
+    management, distribution, collaboration, discovery, web hosting,
+    and support capabilities. The combined SFPDE services offer a
+    comprehensive environment for Eclipse plug-ins
+    development.</p>
+
+    <p>I will use a humble plug-in that I wrote and released on
+    SourceForge as an example (the
+    <a href="http://eclipseexeditor.sourceforge.net/">Eclipse Text
+    Editor Extensions</a> ), so you can refer to a concrete plug-in
+    project.</p>
+
+    <p>For this article, I assume that you are already familiar with
+    writing Eclipse plug-ins, and you have an idea that will
+    revolutionize the Eclipse community: if only you had a way to share
+    it as an open source project! You have some code to commit to CVS
+    and would like to attract one or two open source contributors
+    to help you polish it off. I also assume you are familiar with
+    most of the concepts of open source projects, including license
+    models, community involvement, patches and contributions, etc. If
+    not, there are resources available at the
+    <a href="http://www.opensource.org/">open source Initiative</a>
+    (OSI).</p>
+
+    <h3>Planning</h3>
+
+    <p>As with any software endeavor, a little bit of planning will
+    reduce your long-term frustration. With an open source project,
+    you probably do not have a software manager and marketing
+    department pushing you to release the new product, so you may
+    actually have time for planning!</p>
+
+    <p>This is an outline of an open source project's lifecycle
+    within the SFPDE:</p>
+
+    <ol>
+
+      <li>Understanding the SourceForge open source Software model</li>
+
+      <li>How to structure a SourceForge project</li>
+
+      <li>Naming the project</li>
+
+      <li>Naming the Java package</li>
+
+      <li>Choosing a license</li>
+
+      <li>Registering on SourceForge</li>
+
+      <li>Trove classification</li>
+
+      <li>Using SourceForge's CVS server for Eclipse projects</li>
+
+      <li>Secure services: private and public keys and SSH</li>
+
+      <li>Making a software release</li>
+
+      <li>Building a web site</li>
+
+      <li>Hosting an update site</li>
+
+      <li>Registering with a plug-in promotion site</li>
+
+    </ol>
+
+    <h3>Plugging In</h3>
+
+    <h4>Understanding the SourceForge open source Software model</h4>
+
+    <p>Before you begin an open source project on SourceForge, be sure
+    you understand the SourceForge definition of open source and its
+    requirements for hosted projects. You should read and grok the
+    SourceForge
+    <a href="http://sourceforge.net/docman/display_doc.php?docid=6048&amp;group_id=1"
+    >Terms of Use</a> , and be fully comfortable with the requirements
+    outlined there. SourceForge users assume certain aspects
+   of open source projects, so be sure you know what the open source and
+   SourceForge communities will expect of you.</p>
+
+    <h4>How to structure a SourceForge project</h4>
+
+    <p>The next step in the planning process is to get your project in
+    order before shipping it up to SourceForge. I have found that it
+    is convenient to create four separate Eclipse projects. Below is
+    the layout of my projects for my sample plug-in. I named the
+    project based on the root Java package, net.sf.eclipseexeditor
+    (described below).</p>
+
+    <table border="0" cellpadding="0" cellspacing="0" style="text-align: left; width: 600px;">
+
+      <tbody>
+
+        <tr>
+
+          <th>Eclipse Project Description</th>
+
+          <th>Example</th>
+
+        </tr>
+
+        <tr>
+
+          <td>Your plug-in, as an Eclipse PDE project.</td>
+
+          <td>net.sf.eclipseexeditor</td>
+
+        </tr>
+
+        <tr>
+
+          <td>Your Plug-In Feature, created from the Eclipse feature
+          wizard.</td>
+
+          <td>net.sf.eclipseexeditor-feature</td>
+
+        </tr>
+
+        <tr>
+
+          <td>Your update site, created from the Eclipse update site
+          wizard.</td>
+
+          <td>net.sf.eclipseexeditor-update-site</td>
+
+        </tr>
+
+        <tr>
+
+          <td>Your web site, your public documentation.</td>
+
+          <td>net.sf.eclipseexeditor-web-site</td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+    <p>Some projects may have several plug-ins, each with its own PDE
+    project. For example, solareclipse has the following project/file
+    structure:</p>
+
+    <ul>
+
+      <li>net.sf.solareclipse-feature</li>
+
+      <li>net.sf.solareclipse-home</li>
+
+      <li>net.sf.solareclipse.jsp.ui</li>
+
+      <li>net.sf.solareclipse.ui</li>
+
+      <li>net.sf.solareclipse.xml.core</li>
+
+      <li>net.sf.solareclipse.xml.ui</li>
+
+      <li>net.sf.solareclipse.xslt.debug.core</li>
+
+      <li>net.sf.solareclipse.xslt.debug.ui</li>
+
+      <li>net.sourceforge.solareclipse.web.ui</li>
+
+      <li>net.sourceforge.solareclipse.xml.core</li>
+
+    </ul>
+
+    <p>Be sure to review your project's names before committing to
+    CVS: the project name will become the CVS module name. The
+    solareclipse project's
+    <a href="http://cvs.sourceforge.net/viewcvs.py/solareclipse/">
+    CVS</a> tree has apparently obsolete modules named
+    <code>org.sourceforge.solareclipse.web.ui</code> and a misspelled
+    <code>net.courceforge.solareclipse.web.ui</code> module.</p>
+
+    <p>You may also find it convenient to define
+    <a href="images/working-set.png">an Eclipse Working Set</a> that
+    contains all your projects. This can help with restricted file
+    searches in Eclipse, i.e. text/file searches for classes or package
+    names in plugin.xml or web site content, in case you need to rename
+    classes or packages. Note that you can host <strong>all</strong>
+    your related Eclipse PDE projects within a single SFPDE project
+    space.</p>
+
+    <h4>Naming the project</h4>
+
+    <p>Patterns, packages, projects have more in common than their
+    first letter. In all cases, a good name cannot be beat. Sadly,
+    my project name (eclipseexeditor) is not a good example. It was
+    only after I had created my SourceForge project and worked on it
+    significantly that I realized that ETEE &mdash; an acronym for
+    Eclipse Text Editor Extensions &mdash; would have been a better
+    choice.</p>
+
+    <p>Your SourceForge project name will be used everywhere in
+    SourceForge: in the Unix file system as the directory name, as a
+    CVS root, as a component of a domain name/URL &mdash;
+    <a href="http://eclipseexeditor.sf.net">
+    http://eclipseexeditor.sf.net</a>, in your project's summary
+    page url &mdash; <a href="http://sf.net/projects/eclipseexeditor">
+    http://sf.net/projects/eclipseexeditor</a> , in Mailman mailing
+    lists names, etc. In other words, choose a name that is easy for
+    your users to use and remember and that still conveys the purpose
+    of your project. SourceForge does not support renaming projects
+    after their creation.</p>
+
+    <p>Here are the SourceForge rules for a project name:</p>
+
+    <ul>
+
+      <li>It must begin with a letter</li>
+
+      <li>It must be between 3 and 15 characters in length</li>
+
+      <li>It can only contain only lowercase letters (a-z), numbers
+      (0-9), and dashes (&quot;-&quot;) or underscores
+      (&quot;_&quot;)</li>
+
+      <li>It cannot match the name of any other project or one of
+      SourceForge's reserved names</li>
+
+    </ul>
+
+    <p>Once again, remember that you cannot change the project name after its creation... so
+     be sure you are happy with the name!</p>
+
+    <h4>Naming the Java package</h4>
+
+    <p>Since we are talking naming, it is a good idea to
+    consider carefully the Java packages names for your plug-ins.   If you are
+    part of a commercial organization or org site that is sponsoring
+    the plug-in development, you may wish to release the plug-in as a
+    specific package within that name space, such as the veloedit
+    Velocity editor: <a href="http://sourceforge.net/projects/veloedit/"
+    ><code>org.vaulttec.velocity.ui</code></a> . Presumably, one should
+    not use <code>org.eclipse</code> as a base package name, as that
+    name space is reserved for official Eclipse projects at
+    www.eclipse.org. I chose the pattern of <code>net.sf.</code> +
+    <i><code>projectname</code></i> (i.e.
+    <code>net.sf.eclipseexeditor</code> ) over something like
+    <code>org.biesack</code> so that the code base will feel more
+    &quot;open&quot; to other contributors. After all, a key aspect of
+    an open source project is that potential collaborators feel
+    welcome.</p>
+
+    <p>Other projects on SourceForge have followed this example, such
+    as <a href="http://sourceforge.net/projects/solareclipse/">
+    net.sf.solareclipse</a> and
+    <a href="http://sourceforge.net/projects/lunar-eclipse/">
+    net.sf.lunar_eclipse</a> . Note that if you wish to follow this
+    pattern, you should avoid using a dash in your project name, which
+    is illegal in Java. The biggest reason to use this format is that
+    it follows
+    <a href="http://java.sun.com/docs/books/jls/second_edition/html/packages.doc.html#40169"
+    >Sun's recommended package naming convention</a> of reversing
+    the domain name. Since your domain name will be
+    <code><i>projectname</i>.sourceforge.net</code> or
+    <code><i>projectname</i>.sf.net</code> , this leads to a Java
+    package name space of <code>net.sf.<i>projectname</i></code>. Other
+    projects do not follow Sun's recommendations. For
+    example, <a href="http://sfutils.sourceforge.net/">sfutils</a> has
+    packages like <code>sfutils.frs</code> with no <code>net</code>
+    or <code>org</code> or <code>com</code> prefix.</p>
+
+    <h4>Choosing a license</h4>
+
+    <p>SourceForge has a well-defined specification
+    for open source projects, including a license. SourceForge requires
+    that you use either an approved an approved open source initiative
+    license, or a license that complies with the
+    <a href="http://www.opensource.org/docs/definition.php">open source definition</a>. See the
+    <a href="http://sourceforge.net/docman/display_doc.php?docid=778&amp;group_id=1"
+    >B6. open source license overview</a> for more details: &quot;<cite>It is vital that you read and
+    understand all of the terms of a license, and verify that it meets
+    the needs of your project, before deciding to use that license;
+    this should not be a decision taken lightly.</cite> &quot;</p>
+
+    <p>The license you select can also influence
+    your ability to draw contributors to your plug-in. In addition, changing a license later often
+    alienates your user and contributing developers' community.
+    Eclipse plug-in developers may want
+    to consider the
+    <a href="http://www.opensource.org/licenses/eclipse-1.0.php">
+    Eclipse Public License</a> (EPL), an <a href="http://opensource.org"
+    >OSI approved</a> and SourceForge acceptable license. By choosing
+    EPL, you will be using the same license as the Eclipse.org
+    projects, and your plug-in license will be compatible with future
+    Eclipse developments.</p>
+
+    <h4>Registering on SourceForge</h4>
+
+    <p>Now that you have some of the planning done and your plug-in is
+    complete enough for an initial code contribution, it is time to
+    start your registration process. Naturally, SourceForge has an
+    on-line web based registration process that guides you through the
+    following steps:</p>
+
+    <ol>
+
+      <li>Hosting information</li>
+
+      <li>Registering a project</li>
+
+      <li>Terms of Use Agreement</li>
+
+      <li>Hosting requirements</li>
+
+      <li>Project license details</li>
+
+      <li>Project description details</li>
+
+      <li>Project name details</li>
+
+      <li>Final review</li>
+
+      <li>Submission completed</li>
+
+    </ol>
+
+    <p>There is plenty of documentation and help along the way. If
+    you have done the suggested planning, this should only take 10 to
+    15 minutes. Once your new project submission is complete, it will
+    take a few days for the SourceForge staff to process the request
+    and create your project.</p>
+
+    <p>You start by logging into SourceForge. If you do not already
+    have an account, simply click on the <strong>
+    <a href="http://sourceforge.net/account/newuser_emailverify.php"
+    >New User via SSL</a></strong> link on the front page and enter
+    your email address and a create a password. SourceForge will send
+    an email to the address you supply to confirm it is a valid
+    address. (If you have some spam filtering enabled, configure it to
+    allow mail from the domain &quot;sourceforge.net&quot; and any
+    sub domains). You must visit the confirmation URL in that email
+    message. At this point, you will be able to choose an account user
+    name.</p>
+
+    <p>Next, log in using your userid and password, and then click the
+    <strong><a href="http://sourceforge.net/register/">Register New
+    Project</a></strong> link to begin the registration process. Review
+    the Hosting information and the Terms of Use Agreement that you
+    must accept before proceeding. You will need to supply some of the
+    important information discussed above: your project name,
+    license, a short public project description, and a longer project
+    justification to help the SourceForge administrators understand how
+    your project adds value or is different from existing solutions.</p>
+
+    <p>Once you complete your registration, you must wait a few days
+    for the SourceForge administrators to review your request and set
+    up the infrastructure. You should receive an email response
+    informing you of the project's creation when it is ready. You
+    can check the status of any of your project requests by visiting
+    your SourceForge home page:
+    <code>http://sourceforge.net/users/<i>your-userid</i>/</code> .
+    There, you can view all of your SourceForge projects. Also, on the
+    '<a href="https://sourceforge.net/my/myprojects.php">my
+    projects</a>' page you can see all your projects regardless of
+    their approval status.</p>
+
+    <p>When accepted, your project will also receive a unique numeric
+    identifier, called a <i>group id</i>, used to access some project
+    resources on SourceForge instead of the Unix project
+    name.</p>
+
+    <p>Once your project is created, the next step is to verify your
+    project's public information in the Public Info section, and
+    to classify your project in the <a>Trove Software Map</a>.</p>
+
+    <h4>Understanding the Trove Classification</h4>
+
+    <p>The Trove &mdash; or <a href="http://sourceforge.net/softwaremap/">
+    software map</a> &mdash; is a software categorization and classification
+    system to organize all SourceForge projects. The software map is
+    one of the key links on the SourceForge front page. Together with
+    your keywords and description, the Trove makes your
+    plug-in easier to find.</p>
+
+    <p>Unfortunately, the Trove organization does not always fit
+    everyone's model. For example, although there is a top-level
+    category for
+    <a href="http://sourceforge.net/softwaremap/trove_list.php?form_cat=45"
+    >Software Development</a> , the topic
+    <a href="http://sourceforge.net/softwaremap/trove_list.php?form_cat=65"
+    >Integrated Development Environments (IDE)</a> &mdash; a good location
+    for many Eclipse plug-ins &mdash; is instead under the main topic
+    <a href="http://sourceforge.net/softwaremap/trove_list.php?form_cat=63"
+    >Text Editors</a>.   I recommend placing Eclipse plug-ins that
+    are un-related to Software Development &mdash; such as the
+    <a href="http://sourceforge.net/projects/morphine/">Eclipse RSS
+    Reader</a> &mdash; in Trove categories that reflect
+    their use, not their implementation technology.</p>
+
+    <p>Using the software map, you will have the opportunity to select
+    one to six, and sometimes more, project values in each of several
+    categories: Topic, Operating System, Programming Language, License,
+    Intended Audience, User Interface, Translations, Database
+    Environment, and Development Status . Eclipse plug-in writers
+    should include
+    <a href="http://sourceforge.net/softwaremap/trove_list.php?form_cat=583"
+    ><strong>User Interface :: Plugins :: Eclipse</strong></a> in the
+    set of User Interface values, and under Operating Systems, you may
+    want to choose
+    <a href="http://sourceforge.net/softwaremap/trove_list.php?form_cat=235"
+    ><strong>System :: Grouping and Descriptive Categories :: OS
+    Portable (Source code to work with many OS platforms)</strong></a>
+    . You can also use the
+    <a href="http://sourceforge.net/softwaremap/trove_list.php?form_cat=472"
+    ><strong>User Interface :: Graphical :: Java SWT</strong></a>
+    category.</p>
+
+    <p>Review carefully all the options to help your users locate
+    your plug-in while browsing projects categories. See
+    <a href="http://sourceforge.net/docman/display_doc.php?docid=12973&amp;group_id=1"
+    >Software Search and the SourceForge.net Software Map</a> for
+    details.</p>
+
+    <p>Note also that you must add each classification one by one by
+    selecting the value in a drop down list then clicking the Add
+    button to its right. You cannot select values for several
+    categories and add them all at once.</p>
+
+    <h4>Using SourceForge's CVS server for Eclipse projects</h4>
+
+    <p>Now that you have a project that other's can find,
+    it is time to put some content there. The most important
+    content is the source code, managed in a
+    <a href="http://www.cvshome.org/">Concurrent Versions System</a>
+    (CVS) repository. Since Eclipse has built-in support for CVS
+    repositories in the Team development plug-ins, it is
+    straightforward to use within the SFPDE.</p>
+
+    <p>Once approved, your project will have a CVS repository dedicated
+    for it at
+    <code>cvs.sourceforge.net/cvsroot/<i>yourprojectname</i></code> .
+    For example, the net.sf.eclipseexeditor project is at
+    <code>cvs.sourceforge.net/cvsroot/eclipseexeditor</code>.
+    Here is my project's CVS view:</p>
+
+    <p><img alt="Sample CVS project view" src="images/cvs-view.png"
+     style="width: 407px; height: 222px;"
+     title="Sample CVS project view"/></p>
+
+    <p>You can visualize the project partitioning here: I use one directory
+    for the PDE project source, one for the plug-in feature project,
+    one for the update site project, and one for the web site.</p>
+
+    <p>For each of your Eclipse projects, invoke the project's
+    context menu from the Package Explorer view and select the menu
+    Team -&gt;Share Project. Chose CVS and complete the Share Project
+    wizard (see the
+    <a href="http://help.eclipse.org/help31/index.jsp?topic=/org.eclipse.platform.doc.user/gettingStarted/qs-61f_syncproject.htm"
+    >Eclipse help</a> for more details) to attach it to the SourceForge
+    CVS repository. If instead you are going to be joining a project
+    that already resides in CVS, you can simply check the project out
+    of CVS using the standard Eclipse Team operations.   Once your CVS
+    repository is defined in Eclipse, you can use the normal Team
+    operations to commit your source to CVS by invoking Team-&gt;Commit
+    from each of the project folders. I recommend keeping Eclipse
+    metadata files &mdash; <code>.project</code> and <code>.classpath</code>
+    &mdash; under version control  so that others can simply checkout
+    the projects from Eclipse's CVS client. Eclipse will
+    automatically detect the project's Java nature, and build path
+    configuration.</p>
+
+    <h4>Secure Services</h4>
+
+    <p>To commit files to SourceForge's CVS servers and access the
+    shell, you must use SSH.</p>
+
+    <p>This means using the <code>extSSH</code> connection method if
+    you want to use Eclipse's built-in CVS and SSH client, or
+    using a properly configured <code>ext</code> method to rely on your
+    favorite SSH client. SSH provides secure communication with the
+    server through encryption.</p>
+
+    <p>If your system already has a SSH implementation, you should be
+    able to use it. SSH implementations are available on Macs and most Unix
+    variants, including Linux. Windows users of the Cygwin tool
+    set can use <a href="http://www.openSSH.org/">OpenSSH</a> , or
+    users without Cygwin and OpenSSH can try <a href="http://www.putty.nl/">
+    PUTTY</a> or another secure shell tool set.</p>
+
+    <p>If available, SourceForge recommends using a tool set that uses
+    the SSH2 protocol for greater security, which is the version
+    supported by Eclipse's built-in CVS SSH client.</p>
+
+    <p>You will also need SSH to copy files to your project's
+    shell and web space. The SourceForge site help
+    provides complete documentation to
+    <a href="http://sourceforge.net/docman/display_doc.php?docid=6841&amp;group_id=1"
+    >configure SSH</a>.   Windows users may also consider
+    <a href="http://www.winscp.net">WinSCP</a> , a SourceForge
+    <a href="http://sourceforge.net/projects/winscp">project</a> that
+    provides drag and drop integration with Windows. For example, after
+    you update your web site in Eclipse, you can open WinSCP, authenticate, then jump via a WinSCP favorite to your SourceForge
+    project web space and <a href="images/WinSCP.png">drag files
+    from the Eclipse Package Explorer</a> to the WinSCP view.</p>
+
+    <h4>Making a software release</h4>
+
+    <p>Software releases are the primary mechanism that SourceForge
+    users employ to make downloads available software to their users.
+    SourceForge supports a robust system for releasing your software.
+    Released files are preserved for the lifetime of the project, allowing
+    anyone to download previous releases &mdash; although you can hide
+    releases if needed. Making a software release on SourceForge is
+    well documented in the
+    <a href="http://sourceforge.net/docman/display_doc.php?docid=6445&amp;group_id=1"
+    >Guide to the File Release System (FRS)</a>.</p>
+
+    <p>SFPDE users can use the FRS to publish plug-in jar files. You
+    should also release your plug-in source as part of each release.
+    There are several ways to do this: you can include source in your
+    jar file (to facilitate debugging in Eclipse) or you can use an
+    Ant task to create a zip file of your source. The fewer the number
+    of files in a release, the easier it is to manage, so it is best to
+    minimize files by using archive files (jar files, zip files, tar.gz
+    files, etc.) to collect the files for a release. Note that with open source projects, users often expect releases to
+    contain the source. It is considered impolite to force users to fetch the
+    source from CVS. Do not forget to include your license file in
+    your release.</p>
+
+    <p>To create a release, follow these steps:</p>
+
+    <ol>
+
+      <li>Login to SourceForge</li>
+
+      <li>Select your project</li>
+
+      <li>Go to the Admin panel for your project and select the File
+      Releases link from the navigation menu to enter the FRS.</li>
+
+      <li>Define a <em>FRS package</em> if none is defined.
+      A FRS package a collection of files associated with a
+      project; each plug-in can map to a FRS package.
+      For my eclipseexeditor project, the FRS contains one package &mdash;
+      eclipseexeditor &mdash; as shown in the
+      <a href="http://sourceforge.net/project/showfiles.php?group_id=137861"
+      >Files</a> page .</li>
+
+      <li>Use anonymous FTP to upload files to upload.sourceforge.net.
+      You may use your favorite FTP client for this. SourceForge does
+      not provide anonymous web upload.</li>
+
+      <li>Define a new release &mdash; typically named after the version
+      number, such as 0.1, 1.0Beta2, 1.0, 2.0, etc. &mdash; for your package
+      by using the SourceForge web interface.</li>
+
+      <li>Add files from the anonymous FTP site to the release. The
+      SourceForge web interface provides all you need for this &mdash; you
+      add a new file to the release, select that file from the set of all
+      files in the upload area and select a file type. Remember that other SourceForge users are
+      building releases at the same time, so you will see other files
+      there.</li>
+
+      <li>Verify the release contents by downloading and installing the
+      plug-in in a clean Eclipse installation.</li>
+
+    </ol>
+
+    <p>To create a new release, simply click the
+    Add Release button and submit the web form to create a new release.
+    You can then add the files from the anonymous upload site to the
+    release.</p>
+
+    <div style="text-align: center;">
+
+      <p><img alt="File Release System - Add a Release"
+       src="images/frs.png"
+       title="File Release System - Add a Release"/></p>
+
+    </div>
+
+    <p>SourceForge offers download statistics for each released file.
+    You can monitor how many people have downloaded your source zip or
+    Eclipse plug-in. </p>
+
+    <p>You may also want to have a look at the  <a href="http://sfutils.sourceforge.net">sfutils</a> package.
+     It provides an Ant task and
+    Java API to automate software releases on SourceForge. With
+    sfutils, you can make a release directly from Eclipse by running
+    Ant.</p>
+
+    <h4>Building a web site</h4>
+
+    <p>SourceForge provides enhanced web hosting for projects. In
+    addition to basic HTML services, you get:</p>
+
+    <ol>
+
+      <li>DNS registration. The URL
+      <code>http://yourprojectname.sourceforge.net</code> is reserved
+      for your project web site. For example, my ETEE project is
+      hosted at <a href="http://eclipseexeditor.sourceforge.net">
+      http://eclipseexeditor.sourceforge.net</a>. I emphasize again
+      the importance of choosing a good project name from the
+      beginning.</li>
+
+      <li><a href="http://php.net/">PHP</a>,
+      <a href="http://perl.com/">Perl</a>,
+      <a href="http://python.org/">Python</a> scripting.</li>
+
+      <li>MySQL database.</li>
+
+    </ol>
+
+    <p>You can of course use Eclipse to develop this content. For
+    example, you may use the Eclipse Web Tools project to create your
+    HTML content. There are also PHP authoring plug-ins.</p>
+
+    <p>To publish your content, you must use SSH secure copy.
+    You must login under a
+    project's administrator id, which gives you write access to
+    the web page space. Due to the large number of hosted projects,
+    SourceForge uses a branching directory structure to make it
+    easier to navigate and so that clients do not have to download
+    extremely large directory listings. For example, my eclipseexeditor
+    project is stored at
+    <code>/home/groups/e/ec/eclipseexeditor</code>. I use WinSCP to
+    copy files from my home computer to the SourceForge server. In this
+    <a href="images/WinSCP.png">screenshot</a>, I drag a file
+    from the Eclipse package explorer to WinSCP's folder
+    representing my SourceForge-hosted project web space.</p>
+
+    <p>Each project is required to
+    <a href="http://sourceforge.net/docs/E07/en/#top">display the
+    SourceForge logo</a> on their web pages hosted on the project web
+    service. There are several logos available. You get the logo
+    image from a special SourceForge URL that includes your project
+    group id. The SourceForge server records a page hit for your project
+    when a web browser displays the image. For example, the image URL
+    <code>http://sourceforge.net/sflogo.php?group_id=137861&amp;type=1</code>
+    counts as a web hit for my ETEE project with the group id 137861.
+    Be sure to use the correct logo image URL so your project gets
+    accurate web statistics.</p>
+
+    <h4>Hosting an update site</h4>
+
+    <p>You may wonder if you can use the SourceForge web hosting
+    service to host an Eclipse Plug-in update site. There is little
+    guidance on this that I know of. Some people report that this is
+    frowned upon because SourceForge encourages the use of the File
+    Release System (FRS) for hosting binaries. The FRS uses mirror
+    sites around the world to support scalable download services for
+    SourceForge projects. In addition, if you use the FRS, you get the
+    benefits of download statistics that show download counts. Such
+    download counts can raise your project's activity rating and
+    add some momentum to your project. Nevertheless, you have the following
+    alternative for your update site:</p>
+
+    <ul>
+
+      <li>If you want to host an update site on your project web site
+      instead of using the FRS, you should ask the SourceForge
+      administrators first. It may be bad etiquette to
+      place binary files on the project web site &mdash; if overused, binary
+      file downloads could affect web page hosting performance for all
+      SourceForge projects. To deploy your update, you will just need
+      to copy the site to your project web space.</li>
+
+      <li>If you want to host an update site using the FRS, the
+      procedure is a bit more complex. The FRS uses mirror sites, so
+      you will need to design your update site so that it obtains files
+      from one mirror only. In addition, the FRS is a flat structure
+      with a single directory per project. Therefore any plug-in and feature
+      you release must have a unique name &mdash; you cannot have a feature jar
+      that has the same name as a plug-in jar.
+      You then need to make a release for each feature
+      and plug-in jars to the FRS. Then you need to create an enhanced
+      site.xml file manually. You can find a good example
+      <a href="http://eplug.sourceforge.net/site.xml">here</a> with
+      some explanations at the bottom of the
+      <a href="http://eplug.sourceforge.net/">eplug project home page</a>, which uses that approach.
+      With a bit more
+      work, it should even be possible to take advantage of the Sourceforge mirrors.</li>
+    </ul>
+
+    <p>One additional option to consider is to bundle a full update
+    site (the <code>site.xml</code> and jar files etc.) into an
+    archive, and make that file part of your release. Then, users can
+    download the update site and host it locally, for example on a
+    local Eclipse update site on a corporate intranet. Since people
+    will share binaries anyway, you can make it easier and help with
+    wider adoption of your plug-in.</p>
+
+    <p>Since an update site can manage multiple plug-ins versions, you
+    should consider defining a separate SourceForge FRS
+    'package' for your update site archive. If you simply
+    include the update site (call it <code>update-site.zip</code> ) in
+    the normal plug-in package, version 1.0 of
+    <code>update-site.zip</code> will contain version 1.0 of your
+    plug-in. Version 1.1 of <code>update-site.zip</code> will contain
+    both 1.0 and 1.1 of your plug-in. Since SourceForge never deletes
+    previous releases, this practice leads to a lot of unnecessary wasted
+    server space and potential confusion. I find easier to maintain
+    only one release of an update site package (with a release name of
+    &quot;updates&quot; instead of a numbered release name). Then, each
+    time you release a new version of the plug-in, simply replace the
+    current <code>update-site.zip</code> &mdash; which contains whatever
+    plug-in versions you wish &mdash; within that updated package's
+    release.</p>
+
+    <h4>Registering with a plug-in promotion site</h4>
+
+    <p>Once you have your plug-in deployed via SFPDE, you need to tell
+    the Eclipse community about it. In addition to the SourceForge
+    Trove, you may wish to consider registering your Plug-in on one of
+    several plug-in listing sites that you can find on the Eclipse.org
+    <a href="http://www.eclipse.org/community/osplugins.html">community
+    page</a>.</p>
+
+    <p>If one of these sites does not drive enough traffic to your
+    plug-in, you can always write and publish an article about Eclipse
+    and figure out an interesting way to plug your plug-in in your
+    article!</p>
+
+    <h3>Parting Thoughts</h3>
+
+    <p>Explore all the services the '<strong>SourceForge Plug-in
+    Development Environment</strong>' has to offer. Once you have created,
+    configured, and populated your project site, refer to your
+    project's Admin link and the on-line SourceForge documentation
+    to learn how to:</p>
+
+    <ul>
+
+      <li>Backup up your configuration</li>
+
+      <li>Use the compile farm</li>
+
+      <li>Choosing your support options</li>
+
+      <li>Creating Mailman mailing lists and hosting web discussion
+      forums</li>
+
+    </ul>
+
+    <p>You will find that SourceForge is a tremendous resource for open
+    source development and the project management of Eclipse plug-ins
+    development projects &mdash; a web hosting equivalent of the Eclipse
+    desktop experience.
+    Plug into SourceForge today and see your plug-in reap the myriad
+    benefits SFPDE &mdash; SourceForge + Eclipse PDE &mdash; has to offer.</p>
+
+    <h3>Resources</h3>
+
+    <ul>
+
+      <li><a href="http://sourceforge.net/">SourceForge.net</a></li>
+
+      <li>SourceForge.net
+      <a href="http://sourceforge.net/docman/display_doc.php?docid=6048&amp;group_id=1"
+      >Terms of Use</a></li>
+
+      <li><a href="http://sourceforge.net/docs/">SourceForge End User
+      documentation</a></li>
+
+      <li><a href="http://www.opensource.org/">opensource.org</a> (OSI)</li>
+
+      <li><a href="http://www.javaforge.com/">JavaForge (a SourceForge alternative)</a></li>
+
+    </ul>
+
+    <hr style="width: 100%; height: 2px;"/>
+
+    <h3>Revision History</h3>
+
+    <table border="1" cellpadding="2" cellspacing="2" style="width: 100%; text-align: left;">
+
+      <tbody>
+
+        <tr>
+
+          <th style="vertical-align: top;">Date</th>
+
+          <th style="vertical-align: top;">Comment</th>
+
+        </tr>
+
+        <tr>
+
+          <td
+           style="vertical-align: top; background-color: rgb(238, 238, 238);">
+          October 14, 2005</td>
+
+          <td
+           style="vertical-align: top; background-color: rgb(238, 238, 238);">
+          Created; David J. Biesack,
+          david_biesack@users.sourceforge.net</td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+    <p>Copyright © 2005 by David J. Biesack</p>
+    <p>To discuss or report problems in this article see <a
+	href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=94940">bug 94940</a>.</p>
+
+    <p><small>VA Software and OSTG are trademarks of VA Software
+    Corporation. SourceForge is a registered trademark of VA Software
+    Corporation in the United States and other countries.</small></p>
+
+    <p><small>Java and all Java-based trademarks and logos are
+    trademarks or registered trademarks of Sun Microsystems, Inc. in
+    the United States, other countries, or both.</small></p>
+
+    <p />
+
+  </body>
+
+</html>
+

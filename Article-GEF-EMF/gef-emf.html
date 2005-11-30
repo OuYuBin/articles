@@ -1,0 +1,758 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+  <head>
+    <meta name="generator" content="HTML Tidy, see www.w3.org">
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <meta name="author" content="Chris Aniszczyk">
+
+    <title>Using GEF with EMF</title>
+    <link type="text/css" rel="stylesheet" href="../default_style.css">
+    <link type="text/css" rel="stylesheet" href="article_style.css">
+  </head>
+
+  <body>
+    <div align="right">
+      &nbsp; <span class="copy">Copyright &copy; 2005 IBM Corporation</span> 
+
+      <table border="0" cellpadding="2" cellspacing="0" width="100%">
+        <tbody>
+          <tr>
+            <td colspan="2" align="left" bgcolor="#0080C0" valign="top"><span
+            class="corner">&nbsp;Eclipse Corner Article</span> </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div align="left">
+      <h1><img src="../images/Idea.jpg" height="86" width="120" align=
+      "middle"></h1>
+    </div>
+
+    <p>&nbsp;</p>
+
+    <h1 align="center">Using GEF with EMF</h1>
+
+    <blockquote>
+      <p><b>Summary</b></p>
+
+      <p>The Graphical Editing Framework (GEF) provides a framework for
+      creating visual editors while being model agnostic. In most cases, people
+      bring their own model which tend to be based on Plain Old Java Objects
+      (POJOs). An alternative using POJOs is the Eclipse Modeling Framework
+      (EMF), which provides many features for manipulating models that aren't
+      found in POJOs. The purpose of this article is to build upon the shapes
+      example provided by GEF using the Eclipse Modeling Framework (EMF) and to
+      provide an introduction using EMF based models in GEF based editors.</p>
+
+      <p><b>Chris Aniszczyk, IBM</b><br>
+      <font size="-1">June 8, 2005</font></p>
+    </blockquote>
+    <hr>
+
+    <h3>Environment</h3>
+
+    <p>The examples in this article were built and tested on:</p>
+
+    <ul>
+      <li><a href=
+      "http://download.eclipse.org/eclipse/downloads/drops/S-3.1RC1-200505271300/index.php">
+      Eclipse 3.1RC1</a></li>
+
+      <li><a href=
+      "http://download.eclipse.org/tools/gef/downloads/drops/S-3.1M7-200505231916/index.php">
+      GEF 3.1M7</a></li>
+
+      <li><a href=
+      "http://download.eclipse.org/tools/emf/scripts/downloads-viewer.php?s=2.1.0/I200505261142">
+      EMF 2.1.0</a></li>
+    </ul>
+
+    <p>There is no guarantee the examples will work with other versions.</p>
+     
+
+    <h2>Introduction</h2>
+
+    <p>The <a href="http://www.eclipse.org/gef">Graphical Editing Framework
+    (GEF)</a> assumes that you have a model of some type. The <i>type</i> in
+    most cases, is a set of custom Java classes created to suit the needs of an
+    application. Overlaying the model, users would implement their own observer
+    pattern. For example, when an object changes state, GEF becomes aware of
+    the change, and performs the appropriate action, such as redrawing a figure
+    due to a move request. Users spend time building their own viewers (i.e.
+    properties) and deciding how the model should be persisted. Most novices
+    learning GEF don't realize EMF can help with several modeling issues
+    previously mentioned. The <a href="http://www.eclipse.org/emf">Eclipse
+    Modeling Framework (EMF)</a> is a Java framework and code generation
+    facility for building tools and other applications based on a structured
+    model. EMF consists of two fundamental frameworks: the core framework,
+    responsible for basic code generation, and runtime, responsible for
+    creation of Java implementation classes for a model. The EMF.edit framework
+    builds on the core framework to add support for generating adapter classes
+    that enable viewing and command-based editing of a model. Furthermore, EMF
+    provides a free adapter that listens for model changes, a requirement when
+    building a GEF editor. In addition, EMF includes default support for
+    persistence using XMI or XML (you can write your custom persistence layer
+    by extending a few classes) <a href="#EMFOverview">[1]</a>.</p>
+
+    <p>The purpose of the article is to build upon the shapes example that was
+    extensively evaluated in a previous Eclipse Corner article <a href=
+    "#">[2]</a>. The shapes model currently exists as a custom set of Java
+    objects, this article illustrates how to transform the shapes model into an
+    EMF-based model. The transformation occurs in two major steps: mapping
+    custom Java objects to an EMF model, and modify EditParts to use the new
+    features available in EMF.</p>
+
+    <h2>Shapes Transformation</h2>
+
+    <p>The transformation of the Shapes example will occur in the following
+    order:</p>
+
+    <ul>
+      <li>Map POJOs to an EMF model</li>
+
+      <li>Use PropertySources with your EMF model</li>
+
+      <li>Change EditPart to reflect new behavior of EMF models</li>
+    </ul>
+
+    <h3>Current Model</h3>
+
+    <p>The current shapes model (<b>see Figure 1</b>) was designed for
+    simplicity and for instructional purposes. It consists of the following
+    classes:</p>
+
+    <ul>
+      <li>
+        <i>ModelElement</i> 
+
+        <ul>
+          <li>The base class of all shapes model objects. It serves two main
+          purposes: notification and property source support for the Eclipse
+          property viewer. This class will no longer be needed when
+          transitioning to EMF because EMF provides the necessary facilities to
+          listen for model changes and EMF.Edit provides property support.</li>
+        </ul>
+      </li>
+
+      <li>
+        <i>ShapesDiagram</i> 
+
+        <ul>
+          <li>A container object to hold a collection of shapes.</li>
+        </ul>
+      </li>
+
+      <li>
+        <i>Connection</i> 
+
+        <ul>
+          <li>A connection between two shapes codified into a source and target
+          connection.</li>
+        </ul>
+      </li>
+
+      <li>
+        <i>Shape</i> 
+
+        <ul>
+          <li>An abstract class that represents a shape. It includes various
+          information regarding visual representation, including the source and
+          target connections of the object.</li>
+        </ul>
+      </li>
+
+      <li>
+        <i>RectangularShape / EllipticalShape</i> 
+
+        <ul>
+          <li>Special classes that represent two types of <i>Shape</i>s:
+          rectangular and elliptical.</li>
+        </ul>
+      </li>
+    </ul>
+
+    <div class="figure">
+      <img src="images/shapesmodel.png"><br>
+       
+
+      <div class="figure-caption">
+        <span class="figure-number">Figure 1</span>: Summarized Shapes Model
+        (without ModelElement)
+      </div>
+    </div>
+
+    <h3>Transformed Model</h3>
+
+    <p>To transform the simple shapes model, we must map it an EMF model. This
+    can be accomplished in many ways (i.e. XSD, Java, UML) and is discussed
+    further at the EMF documentation site <a href="#EMFDocumentation">[3]</a>.
+    For simplicity, this article will only focus on using annotated Java as EMF
+    input. Listed below are sketches representing the old shapes model and
+    their corresponding annotated Java models. After we have these models, we
+    can use EMF to generate the rest of the code needed to interact with our
+    models.</p>
+
+    <p><img src="../images/tip.gif">A tutorial is available that describes how
+    to generate an EMF model from annotated Java <a href=
+    "#EMFTutorial">[4]</a>.</p>
+
+    <table class="content" cellspacing="20">
+      <tbody>
+        <tr>
+          <td><img src="images/shapesdiagram.png"> </td>
+
+          <td>
+<pre class="program">
+/** @model */
+public interface ShapesDiagram {
+
+    /** @model type="Shape" containment="true" */
+    public List getShapes();
+    
+}
+</pre>
+
+            <center>
+              <b>ShapesDiagram.java</b>
+            </center>
+          </td>
+        </tr>
+
+        <tr>
+          <td><img src="images/connection.png"> </td>
+
+          <td>
+<pre class="program">
+/** @model */
+public interface Connection {
+
+    /** @model */
+    public Shape getSource();
+    
+    /** @model */
+    public Shape getTarget();
+    
+    /** @model */
+    public boolean isDashed();
+    
+    /** @model */
+    public void reconnect();
+    
+    /** @model */
+    public void disconnect();
+    
+}
+</pre>
+
+            <center>
+              <b>Connection.java</b>
+            </center>
+          </td>
+        </tr>
+
+        <tr>
+          <td><img src="images/shape.png"> </td>
+
+          <td>
+<pre class="program">
+/** @model abstract="true" */
+public interface Shape {
+    
+    /** @model */
+    public int getX();
+    
+    /** @model */
+    public int getY();
+    
+    /** @model */
+    public int getWidth();
+    
+    /** @model default="0" */
+    public int getHeight();
+    
+    /** @model type="Connection" containment="true" */
+    List getSourceConnections();
+    
+    /** @model type="Connection" */
+    List getTargetConnections();
+    
+}
+</pre>
+
+            <center>
+              <b>Shape.java</b>
+            </center>
+          </td>
+        </tr>
+
+        <tr>
+          <td><img src="images/shapetypes.png"> </td>
+
+          <td>
+<pre class="program">
+/** @model */
+public interface RectangularShape extends Shape {
+
+}
+</pre>
+
+            <center>
+              <b>RectangularShape.java</b>
+            </center>
+<pre class="program">
+/** @model */
+public interface EllipticalShape extends Shape {
+
+}
+</pre>
+
+            <center>
+              <b>EllipticalShape.java</b>
+            </center>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Properties for your EMF model</h3>
+
+    <p>Before I discuss how to add properties to your EMF model, I would like
+    to bring up the issue of notational model and semantic model separation. It
+    is considered good design to separate visual information from semantic
+    information. In the original shapes example, there was no logical
+    separation of the notational (visual) information, like size and location,
+    from the semantic information. For simplicity, this example will not
+    separate visual information from semantic information. Note the original
+    shapes example didn't have semantic information unless you can imagine the
+    shape model having a name attribute that would specify the name of a shape.
+    If you are curious to see this type of separation, the <a href=
+    "#Future">Looking to the Future</a> section discussed in this article
+    contains information of interest.</p>
+
+    <p>Eclipse provides a properties view that allows for the manipulation of
+    currently selected object properties as long as the object adheres to the
+    <i>IPropertySource</i> interface. In GEF, <i>AbstractEditPart</i> checks if
+    its model implements <i>IPropertySource</i>, if so the model is returned so
+    the Eclipse properties view can take advantage of it.</p>
+
+    <p>For simplicity reasons this example isn't taking advantage of EMF.edit
+    property source generation support. The reason being is that EMF and GEF
+    use different command stacks and command interfaces so they can't be used
+    together easily. In order to take advantage of EMF.edit, the user needs to
+    wrap EMF commands with GEF commands. If you think you are hot stuff, you
+    can further investigate this issue <a href="#CommandStackBug1">[5]</a> <a
+    href="#CommandStackBug2">[6]</a> in a few ways:</p>
+
+    <ul>
+      <li>Eclipse 3.1 features a common command infrastructure <a href=
+      "#CommonCommand">[7]</a> that projects may pick up.</li>
+
+      <li>The Graphical Modeling Framework (GMF) <a href="#GMFWebpage">[8]</a>
+      is an upcoming project and is discussed in <a href="#Future">Looking to
+      the Future</a> section.</li>
+
+      <li>The Merlin Generator Framework <a href="#MerlinWebpage">[9]</a>
+      discussed in <a href="#Future">Looking to the Future</a> contains
+      examples of using EMF.Edit with GEF based editors (there's also an
+      example in this article).</li>
+
+      <li>Examine GEF 3.1 EDiagram example <a href=
+      "#EDiagramCVSOldProperties">[10]</a> (older version used EMF.Edit to
+      display properties).</li>
+    </ul>
+
+    <p>In order to take advantage of Eclipse properties views we create classes
+    that implement the <i>IPropertySource</i> interface. To investigate how
+    this is accomplished, it is recommended to look at
+    <i>AbstractPropertySource</i> and its implementers. Listed below is an
+    example implementation, <i>ConnectionPropertySource</i> which needs to
+    define how a property is <img src="../images/tag_1.gif">retrieved and <img
+    src="../images/tag_2.gif">set.</p>
+<pre class="program">
+public class ConnectionPropertySource extends AbstractPropertySource {
+
+...
+
+    <img src="../images/tag_1.gif">public Object getPropertyValue(Object id) {
+        if(id == ID_STYLE) {
+            return Boolean.toString(getConnectionModel().isDashed());
+        }
+        return null;
+    }
+
+    <img src=
+"../images/tag_2.gif">public void setPropertyValue(Object id, Object value) {
+        if(id == ID_STYLE) {
+            getConnectionModel().setDashed(Boolean.valueOf((String) value));
+        }
+    }
+
+...
+
+}
+</pre>
+
+    <center>
+      <b>ConnectionPropertySource.java</b>
+    </center>
+
+    <h3>Listening to your EMF model</h3>
+
+    <p>In GEF, the EditParts act as controllers and receive notice of input and
+    then properly direct changes to its model and view objects. It also keeps
+    track of connections between the model objects and any other communication.
+    In the original shapes example <a href="#ShapeArticle">[2]</a>, every model
+    object extended the abstract class <i>ModelElement</i> which included
+    support for adding and removing listeners from model objects. This type of
+    behavior is possible with EMF since every EMF Object (<i>EObject</i>) is
+    also a <i>Notifier</i> which supports listening for objects.</p>
+
+    <p>We'll use the EditPart that represents a shape in the new example. In
+    <i>ShapeEditPart</i> we added a convenience method <i>hookIntoModel</i>
+    which provides the ability to pass a model object and <img src=
+    "../images/tag_1.gif">add a listener to the model. In order to add
+    listeners to EMF model objects, our listener (the EditPart) must implement
+    the <i>Adapter</i> interface. An important part of this interface is the
+    <i>notifyChanged</i> method which serves as the point where we will analyze
+    the types of changes that happen to our EMF model and act on them.
+    Furthermore, EMF provides the ability to filter based on the type of
+    notification your listener receives, whether it is a <img src=
+    "../images/tag_2.gif">set, <img src="../images/tag_4.gif">add, remove,
+    etc... (take a peek at the <i>Notification</i> class for what other filters
+    exist). The first case is when a visual value like <img src=
+    "../images/tag_3.gif">x-coordinate, y-coordinate, width or height is set.
+    Once we establish that a set happened on any of these visual elements, we
+    can properly call the <i>refreshVisuals</i> method to redraw the figure.
+    The next case is when a <img src="../images/tag_5.gif">source connection or
+    a target connection is <img src="../images/tag_4.gif">removed or added.
+    Since we know what type of connection is added or removed, we can tell the
+    EditPart which type of connections need to be refreshed.</p>
+
+    <table align="center" cellspacing="20">
+      <tbody>
+        <tr>
+          <td>
+<pre class="program">
+private void hookIntoModel(EObject model) {
+    if(model != null) {
+        <img src="../images/tag_1.gif">model.eAdapters().add(this);
+    }
+}
+</pre>
+
+            <center>
+              <b>ShapeEditPart.java</b>
+            </center>
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+<pre class="program">
+public void notifyChanged(Notification notification) {
+        int type = notification.getEventType();
+        int featureId = notification.getFeatureID(ModelPackage.class);
+        switch(type) {
+        <img src="../images/tag_2.gif">case Notification.SET:
+            switch(featureId) {
+            <img src="../images/tag_3.gif">case ModelPackage.SHAPE__X:
+            <img src="../images/tag_3.gif">case ModelPackage.SHAPE__Y:
+            <img src="../images/tag_3.gif">case ModelPackage.SHAPE__WIDTH:
+            <img src="../images/tag_3.gif">case ModelPackage.SHAPE__HEIGHT:
+                refreshVisuals();
+                break;
+            }
+        <img src="../images/tag_4.gif">case Notification.ADD:
+        <img src="../images/tag_4.gif">case Notification.REMOVE:
+            switch(featureId) {
+            <img src=
+"../images/tag_5.gif">case ModelPackage.SHAPE__SOURCE_CONNECTIONS:
+                refreshSourceConnections();
+                break;
+            <img src=
+"../images/tag_5.gif">case ModelPackage.SHAPE__TARGET_CONNECTIONS:
+                refreshTargetConnections();
+                break;
+            }
+        }
+    }
+</pre>
+
+            <center>
+              <b>ShapeEditPart.java</b>
+            </center>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="Future">Looking to the Future</h2>
+
+    <p>There has been a considerable amount of work done trying to unite two of
+    the most popular Eclipse projects: EMF and GEF. In this section, I will
+    discuss some of that work and where it is headed. Also, this section serves
+    the ancillary purpose of pointing you to more complex examples if you gain
+    mastery of the example discussed in this article.</p>
+
+    <h3>GEF 3.1 EDiagram Example</h3>
+
+    <p>The GEF 3.1 release will include a new example (<b>see Figure 2</b>)
+    that lets you visualize and edit EMF models (Ecore). The source code is
+    available in CVS and is viewable online <a href="#EDiagramCVS">[11]</a>.
+    This example is fairly complex, but it illustrates how to separate
+    notational (diagram) logic from semantic (business) logic. It accomplishes
+    this by creating an EMF model EDiagram that represents the diagram logic.
+    Inside this model is the typical information associated with diagrams:
+    location, size, incoming connections, outgoing connections, etc.... The
+    semantic information is provided in the EMF model (.ecore file). I believe
+    the Shapes EMF example will serve as a good stepping stone in understanding
+    the complexities of the EDiagram example.</p>
+
+    <div class="figure">
+      <img src="images/ediagram.jpg"> 
+
+      <div class="figure-caption">
+        <span class="figure-number">Figure 2</span>: EDiagram Example (picture
+        shamelessly stolen from Ed Merks)
+      </div>
+    </div>
+
+    <h3>Graphical Modeling Framework (GMF)</h3>
+
+    <p>The GMF <a href="#GMFWebpage">[8]</a> is a new Eclipse project that is
+    currently in validation phase and entering the implementation phase soon.
+    The goal of GMF is to form a generative bridge between EMF and GEF, whereby
+    a diagram definition will be linked to a domain model as input to the
+    generation of a visual editor. The main components of GMF will be a
+    diagramming infrastructure that will provide a set of base diagramming
+    components that serve as a target for the next component, a diagram
+    generation framework. The Diagram Generation framework will use the diagram
+    definition input and generate code that is part of GMF's final component,
+    in addition it will provide exemplary modeling tools <a href=
+    "#GMFRequirements">[12]</a>. I encourage readers to browse the GMF <a href=
+    "news://news.eclipse.org/eclipse.technology.gmf">newsgroup</a> and webpage
+    <a href="#GMFWebpage">[8]</a> for more information. I believe the GMF
+    project will address a lot of the current concerns with building GEF
+    editors based on EMF models and make the process a lot easier.</p>
+     
+
+    <h3>Merlin Generator Project</h3>
+
+    <p>Merlin is a free Eclipse plugin (EPL) <a href="#MerlinWebpage">[9]</a>,
+    based on EMF, that provides enhanced code generation and model
+    transformation tools. Also, Merlin comes with a set of wizards and editors
+    for customizing code generation and model transformations (including a JET
+    file editor with syntax coloring, code completion and validation). An
+    interesting subset of Merlin includes a built-in GEF generator (created
+    with Merlin's own mappings and templates) that allows users to generate GEF
+    editors from any EMF based model. Similar to the EDiagram example, this GEF
+    generator produces editors that store semantic and notational information
+    in different files. Additionally, the generator options can be amended so
+    custom figures are used for the EditParts. There are more features
+    contained with Merlin that won't be discussed since I deemed them outside
+    the scope of this article. Note that some of the features of Merlin may end
+    up in the GMF project as Merlin is a possible initial contributor.</p>
+
+    <p>To show the capabilities of Merlin and add some excitement to this
+    article, I used the shapes EMF model as input to Merlin and generated a
+    functional GEF editor (<b>see Figure 3</b>) that uses EMF for its model. It
+    took me all of a few seconds to create a fully functional EMF-based GEF
+    editor. I recommend users to look at Merlin once they are familiar with the
+    basics and look to tackle more complex problems. Note, there are two
+    examples with Merlin: There is a .gefgenmodel included with the shapes EMF
+    example and there is a separate contribution by the author of Merlin that
+    shows off a bit more advanced generation.</p>
+
+    <p><img src="../images/tip.gif">Used <a href=
+    "http://sourceforge.net/project/showfiles.php?group_id=125827&amp;package_id=137615&amp;release_id=330085">
+    Merlin 0.4.9</a> in this article<br>
+    </p>
+
+    <div class="figure">
+      <img src="images/shapesmerlin.png"> 
+
+      <div class="figure-caption">
+        <span class="figure-number">Figure 3</span>: Merlin based GEF editor using
+        a shapes model as input
+      </div>
+    </div>
+
+    <h2>Bonus: Shapes Example goes RCP!</h2>
+
+    <p>I spend a considerable amount of time browsing the Eclipse newsgroups
+    and one of the questions that comes up frequently in regards to GEF is
+    <i>how to use my GEF editor in an RCP based application</i>. I believe this
+    question is going to get asked more as the Eclipse 3.1 release sufficiently
+    increases the ease in building and deploying RCP-based applications. So,
+    for my last magic trick and to reward readers who got to this point, I'll
+    discuss how to convert the original shapes example into an RCP-based one
+    and provide the code!</p>
+
+    <p><img src="../images/tip.gif">If you are unfamiliar with RCP, the <a
+    href="http://www.eclipse.org/rcp/faq.html">RCP FAQ</a> is a good start.</p>
+
+    <p>The conversion of the shapes example into an RCP-based application is a
+    lot simpler than most people think. The problem stems from the
+    <i>setInput</i> method of <i>ShapesEditor</i> expecting an
+    <i>IEditorInput</i>, but the most familiar editor input people work with is
+    <i>IFileEditorInput</i>. The problem with <i>IFileEditorInput</i> is that
+    it belongs to the pesky <b>org.eclipse.ui.ide</b> plugin which is not an
+    acceptable dependency for an RCP-based application. The solution to this
+    problem is to simply create our own editor input, <i>ShapesEditorInput</i>
+    which implements the <i>IEditorInput</i> interface via
+    <i>IPathEditorInput</i> interface. Once this change is completed and the
+    <i>setInput</i> method is properly changed in <i>ShapesEditor</i> to use
+    <i>ShapesEditorInput</i>, we can now properly open a shapes editor. Note,
+    the sole purpose of this example is to demonstrate how to get a GEF editor
+    inside of an RCP application, it doesn't include support for various
+    actions such as saving or wizards (I leave this for the reader to
+    explore).</p>
+
+    <p><img src="../images/tip.gif">This concept of creating your own
+    <i>IEditorInput</i> can be applied to creating editors that aren't file
+    based (i.e. an editor which is based off of data from a database).</p>
+
+    <table align="center" cellspacing="20">
+      <tbody>
+        <tr>
+          <td>
+            <div class="figure">
+              <img src="images/shapesrcp.png"> 
+
+              <div class="figure-caption">
+                <span class="figure-number">Figure 4</span>: Shapes RCP Example
+                Product
+              </div>
+            </div>
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+<pre class="program">
+/**
+ * Uses a ShapesEditorInput to serve as a dummy editor input
+ * It is up to the editor input to supply the initial shapes diagram
+ * 
+ * @see org.eclipse.ui.part.EditorPart#setInput(org.eclipse.ui.IEditorInput)
+ */
+protected void setInput(IEditorInput input) {
+    super.setInput(input);
+    ShapesEditorInput shapesInput = ((ShapesEditorInput) input);
+    diagram = shapesInput.getShapesDiagram();
+    setPartName(shapesInput.getName());
+}
+</pre>
+
+            <center>
+              <b>ShapesEditor.java</b>
+            </center>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Summary</h2>
+
+    <p>I made an attempt at giving you a simple example to learn how to
+    integrate EMF with GEF editors. I discussed step-by-step how to transform
+    the original shapes example into a EMF-based one. Also, I included
+    discussion of upcoming work that may yield more complex examples that you
+    may learn from using some of the knowledge gleaned from studying the shapes
+    EMF example. For my more attentive readers, I included an example that
+    ported the original shapes example to an RCP-based one. I understand that
+    there is a high learning curve associated with these two complex frameworks
+    and almost anything Eclipse related, but my hope is you will use the
+    examples illustrated here as stepping stones to build your knowledge base.
+    Happy hacking :)</p>
+
+    <h3>Example Downloads</h3>
+
+    <ul>
+      <li><a href="files/shapesemf.zip">Shapes EMF</a></li>
+
+      <li><a href="files/shapesrcp.zip">Shapes RCP</a></li>
+
+      <li><a href="files/shapesmerlin.zip">Shapes Merlin</a></li>
+    </ul>
+     
+
+    <h2>Acknowledgments</h2>
+
+    <p>I'd like to thank:</p>
+
+    <ul>
+      <li>Richard Gronback for information regarding GMF.</li>
+
+      <li>Joel Cheuoua for various corrections regarding Merlin and updating my
+      Merlin example.</li>
+
+      <li>Ed Merks for half the posts on the EMF newsgroup, his screenshot and
+      for his feedback on this article.</li>
+
+      <li>Sushma Patel for reviewing the article and correcting my horrible
+      grammar.</li>
+    </ul>
+     
+
+    <h2>Bibliography</h2>
+
+    <p>[1] <a name="EMFOverview" href=
+    "http://eclipse.org/emf/docs.php?doc=references/overview/EMF.html">The
+    Eclipse Modeling Framework (EMF) Overview</a>, EMF Website</p>
+
+    <p>[2] <a name="ShapeArticle" href=
+    "http://www.eclipse.org/articles/Article-GEF-diagram-editor/shape.html">A
+    Shape Diagram Editor</a>, Eclipse Corner Article</p>
+
+    <p>[3] <a name="EMFDocumentation" href=
+    "http://www.eclipse.org/emf/docs.php">EMF Documentation</a>, EMF
+    Website</p>
+
+    <p>[4] <a name="EMFTutorial" href=
+    "http://eclipse.org/emf/docs.php?doc=tutorials/clibmod/clibmod.html">Generating
+    an EMF Model</a>, EMF Website</p>
+
+    <p>[5] <a name="CommandStackBug1" href=
+    "https://bugs.eclipse.org/bugs/show_bug.cgi?id=29939">Eclipse Bug
+    #29939</a>, Eclipse Bugzilla</p>
+
+    <p>[6] <a name="CommandStackBug2" href=
+    "https://bugs.eclipse.org/bugs/show_bug.cgi?id=37716">Eclipse Bug
+    #37716</a>, Eclipse Bugzilla</p>
+
+    <p>[7] <a name="CommonCommand" href=
+    "http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.core.commands/">org.eclipse.core.commands</a>,
+    Eclipse CVS</p>
+
+    <p>[8] <a name="GMFWebpage" href="http://www.eclipse.org/gmf">GMF
+    Homepage</a>, GMF Website</p>
+
+    <p>[9] <a name="MerlinWebpage" href=
+    "http://sourceforge.net/projects/merlingenerator/">Merlin Homepage</a>,
+    Merlin Website</p>
+
+    <p>[10] <a name="EDiagramCVSOldProperties" href=
+    "http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.gef.examples.ediagram/src/org/eclipse/gef/examples/ediagram/model/properties/emf/?cvsroot=Tools_Project&amp;only_with_tag=oldProperties">
+    EDiagram Old Properties Source</a>, GEF CVS</p>
+
+    <p>[11] <a name="EDiagramCVS" href=
+    "http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.gef.examples.ediagram/?cvsroot=Tools_Project">
+    EDiagram Example Source</a>, GEF CVS</p>
+
+    <p>[12] <a name="GMFRequirements" href=
+    "http://www.eclipse.org/gmf/requirements.html">GMF Requirements</a>, GMF
+    Website</p>
+
+    <p><small>ref: <a href=
+    "https://bugs.eclipse.org/bugs/show_bug.cgi?id=91472">bug
+    91472</a></small></p>
+
+    <p><small>Java and all Java-based trademarks and logos are trademarks or
+    registered trademarks of Sun Microsystems, Inc. in the United States, other
+    countries, or both.</small></p>
+  </body>
+</html>
+

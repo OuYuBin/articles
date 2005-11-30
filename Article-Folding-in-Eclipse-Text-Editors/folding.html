@@ -1,0 +1,395 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Folding in Eclipse Text Editors</title>
+<link rel="stylesheet" href="default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright
+  &copy; 2005 Prashant Deva</font>
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr>
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left">
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Folding in Eclipse Text Editors</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  Starting with release 3.0, Eclipse allows folding in its text editor. In this
+  article, I explain the new projection infrastructure introduced in
+  the JFace Text framework
+  and show how to extend the XML Editor example provided
+  with Eclipse to allow folding of text.
+  <p><b> By Prashant Deva</b> (<a href="mailto:prashant.deva@gmail.com">prashant.deva@gmail.com</a>)<br>
+    March 11, 2005</p>
+</blockquote>
+
+<hr width="100%">
+<p>Starting with Eclipse 3.0 the JFace Text framework has been extended with a
+  feature to allow for collapsing and expanding of text. This can be noticed in
+  the JDT text editor, which allows you to fold individual methods and classes.
+  You can implement folding in your plug-in too, to allow the users to fold text
+  according the structure of your plug-in's documents.</p>
+<p>You will notice that 2 new packages have been added to the framework: </p>
+<ul>
+  <li><b>org.eclipse.jface.text.projection</b><br>
+    Implements the infrastructure for folding in a UI independent manner. <br>
+    This package resides in the plug-in <code>org.eclipse.text</code>.</li>
+  <li><b>org.eclipse.jface.text.source.projection</b><br>
+    Uses the class in <code>org.eclipse.jface.text.projection</code> to implement
+    folding in a UI dependent manner.<br>
+    This package resides in the plug-in <code>org.eclipse.jface.text</code>. </li>
+</ul>
+<h2>Basic Concept</h2>
+<p>Now let's look at the basic idea in the framework that allows it to just show portions
+  of the actual text. Although these concepts have been in the framework
+  since 2.1, a whole new implementation was added in 3.0 to support the additional
+  requirements of text folding.</p>
+<p><img src="images/withoutFolding.png" width="284" height="172"> &nbsp;&nbsp;&nbsp;&nbsp;<img src="images/withFolding.png" width="364" height="174"></p>
+<p>As you can see in the figure (a) above, without folding things were very simple.
+  We had a document to hold the text and a corresponding view to provide the UI
+  for the text. Now things are a little bit more complicated. We have a <strong>Master
+  Document</strong>, which is like the document we used to use previously.
+  It contains the entire text. However, there is also an additional <strong>Projection
+  Document</strong> attached to a Master Document. The contents of a projection
+  document are a subset of the contents of the Master Document. In other words,
+  the content of a projection document consists of portions of the Master Document.</p>
+<p> As you probabably guessed, when you collapse the text in the editor you see
+  the contents of a projection document containing only the expanded sections.</p>
+  <h2>Behind the scenes</h2>
+<h4>UI Independent Infrastructure </h4>
+<p>Now let’s take a look at the <code>org.eclipse.jface.text.projection</code> package.
+  Keep in mind that you don't actually have to use this package in order to implement
+  folding in your text editor. The following description is just
+  to help you understand the concepts behind the folding infrastructure.<br>
+  <br>
+  The classes we need to concentrate on are:
+<ul>
+  <li><code>ProjectionDocument</code>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Represents
+    a portion of the content of a Master Document.</li>
+  <li><code>ProjectionDocumentEvent</code>: &nbsp;&nbsp;&nbsp;&nbsp;The event object
+    sent out by ProjectionDocument</li>
+  <li><code>ProjectionDocumentManager</code>: Maintains the association between
+    a Master Document and its Projection Documents.</li>
+ </ul>
+<p>The rest of the classes in the package are for internal use only and we need
+  not bother with them.</p>
+<p>The class <code>ProjectionDocumentManager</code> acts as glue between the master
+  document and its child projection documents, connecting them together. Thus
+  any change made to the projection document causes a corresponding change
+  to the master document and vice versa.</p>
+<p>Here is an example of using ProjectionDocumentManager:</p>
+
+<pre>   Document masterDocument = <font color="#0000FF">new</font> Document();
+   ProjectionDocumentManager manager = <font color="#0000FF">new</font> ProjectionDocumentManager();
+<img src="images/tag_1.gif" CENTER>ProjectionDocument projectionDocument = (ProjectionDocument)
+               manager.createSlaveDocument(masterDocument);
+</pre>
+<p>In the above example we first create a <strong>Master Document</strong> and
+  then create a <strong>Projection Document</strong> off of it by using the <code>ProjectionDocumentManager</code>.
+  Instances of the class <code>ProjectionDocument</code>
+  (<img src="images/tag_1.gif" width="24" height="13">)
+  should be created only
+  by using the ‘factory method’ <code>createSlaveDocument()</code> of <code>ProjectionDocumentManager</code>
+  and not instantiated through its constructor. </p>
+<p>A Projection Document has two methods to define its content from the master
+  document:</p>
+<ul>
+  <li><code><font color="#0000FF">public void</font> addMasterDocumentRange(<font color="#0000FF">int</font>
+    offsetInMasterDocument,<font color="#0000FF">int</font> lengthInMasterDocument)</code>
+    <br>
+    Adds a range of text from the Master Document to the Projection Document.
+	<br>&nbsp;</li>
+  <li> <code><font color="#0000FF">public void</font> removeMasterDocumentRange(<font color="#0000FF">int</font>
+    offsetInMasterDocument,<font color="#0000FF">int</font> lengthInMasterDocument)</code><br>
+    Removes a range of text corresponding to the Master Document from the Projection
+    Document.</li>
+</ul>
+<p>Adding more to the previous lines of code: </p>
+<pre>
+masterDocument.set("one two");
+
+<font color="#009900">//removes "one t" from projection document</font>
+projectionDocument.removeMasterDocumentRange(0,5);
+
+<font color="#009900">//adds "ne " to projection document</font>
+projectionDocument.addMasterDocumentRange(1,3);
+
+System.out.println(masterDocument.get());  <font color="#009900">//prints 'one two'</font>
+System.out.println(projectionDocument.get());<font color="#009900">//prints 'ne wo'</font>
+</pre>
+<p>Above, we set the contents of the master document to a string.
+  Doing so
+  automatically sets the contents of the projection document to the same value. Then
+  we modify the projection document to contain only certain portions of the master
+  document. Finally we output the contents of both the documents and see that
+  the portion of master document which we removed from the projection document
+  is not printed out but the contents of the master document remain the same.</p>
+<h2>The Stage</h2>
+<h4>UI Dependent Infrastructure</h4>
+<p>To actually implement folding in your editor, you don't really need to be concerned
+  with the details above.
+  The Eclipse developers have provided a nice package
+  named <code><strong>org.eclipse.jface.text.source.projection</strong></code>
+  that takes care of all the details and makes your job far easier.</p>
+<p>The centerpiece of this package is the <code>ProjectionViewer</code> class,
+  which you must use in your plug-in instead of the usual <code>TextViewer</code>
+  class, to implement folding. A <code>ProjectionViewer</code> internally uses
+  a <code>ProjectionDocumentManager</code> to manage the display of Projection
+  Documents, so we don't have to worry about that. It implements the <code>ITextViewerExtension5</code>
+  interface which is a central part of the UI dependent infrastructure. </p>
+<p><code>ITextViewerExtension5</code> introduces the concept of
+  <em>widget coordinates</em> and <em>model coordinates</em>.
+  A widget coordinate corresponds
+  to a position on the text viewer while a model coordinate corresponds to a position
+  on the document. A widget range always has a corresponding model range which
+  maps to the viewer’s document, while on the other hand a model range can be
+  either ‘exposed’ or ‘unexposed’. An exposed model range is visible on the viewer
+  and can thus be mapped to a widget range. Thus when you expand the text in the
+  viewer, that model range is ‘exposed’ and vice versa. <code>ITextViewerExtension5</code>
+  contains methods to do the conversion from widget to model coordinates and vice
+  versa, and to expose model ranges.</p>
+<h4>Projection Support</h4>
+<p>Another important class in this package is <code>ProjectionSupport</code>.
+  This class controls the display and configuration of all the UI elements related
+  to folding, for example, the painting of those elipsis icons when
+  you collapse a region, and the vertical column that contains the triangle icons
+  to expand/collapse text. A <code>ProjectionSupport</code> instance needs to be installed
+  on a viewer. The XML Editor example shown <a href="#projectionSupport">below</a> demonstrates how to do this
+  in code.</p>
+<p><code>ProjectionSupport</code>
+  allows you to specify <em>summarizable annotation types</em>. Basically,
+  these are the annotations that will appear in the vertical column on the left
+  when you fold the text that contains them. For example, JDT specifies the ‘error’
+  and ‘warning’ annotation types as summarizable, so that when you fold the text
+  that contains a warning or an error, its icon appears on the vertical column
+  besides the folding arrow, as shown below.</p>
+<p><img src="images/annotationSummary.png" width="282" height="129"></p>
+<p>Here is how it is implemented:</p>
+<pre>fProjectionSupport.addSummarizableAnnotationType(
+         "org.eclipse.ui.workbench.texteditor.error");
+fProjectionSupport.addSummarizableAnnotationType(
+         "org.eclipse.ui.workbench.texteditor.warning");
+</pre>
+<p>The <code>setHoverControlCreator()</code> method
+  allows you to set up a hover control to display the collapsed text
+  in a tooltip style box when the use moves the cursor over the arrow.
+  For example:</p>
+<p><img src="images/hover.png" width="223" height="136"></p>
+<p>The constructor takes an <code>IInformationControlCreator</code> as the argument. You usually
+  create an anonymous class here. Here is how JDT does it: </p>
+<pre>fProjectionSupport.setHoverControlCreator(new IInformationControlCreator() {
+   <font color="#0000FF">public</font> IInformationControl createInformationControl(Shell shell) {
+     <font color="#0000FF">return new</font> CustomSourceInformationControl(shell, IDocument.DEFAULT_CONTENT_TYPE);
+   }
+});
+</pre>
+<h4>Projection Annotations</h4>
+<p>To enable folding, we have to specify which regions of the text are collapsible.
+  We do this by
+  calling <code>addAnnotation()</code>
+  adding <code>ProjectionAnnotations</code> to the ProjectionViewer's
+  <code>ProjectionAnnotationModel</code>. The position allows the annotation to
+  be attached to certain text in the editor. </p>
+
+<p>The methods of ProjectionAnnotationModel are pretty self-explanatory: </p>
+<pre><font color="#0000FF">class</font> ProjectionAnnotationModel{
+
+  <font color="#0000FF"> public void</font> collapse(Annotation annotation)
+  <font color="#0000FF"> public void</font> expand(Annotation annotation)
+  <font color="#0000FF"> public boolean</font> expandAll(int offset,int length)
+
+  <font color="#0000FF"> public void</font> toggleExpansionState(Annotation annotation)
+
+  <font color="#0000FF"> public void</font> modifyAnnotations(Annotation[] deletions,Map additions,
+                              Annotation[] modifications)
+}
+</pre>
+<p>These methods toggle the annotations to expand/collapse states.
+  The only method which may be confusing is: <code>modifyAnnotations()</code>.
+  This basically does several deletions, additions, and modifications at once.
+  The additions
+  parameter is a Map with Annotation as the key and Position as the value. Executing
+  the method generates a single change event rather than a series of them when
+  you would add and remove annotations one after the other.
+</p>
+<p>A <code>ProjectionAnnotation</code> has the following methods to collapse/expands
+  the text region it is associated with:</p>
+<pre>  <font color="#0000FF">public void</font> markCollapsed() <font color="#009933"> //marks the annotation as collapsed</font>
+  <font color="#0000FF">public void</font> markExpanded()   <font color="#009933">//marks the annotation as expanded</font>
+  <font color="#0000FF">public boolean</font> isCollapsed() <font color="#009933">//tells whether the annotation is collapsed or expanded</font>
+</pre>
+<p>Thus, when you are working in JDT and you click the arrow on the left side
+  column of the text to collapse it, the method <code>isCollapsed()</code> is
+  called to check whether the text is collapsed or not and then
+  <code>markCollapsed()</code> is called
+  if <code>isCollapsed()</code> returns false. For example,</p>
+<pre>  <font color="#0000FF">if</font>(!annotation.isCollapsed())
+      annotation.markCollapsed();
+</pre>
+<p><img src="images/note.gif"> Manipulating ProjectionAnnotations is the only
+  supported way to control folding. Even if you were to get a hold of a Projection
+  Document, its projection behavior should never be manipulated directly. </p>
+<h4>Painting the Annotations...</h4>
+<p>Folding in the editor would be quite useless without the user interface
+  that allowed us to collapse and expand the text.
+  Here's what it looks like in the editor:</p>
+<p><img src="images/projectionAnnotation.png" width="226" height="214"></p>
+<p>ProjectionAnnotation has a method which actually paints those triangles you see
+  on the left.</p>
+<p><code><font color="#0000FF">public void</font> paint(GC gc, Canvas canvas,
+  Rectangle rectangle)</code></p>
+<p>You can override this method in your plug-in if you want to draw something other
+  than an triangle on the left side, for example a plus/minus sign.</p>
+<p>There is one more method you should know about:</p>
+<p><code><font color="#0000FF">public void</font> setRangeIndication(<font color="#0000FF">boolean</font>
+  rangeIndication)</code></p>
+<p>A <em>range indication</em>
+  is that line you see when you move your cursor to an triangle indicating
+  that the text is expanded. The line signifies the range of
+  text that will be collapsed when you click the triangle, and thus the name.
+  Passing true or false to this method controls whether
+  that line is drawn or not.</p>
+
+<h2>The Show</h2>
+<h4>XML Editor plug-in</h4>
+<p>I can hear you saying “Yeah, all this is fine, but how do I actually use this
+  stuff in my plug-in?” Well to show you how to do that I will walk you through
+  a little example. We will extend the XML editor plug-in example provided with
+  Eclipse to allow folding of XML elements. My aim is just to demonstrate the
+  basics of implementing folding here, so I have tried to keep the code as simple
+  as possible. If you want to add any advanced functionality you should be able
+  to do so yourself by now (hopefully) ;-) </p>
+<p>Let's look at the steps involved in supporting folding.
+  Note that all the methods shown below are defined in the class
+  <code>XMLEditor</code> which extends the <code>TextEditor</code> class.</p>
+
+
+<ol>
+  <li>Override <code>createPartControl </code> method of <code>TextEditor</code>
+    to configure and install <code>ProjectionSupport</code></li>
+  <li>Override <code>createSourceViewer</code> method of <code>AbstractTextEditor</code>
+    to return a <code>ProjectionViewer</code></li>
+  <li>Provide some functionality to define collapsible regions</li>
+  </ol>
+  Now lets see how to implement this in our plug-in.
+<p><img src="images/tryit.gif" width="61" height="13">Create a new Plug-in project.
+  At the end of the Project Wizard there will be an option to Create a
+  plug-in using one of the templates. Check it and select Plug-in with an editor.
+  This will create a plug-in with an editor for XML files. Now we will extend
+  this editor to allow the folding of XML elements.</p>
+<p><strong>1)</strong> First, we override the <code> createPartControl</code>
+  method of the <code>TextEditor</code> class. To keep things simple
+  I haven't provided any code for summarizable annotation types or hover controls,
+  but you are free to do so in your own plug-in.</p>
+<a name="projectionSupport"></a><pre><font color="#0000FF">public void</font> createPartControl(Composite parent)
+{
+    <font color="#0000FF">super</font>.createPartControl(parent);
+    ProjectionViewer viewer =(ProjectionViewer)getSourceViewer();
+
+    projectionSupport = new ProjectionSupport(viewer,getAnnotationAccess(),getSharedColors());
+    projectionSupport.install();
+
+    <font color="#009933">//turn projection mode on</font>
+    viewer.doOperation(ProjectionViewer.TOGGLE);
+
+    annotationModel = viewer.getProjectionAnnotationModel();
+
+}</pre>
+<p><strong>2)</strong> Next, we tell <code>createSourceViewer</code> to return
+  a <code>ProjectionViewer</code> instead of a <code>SourceViewer</code>. </p>
+<pre><font color="#0000FF">protected</font> ISourceViewer createSourceViewer(Composite parent,
+            IVerticalRuler ruler, <font color="#0000FF">int</font> styles)
+{
+   ISourceViewer viewer = <font color="#0000FF">new</font> ProjectionViewer(parent, ruler,
+				getOverviewRuler(), isOverviewRulerVisible(), styles);
+
+   <font color="#009933">// ensure decoration support has been created and configured.</font>
+   getSourceViewerDecorationSupport(viewer);
+
+   <font color="#0000FF">return</font> viewer;
+}
+</pre>
+
+<p><strong>3)</strong> Finally, we need some mechanism to tell the editor which
+  regions are collapsible. For that I have written a (very) small parser for XML
+  (which is very buggy and doesn't support nested elements). The parser runs as
+  a reconciling strategy and parses the entire document every time it is modified.
+  The parser then passes the range of every XML element to the editor, which then
+  in turn adds Projection Annotations to define collapsible regions.</p>
+  <p>
+  The source code for my simple parser is too large to show here, however, those
+  interested can take a look at the <code>XmlReconcilingStrategy.java</code>
+  file in the provided source code. </p>
+<p>Below is the code that does all this:</p>
+<pre><font color="#0000FF">private</font> Annotation[] oldAnnotations;
+<font color="#0000FF">public void</font> updateFoldingStructure(ArrayList positions)
+{
+   Annotation[] annotations = new Annotation[positions.size()];
+
+   <font color="#009933">//this will hold the new annotations along
+   //with their corresponding positions</font>
+   HashMap newAnnotations = new HashMap();
+
+   <font color="#0000FF">for</font>(<font color="#0000FF">int</font> i = 0; i < positions.size();i++)
+   {
+      ProjectionAnnotation annotation = <font color="#0000FF">new</font> ProjectionAnnotation();
+
+      newAnnotations.put(annotation, positions.get(i));
+
+      annotations[i] = annotation;
+   }
+
+   annotationModel.modifyAnnotations(oldAnnotations, newAnnotations,null);
+
+   oldAnnotations = annotations;
+}
+</pre>
+<p>Here is our completed editor with folding:</p>
+<p><img src="images/xmlEditor.png" width="331" height="203"></p>
+<h1>Source Code</h1>
+<p>All the source code that accompanies this article
+  may be found in the <a href="xmlEditorPlugin.zip">xmlEditorPlugin.zip file</a>.</p>
+<p><b>Update (19April2005):</b> My (buggy) xml parser has been replaced by a better one from
+Gerd Castan which supports nested xml elements.
+</p>
+<h1>Conclusion</h1>
+<p>By now, you should have understood the UI independent and dependent infrastructure
+  used in JFace Text to implement the folding capability. You should also have
+  understood how to implement folding in the text editor of your eclipse plug-in.
+  Plus you even got a free XML editor for Eclipse with folding support ;-).</p>
+<h1>References</h1>
+<ul>
+  <li><a href="http://devresource.hp.com/drc/technical_white_papers/eclipeditor/index.jsp" target="_blank">Creating a text-based editor for Eclipse</a></li>
+  <li>Articles in the Eclipse 3.0 Faqs book on text editors:
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq262.html" target="_blank">[FAQ262]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq263.html" target="_blank">[FAQ263]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq264.html" target="_blank">[FAQ264]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq265.html" target="_blank">[FAQ265]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq266.html" target="_blank">[FAQ266]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq267.html" target="_blank">[FAQ267]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq268.html" target="_blank">[FAQ268]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq269.html" target="_blank">[FAQ269]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq270.html" target="_blank">[FAQ270]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq271.html" target="_blank">[FAQ271]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq272.html" target="_blank">[FAQ272]</a>
+    <a href="http://www.eclipsefaq.org/chris/faq/html/faq273.html" target="_blank">[FAQ273]</a>
+    </li>
+  <li><a href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/guide/editors.htm" target="_blank">Online help for Editors</a></li>
+  <li><a href="http://help.eclipse.org/help30/topic/org.eclipse.platform.doc.isv/samples/org.eclipse.ui.examples.javaeditor/doc-html/ui_javaeditor_ex.html" target="_blank">Online help for the Java editor example</a></li>
+</ul>
+<small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States, other countries, or both.</small>
+</body>
+</html>

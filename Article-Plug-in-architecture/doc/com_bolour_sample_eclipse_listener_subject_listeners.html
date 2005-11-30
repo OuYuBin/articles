@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HEAD><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<STYLE type="text/css">
+div.dtd-fragment {
+	width: 100%;
+	border: none;
+	background-color: #eee;
+}
+</STYLE>
+</HEAD>
+<HTML>
+<BODY>
+<H1><CENTER>Listeners</CENTER></H1>
+<b><i>Identifier: </i></b>com.bolour.sample.eclipse.listener.subject.listeners<p>
+<b><i>Since: </i></b>2.1.0<p>
+<b><i>Description: </i></b>This extension-point is used to include one or more notification
+         listeners in the host plugin's list of listeners to be notified 
+         of host menu events.<p><b><i>Configuration Markup:</i></b><p>
+<p><samp><font color="#800000">&nbsp;&nbsp; &lt;!ELEMENT <a name="e.extension">extension</a> (<a href="#e.listener">listener</a>*)&gt;</font></samp>
+<br><br><samp><font color="#800000">&nbsp;&nbsp; &lt;!ATTLIST extension</samp>
+<br><samp>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;point&nbsp;CDATA #REQUIRED</samp>
+<br><samp>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;CDATA #IMPLIED</samp>
+<br><samp>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;&nbsp;CDATA #IMPLIED</samp>
+<br><samp>&nbsp;&nbsp; &gt;</font></samp>
+<ul>
+<li><b>point</b> - The fully-qualified name of the extension point.
+                  That is com.bolour.sample.eclipse.listener.subject.listeners.</li>
+<li><b>id</b> - An optional id.</li>
+<li><b>name</b> - An optional name.</li>
+</ul>
+<p><samp><font color="#800000">&nbsp;&nbsp; &lt;!ELEMENT <a name="e.listener">listener</a> EMPTY&gt;</font></samp>
+<br><br><samp><font color="#800000">&nbsp;&nbsp; &lt;!ATTLIST listener</samp>
+<br><samp>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class&nbsp;CDATA #REQUIRED</samp>
+<br><samp>&nbsp;&nbsp; &gt;</font></samp>
+<ul>
+<li><b>class</b> - The fully-qualified name of this listener's callback class.
+                  The class is instantiated by the host plugin, and the instance
+                  is added to the host plugin's notification list.</li>
+</ul>
+<b><i>Examples: </i></b><p>
+<pre>
+   <font color="#000080">&lt;!-- Extend the listeners of the subject ... --&gt;</font>
+   <font color="#000080">&lt;extension
+         id=<font color="#008000">&quot;listener.firstlistener&quot;</font>
+         name=<font color="#008000">&quot;FirstListener&quot;</font>
+         point=<font color="#008000">&quot;com.bolour.sample.eclipse.listener.subject.listeners&quot;</font>&gt;</font>
+      <font color="#000080">&lt;!-- ... by a listener of type X ... --&gt;</font>
+      <font color="#000080">&lt;listener
+            class=<font color="#008000">&quot;com.bolour.sample.eclipse.listener.firstlistener.ListenerX&quot;</font>/&gt;</font>
+      <font color="#000080">&lt;!-- and by a listener of type Y. --&gt;</font>
+      <font color="#000080">&lt;listener
+            class=<font color="#008000">&quot;com.bolour.sample.eclipse.listener.firstlistener.ListenerY&quot;</font>/&gt;</font>
+   <font color="#000080">&lt;/extension&gt;</font>         
+</pre>
+<p><p>
+<b><i>API Information: </i></b>Each listener callback must implement the interface
+         com.bolour.sample.eclipse.listener.subject.IListener.<p>
+<b><i>Supplied Implementation: </i></b>An update of the subject plug-in causes a notification to 
+      be broadcast to all listeners.<p>
+<font size="-1" color="#336699">
+</font>
+</BODY>
+</HTML>

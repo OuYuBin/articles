@@ -1,0 +1,1000 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Building a Database Schema Diagram Editor with GEF</title>
+<link rel="stylesheet" href="../default_style.css"/>
+</head>
+
+<BODY vLink=#800080 link=#0000FF>
+<DIV align=right>&nbsp; <FONT face="Times New Roman, Times, serif"><FONT
+	size=-1>Copyright © 2004 Realsolve Solutions Ltd.</FONT></FONT></DIV>
+&nbsp;
+<DIV align=right> 
+  <table cellspacing=0 cellpadding=2 width="100%" border=0>
+    <tbody>
+      <tr> 
+        <td valign=top align=left bgcolor=#0080c0 colspan=2><b><font
+				face=Arial,Helvetica><font color=#ffffff>&nbsp;Eclipse Corner 
+          Article</font></font></b></td>
+      </tr>
+    </tbody>
+  </table>
+</DIV>
+<H1><IMG border="0" src="images/Idea.jpg" width="120" height="86"></H1>
+<CENTER>
+  <h1>Building a Database Schema Diagram Editor<br>
+    with GEF</h1>
+</CENTER>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  GEF is a very powerful framework for visually creating and editing models. With a small initial investment, 
+  even the relative Eclipse novice can be quickly up and running, building applications with graphical editing capabilities. 
+  To illustrate, this article uses a relational database schema diagram editor with a deliberately 
+  simplified underlying model, but with enough bells and whistles to show some of the interesting features of GEF at work.
+  <p><b> Phil Zoio, Realsolve Solutions Ltd.</b> <br>
+    <font size="-1">September 27, 2004</font> </p>
+</blockquote>
+
+<hr width="100%">
+
+<h2>Introduction</h2>
+<p>
+Having graphical editing capabilities can be a real asset, if not an essential feature, for many tools and applications. Examples are not
+hard to think of: UML tools, GUI builders, in fact, any application which comprises a dynamic model which can be visualized. 
+With GEF, Eclipse developers have at their disposal a framework which can really simplify development of graphical editors. 
+This article uses a simple but non-trivial example to show how a GEF application works - 
+and what you need to do to get it to perform its little miracles. 
+</p>
+<p>
+The screenshot below shows what our example editor looks like. 
+The edit area uses a "flyout" palette which contains some very basic entries and can be minimized to increase the editable screen area. 
+On the right side is a scrollable graphical viewer containing the tables and their relationships.
+</p>
+<p> <img src="images/editor.JPG" height=645 width=597 align=CENTER></p>
+
+<p> <img src="images/tryit.gif" width="61" height="13"> Download and unzip the 
+  example plug-in <a href="schemaeditor.zip">schemaeditor.zip</a> into your <i>eclipse/</i> 
+  directory, then create a new diagram by launching the wizard from the File menu: 
+  File -> New -> Example ... -> GEF (Graphical Editing Framework) -> Schema Diagram 
+  Editor. </p>
+    
+<p>
+At the heart of GEF is the <B>Model-View-Controller</B> pattern, discussed in Randy Hudson's introductory tutorial 
+<i><a href="http://www-106.ibm.com/developerworks/opensource/library/os-gef/" target="_blank">How to Get Started with the GEF</a></i>, and also
+providing a focus for much of this article.
+</p>
+<h2>The Model</h2>
+<p>
+The starting point for any GEF application is the model. This is what needs to be displayed, edited and persisted. 
+Our somewhat oversimplified model contains the following classes:
+</p>
+<ul>
+  <li><CODE>Table</CODE>: represents a relational database table. The only attribute that the table holds itself is the name</li>
+  <li><CODE>Column</CODE>: represents a table column. Here we are interested in the column name and the type of data, which itself can either be <CODE>VARCHAR</CODE> or <CODE>INTEGER</CODE></li>
+  <li><CODE>Relationship</CODE>: represents a primary key/foreign key relationship between two tables. 
+  The foreign key table we denote the <B>source</B> of the relationship, while the primary key table is the <B>target</B>. 
+  Note that our model applies a relationship directly between two tables, 
+  rather than between foreign and primary key fields in the respective tables, 
+  as we would in the real world</li>
+  <li><CODE>Schema</CODE>: simply represents all the tables we plan to group together (and ultimately show on the same diagram)</li>
+</ul>
+Our model is extremely simple, but does at least include the two key forms of relationship in a typical GEF model:
+<ul>
+  <li>The <B>parent-child</B> relationship that exists between schemas and tables, and between tables and columns</li>
+  <li><B>Connections</B> between different <B>nodes</B>. 
+  In our example application, the connections are in the form of primary key/foreign key relationships, with the nodes being the tables</li>
+</ul>
+<p>
+Of course, we need to decide what we want our editor to be able to do with the model. Here, we want to be able to:
+</p>
+<ul>
+  <li>lay our tables nicely on the diagram. The diagram must scale to accommodate any growth in our model, and should be readable</li>
+  <li>add new tables to our schema, and new columns to our table, using either drag and drop or point and click</li>
+  <li>directly edit the names of the tables as well as both the names and types of our columns. In both cases, we want validation to tell us when we are typing in nonsense</li>  
+  <li>use drag and drop to set up relationships between tables, as well as to change these relationships</li>
+  <li>use drag and drop to move column definitions from one table to another, or to reorder columns within tables</li>     
+  <li>be able to delete tables, columns and relationships by hitting the delete key</li>  
+  <li>have a choice between manually laying out our diagram, and having this done automatically. When using manual layout, we want to be able to
+  shift our tables around using drag and drop</li>     
+</ul>
+There are of course many more things we would like to be able to do with our editor, 
+but we have enough here to be able to test out many of the most commonly used GEF features.
+<h2>The View</h2>
+
+<h3>Figures</h3>
+<p>
+The display component in both GEF and draw2d is built around the draw2d <code>IFigure</code> interface. 
+Figures in draw2d are lightweight objects which can be nested to create a complex graphical representation.
+The view is created by rendering and laying out the set of figures which reflect the model. 
+In a typical GEF application, you would normally create a set of customized <code>IFigure</code> implementations, each subclassing <code>Figure</code>. 
+</p>
+
+<p>
+<img src="images/tip.gif" width="62" height="13"> 
+If you're unfamiliar with draw2d and <code>Figures</CODE>, take a look at Daniel Lee's article on <i><a href="../Article-GEF-Draw2d/GEF-Draw2d.html">Display a UML Diagram using Draw2D</a></i>, 
+</p>
+
+<p>
+In our application we have the following figures:
+<ul>
+  <li><CODE>EditableLabel</CODE>: a subclass of the draw2d <CODE>Label</CODE> class which itself
+    subclasses <CODE>Figure</CODE>. We need this for the column and table names</li>
+  <li><CODE>ColumnsFigure</CODE>: a container for all the column labels</li>
+  <li><CODE>TableFigure</CODE>: contains an <CODE>EditableLabel</CODE> for the table name, as well as a <CODE>ColumnsFigure</CODE> for the column names</li>
+  <li><CODE>SchemaFigure</CODE>: a container for all the <CODE>TableFigures</CODE> in the schema</li>   
+</ul>
+<p>
+We haven't provided any custom figures to represent connections - we simply use the draw2d <CODE>PolylineConnection</CODE> class, 
+which is a just a line with zero or more kinks or bend points.
+</p>
+<p>
+Because the table names as well as the number of columns and their names are likely to change during the lifetime of a <CODE>TableFigure</CODE> instance, 
+we want our <CODE>ColumnsFigure</CODE> and <CODE>TableFigure</CODE> to be resizable. 
+A key role in allowing this to happen is played by layout managers, another important part of the draw2d framework.
+</p>
+
+<h3>Layout Management</h3>
+<p>
+GEF provides a layout management framework which is distinct from the Swing and Eclipse SWT layout managers: 
+its job is specifically to handle layout of the child figures of draw2d <CODE>IFigure</CODE> instances. 
+Your job as an application developer is to decide which layout manager to use
+for each figure containing child figures.</p> 
+<p>
+Broadly speaking, there are three types of layout managers:
+<ul>
+  <li><B>Structured layout managers</B>, such as <CODE>FlowLayout</CODE> and <CODE>ToolbarLayout</CODE>, 
+  which lay out child figures according to their <B>order</B> by arranging them vertically or horizontally
+  <li><B>Constraint-based layout managers</B>, such as the <CODE>XYLayout</CODE> and the <CODE>DelegatingLayout</CODE>. 
+  Here the application itself participates directly in the placement of figures by setting a constraint <CODE>Object</CODE> 
+  for each child figure. In the case of the <CODE>XYLayout</CODE>, this object is a <CODE>Rectangle</CODE> 
+  with specified location and size</li>
+  <li>
+  <B>Layout using geometry computation algorithms</B>. Here layout is determined by applying a series of rather complex algorithms to 
+  calculate the "best" layout for child figures. The algorithms take a specially constructed data structure as input and 
+  deliver as their output a solution to geometrical problems such as node placement and routing of paths.
+  The algorithms provided by GEF are in the classes <CODE>DirectedGraphLayout</CODE>
+  and <CODE>CompoundDirectedGraphLayout</CODE>
+  </li>
+</ul>
+<p>
+The GEF developer needs to understand which layout managers can be best applied in which situation. 
+Structured layout managers are suitable when there is a well defined parent-child relationship between the 
+containing figure and its children <I>and</I>
+the children are not related to each other in arbitrary ways.
+In our example application, <CODE>TableFigure</CODE> uses a <CODE>ToolbarLayout</CODE> to place its children 
+(simply stacking them vertically). The <CODE>ColumnsFigure</CODE> does the same with its child <CODE>Label</CODE> objects, 
+but uses the <CODE>FlowLayout</CODE> for this purpose. 
+<p>
+This kind of arrangement of course does not work with <CODE>SchemaFigure</CODE> - 
+any of its child <CODE>TableFigures</CODE> may be related to any other via a primary key/foreign key relationship, 
+so we cannot simply stack the table figures next to each other or side by side.
+For <CODE>SchemaFigure</CODE> we need to choose between either a constraint-based layout manager or a graph layout manager. 
+In our example application we use both. Users can switch between manual layout, which involves dragging table figures 
+to their desired locations, and automatic placement of figures using geometry computation algorithms. 
+How this is done is beyond the scope of this article, 
+although interested readers can examine the 
+<CODE>DelegatingLayoutManager</CODE> class in the example application source code.
+
+<p>
+<img src="images/tryit.gif" width="61" height="13">  Open a schema diagram editor and make some changes, switching between manual 
+and automatic layout using the
+<img src="images/layout.gif" width="16" height="16"> icon.
+</p>
+
+<h2>The Controller</h2>
+<p>
+We only really move into GEF territory proper when we start talking about the controller in the MVC trilogy. 
+GEF provides an abstraction that prevents the model from having to know about the figures, and vice versa. 
+At the centre of this architecture is the <CODE>EditPart</CODE> interface.
+</p>
+<h3>EditParts</h3>
+<p>
+The first thing to know is that typically every separately editable part of the model will need to be
+associated with an <CODE>EditPart</CODE> instance. This means that there will usually be a close to one-for-one mapping between classes 
+in the model hierarchy and classes in the <CODE>EditPart</CODE>  hierarchy. 
+In most cases, an <CODE>EditPart</CODE> is also a <CODE>GraphicalEditPart</CODE>, which means that
+as well as managing a model component, it also has an associated view component. Because the 
+model and view are completely decoupled, all coordination between the model and the view must be managed by the <CODE>EditPart</CODE>.
+This coordination can be divided into two separate areas of activity:
+<ol>
+  <li>Acting as a listener to changes in the model so that these can be propagated to the view, by calling layout related methods. We discuss this
+  in detail in the section <A HREF="#viewUpdate">Updating an Repainting the Display</A>
+  </li>
+  <li>Providing a means by which user interaction can be interpreted and propagated to changes in the model. 
+  Central to this are <CODE>EditPolicies</CODE>, discussed in the section <A HREF="#editPolicies">EditPolicies and Roles</A>
+  </li>
+  <li>Managing what are known as direct edits, where the user types text directly into an editable control
+  </li>
+</ol> 
+In our example application we have the following <CODE>EditPart</CODE> implementations
+<ul>
+  <li><CODE>SchemaDiagramPart</CODE>: represents a <CODE>Schema</CODE> instance and associated <CODE>SchemaFigure</CODE></li>
+  <li><CODE>TablePart</CODE>: represents a <CODE>Table</CODE> and manages the <CODE>TableFigure</CODE> and child view components</li>
+  <li><CODE>ColumnPart</CODE>: enables editing functionality for the column label</li> 
+  <li><CODE>RelationshipPart</CODE>: represents a primary key/foreign key relationship. 
+  In the same way that Relationship in the model is associated with two <CODE>Table</CODE> instances, 
+  a <CODE>RelationshipPart</CODE> is associated with two <CODE>TableParts</CODE></li>  
+</ul>
+<p>
+When an instance of any of these classes is created, it is automatically associated with a part of the model. 
+This is a build-in feature of the framework. As part of our editor, we have to provide an <CODE>EditPartFactory</CODE> implementation. 
+Ours looks like this:
+</p>
+<font color="#0000cc">
+<pre>public class SchemaEditPartFactory implements EditPartFactory
+{
+    public EditPart createEditPart(EditPart context, Object model)
+    {
+        EditPart part = null;
+        if (model instanceof Schema)
+            part = new SchemaDiagramPart();
+        else if (model instanceof Table)
+            part = new TablePart();
+        else if (model instanceof Relationship)
+            part = new RelationshipPart();
+        else if (model instanceof Column)
+            part = new ColumnPart();
+        part.setModel(model);
+        return part;
+    }
+}</pre>
+</font>
+<p>
+<CODE>SchemaDiagramPart</CODE>, <CODE>TablePart</CODE> and <CODE>ColumnPart</CODE> 
+all extend <CODE>AbstractGraphicalEditPart</CODE> and implement <CODE>GraphicalEditPart</CODE>. 
+In addition, <CODE>TablePart</CODE> can be a <I>node</I> in a primary/foreign key relationship, 
+so it has to implement <CODE>NodeEditPart</CODE>.
+Finally, <CODE>RelationshipPart</CODE> represents the <I>connection</I> part of the relationship, 
+so it extends <CODE>AbstractConnectionEditPart</CODE>.
+</p>
+<p>
+<CODE>SchemaDiagramPart</CODE>'s job is primarily managing the layout of the tables. 
+<CODE>ColumnPart</CODE>'s role is relatively limited - it just needs to handle editing of the label displaying name and type information.
+</p>
+<p>
+Of the four of these, <CODE>TablePart</CODE> has the most to do. 
+In GEF, most of the work that is done to manage relationships is done
+by <CODE>NodeEditPart</CODE>, and not <CODE>ConnectionEditPart</CODE>. 
+Because we sometimes need to rename tables, <CODE>TablePart</CODE> also has to manage
+editing of the label that displays its name. 
+We will spend more of our time focusing on <CODE>TablePart</CODE>.
+</p>
+
+
+In a GEF application, there are a number of tasks <CODE>EditPart</CODE> subclasses must
+fulfill:
+<ol>
+  <li>
+  <p>
+  Provide a figure instance to be associated with the <CODE>EditPart</CODE>. 
+  In the case of <CODE>TablePart</CODE>, we simply return a new <CODE>TableFigure</CODE> instance with a name label:
+<font color="#0000cc">
+<pre>  protected IFigure createFigure()
+  {
+      Table table = getTable();
+      EditableLabel label = new EditableLabel(table.getName());
+      TableFigure tableFigure = new TableFigure(label);
+      return tableFigure;
+  }</pre>
+  </font>
+  </li>
+	<li>		
+	<p>  
+	<CODE>EditParts</CODE> which represent parent objects in <B>parent-child</B> relationships need to override <CODE>getModelChildren()</CODE>. 
+	In the case of <CODE>TablePart</CODE>, our
+	implementation of this method simply returns the <CODE>Column</CODE> objects it contains:
+<font color="#0000cc">
+<pre>  protected List getModelChildren()
+  {
+      return getTable().getColumns();
+  }</pre>
+</font>	
+	Note that the <CODE>AbstractEditPart</CODE> implements a parallel method <CODE>getChildren()</CODE>, 
+	which returns the <CODE>EditPart</CODE> collection representing the model children.
+	In the case of <CODE>TablePart</CODE>, <CODE>getChildren()</CODE> returns a list of <CODE>ColumnPart</CODE> objects. 
+	We know this because our implementation of <CODE>EditPartFactory</CODE> associates 
+	<CODE>Column</CODE> model instances with instances of <CODE>ColumnPart</CODE>.
+	The <CODE>EditPart</CODE> <CODE>List</CODE> returned by <CODE>getChildren()</CODE> 
+	always needs to be kept in sync with the <CODE>getModelChildren()</CODE>. 
+	In the Section <A HREF="#synchronising">Synchronizing EditPart Relationships with Model Changes</A> we describe how this happens
+	<br>
+	</li>
+	<li>
+	<p>
+	If the parent <CODE>EditPart</CODE>'s figure is not the direct parent of the child <CODE>EditPart</CODE>'s figure, you will
+	need to override <CODE>AbstractGraphicalEditPart.getContentPane()</CODE>.	
+	The <B>content pane</B> is the containing figure into which GEF adds figures created by child <CODE>EditParts</CODE>,
+	which is by default the figure returned by the <CODE>EditPart</CODE>'s <CODE>createFigure()</CODE> method.
+	</p>
+	<p>
+	In our example application
+	the column labels are not contained within a <CODE>TableFigure</CODE> but within its <CODE>ColumnsFigure</CODE> child. 
+	Our implementation of <CODE>getContentPane()</CODE> in <CODE>TablePart</CODE> reflects this:
+<pre>public IFigure getContentPane()
+{
+    TableFigure figure = (TableFigure) getFigure();
+    return figure.getColumnsFigure();
+}</pre>			
+<p>
+<img src="images/tip.gif" width="62" height="13"> Do not add and remove child figures 
+by overriding <CODE>AbstractGraphicalEditPart.addChildVisual()</CODE> and <CODE>AbstractGraphicalEditPart.removeChildVisual()</CODE>.
+Override <CODE>getContentPane()</CODE> instead.
+</p>
+  </li>
+    <li>
+    <CODE>EditParts</CODE> which represent nodes (model objects which may participate in connections) 
+    must also implement a number of additional methods defined in the interface <CODE>NodeEditPart</CODE>
+    <ul>
+  		<li>
+  		<p>
+  		<CODE>protected List getModelSourceConnections()</CODE>: this returns all the connection model objects for which the 
+  		node model object is the source.
+  		In our example application, we have identified foreign keys as the source of a primary key/foreign key relationship. 
+  		<CODE>TablePart</CODE>'s implementation contains just a single line of code:
+  		</p>
+  		<p>
+  		<font color="#0000cc"><CODE>return getTable().getForeignKeyRelationships();</CODE></font>	
+  		</p>
+  		<p>
+  		This method simply returns the <CODE>Relationship</CODE> objects for 
+  		which the current <CODE>TablePart</CODE>'s <CODE>Table</CODE> is the foreign key. 
+  		Once again, there is a parallel method <CODE>getSourceConnections()</CODE>, 
+  		which returns the <CODE>List</CODE> of <CODE>RelationshipParts</CODE> associated with these relationships.
+  		We also consider in the Section <A HREF="#synchronising">Synchronizing EditPart Relationships with Model Changes</A>
+  		 how the <CODE>ConnectionEditPart</CODE> list returned by 
+  		<CODE>getSourceConnections()</CODE> stays in sync with the 
+  		<CODE>Relationship</CODE> list returned by <CODE>getModelSourceConnections()</CODE>
+  		</p>
+  		</li>
+  		<li>
+  		<p>
+  		<CODE>protected List getModelTargetConnections()</CODE>: 
+  		this works identically to <CODE>getModelSourceConnections()</CODE>, 
+  		except that it returns the <CODE>Relationship</CODE> objects for which the current 
+  		<CODE>TablePart</CODE>'s <CODE>Table</CODE> is the primary key
+  		</p>
+  		</li>
+  		<li>
+  		<p>
+  		the node <CODE>GraphicalEditPart</CODE> must also provide implementations of the 
+  		<CODE>NodeEditPart</CODE> <CODE>getSourceConnectionAnchor()</CODE> and <CODE>getTargetConnectionAnchor()</CODE> methods. 
+  		In each case, these methods return objects which represent the points to which connections between nodes can be attached
+  		</p>
+  		</li>
+  	</ul>
+    </li>
+    <li>Provide an implementation for <CODE>createEditPolicies()</CODE>, 
+    during which <CODE>EditPolicy</CODE> implementations are associated with specific editing roles. 
+    The <CODE>EditPolicy</CODE> and its associated roles, <CODE>Request</CODE> and 
+    <CODE>Command</CODE> objects are a fundamental part of GEF which we discuss in the next sections
+    </li>    
+</ol>
+
+<h3>Requests</h3>
+<p>
+We begin with requests because these are really the starting point of the editing process that GEF application developer works with.
+In fact, the real magic in GEF is being able to interpret user interactions and transform
+these into <B>requests</B>, 
+which the application can work with in an object-oriented fashion. 
+For example, when we drag from the "New Column" palette button onto an existing
+table on the diagram, we are of course trying to add a new column to the table. 
+As users interact with the application, GEF's behind-the-scenes work produces <CODE>Request</CODE> objects. 
+In the create column example, GEF produces
+a <CODE>CreateRequest</CODE>, which contains the following important information:
+<ul>
+  <li>the instance of the new model object that has been created 
+  (but probably not yet configured and definitely not added to the rest of the model)</li>
+  <li>The <CODE>EditPart</CODE> object which is hosting this request. 
+  In our case this will be an instance of <CODE>TablePart</CODE></li>
+</ul>
+Different types of user interactions will produce different <CODE>Request</CODE> types
+- these are well covered in the GEF API and platform documentation. 
+These request objects neatly encapsulate the information the application needs to transform user interaction into changes to the model. 
+We can take a look at how this is done once we have looked at <CODE>Commands</CODE> and <CODE>EditPolicies</CODE>, 
+which we cover in the next section. 
+
+
+
+<A NAME="editPolicies"></A>
+<h3>EditPolicies and Roles</h3>
+<p>
+An <CODE>EditPolicy</CODE> is really just an extension of an <CODE>EditPart</CODE>, 
+in the sense that certain editing related tasks are passed on from the <CODE>EditPart</CODE> to its <CODE>EditPolicy</CODE> delegates.
+<CODE>EditPart</CODE> implementations would rapidly become bloated if they had to take on everything that <CODE>EditPolicies</CODE> do. 
+To understand what an <CODE>EditPolicy</CODE> is and what it does, 
+lets start by looking at the <CODE>createEditPolicies()</CODE> method in <CODE>TablePart</CODE>:
+<font color="#0000cc">
+<pre>protected void createEditPolicies()
+{
+    installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE, new TableNodeEditPolicy());
+    installEditPolicy(EditPolicy.LAYOUT_ROLE, new TableLayoutEditPolicy());
+    installEditPolicy(EditPolicy.CONTAINER_ROLE, new TableContainerEditPolicy());
+    installEditPolicy(EditPolicy.COMPONENT_ROLE, new TableEditPolicy());
+    installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE, new TableDirectEditPolicy());
+}</pre>
+</font>
+<p>
+The purpose of this method is simply to decorate the <CODE>TablePart</CODE> with editing functionality. 
+Each call to <CODE>installEditPolicy()</CODE> in the above method 
+registers an <CODE>EditPolicy</CODE> with the <CODE>EditPart</CODE>. 
+The key constant used in each of these calls is the name of the <B>role</B> used. 
+For example, <CODE>EditPolicy.CONTAINER_ROLE</CODE> is 
+simply the string <I>"ContainerEditPolicy"</I>. 
+The container role is relevant for <CODE>TablePart</CODE> because we know that tables contain
+columns, and one of our application's requirements is to create new columns 
+and add these to existing tables.
+</p>
+<p>
+The use of a particular role name in the <CODE>installEditPolicy()</CODE> call is really just a convention - the framework does not 
+attach any behavior to a particular choice of role name. 
+What distinguishes an <CODE>EditPolicy</CODE> implementation (and its corresponding role) is the type of requests it understands. 
+Most of the abstract <CODE>EditPolicy</CODE> classes
+provide an implementation of the <CODE>getCommand(Request request)</CODE> method.
+</p> 
+<p> 
+In <CODE>ContainerEditPolicy</CODE> we find the following:
+
+<font color="#0000cc">
+<pre>public Command getCommand(Request request) {
+  if (REQ_CREATE.equals(request.getType()))
+	return getCreateCommand((CreateRequest)request);
+  if (REQ_ADD.equals(request.getType()))
+	return getAddCommand((GroupRequest)request);
+  if (REQ_CLONE.equals(request.getType()))
+	return getCloneCommand((ChangeBoundsRequest)request);
+  if (REQ_ORPHAN_CHILDREN.equals(request.getType()))
+	return getOrphanChildrenCommand((GroupRequest)request);
+  return null;
+}</pre>
+</font>
+<p>
+Here <CODE>getCommand()</CODE> simply uses the request type to determine which <CODE>getXXXCommand()</CODE> method to call. 
+In <CODE>ContainerEditPolicy</CODE>, <CODE>getCreateCommand()</CODE> is abstract - 
+we must provide an implementation in order to use the base <CODE>ContainerEditPolicy</CODE> functionality.
+</p>
+<p>
+Here is our implementation of <CODE>TableContainerEditPolicy</CODE>:
+
+<font color="#0000cc">
+<pre>public class TableContainerEditPolicy extends ContainerEditPolicy
+{
+    protected Command getCreateCommand(CreateRequest request)
+    {
+    <img src="images/tag_1.gif" height=13 width=24 align=CENTER> Object newObject = request.getNewObject();
+        if (!(newObject instanceof Column))
+        {
+            return null;
+        }
+        Column column = (Column) newObject;
+
+    <img src="images/tag_2.gif" height=13 width=24 align=CENTER> TablePart tablePart = (TablePart) getHost();
+        Table table = tablePart.getTable();
+    <img src="images/tag_3.gif" height=13 width=24 align=CENTER> ColumnCreateCommand command = new ColumnCreateCommand();
+        command.setTable(table);
+        command.setColumn(column);
+        return command;
+    }
+}</pre>
+</font>
+<p>
+In most cases, our <CODE>EditPolicy</CODE> implementations simply amount to using a 
+<CODE>Request</CODE> object to generate a <CODE>Command</CODE>. 
+Our <CODE>getCreateCommand()</CODE> method 
+<ul>
+  <li><img src="images/tag_1.gif" height=13 width=24 align=CENTER> gets the new object embodied in the <CODE>CreateRequest</CODE> 
+  and makes sure that it is an instance of <CODE>Column</CODE>,</li>
+  <li><img src="images/tag_2.gif" height=13 width=24 align=CENTER> gets the <CODE>Table</CODE> object associated with 
+  the host <CODE>EditPart</CODE>, and</li>
+  <li><img src="images/tag_3.gif" height=13 width=24 align=CENTER> creates an instance of the relevant <CODE>Command</CODE> class, 
+  configures it with the <CODE>Table</CODE> and <CODE>Column</CODE> information, and returns it</li>
+</ul>
+Our <CODE>TablePart</CODE> <CODE>createEditPolicies()</CODE> implementation uses one of 
+our customized <CODE>EditPolicy</CODE> implementations for each invocation of 
+<CODE>installEditPolicy()</CODE>. 
+Each of our <CODE>EditPolicy</CODE> implementations subclasses a GEF-provided abstract <CODE>EditPolicy</CODE> for a different role. 
+For example, <CODE>TableEditPolicy</CODE> extends <CODE>ComponentEditPolicy</CODE> to
+fulfill the <CODE>EditPolicy.COMPONENT_ROLE</CODE>. 
+It does so by implementing the 
+<CODE>createDeleteCommand(GroupRequest request)</CODE> to handle requests of type <CODE>REQ_DELETE</CODE>.
+<p>
+The GEF platform documentation provides a lot more detail on the types of roles and requests and how and when they can be used, 
+so we won't cover them in any more detail here.
+</p>
+<h3>Commands</h3>
+
+<p>
+<CODE>Command</CODE> is GEF's abstract base class whose function is simply to encapsulate our application's response to a request.  
+Key methods included in the <CODE>Command</CODE> class are the following: 
+<ul>
+  <li><CODE>execute()</CODE>:  
+  <CODE>Command</CODE> provides a no-op implementation. As the name suggests, 
+  this contains the code to apply any change to the model that the <CODE>Command</CODE> object encapsulates</li>
+  <li><CODE>undo()</CODE>: used to reverse the effect of <CODE>execute()</CODE>. 
+  Here <CODE>Command</CODE> also provides a no-op implementation</li>
+  <li><CODE>redo()</CODE>: used redo a command execution. 
+  The <CODE>Command</CODE> implementation simply calls <CODE>execute()</CODE>, which should usually be adequate</li>  
+  <li><CODE>canExecute()</CODE>: whether <CODE>execute()</CODE> can be executed. 
+  The subclass can implement this to specify the conditions under which the command can be executed</li>
+  <li><CODE>canUndo()</CODE>: whether <CODE>undo()</CODE> can be executed. 
+  The <CODE>Command</CODE> implementation simply returns true, which subclasses can override</li>
+  <li><CODE>canRedo()</CODE>: whether <CODE>redo()</CODE> can be executed. The <CODE>Command</CODE> implementation here also simply returns true</li>
+</ul>
+<p>
+Any non-trivial <CODE>Command</CODE> subclass would need to implement <CODE>execute()</CODE>. 
+Implementation of <CODE>undo()</CODE> would be recommended in most cases. The other methods
+are optional and would only be overridden as required.
+</p>
+<p>
+Lets take a look at our rather straightforward <CODE>ColumnCreateCommand</CODE> implementation:
+
+<font color="#0000cc">
+<pre>public class ColumnCreateCommand extends Command
+{
+    private Column column;
+    private Table table;
+
+    public void setColumn(Column column)
+    {
+        this.column = column;
+    <img src="images/tag_1.gif" height=13 width=24 align=CENTER> this.column.setName(&quot;COLUMN &quot; + (table.getColumns().size() + 1));
+        this.column.setType(Column.VARCHAR);
+    }
+
+    public void setTable(Table table)
+    {
+        this.table = table;
+    }
+
+    public void execute()
+    {
+    <img src="images/tag_2.gif" height=13 width=24 align=CENTER> table.addColumn(column);
+    }
+
+    public void undo()
+    {
+    <img src="images/tag_3.gif" height=13 width=24 align=CENTER> table.removeColumn(column);
+    }
+}</pre>
+</font>
+Much of the class is self-explanatory. 
+We have setter methods to populate the <CODE>Command</CODE> object 
+with the newly-created <CODE>Column</CODE> as well as the 
+target container <CODE>Table</CODE>. 
+We arbitrarily provide a name and type for the <CODE>Column</CODE> <img src="images/tag_1.gif" height=13 width=24 align=CENTER>, 
+which the user can later change.
+We can also see that <CODE>execute()</CODE> <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+simply adds the <CODE>Column</CODE> object to the <CODE>Table</CODE>, 
+and <CODE>undo()</CODE> <img src="images/tag_3.gif" height=13 width=24 align=CENTER> simply reverses that change.
+<p>
+The use of <CODE>Commands</CODE> has two key advantages over using <CODE>EditPolicies</CODE> directly to effect model changes
+<ul>
+  <li>Commands are more elegant and in line with OO best practice</li>
+  <li>The <CODE>Command</CODE> framework has built-in support for undo and redo functionality</li>
+</ul>
+<p>
+<img src="images/tip.gif" width="62" height="13">  The <CODE>Command</CODE> implementation is closely tied to the model, 
+and should be cleanly separated from GEF-specific components. 
+It should not contain any references to <CODE>EditParts</CODE> or <CODE>EditPolicies</CODE>. 
+Observing this rule preserves the clean separation
+between commands and the UI logic, helping to keep code more maintainable and bug-free.
+</p>
+
+
+<h2>Propagating Model Changes</h2>
+
+<p>
+Once we've changed the model, our GEF editor needs to propagate these changes to the UI. Our model, view and controller need
+to work together to achieve this.
+</p>
+<p>
+So far, we have discussed the <CODE>GraphicalEditPart</CODE>'s responsibility to provide a figure 
+to represent the part of the model it is managing.
+To participate in a fully functional graphical editor, it needs to do more:
+<ul>
+  <li>It needs to act as a <B>listener</B> for changes in the model. 
+  The model itself needs to <B>fire event notifications</B> which the <CODE>EditPart</CODE> can receive</li>
+  <li>It needs to maintain its own 
+  child and connection relationships with other <CODE>EditParts</CODE>, keeping these in sync with changes to the model</li>
+  <li>It needs to update the figures that it is managing, and their layouts, in line with model changes</li>
+</ul>
+We discuss each of these in turn.
+
+<h3>Sending and Receiving Event Notifications</h3>
+<p>
+The requirements imposed on our model implementation are that
+<ol>
+  <li>it exposes a mechanism by which listeners can register interest in event notifications, and</li>
+  <li>it actually fires these event notifications at the appropriate times!</li>
+</ol>
+In our example application we want all our model objects to use a common framework, 
+so we satisfy the first requirement by 
+allowing all our model classes to extend <CODE>PropertyAwareObject</CODE>, which looks like this:
+
+<font color="#0000cc">
+<pre>public abstract class PropertyAwareObject implements Serializable
+{
+
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> public static final String CHILD = &quot;CHILD&quot;;
+    ... other String constants representing the other types of model changes
+	
+    <img src="images/tag_2.gif" height=13 width=24 align=CENTER> protected transient PropertyChangeSupport listeners = new PropertyChangeSupport(this);
+
+    protected PropertyAwareObject()
+    {
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener l)
+    {
+    <img src="images/tag_3.gif" height=13 width=24 align=CENTER> listeners.addPropertyChangeListener(l);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener l)
+    {
+    <img src="images/tag_4.gif" height=13 width=24 align=CENTER> listeners.removePropertyChangeListener(l);
+    }
+  
+    protected void firePropertyChange(String prop, Object old, Object newValue)
+    {
+    <img src="images/tag_5.gif" height=13 width=24 align=CENTER> listeners.firePropertyChange(prop, old, newValue);
+    }
+    
+    ...
+}</pre>
+</font>
+
+Our abstract model base class 
+contains a few <CODE>String</CODE> constants <img src="images/tag_1.gif" height=13 width=24 align=CENTER> 
+representing the types of model changes it knows about. 
+It uses the <CODE>java.beans.PropertyChangeSupport</CODE> <img src="images/tag_2.gif" height=13 width=24 align=CENTER>
+to provide the "plumbing" for the event handling. 
+It also exposes methods <img src="images/tag_3.gif" height=13 width=24 align=CENTER> 
+and <img src="images/tag_4.gif" height=13 width=24 align=CENTER> which observers can use to register and deregister their
+interest in model changes. 
+Finally, it includes a <CODE>firePropertyChange()</CODE> <img src="images/tag_5.gif" height=13 width=24 align=CENTER> method 
+which subclasses can use to trigger property events.
+In our example of adding a column to a table, we see a good example in <CODE>Table</CODE>:
+
+<font color="#0000cc">
+<pre>public void addColumn(Column column)
+{
+    columns.add(column);
+    firePropertyChange(CHILD, null, column);
+}</pre>
+</font>
+
+With this mechanism available, we now need to take advantage in our <CODE>EditPart</CODE> listeners. 
+Once again, we address the issue
+by providing a common base class for our <CODE>GraphicalEditParts</CODE> to extend, shown below:
+  
+<font color="#0000cc">
+<pre>public abstract class PropertyAwarePart 
+		extends AbstractGraphicalEditPart 
+		implements PropertyChangeListener
+{
+    public void activate()
+    {
+        super.activate();
+        PropertyAwareObject propertyAwareObject = (PropertyAwareObject) getModel();
+    <img src="images/tag_1.gif" height=13 width=24 align=CENTER> propertyAwareObject.addPropertyChangeListener(this);
+    }
+
+    public void deactivate()
+    {
+        super.deactivate();
+        PropertyAwareObject propertyAwareObject = (PropertyAwareObject) getModel();
+    <img src="images/tag_2.gif" height=13 width=24 align=CENTER> propertyAwareObject.removePropertyChangeListener(this);
+    }
+
+    public void propertyChange(PropertyChangeEvent evt)
+    {
+    <img src="images/tag_3.gif" height=13 width=24 align=CENTER> //handle property change event 
+        ...   
+    }
+}</pre>
+</font>
+The GEF API documentation recommends the use of <CODE>activate()</CODE> and <CODE>deactivate()</CODE> 
+to register or deregister model listeners. 
+This is what we do here. After casting our model object to <CODE>PropertyAwareObject</CODE>, 
+we add our <CODE>EditPart</CODE> as a listener in <img src="images/tag_1.gif" height=13 width=24 align=CENTER>, 
+and allow it to be removed on deactivation in <img src="images/tag_2.gif" height=13 width=24 align=CENTER>. 
+Once the <CODE>EditPart</CODE> is activated, any event notifications fired from our model 
+will result in an invocation of <CODE>propertyChange()</CODE> <img src="images/tag_3.gif" height=13 width=24 align=CENTER>. 
+Our <CODE>propertyChange()</CODE> implementation in <CODE>PropertyAwarePart</CODE> in turn delegates 
+its response to other methods, which can be overridden by <CODE>EditPart</CODE> subclasses 
+to customize reactions to specific changes in the model.
+
+<A NAME="synchronising"></A>
+<h3>Synchronizing EditPart Relationships with Model Changes</h3>
+<p>
+As we mentioned previously, the first thing the <CODE>EditPart</CODE> implementation needs to do in response to a model change is to 
+ensure that its relationship hierarchy is in sync with that of the model. 
+GEF provides a quick and easy solution in the form of three methods in the <CODE>EditPart</CODE> 
+hierarchy. Before discussing
+a more performant approach that many applications will demand, we'll take a look at these methods. 
+<ul>
+  <li><CODE>refreshChildren()</CODE>: when an <CODE>EditPart</CODE> represents a model object with children, 
+  this method may need to be called. 
+  Our example of adding a column to a table is a good one. The same applies for removing a column from a table.
+  If we moved a column from one table to another, 
+  <CODE>refreshChildren()</CODE> would need to be called for both corresponding <CODE>TableParts</CODE>. 
+  The base implementation of this method not only synchronizes your model and <CODE>EditPart</CODE> hierarchies - 
+  it also adds or removes visual components as required
+  by calling the <CODE>AbstractGraphicalEditPart</CODE> <CODE>addChildVisual()</CODE> and <CODE>removeChildVisual()</CODE> methods
+  </li>
+  <li><CODE>refreshSourceConnections()</CODE>: this applies to any model change where the source of a connection 
+  is added, removed or reassigned.
+  For example, if we added or deleted a primary/foreign key relationship, this method would need to be called
+  </li>
+  <li>
+  <CODE>refreshTargetConnections()</CODE>: this only applies to a model change where the target 
+  of a connection is added, removed or reassigned. It would be needed for any change affecting 
+  the primary key of a relationship between tables</li>
+</ul>
+<p>
+Returning to our example of adding a column to a table, 
+our implementation of <CODE>PropertyAwarePart.propertyChange()</CODE> can be
+reduced to the following:
+<A NAME = "propertyChange"></A>
+<font color="#0000cc">
+<pre>public void propertyChange(PropertyChangeEvent evt)
+{
+    String property = evt.getPropertyName();
+
+    if (PropertyAwareObject.CHILD.equals(property))
+    {
+    <img src="images/tag_1.gif" height=13 width=24 align=CENTER> refreshChildren();
+    <img src="images/tag_2.gif" height=13 width=24 align=CENTER> refreshVisuals();
+    }
+    ... handle other types of property changes here
+
+}</pre>
+</font>
+
+To resynchronize the <CODE>EditPart</CODE> hierarchy, we simply call 
+<CODE>refreshChildren()</CODE> <img src="images/tag_1.gif" height=13 width=24 align=CENTER>. 
+To update the display, we then call <CODE>refreshVisuals()</CODE> <img src="images/tag_2.gif" height=13 width=24 align=CENTER>. 
+We discuss the
+mechanics and rationale for <img src="images/tag_2.gif" height=13 width=24 align=CENTER> 
+in the next section.
+<p>
+Using the methods <CODE>refreshChildren()</CODE>, <CODE>refreshSourceConnections()</CODE> and <CODE>refreshSourceConnections()</CODE> 
+can help you get your application working quickly, but if we want our application to run <B>efficiently</B>, 
+we need to be more selective
+in the methods we use. For example, to add or remove a child, we can use the <CODE>EditPart</CODE> methods 
+<CODE>addChild(EditPart, int)</CODE> and <CODE>removeChild(EditPart)</CODE>. 
+Our revised <CODE>handleChildChange(PropertyChangeEvent)</CODE>below is a better performing replacement for <CODE>refreshChildren()</CODE> 
+which uses these methods:
+<font color="#0000cc">
+<pre>protected void handleChildChange(PropertyChangeEvent evt)
+{
+    Object newValue = evt.getNewValue();
+    Object oldValue = evt.getOldValue();
+
+    if (newValue != null)
+    {
+        //add new child
+        <img src="images/tag_1.gif" height=13 width=24 align=CENTER> EditPart editPart = createChild(newValue);
+        <img src="images/tag_2.gif" height=13 width=24 align=CENTER> int modelIndex = getModelChildren().indexOf(newValue);
+        <img src="images/tag_3.gif" height=13 width=24 align=CENTER> addChild(editPart, modelIndex);
+    }
+    else
+    {
+        //remove an existing child
+        List children = getChildren();
+
+        EditPart partToRemove = null;
+        for (Iterator iter = children.iterator(); iter.hasNext();)
+        {
+            EditPart part = (EditPart) iter.next();
+            if (part.getModel() == oldValue)
+            {
+            <img src="images/tag_4.gif" height=13 width=24 align=CENTER> partToRemove = part;
+                break;
+            }
+        }
+        if (partToRemove != null)
+        <img src="images/tag_5.gif" height=13 width=24 align=CENTER> removeChild(partToRemove);
+    }
+}</pre>
+</font>
+<p>
+When adding our child, we need to call <CODE>createChild()</CODE> 
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> to get a new <CODE>EditPart</CODE> for the model child.
+We then find the index of the model child in the containing <CODE>List</CODE><img src="images/tag_2.gif" height=13 width=24 align=CENTER>, 
+and add our new child <CODE>EditPart</CODE> using this index <img src="images/tag_3.gif" height=13 width=24 align=CENTER>. 
+When removing a child, we iterate through the existing children
+<CODE>EditParts</CODE> until we find the one representing the removed model child <img src="images/tag_4.gif" height=13 width=24 align=CENTER>. 
+We then remove this <CODE>EditPart</CODE> <img src="images/tag_5.gif" height=13 width=24 align=CENTER>.
+</p>
+<p>
+Clearly, there is more work here than in simply calling <CODE>refreshChildren()</CODE>: but for large models where performance is critical, this effort will be worth it. 
+</p>
+<p>
+Interested readers can examine <CODE>handleInputChange(PropertyChangeEvent)</CODE> and <CODE>handleOuputChange(PropertyChangeEvent)</CODE> in
+<CODE>PropertyAwarePart</CODE> 
+for similar alternatives to <CODE>refreshSourceConnections()</CODE> and <CODE>refreshTargetConnections()</CODE> when updating relationships.
+</p>
+
+<A NAME="viewUpdate"></A>
+<h3>Updating and Repainting the Display</h3>
+
+<p>
+Consider our example of adding a column to a table. In draw2d terms, 
+this is represented by adding an <CODE>EditableLabel</CODE> into 
+a <CODE>ColumnsFigure</CODE> instance, which is itself contained within a <CODE>TableFigure</CODE>. 
+Both the <CODE>ColumnsFigure</CODE> and the <CODE>TableFigure</CODE> both need to enlarge 
+- the result otherwise is ugly (take my word for it!).
+</p>
+<p>
+A few things need to happen:
+<ol>
+  <li>The cached information held by the layout managers for the <CODE>TableFigure</CODE> and <CODE>ColumnsFigure</CODE>, 
+  which includes minimum size and preferred size for the child figures, needs to be thrown away</li>
+  <li>The <CODE>SchemaFigure</CODE>'s layout manager needs to 
+  update any cached constraint information it is holding for the <CODE>TableFigure</CODE></li>
+  <li>The bounds of both the <CODE>TableFigure</CODE> and the <CODE>ColumnsFigure</CODE> 
+  need to change to reflect addition of the column&nbsp;</li> 
+  <li>Any area affected by the change needs to be repainted</li>  
+</ol>
+
+<p>
+In fact, all we need to achieve this is in our implementation of <CODE>refreshVisuals()</CODE> in <CODE>TablePart</CODE>:
+
+<font color="#0000cc">
+<pre>protected void refreshVisuals()
+{
+    TableFigure tableFigure = (TableFigure) getFigure();
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER> Point location = tableFigure.getLocation();
+    SchemaDiagramPart parent = (SchemaDiagramPart) getParent();
+<img src="images/tag_2.gif" height=13 width=24 align=CENTER> Rectangle constraint = new Rectangle(location.x, location.y, -1, -1);
+<img src="images/tag_3.gif" height=13 width=24 align=CENTER> parent.setLayoutConstraint(this, tableFigure, constraint);
+}</pre>
+</font>
+We get the 
+location of our figure <img src="images/tag_1.gif" height=13 width=24 align=CENTER>, 
+use this to provide a new <CODE>Rectangle</CODE> constraint object <img src="images/tag_2.gif" height=13 width=24 align=CENTER>.
+By setting the width and height to <B>-1</B>, we ensure that the preferred width and height are calculated automatically.
+We then pass on the constraint to the parent <CODE>EditPart</CODE>'s layout manager <img src="images/tag_3.gif" height=13 width=24 align=CENTER>.
+<p>
+That's all there is to it. 
+
+
+
+
+
+But how do we know that the preferred size calculation for the 
+<CODE>TableFigure</CODE> or <CODE>ColumnFigure</CODE> 
+won't be using some stale cached value? 
+If you're interested in the answers to questions like this, read the
+sidebar below. 
+</p>
+<table border="1" cellpadding="4" width="90%" bgcolor="FFFFCC"><tr>
+    <td bgcolor="0080c0"><font size="+1" color="FFFFCC"><b>Sidebar: Invalidating and Updating Figures</b></font> </td>
+  </tr>
+<tr><td>
+<p>
+How does GEF know when to rearrange and resize figures, and which parts of the screen to repaint? 
+The key is in the methods in the <CODE>IFigure</CODE> interface and in the behavior of the <B>update manager</B>: 
+
+<ul>
+  <li>
+  <p>
+  <CODE>invalidate()</CODE>: each <CODE>Figure</CODE> instance has a <B>valid</B> 
+  flag which can be set to <CODE>true</CODE> or <CODE>false</CODE>. 
+  When <CODE>invalidate()</CODE> is called:
+  <ol>
+  	<li>the valid flag for the figure is set to false (the figure becomes invalid)
+  	</li>
+  	<li><CODE>invalidate()</CODE> is called on the <CODE>Figure</CODE>'s layout manager. 
+  	Here, any cached preferred size information that the layout manager holds for the figure is thrown away
+  	<br>
+  	<br>
+  	</li>
+  </ol>
+  The importance of the invalid state will become more clear when we discuss <CODE>validate()</CODE>. 
+  </p>
+  </li> 
+  <li>
+  <p>  
+  <CODE>revalidate()</CODE>: this method is used to <CODE>invalidate()</CODE> a figure and its parent chain. 
+  When called on a figure, this figure invalidates itself and then 
+  calls its parent's <CODE>revalidate()</CODE> method. 
+  The hierarchy's root figure (one with no parent) is finally placed on the update manager's queue of 
+  <B>invalid root figures</B>, 
+  that is, figures that need to be validated.
+  </p> 
+  <p> 
+  <CODE>revalidate()</CODE> is called automatically when changes to figures occur which are likely to affect the bounds of 
+  parent figures. 
+  Its role can be clearly seen in its usages in the <CODE>Figure</CODE> and <CODE>Label</CODE> classes draw2d package, shown below:
+<p>
+<img src="images/revalidate-s.JPG" height=274 width=259 align=CENTER>
+</p> 
+<p>
+  In our example of adding a column label to a table, <CODE>revalidate()</CODE> is automatically called when the new column label is added to the 
+  <CODE>ColumnsFigure</CODE> instance using the <CODE>IFigure.addFigure(IFigure, Object, int)</CODE> method. 
+  This is why correct resizing of the table occurs without having to invalidate any figures in our 
+  example's code.
+  </p> 
+	<p>
+<p>
+<img src="images/tip.gif" width="62" height="13"> If no method is called which itself automatically invokes <CODE>revalidate()</CODE>,
+you may need to invoke this method yourself in your application code to correctly update the display. 
+</p>
+  </p>  
+  </li>
+  <li>  
+  <p> 
+  <CODE>repaint()</CODE>: in the same way that <CODE>revalidate()</CODE> queues a figure with the update manager for validating, 
+  this method queues the figure's bounds as a <I>dirty region</I> for repainting. 
+  Like <CODE>revalidate()</CODE>, this method is automatically called in many places in draw2d, such as when the size of a figure changes.
+  You are most likely to need to call this method in your application code if implementing custom subclasses of <CODE>Figure</CODE>.  
+  </p>
+  </li>   
+  <li>
+  <p> 
+  <CODE>validate()</CODE>: this finishes the job that <CODE>revalidate()</CODE> started. 
+  The update manager calls <CODE>validate()</CODE> on each of the invalid root figures on the queue. 
+  During the <CODE>validate()</CODE> execution the following happens:
+  <ol>
+  	<li>the figure's valid flag is set back to true</li>
+  	<li>layout takes place - if the figure has a layout manager 
+  then its <CODE>layout()</CODE> 
+  method is called
+  	</li>
+  	<li>
+  	the figure then validates each of its invalid children
+  	</li>
+  	<br>
+  </ol>
+  The value of <CODE>revalidate()</CODE> is in helping to ensure that 
+  only figures that <I>need</I> to participate in the validate and layout process 
+  can be correctly flagged as invalid before this process begins.  
+  </p>
+  <p>
+  After validating its invalid root figures, the update manager will repaint the enclosing rectangle for regions marked as <I>dirty</I>
+   via the <CODE>repaint()</CODE> method.
+  </p>
+  </li>
+</ul>
+</p>
+</td></tr></table>
+
+<h2>Conclusion</h2>
+<p>
+We've covered quite a lot of ground in this article.  
+Most significantly, we've talked about how you can use the 
+basic building blocks of a GEF application to easily build an application which adheres to a clean MVC design. 
+With the exception of the direct editing functionality, most
+of the other types of editing operations work in a very similar way to the simple column adding example presented.
+Of course, all of the building blocks need to be put together in the 
+context of an Eclipse editor. Space limitations preclude any discussion of these
+topics, but interested readers can peruse the source code, as well as that of the official GEF examples, 
+to see how this can be done. 
+</p>
+<p>
+For more information on GEF, look at the Eclipse platform documentation, 
+available via Eclipse online help if you download and install the GEF SDK. 
+<a href="http://www-106.ibm.com/developerworks/opensource/library/os-gef/" target="_blank">How to Get Started with the GEF</a> 
+  gives a good introduction to GEF basics. <a href="../Article-GEF-Draw2d/GEF-Draw2d.html">Display a UML Diagram using Draw2D</a>
+  is a good starting point for those unfamiliar with Eclipse draw2d. <a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg246302.html?Open" target="_blank">
+  Eclipse Development using the Graphical Editing Framework and the Eclipse Modeling Framework</a> 
+  is an IBM Redbook providing more detailed coverage of GEF and EMF.
+  You will also need to install EMF to get the Redbook examples to work.
+</p>
+<h2>Acknowledgements</h2>
+<p>
+Thanks to Randy Hudson and Jim des Rivières for their thorough and careful reviews, 
+which have been very helpful in improving both the technical accuracy and readability of 
+this article.
+<h2>Source Code</h2>
+<p> To run the example or view the source code for this article, download and 
+  unzip <a href="schemaeditor.zip">schemaeditor.zip</a> into your <i>eclipse/</i> 
+  subdirectory. Note that you will need Eclipse 3.0 or later to run the examples.</p>
+
+</body>
+</html>

@@ -1,0 +1,583 @@
+
+(object Petal
+    version    	42
+    _written   	"Rose 4.5.8163.3"
+    charSet    	0)
+
+(object Design "Logical View"
+    is_unit    	TRUE
+    is_loaded  	TRUE
+    defaults   	(object defaults
+	rightMargin 	0.250000
+	leftMargin 	0.250000
+	topMargin  	0.250000
+	bottomMargin 	0.500000
+	pageOverlap 	0.250000
+	clipIconLabels 	TRUE
+	autoResize 	TRUE
+	snapToGrid 	TRUE
+	gridX      	16
+	gridY      	16
+	defaultFont 	(object Font
+	    size       	10
+	    face       	"Arial"
+	    bold       	FALSE
+	    italics    	FALSE
+	    underline  	FALSE
+	    strike     	FALSE
+	    color      	0
+	    default_color 	TRUE)
+	showMessageNum 	1
+	showClassOfObject 	TRUE
+	notation   	"Unified")
+    root_usecase_package 	(object Class_Category "Use Case View"
+	quid       	"3DDFA8FE0135"
+	exportControl 	"Public"
+	global     	TRUE
+	logical_models 	(list unit_reference_list)
+	logical_presentations 	(list unit_reference_list
+	    (object UseCaseDiagram "Main"
+		quid       	"3DDFA8FF00F9"
+		title      	"Main"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list))))
+    root_category 	(object Class_Category "Logical View"
+	quid       	"3DDFA8FE0134"
+	exportControl 	"Public"
+	global     	TRUE
+	subsystem  	"Component View"
+	quidu      	"3DDFA8FE0136"
+	logical_models 	(list unit_reference_list
+	    (object Class "Male"
+		quid       	"3DDFA9050364"
+		superclasses 	(list inheritance_relationship_list
+		    (object Inheritance_Relationship
+			quid       	"3DDFA91B0167"
+			supplier   	"Logical View::Individual"
+			quidu      	"3DDFA91202D6")))
+	    (object Class "Female"
+		quid       	"3DDFA90C01FB"
+		superclasses 	(list inheritance_relationship_list
+		    (object Inheritance_Relationship
+			quid       	"3DDFA91E0229"
+			supplier   	"Logical View::Individual"
+			quidu      	"3DDFA91202D6")))
+	    (object Class "Individual"
+		quid       	"3DDFA91202D6"
+		class_attributes 	(list class_attribute_list
+		    (object ClassAttribute "name"
+			quid       	"3DEE34A90368"
+			type       	"String"
+			exportControl 	"Public"))
+		abstract   	TRUE)
+	    (object Class "FamilyTree"
+		quid       	"3DDFA921035A")
+	    (object Class "Family"
+		quid       	"3DDFA92900E5")
+	    (object Association "$UNNAMED$0"
+		quid       	"3DDFA9320084"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$1"
+			quid       	"3DDFA9330248"
+			supplier   	"Logical View::FamilyTree"
+			quidu      	"3DDFA921035A"
+			is_aggregate 	TRUE)
+		    (object Role "individuals"
+			quid       	"3DDFA9330249"
+			label      	"individuals"
+			supplier   	"Logical View::Individual"
+			quidu      	"3DDFA91202D6"
+			client_cardinality 	(value cardinality "0..n")
+			Containment 	"By Value"
+			is_navigable 	TRUE)))
+	    (object Association "$UNNAMED$2"
+		quid       	"3DDFA95100E2"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$3"
+			quid       	"3DDFA9520256"
+			supplier   	"Logical View::FamilyTree"
+			quidu      	"3DDFA921035A"
+			is_aggregate 	TRUE)
+		    (object Role "families"
+			quid       	"3DDFA9520257"
+			label      	"families"
+			supplier   	"Logical View::Family"
+			quidu      	"3DDFA92900E5"
+			client_cardinality 	(value cardinality "0..n")
+			Containment 	"By Value"
+			is_navigable 	TRUE)))
+	    (object Association "$UNNAMED$4"
+		quid       	"3DDFA96D03D2"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$5"
+			quid       	"3DDFA96E029D"
+			supplier   	"Logical View::Family"
+			quidu      	"3DDFA92900E5"
+			is_aggregate 	TRUE)
+		    (object Role "children"
+			quid       	"3DDFA96E029E"
+			label      	"children"
+			supplier   	"Logical View::Individual"
+			quidu      	"3DDFA91202D6"
+			client_cardinality 	(value cardinality "0..n")
+			Containment 	"By Value"
+			is_navigable 	TRUE)))
+	    (object Association "$UNNAMED$6"
+		quid       	"3DDFA98A024D"
+		roles      	(list role_list
+		    (object Role "father"
+			quid       	"3DDFA98B03AD"
+			label      	"father"
+			supplier   	"Logical View::Male"
+			quidu      	"3DDFA9050364"
+			client_cardinality 	(value cardinality "0..1")
+			is_navigable 	TRUE)
+		    (object Role "$UNNAMED$7"
+			quid       	"3DDFA98B03AE"
+			supplier   	"Logical View::Family"
+			quidu      	"3DDFA92900E5")))
+	    (object Association "$UNNAMED$8"
+		quid       	"3DDFA9A70230"
+		roles      	(list role_list
+		    (object Role "mother"
+			quid       	"3DDFA9A90002"
+			label      	"mother"
+			supplier   	"Logical View::Female"
+			quidu      	"3DDFA90C01FB"
+			client_cardinality 	(value cardinality "0..1")
+			is_navigable 	TRUE)
+		    (object Role "$UNNAMED$9"
+			quid       	"3DDFA9A90003"
+			supplier   	"Logical View::Family"
+			quidu      	"3DDFA92900E5"))))
+	logical_presentations 	(list unit_reference_list
+	    (object ClassDiagram "Main"
+		quid       	"3DDFA8FF012A"
+		title      	"Main"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list
+		    (object ClassView "Class" "Logical View::FamilyTree" @1
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(256, 192)
+			label      	(object ItemLabel
+			    Parent_View 	@1
+			    location   	(139, 141)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	234
+			    justify    	0
+			    label      	"FamilyTree")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3DDFA921035A"
+			width      	252
+			height     	126
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Individual" @2
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(992, 192)
+			font       	(object Font
+			    italics    	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@2
+			    location   	(843, 111)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	298
+			    justify    	0
+			    label      	"Individual")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3DDFA91202D6"
+			compartment 	(object Compartment
+			    Parent_View 	@2
+			    location   	(843, 171)
+			    icon_style 	"Icon"
+			    fill_color 	16777215
+			    anchor     	2
+			    nlines     	2
+			    max_width  	294)
+			width      	316
+			height     	186
+			annotation 	8
+			autoResize 	TRUE)
+		    (object AssociationViewNew "$UNNAMED$0" @3
+			location   	(607, 192)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3DDFA9320084"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$1" @4
+				Parent_View 	@3
+				location   	(-241, -304)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA9330248"
+				client     	@3
+				supplier   	@1
+				line_style 	0)
+			    (object RoleView "individuals" @5
+				Parent_View 	@3
+				location   	(-241, -304)
+				label      	(object SegLabel @6
+				    Parent_View 	@5
+				    location   	(700, 151)
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	216
+				    justify    	0
+				    label      	"+individuals"
+				    pctDist    	0.416382
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA9330249"
+				client     	@3
+				supplier   	@2
+				line_style 	0
+				label      	(object SegLabel @7
+				    Parent_View 	@5
+				    location   	(761, 231)
+				    anchor     	2
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	15
+				    justify    	0
+				    label      	"0..*"
+				    pctDist    	0.681416
+				    height     	39
+				    orientation 	1))))
+		    (object ClassView "Class" "Logical View::Male" @8
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1152, 464)
+			label      	(object ItemLabel
+			    Parent_View 	@8
+			    location   	(1071, 413)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	162
+			    justify    	0
+			    label      	"Male")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3DDFA9050364"
+			height     	126
+			annotation 	8
+			autoResize 	TRUE)
+		    (object InheritView "" @9
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3DDFA91B0167"
+			client     	@8
+			supplier   	@2
+			line_style 	0)
+		    (object ClassView "Class" "Logical View::Female" @10
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1440, 464)
+			label      	(object ItemLabel
+			    Parent_View 	@10
+			    location   	(1359, 413)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	162
+			    justify    	0
+			    label      	"Female")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3DDFA90C01FB"
+			height     	126
+			annotation 	8
+			autoResize 	TRUE)
+		    (object InheritView "" @11
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3DDFA91E0229"
+			client     	@10
+			supplier   	@2
+			line_style 	0)
+		    (object ClassView "Class" "Logical View::Family" @12
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(576, 864)
+			label      	(object ItemLabel
+			    Parent_View 	@12
+			    location   	(495, 813)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	162
+			    justify    	0
+			    label      	"Family")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3DDFA92900E5"
+			height     	126
+			annotation 	8
+			autoResize 	TRUE)
+		    (object AssociationViewNew "$UNNAMED$2" @13
+			location   	(256, 675)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3DDFA95100E2"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$3" @14
+				Parent_View 	@13
+				location   	(-624, -141)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA9520256"
+				client     	@13
+				supplier   	@1
+				line_style 	3
+				origin_attachment 	(256, 675)
+				terminal_attachment 	(256, 255))
+			    (object RoleView "families" @15
+				Parent_View 	@13
+				location   	(-624, -141)
+				label      	(object SegLabel @16
+				    Parent_View 	@15
+				    location   	(389, 900)
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	168
+				    justify    	0
+				    label      	"+families"
+				    pctDist    	0.768496
+				    height     	36
+				    orientation 	1)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA9520257"
+				client     	@13
+				supplier   	@12
+				vertices   	(list Points
+				    (256, 675)
+				    (256, 864)
+				    (486, 864))
+				line_style 	3
+				origin_attachment 	(256, 675)
+				terminal_attachment 	(486, 864)
+				label      	(object SegLabel @17
+				    Parent_View 	@15
+				    location   	(409, 829)
+				    anchor     	2
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	15
+				    justify    	0
+				    label      	"0..*"
+				    pctDist    	0.816229
+				    height     	36
+				    orientation 	0))))
+		    (object AssociationViewNew "$UNNAMED$4" @18
+			location   	(774, 542)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3DDFA96D03D2"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$5" @19
+				Parent_View 	@18
+				location   	(-74, 46)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA96E029D"
+				client     	@18
+				supplier   	@12
+				line_style 	0)
+			    (object RoleView "children" @20
+				Parent_View 	@18
+				location   	(-74, 46)
+				label      	(object SegLabel @21
+				    Parent_View 	@20
+				    location   	(793, 362)
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	168
+				    justify    	0
+				    label      	"+children"
+				    pctDist    	0.543527
+				    height     	80
+				    orientation 	0)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA96E029E"
+				client     	@18
+				supplier   	@2
+				line_style 	0
+				label      	(object SegLabel @22
+				    Parent_View 	@20
+				    location   	(963, 340)
+				    anchor     	2
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	15
+				    justify    	0
+				    label      	"0..*"
+				    pctDist    	0.900000
+				    height     	54
+				    orientation 	1))))
+		    (object AssociationViewNew "$UNNAMED$6" @23
+			location   	(1050, 828)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3DDFA98A024D"
+			roleview_list 	(list RoleViews
+			    (object RoleView "father" @24
+				Parent_View 	@23
+				location   	(426, -180)
+				label      	(object SegLabel @25
+				    Parent_View 	@24
+				    location   	(1046, 559)
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	132
+				    justify    	0
+				    label      	"+father"
+				    pctDist    	0.916883
+				    height     	89
+				    orientation 	0)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA98B03AD"
+				client     	@23
+				supplier   	@8
+				vertices   	(list Points
+				    (1050, 828)
+				    (1134, 828)
+				    (1134, 527))
+				line_style 	3
+				origin_attachment 	(1050, 828)
+				terminal_attachment 	(1134, 527)
+				label      	(object SegLabel @26
+				    Parent_View 	@24
+				    location   	(1208, 566)
+				    anchor     	2
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	15
+				    justify    	0
+				    label      	"0..1"
+				    pctDist    	0.898701
+				    height     	74
+				    orientation 	1))
+			    (object RoleView "$UNNAMED$7" @27
+				Parent_View 	@23
+				location   	(426, -180)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA98B03AE"
+				client     	@23
+				supplier   	@12
+				line_style 	3
+				origin_attachment 	(1050, 828)
+				terminal_attachment 	(666, 828))))
+		    (object AssociationViewNew "$UNNAMED$8" @28
+			location   	(1218, 878)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3DDFA9A70230"
+			roleview_list 	(list RoleViews
+			    (object RoleView "mother" @29
+				Parent_View 	@28
+				location   	(594, -130)
+				label      	(object SegLabel @30
+				    Parent_View 	@29
+				    location   	(1517, 650)
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	156
+				    justify    	0
+				    label      	"+mother"
+				    pctDist    	0.777174
+				    height     	98
+				    orientation 	1)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA9A90002"
+				client     	@28
+				supplier   	@10
+				vertices   	(list Points
+				    (1218, 878)
+				    (1419, 878)
+				    (1419, 527))
+				line_style 	3
+				origin_attachment 	(1218, 878)
+				terminal_attachment 	(1419, 527)
+				label      	(object SegLabel @31
+				    Parent_View 	@29
+				    location   	(1473, 582)
+				    anchor     	2
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	15
+				    justify    	0
+				    label      	"0..1"
+				    pctDist    	0.900000
+				    height     	54
+				    orientation 	1))
+			    (object RoleView "$UNNAMED$9" @32
+				Parent_View 	@28
+				location   	(594, -130)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3DDFA9A90003"
+				client     	@28
+				supplier   	@12
+				line_style 	3
+				origin_attachment 	(1218, 878)
+				terminal_attachment 	(666, 878))))))))
+    root_subsystem 	(object SubSystem "Component View"
+	quid       	"3DDFA8FE0136"
+	physical_models 	(list unit_reference_list)
+	physical_presentations 	(list unit_reference_list
+	    (object Module_Diagram "Main"
+		quid       	"3DDFA8FF00F8"
+		title      	"Main"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list))))
+    process_structure 	(object Processes
+	quid       	"3DDFA8FE0137"
+	ProcsNDevs 	(list
+	    (object Process_Diagram "Deployment View"
+		quid       	"3DDFA8FE013D"
+		title      	"Deployment View"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list))))
+    properties 	(object Properties
+	quid       	"3DDFA8FE0138"))

@@ -1,0 +1,629 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.74 [en] (Windows NT 5.0; U) [Netscape]">
+   <meta name="ProgId" content="FrontPage.Editor.Document">
+   <title>Introduction to SWT Graphics</title>
+<link 
+href="../default_style.css" 
+rel=stylesheet>
+</head>
+<body link="#0000FF" vlink="#800080">
+<div align="right"><font size="-2">Copyright &copy; 2003 International Business Machines 
+  Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica" color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></b></td>
+    </tr>
+  </table>
+</div>
+<h1> <img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+<center>
+  <h1> Graphics Context - Quick on the draw</h1>
+</center>
+<blockquote><b>Summary</b> <br>
+  The package <code>org.eclipse.swt.graphics</code> contains classes that allows 
+  management of graphics resources. Graphics can be drawn on anything that implements 
+  <code>org.eclipse.swt.graphics.Drawable, </code>which includes <code>org.eclipse.swt.widgets.Control</code> 
+  and <code>org.eclipse.swt.graphics.Image</code>. The class <code>org.eclipse.swt.graphics.GC 
+  </code>encapsulates all of the drawing API, including how to draw lines and 
+  shapes, draw text and images and fill shapes. This article shows how to 
+  use a GC to draw onto an Image, or onto a control through its paintEvent callback.
+  The Canvas control, specifically designed for drawing operations, has a number 
+  of constructor style bits that allow you to determine when and how painting 
+  occurs, and the article shows how to use these. 
+  <p><b>By Joe Winchester, IBM</b> <br>
+    July 3, 2003</blockquote>
+<hr width="100%">
+<br>
+Table of contents: 
+<ul>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Graphics Context">Graphics 
+    Context</a></li>
+  <ul>
+    <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Graphics Context">Drawing 
+      on an Image</a></li>
+    <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Graphics Context">Drawing 
+      on a Control</a></li>
+  </ul>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Clipping">Clipping</a></li>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Canvas">Canvas</a></li>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Drawing lines and">Drawing 
+    lines and shapes</a></li>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Drawing Text">Drawing 
+    text</a></li>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Filling shapes">Filling 
+    shapes</a></li>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#XOR">XOR</a></li>
+  <li> <a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Drawing Images">Drawing 
+    images</a></li>
+</ul>
+The SWT graphics system uses the same coordinate convention used for controls, 
+where the origin is at 0,0 is the top left corner, and the x axis increases to 
+the right while the y axis increases downwards.&nbsp; The Point class is used 
+to represent both a location (a position in the coordinate system) and also an 
+offset (there is no Dimension class in SWT - the size of a rectangle is represented 
+by a Point capturing the x and y offset from its origin). 
+<h1> <a NAME="Graphics Context"></a>Graphics Context</h1>
+Graphics can be drawn on anything that implements <code>org.eclipse.swt.graphics.Drawable</code>.&nbsp; 
+This includes a Control, an Image, a Display device or a Printer device.&nbsp; 
+The class <code>org.eclipse.swt.graphics.GC</code> is a graphics context that encapsulates 
+the drawing operations that can be performed.&nbsp; There are two common ways 
+to use a GC; either by creating one using the Drawable instance as a constructor 
+argument, or else using a GC that's given to you as part of a paintEvent callback. 
+<h2> Drawing on an Image</h2>
+The code below creates a GC with an image as its argument and draws two lines 
+on it,&nbsp;<img src="images/tag_1.gif" height=13 width=24> one from the top left (0,0) 
+to the bottom right, and&nbsp;<img src="images/tag_2.gif" height=13 width=24> one from 
+the top right to the bottom left. 
+<p><code>&nbsp;&nbsp;&nbsp; Image image = new Image(display,"C:/devEclipse_02/eclipse/plugins/org.eclipse.platform_2.0.2/eclipse_lg.gif");</code> 
+  <br>
+  <code>&nbsp;&nbsp;&nbsp; GC gc = new GC(image);</code> <br>
+  <code>&nbsp;&nbsp;&nbsp; Rectangle bounds = image.getBounds();</code> <br>
+  <img src="images/tag_1.gif" height=13 width=24><code> gc.drawLine(0,0,bounds.width,bounds.height);</code> 
+  <br>
+  <img src="images/tag_2.gif" height=13 width=24><code> gc.drawLine(0,bounds.height,bounds.width,0);</code> 
+  <br>
+  <img src="images/tag_3.gif" height=13 width=24><code> gc.dispose();</code> <br>
+  <code>&nbsp;&nbsp;&nbsp; image.dispose();</code> <br>
+  &nbsp; 
+<table BORDER >
+  <caption>
+  <TBODY>
+  <br></TBODY>
+  </caption>
+  <tr> 
+    <td>&nbsp;<i>Original image&nbsp;</i></td>
+    <td><i>Image after the GC draws across it</i></td>
+  </tr>
+  <tr> 
+    <td><img src="images/image_lg_orig.gif" height=164 width=115></td>
+    <td><img src="images/image_lg_lines.gif" height=164 width=115></td>
+  </tr>
+</table>
+<p>When creating a GC you must be responsible for disposing it&nbsp;<img src="images/tag_3.gif" height=13 width=24> 
+  by calling its dispose() method. For more information on how to manage SWT resources 
+  see <a href="http://www.eclipse.org/articles/swt-design-2/swt-design-2.html">SWT: 
+  The Standard Widget Toolkit.</a>&nbsp; A GC that's instantiated by the program 
+  should be drawn upon and then disposed as soon as possible.&nbsp; This is because 
+  each GC requires an underlying platform resource, and on some operating systems 
+  these may be scarce, such as Windows 98 that only allows 5 GC objects to be 
+  created before it runs out resources. 
+<h2> Drawing on a Control</h2>
+The class <code>org.eclipse.swt.widgets.Control</code> is a Drawable, so you could 
+draw onto a Control the same way you draw onto an Image (passing the Control as 
+the argument of GC to draw onto it), however unlike drawing on an image (that 
+permanently changes the data making up the graphic), if you use a GC to draw onto 
+a control you must be aware that when the operating system itself draws the control 
+it will overwrite your changes.&nbsp; The correct way to draw onto a control is 
+by adding a listener to its paint event.&nbsp; The listener class is <code>org.eclipse.swt.events.PaintListener</code>, 
+and the callback method argument is an instance of <code>org.eclipse.swt.events.PaintEvent</code>.&nbsp; 
+The PaintEvent includes a GC that you can send message to, that is already prepared 
+to draw onto the control and includes the damaged area. 
+<p>The following code&nbsp;<img src="images/tag_1.gif" height=13 width=24> adds a paint 
+  listener to a Shell, and in the paintControl callback method&nbsp;<img src="images/tag_2.gif" height=13 width=24> 
+  draws a line from the origin to bottom right corner. 
+<p><code>&nbsp;&nbsp;&nbsp; Shell shell = new Shell(display);</code> <br>
+  <img src="images/tag_1.gif" height=13 width=24><code> shell.addPaintListener(new PaintListener(){</code> 
+  <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public void paintControl(PaintEvent 
+  e){</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rectangle 
+  clientArea = shell.getClientArea();</code> <br>
+  <img src="images/tag_2.gif" height=13 width=24><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  e.gc.drawLine(0,0,clientArea.width,clientArea.height);</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</code> <br>
+  <code>&nbsp;&nbsp;&nbsp; });</code> <br>
+  <code>&nbsp;&nbsp;&nbsp; shell.setSize(150,150)</code> 
+<p><img src="images/ShellDrawnLine.gif" height=215 width=267> 
+<p>Although the size of the Shell is set to (150,150), the area that can be drawn 
+  onto is smaller.&nbsp; This is known as the client area, and takes into account 
+  any trim or borders; for a Shell this includes its edges, titlebar and menubar.&nbsp; 
+  To determine the clientArea of any Composite use the method <code>getClientArea().</code> 
+<p>The application always get a paint event after the underlying OS has drawn 
+  the control, so any drawing done to the paint event's GC will be shown on top 
+  of the control.&nbsp; There are some exceptions to this, such as for a ToolBar 
+  where on certain platforms the items are heavyweight controls that can't be 
+  drawn on top of, however this is not considered normal behavior.&nbsp; For general-purpose 
+  drawing the control <code><a href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Canvas">org.eclipse.swt.widgets.Canvas</a></code> 
+  can be used that is optimized for graphics operations. 
+<h1> <a NAME="Clipping"></a>Clipping</h1>
+The clipping area of a GC is the portion onto which visible drawing occurs. By 
+default a GC is clipped to the bounds of the drawable that it was constructed 
+with. Altering the clipping area of a GC allows you to create graphic effects.&nbsp; 
+An example of this is if you wanted to fill a triangle shape that had a portion 
+of its edges missing.&nbsp; One way to do this would be to draw multiple polygons 
+rectangles making up the shape, another way however is to fill the shape, but 
+to clip the GC so that the edges are outside the clipping area. 
+<p><code>&nbsp;&nbsp;&nbsp; shell.addPaintListener(new PaintListener() {</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public void paintControl(PaintEvent 
+  e) {</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rectangle 
+  clientArea = shell.getClientArea();</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int width 
+  = clientArea.width;</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int height 
+  = clientArea.height;</code> <br>
+  <img src="images/tag_2.gif" height=13 width=24><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  e.gc.setClipping(20,20,width - 40, height - 40);</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.setBackground(display.getSystemColor(SWT.COLOR_CYAN));</code> 
+  <br>
+  <img src="images/tag_1.gif" height=13 width=24><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  e.gc.fillPolygon(new int[] {0,0,width,0,width/2,height});</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</code> <br>
+  <code>&nbsp;&nbsp;&nbsp; });</code> 
+<p>This code draws a triangle on a Shell as a polygon from&nbsp; the&nbsp;<img src="images/tag_1.gif" height=13 width=24> 
+  top left, top right, and center of the bottom edge. Beforehand however, the 
+  GC is clipped with a rectangle&nbsp;<img src="images/tag_2.gif" height=13 width=24> 
+  that reduces the client area with a margin of 20 pixels wide, so only the clipped 
+  rectangle is draw. 
+<p><img src="images/ClippedTriangles.gif" height=191 width=562> 
+<p>When a paintEvent occurs for a control the GC is always clipped to just the 
+  area that needs repainting. For example, if another window is moved in front 
+  of an SWT shell and then moved away, the newly revealed portion of the GUI is 
+  marked as damaged and a paint event is queued.&nbsp; When the paint event occurs, 
+  the <code>paintControl(PaintEvent evt)</code> method argument contains the area 
+  of the Control that requires redrawing in its x, y, width and height fields.&nbsp; 
+  The damage to the control can be complex containing multiple disjoint rectangles, 
+  and if there is more than one damaged area of a control when the paint event 
+  occurs the damaged areas are merged into a single rectangle representing the 
+  union of the damaged areas. This step is performed by the underlying platform 
+  and is designed to aid performance as multiple paint events are processed in 
+  a single callback. 
+<p>In the example above that fills a clipped triangle&nbsp; each time the <code>paintControl(PaintEvent)</code> 
+  method is called, an optimization could be to look at the PaintEvent's area.&nbsp; 
+  It maybe that the paint event doesn't even intersect the shape being drawn in 
+  which case no drawing need occur, or if only a portion of the drawing is needs 
+  repainting then only this is drawn.&nbsp; Depending on the type of drawing, 
+  working out which portion of a GC to selectively redraw however can be more 
+  expensive than just relying on the fact the GC is clipped, and in practice code 
+  inside paint events often just ignores the damaged area and re-does all of the 
+  GC drawing, relying on clipping to ensure only the damaged area is refreshed. 
+<p>If a program needs to manually damage an area of a control this can be done 
+  using <code>Control.redraw(int x, int y, int width, int height)</code>, or <code>Control.redraw()</code> 
+  to damage the entire client area.&nbsp; The area is marked as damaged and will 
+  be included in the next paint event that occurs.&nbsp; To cause a synchronous 
+  and immediate paint event to occur use the method <code>Control.update()</code> 
+  that will force all outstanding paint requests to be processed for the control. 
+  If there are no paint request&nbsp; (i.e. none of the client area is damaged), 
+  then <code>update()</code> will do nothing. 
+<h1> <a NAME="Canvas"></a>Canvas</h1>
+Although any Control can be drawn onto through its paintEvent, the subclass org.eclipse.swt.widgets.<code>Canvas</code> 
+is specifically designed for graphics operations. This can be done either by using 
+a Canvas and adding a paint listener, or through subclassing to create a re-usable 
+Custom Control.&nbsp; Canvas has a number of style bits that can be used to affect 
+how painting occurs. 
+<p>The default behavior for a Canvas is that before it paints itself the entire 
+  client area is filled with the current background color.&nbsp; This can create 
+  screen flicker, because if the paintEvent also draws onto the GC, then the user 
+  sees a flash between the original background being filled, and the drawing occurring.&nbsp; 
+  One way to avoid this is to use the style bit SWT.NO_BACKGROUND when creating 
+  the Canvas.&nbsp; This prevents the native background from being drawn, however 
+  it means the program must be responsible for drawing every pixel of the client 
+  area. 
+<p>When a widget is resized a paint event occurs.&nbsp; This can create screen 
+  flicker as repeated repainting of the client area occurs.&nbsp; Flicker is also 
+  known as flash, and the style bit SWT.NO_REDRAW_RESIZE can be used to reduce 
+  this.&nbsp; When NO_REDRAW_RESIZE is used and the control's size is reduced 
+  no paint event is generated.&nbsp; This means there will be no flash as the 
+  control is not unnecessarily redrawn, and if the size is increased then the 
+  paint event's GC is clipped set to just the area that needs repainting.&nbsp; 
+  This is the newly revealed bottom and right edge rectangles in a shape like 
+  a backwards L. 
+<p>The style bit NO-REDRAW_RESIZE works well to reduce flicker if a fixed-size 
+  drawing is being done on the GC, and each newly exposed area generates a paint 
+  event onto which a fresh piece of the drawing occurs.&nbsp; Incorrectly used 
+  however, NO_REDRAW_RESIZE can lead to a graphic effect known as cheese.&nbsp; 
+  Cheese is a general term that applies when a portion of a widget is not updated 
+  correctly following a resize. An example of&nbsp; is shown below where the paint 
+  event needs to update the entire client area, such as&nbsp;<img src="images/tag_1.gif" height=13 width=24> 
+  fill it with an oval shape.&nbsp; Because no paint event occurs when the window 
+  is reduced in size the shape is not redrawn when the size is decreased, and 
+  when the window is made larger because the GC is clipped to just the damaged 
+  area Cheese occurs in the newly expanded area because the previous drawing is 
+  not erased ( as the paint event is clipped to only the newly exposed area ). 
+<p><code>&nbsp;&nbsp;&nbsp; shell.setLayout(new FillLayout());</code> <br>
+  <img src="images/tag_2.gif" height=13 width=24><code> final Canvas canvas = new Canvas(shell,SWT.NO_REDRAW_RESIZE);</code> 
+<p><code>&nbsp;&nbsp;&nbsp; canvas.addPaintListener(new PaintListener() {</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public void paintControl(PaintEvent 
+  e) {</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rectangle 
+  clientArea = canvas.getClientArea();</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.setBackground(display.getSystemColor(SWT.COLOR_CYAN));</code> 
+  <br>
+  <img src="images/tag_1.gif" height=13 width=24><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  e.gc.fillOval(0,0,clientArea.width,clientArea.height);</code> <br>
+  <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</code> <br>
+  <code>&nbsp;&nbsp;&nbsp; });</code> 
+<p>When the canvas size is increased the GC is clipped to just the area that needs 
+  repainting and cheese occurs. 
+<p><img src="images/Cheese_Complete.gif"> 
+<p>To correct this problem in line&nbsp;<img src="images/tag_2.gif" height=13 width=24> 
+  the style bit of SWT.NONE should be used so that the GC is not clipped on expansion, 
+  and a paint event occurs even when the shell size is reduced so the full oval 
+  can be repainted. 
+<p><img src="images/tag_2.gif" height=13 width=24><code> final Canvas canvas = new Canvas(shell,SWT.NONE);</code> 
+<p>For any SWT widget, if more than one rectangle is damaged then the platform 
+  merges these into a single damaged area that is the union of all damaged rectangles 
+  so the SWT program only processes a single paint event. The style bit NO_MERGE_PAINTS 
+  on Canvas can be used to override this behavior which means the listener will 
+  be called with a single paint event for every separate damaged rectangle. 
+<p>The style bits NO_BACKGROUND, NO_REDRAW_RESIZE and NO_MERGE_PAINTS can be used 
+  with any Composite or subclass, including Canvas, Shell, or Group.&nbsp; Although 
+  this is allowed by SWT ( no exceptions will be thrown ) the Composite class's 
+  Javadoc includes the following style bit warning <i>"... their behavior is undefined 
+  if they are used with subclasses of <code>Composite</code> other than <code>Canvas</code>".&nbsp; 
+  </i>The Canvas class is therefore the preferred control to use when performing 
+  arbitrary drawing operations. 
+<p>Another way to reduce flicker is to batch up the drawing that occurs on the 
+  display by double buffering.&nbsp; Double buffering is a technique where the 
+  drawing occurs onto a GC that is not the one used on the paintEvent, and the 
+  contents are then copied across. To do this you can create an Image with the 
+  same size as the Canvas' client area and then draw onto this with a <code>GC(Image)</code>;&nbsp; 
+  The final image is then transferred across to the paint event's GC with a single 
+  <code>drawImage(Image image, int x, int y) </code>method call.&nbsp; When using 
+  this technique be aware that some platforms perform native double buffering 
+  for you already, so you may in fact be triple buffering. 
+<h1> <a NAME="Drawing lines and"></a>Drawing lines and shapes</h1>
+A GC has a number of methods that allow lines to be drawn on it, either between 
+two points, a series of interconnected points, or a pre-defined shape.&nbsp; Lines 
+are drawn in the foreground color of the GC and can be drawn in a number of styles 
+and with different thickeness.&nbsp; For a paint event the GC has the same attributes 
+as the control that fired the event (foreground / background color and font), 
+and the default line style is solid with a width of 1 pixel. 
+<h2> <code>GC.drawLine(int x1, int y1, int x2, int y2);</code></h2>
+Draw a line between two points on the drawable surface beginning at x1,y1 and 
+ending at x2,y2.&nbsp; The end points are included in the line, and if they are 
+the same then a single pixel dot will be drawn. 
+<h2> <code>GC.drawPolyline(int[] pointArray);</code></h2>
+Draw a series of interconnecting lines with the int[] representing x and y positions 
+for consecutive points.&nbsp; The statement: <br>
+<code>gc.drawPolyline(new int[] { 25,5,45,45,5,45 });</code> <br>
+draws a line from 25,5 to 45,45 and then from 45,45 onto 5,45. 
+<p><img src="images/PolygonClient.gif" height=94 width=161> 
+<h2> <code>GC.drawPolygon(int[] pointArray);</code></h2>
+Similar to <code>drawPolyline(int[])</code> except that the last point is joined to 
+the first <br>
+<code>gc.drawPolygon(new int[] { 25,5,45,45,5,45 });</code> <br>
+This draws the three corners of the triangle and, by joining the point at 5,45 
+with 25,5 completes the shape by creating a contained area <br>
+<img src="images/PolygonClient.gif" height=94 width=161> 
+<h2> <code>GC.drawRectangle(int x, int y, int width, int height);</code></h2>
+Draw a rectangle with the top left corner at x,y with the specified with and height 
+<br>
+<code>gc.drawRectangle(5,5,90,45);</code> <br>
+draws a rectangle with one corner at 5,5 and the opposite corner at 95,50; <br>
+<img src="images/RectangleClient.gif" height=97 width=174> 
+<p>When a rectangle is drawn the bottom and right edges are drawn and it is conceptually 
+  similar to lines being drawn between its four corners.&nbsp; As well as passing 
+  the x,y,width and height as individual arguments the method is overloaded so 
+  you can pass in the entire Rectangle - <code>GC.drawRectangle(Rectangle);</code> 
+<h2> <code>GC.drawRoundedRectangle(int x, int y, int width, int height, int arcWidth, 
+  int arcHeight);</code></h2>
+A rounded rectangle differs from a standard rectangle in that its corners are 
+rounded.&nbsp; The rounding on each corner can be thought of as 1/4 of an oval, 
+and the arcWidth and arcHeight specify the width and height of the full oval. 
+<br>
+<code>gc.drawRoundedRectangle(5,5,90,45,25,15); </code>draws a rounded rectangle with 
+a top left corner of 5,5.&nbsp; The figure below shows a zoomed picture of the 
+bottom right corner together with an imaginary oval shown with a width of 25 and 
+a height of 15 to show how the rounded corner is created from 1/4 of the oval. 
+<p><img src="images/RoundedRectangleClient.gif" height=121 width=449> 
+<p>The implementation of the rounded rectangle could be achieved with 4 calls 
+  to <code>drawArc() </code>and 4 to <code>drawLine(). </code>However on some platforms 
+  such as Windows or Photon there is an optimized platform API that SWT uses. 
+<h2> <code>GC.drawOval(int x, int y, int width, int height);</code></h2>
+An oval is draw within the rectangle defined by its top left corner (x,y) and 
+its width and height.&nbsp; To draw a circle set the width and height to be the 
+same value. <br>
+<code>gc.drawOval(5,5,90,45);</code> 
+<p><img src="images/OvalClient.gif" height=95 width=188> 
+<h2> <code>GC.drawArc(int x, int y, int width, int height, int startAngle, int endAngle);</code></h2>
+An arc is drawn within the area bounded by the rectangle whose top left corner 
+is x,y and has the specified width and height.&nbsp; The startAngle is on the 
+horizontal x axis, so 0 degrees does not represent North but instead can be thought 
+of as pointing East.&nbsp; The arc is drawn anticlockwise for the number of degrees 
+specified by the endAngle <br>
+<code>gc.drawArc(5,5,90,45,90,200);</code> <br>
+This draws an arc beginning at 90 degrees, which is vertical ( 0 degrees being 
+horizontal ), and the arc continues for 200 degrees.&nbsp; The arc does not stop 
+when it reaches the endAngle of 200 degrees relative to the 0 axis, rather it 
+stops when it has traversed 200 degrees relative to its starting position. 
+<p><img src="images/ArcClient.gif" height=87 width=161> 
+<h2> <code>GC.setLineStyle(int style);</code></h2>
+Lines can be drawn in a number of styles that are defined as static constants 
+on the class <code>org.eclipse.swt.SWT </code>beginning LINE_. <br>
+&nbsp; 
+<table BORDER >
+  <caption>
+  <TBODY>
+  <br></TBODY>
+  </caption>
+  <tr> 
+    <td>SWT.LINE_SOLID</td>
+    <td><img src="images/Line_SOLID.gif" height=16 width=292></td>
+  </tr>
+  <tr> 
+    <td>SWT.LINE_DOT</td>
+    <td><img src="images/LINE_DOT.gif" height=16 width=292></td>
+  </tr>
+  <tr> 
+    <td>SWT.LINE_DASH</td>
+    <td><img src="images/LINE_DASH.gif" height=16 width=292></td>
+  </tr>
+  <tr> 
+    <td>SWT.LINE_DASHDOT</td>
+    <td><img src="images/LINE_DASHDOT.gif" height=16 width=292></td>
+  </tr>
+  <tr> 
+    <td>SWT.LINE_DASHDOTDOT</td>
+    <td><img src="images/LINE_DASHDOTDOT.gif" height=16 width=292></td>
+  </tr>
+</table>
+<h2> <code>GC.setLineWidth(int width);</code></h2>
+The default width for a line is 1 pixel, however this can be changed by setting 
+the lineWidth of the GC. <br>
+&nbsp; 
+<table BORDER >
+  <caption>
+  <TBODY>
+  <br></TBODY>
+  </caption>
+  <tr> 
+    <td>gc.setLineWidth(2);</td>
+    <td><img src="images/Width_2.gif" height=16 width=292></td>
+  </tr>
+  <tr> 
+    <td>gc.setLineWidth(4);</td>
+    <td><img src="images/Width_4.gif" height=16 width=292></td>
+  </tr>
+</table>
+<p>Because line styles and width affect all of the draw operations, allowing you 
+  to achieve effects such as a dotted rectangle or an oval with a thick line. 
+<p><code>gc.setLineWidth(3);</code> <br>
+  <code>gc.drawOval(5,5,40,40);</code> <br>
+  <code>gc.setLineWidth(1);</code> <br>
+  <code>gc.setLineStyle(SWT.LINE_DOT);</code> <br>
+  <code>gc.setForeground(display.getSystemColor(SWT.COLOR_BLUE));</code> <br>
+  <code>gc.drawRectangle(60,5,60,40);</code> 
+<p><img src="images/LineShapes.gif" height=91 width=172> <br>
+  When a property such as a line width, line style or color is changed on a GC 
+  this affects all subsequent drawing operations.&nbsp; The code snippet above 
+  changes the width to 3 to draw the oval, but it then changes it back to 1 before 
+  drawing the dotted blue rectangle.&nbsp; Forgetting to revert values in a GC 
+  after modifying them is a common bug when doing SWT graphics programming. 
+<h1> <a NAME="Drawing Text"></a>Drawing text</h1>
+Text can be drawn onto a GC, the glyphs are drawn in the GC's foreground color 
+and font, and the area it occupies is drawn with the GC's background color.&nbsp; 
+To draw text you define its top left corner, width and height.&nbsp; There are 
+two sets of methods to draw text, the first set of which have <b><code>Text</code></b> 
+in their method name, and will handle line delimiters and tabs and are used to 
+implement an emulated Label. The second set of API methods have <b><code>String</code></b> 
+in their method name, and no tab expansion or carriage return processing occurs, 
+and are used for more sophisticated controls like the <code>StyledText </code>used 
+by the Eclipse Java editor. 
+<h2> <code>GC.drawText(String text, int x, int y);</code></h2>
+<code>Font font = new Font(display,"Arial",14,SWT.BOLD | SWT.ITALIC);</code> <br>
+<code>// ...</code> <br>
+<code>gc.drawText("Hello World",5,5);</code> <br>
+<code>gc.setForeground(display.getSystemColor(SWT.COLOR_BLUE));</code> <br>
+<code>gc.setFont(font);</code> <br>
+<code>gc.drawText("Hello\tThere\nWide\tWorld",5,25);</code> <br>
+<code>// ...</code> <br>
+<code>font.dispose();</code> 
+<p><img src="images/TextHelloWorld.gif" height=108 width=200> 
+<p>The drawText API processes the control characters \t as tab \n as a carriage 
+  return. 
+<h2> <code>GC.drawString(String text, int x, int y);</code></h2>
+<code>Font font = new Font(display,"Arial",14,SWT.BOLD | SWT.ITALIC);</code> <br>
+<code>// ...</code> <br>
+<code>gc.drawString("Hello World",5,5);</code> <br>
+<code>gc.setForeground(display.getSystemColor(SWT.COLOR_BLUE));</code> <br>
+<code>gc.setFont(font);</code> <br>
+<code>gc.drawString("Hello\tThere\nWide\tWorld",5,25);</code> <br>
+<code>// ...</code> <br>
+<code>font.dispose()</code> 
+<p><img src="images/StringHelloWorld.gif" height=106 width=304> <br>
+  When drawString is used, the tab and carriage return characters are not processed 
+<p>The size that a String occupies when it is drawn onto a GC is based on its 
+  contents and the font of the GC.&nbsp; To determine the area that a String will 
+  occupy when it is drawn use the methods <code>GC.stringExtent(String text), </code>or<code> 
+  GC.textExtent(String text). </code>These return a Point whose x and y are the 
+  width and height required to render the String argument. 
+<h2> <code>GC.drawText(String text, int x, int y, boolean isTransparent);</code></h2>
+When drawText(String text, int x, int y) is used the text is drawn in the GC's 
+current foreground color.&nbsp; If you are drawing on top of an area where you 
+want the existing background to show through, then you can set the isTransparent 
+argument to true.&nbsp; This is useful if you are drawing on top of an image and 
+you don't want the text to obscure the image's background. 
+<p><code>Font font = new Font(display,"Arial",12,SWT.BOLD | SWT.ITALIC);</code> <br>
+  <code>Image image = new Image(display,"C:/devEclipse_02/eclipse/plugins/org.eclipse.platform_2.0.2/eclipse_lg.gif");</code> 
+  <br>
+  <code>GC gc = new GC(image);</code> <br>
+  <code>gc.drawText("Hello World",5,5);</code> <br>
+  <code>gc.setFont(font);</code> <br>
+  <code>gc.setForeground(display.getSystemColor(SWT.COLOR_WHITE));</code> <br>
+  <code>gc.drawText("Hello World",5,25,true);</code> <br>
+  <code>gc.dispose();</code> <br>
+  <code>image.dispose();</code> <br>
+  <code>font.dispose();</code> 
+<p><img src="images/TextHelloWorldTransparent.gif" height=182 width=159> <br>
+  &nbsp; 
+<h2> <code>GC.drawText(String text, int x, int y, int flags);</code></h2>
+The flags are a bitmask of the constants SWT.DRAW_DELIMITER, SWT.DRAW_TAB, SWT.DRAW_TRANSPARENT 
+and SWT.DRAW_MNEMONIC.&nbsp; These determine whether or not \n is processed as 
+a carriage return, \t as a tab expansion, whether background transparency is used, 
+and whether &amp; is processed as a mnemonic or a literal. 
+<p><code>gc.drawImage(image,0,0);</code> <br>
+  <code>gc.drawText("Hello\t&amp;There\nWide\tWorld",5,5,SWT.DRAW_TRANSPARENT);</code> 
+  <br>
+  <code>gc.drawText("Hello\t&amp;There\nWide\tWorld",5,25,SWT.DRAW_DELIMITER | SWT.DRAW_TAB 
+  | SWT.DRAW_MNEMONIC );</code> 
+<p><img src="images/TextFlags.gif" height=166 width=192> <br>
+  &nbsp; <br>
+  &nbsp; 
+<h1> <a NAME="Filling shapes"></a>Filling shapes</h1>
+Whereas lines are drawn in the GC's foreground color, shapes are filled with the 
+GC's background color. 
+<h2> <code>GC.fillPolygon(int[]);</code></h2>
+<code>gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));</code> <br>
+<code>gc.fillPolygon(new int[] { 25,5,45,45,5,45 })</code> <br>
+<img src="images/PolygonFillClient.gif" height=96 width=164> 
+<h2> <code>GC.fillRectangle(int x, int y, int width, int height);</code></h2>
+<code>gc.fillRectangle(5,5,90,45);</code> 
+<p><img src="images/RectangleFillClient.gif" height=98 width=165> 
+<p>When a rectangle is filled, the bottom and right edges are not included.&nbsp; 
+  With the code above the origin point 5,5 is included in the filled blue rectangle, 
+  however the argument rectangle's bottom right corner of 95,50 (5+90 , 45+5) 
+  is outside the filled area.&nbsp; The bottom right corner of the filled rectangle 
+  is at 94,49.&nbsp; This is unlike the behavior for <code>drawRectangle(5,5,90,45)</code>, 
+  where the full shape is outlined so the bottom right corner is 95,50. 
+<p>To illustrate this, the code below strokes a rectangle whose corners are 5,5 
+  and 90,45 before filling it in cyan.&nbsp; To ensure that the filling of the 
+  rectangle doesn't overwrite its drawn outline, the origin is offset to 6,6.&nbsp; 
+  This moves the bottom right corner of the filled rectangle, however because 
+  it has already excluded the bottom and right edges it only needs to be inset 
+  by one to not overlap with the drawn rectangle. 
+<p><code>gc.drawRectangle(5,5,90,45);</code> <br>
+  <code>gc.setBackground(display.getSystemColor(SWT.COLOR_CYAN));</code> <br>
+  <code>gc.fillRectangle(6,6,89,44);</code> 
+<p><img src="images/RectangleStrokeFill.gif" height=111 width=195> 
+<h2> <code>GC.fillRoundedRectangle(int x, int y, int width, int height, int arcWidth, 
+  int arcHeight);</code></h2>
+<code>gc.fillRoundRectangle(5,5,90,45,25,15);</code> 
+<p><img src="images/RoundedRectangleFilledClient.gif" height=95 width=166> 
+<p>Like the <code>GC.fillRectangle(...) </code>method, the bottom and right edges 
+  are excluded from the filled shape so the bottom right corner becomes 94,49 
+  rather than 95,50. 
+<h2> <code>GC.fillOval(int x, int y, int width, int height);</code></h2>
+<code>gc.fillOval(5,5,90,45);</code> 
+<p><img src="images/OvalFilledClient.gif" height=93 width=167 align=ABSBOTTOM> 
+<p>Like the other fill APIs, the bounding rectangle's bottom right corner is inset 
+  by one. 
+<h2> <code>GC.fillArc(int x, int y, int widt4h., int height, int startAngle, int 
+  endAngle);</code></h2>
+<code>gc.fillArc(5,5,90,45,90,200);</code> <br>
+<img src="images/ArcFilledClient.gif" height=97 width=196> <br>
+The arguments to the <code>fillArc(...)</code> method are similar to the <code>drawArc(...)</code>, 
+with the offset from an East axis to begin filling and the number of degrees to 
+continue the arc in an anti-clockwise direction. However unlike the <code>drawArc(...)</code> 
+whose bottom right corner of the bounding rectangle is the origin offset by the 
+width and height, <code>fillArc(...)</code> follows the same pattern used by the other 
+fill methods where the bottom and right edge are excluded and the corner inset 
+by one. 
+<h2> <code>GC.fillGradientRectangle(int x, int y, int width. int height, vertical 
+  boolean);</code></h2>
+This allows a rectangle to be filled with a gradient of coloring between the GC's 
+foreground and background color.&nbsp; The gradient can either be horizontal or 
+vertical 
+<p><code>gc.setBackgrouind(display,getSystemColor(SWT.COLOR_BLUE));</code> <br>
+  <code>gc.fillGradientRectangle(5,5,90,45,false);</code> 
+<p>This creates a horizontal gradient fill starting with the foreground color 
+  (black) on the left, and finishing with the background color (blue) on the right.&nbsp; 
+  As with the other fill methods, the bottom and right edges are excluded so the 
+  bottom right corner becomes inset by 1. 
+<p><img src="images/GradientFillFalse.gif" height=97 width=166> 
+<p><code>gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));</code> <br>
+  <code>gc.setForeground(display.getSystemColor(SWT.COLOR_CYAN));</code> <br>
+  <code>gc.fillGradientRectangle(5,5,90,45,true);</code> 
+<p>The vertical gradient begins at the top with the foreground color (cyan) and 
+  finishes at the bottom with the blue background color. 
+<p><img src="images/GradientFillTrue.gif" height=100 width=166> 
+<h1> <a NAME="XOR"></a>XOR</h1>
+When drawing occurs on a GC you are altering its pixel values that make up the 
+graphic on the Drawable surface.&nbsp; If you set the GC's XOR mode to true, then 
+what occurs is that for each pixel the red, green and blue values of the source 
+being drawn are XOR'd with the existing red, green and blue values and the result 
+becomes the new destination pixel. <br>
+&nbsp; 
+<p><code>shell.setBackground(display.getSystemColor(SWT.COLOR_WHITE));</code> <br>
+  <code>// ...</code> <br>
+  <code>gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));</code> <br>
+  <code>gc.fillRectangle(5,5,90,45);</code> <br>
+  <code>gc.setXORMode(true);</code> <br>
+  <code>gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));</code> <br>
+  <code>gc.fillRectangle(20,20,50,50);</code> <br>
+  <code>gc.setBackground(display.getSystemColor(SWT.COLOR_RED));</code> <br>
+  <code>gc.fillOval(80,20,50,50);</code> 
+<p><img src="images/XORFills.gif" height=117 width=276> 
+<p>The filled rectangle has a background color of white (255,255,255).&nbsp; When 
+  this is drawn over the blue (0,0,255) the XOR'd result is yellow (255,255,0).&nbsp; 
+  The portion of the rectangle drawn over the white background (255,255,255) creates 
+  an XOR result of black (0,0,0). The filled oval has a background color or red 
+  (255,0,0).&nbsp; When this is drawn over blue the resulting XOR value is purple 
+  (255,0,255), and when it is drawn over white the result is cyan (0,255,255); 
+<h1> <a NAME="Drawing Images"></a>Drawing Images</h1>
+The class <code>org.eclipse.swt.graphics.Image</code> represents a graphic that has 
+been prepared ready to be displayed on a device such as a Display or Printer.&nbsp; 
+The simplest way to create an image is to load it from a recognized file format.&nbsp; 
+Supported file formats are GIF, BMP (Windows format bitmap), JPG, PNG, and in 
+newer Eclipse releases TIFF. 
+<p><code>Image image = new Image(display,"C:/eclipse/eclipse/plugins/org.eclipse.platform_2.0.2/eclipse_lg.gif");</code> 
+<h2> <code>GC.drawImage(Image image, int x, int y);</code></h2>
+Every image has a size that is determined by its bounds.&nbsp; For example, the 
+size of the image <code>eclipse_lg.gif </code>is 115,164 and can be determined by 
+using the method <code>image.getBounds(). </code>When an image is drawn it will be 
+shown at the width and height defined by its bounds.. 
+<p><code>gc.drawImage(image,5,5);</code> <br>
+  <img src="images/ImageClient.jpg" height=221 width=175> 
+<h2> <code>GC.drawImage(Image image, int srcX, int srcY, int srcWidth, int srcHeight, 
+  int dstX, int dstY, int dstWidth, int dstHeight);</code></h2>
+Images can be drawn with different sizes from their original width and height, 
+and also portions of images can be drawn. 
+<p>The src coordinates are relative to image itself, so to draw the entire image 
+  use 0,0 and width and height set to the image bound's width and height.&nbsp; 
+  The dst arguments represent where to draw the image on the GC, and what size 
+  to draw it at.&nbsp; The original image is 115 by 164, so to stretch it to twice 
+  the width and half the height use the statement 
+<p><code>gc.drawImage(image,0,0,115,164,5,5,230,82);</code> <br>
+  <img src="images/ImageClientStretched.jpg" height=136 width=289> 
+<p>Using the src coordinates allows you to specify that you want only a portion 
+  of the image drawn.&nbsp; For example, if you only want a section from the top 
+  right area of the image drawn, you can use src coordinates of 20,0 and a width 
+  and height of 95,82.&nbsp; The code below draws the destination rectangle with 
+  the same width and height (95,82) as the cropped area, however a different size 
+  could be used to stretch or shrink the image portion. 
+<p><code>gc.drawImage(image,20,0,95,82,5,5,95,82);</code> 
+<p><img src="images/ImageClipped.jpg" height=219 width=405> 
+<p>Other images effects can be achieved, such as transparency, animation and alpha 
+  channel blending of images.&nbsp; These are outside the scope of this article, 
+  however I hope to cover these in a future article. 
+<h1> <a NAME="Understanding Images"></a>Conclusion</h1>
+This article has shown how a GC can be used to draw lines, text, and to fill shapes.&nbsp; 
+A GC can be created by passing the drawable into its constructor, such as an Image, 
+or for a Control by using the <code>paintEvent</code> callback.&nbsp; The API of a 
+GC allows lines and shapes to be drawn in its foreground color and filled in its 
+background color.&nbsp; The general purpose Canvas control is optimized to allow 
+drawing through its <code>paintEvent</code>, and it has a number of constructor style 
+bits to control when paint events occur.&nbsp; GC clipping allows you to control 
+the region of the GC that visible drawing occurs on, and when drawing different 
+line styles can be used, and text and images can be shown. 
+<p><font size="-2">Java and all Java-based trademarks and logos are trademarks 
+  or registered trademarks of Sun Microsystems, Inc. in the United States, other 
+  countries, or both. </font>
+<p><font size="-2">Other company, product, and service names may be trademarks 
+  or service marks of others. </font> 
+</body>
+</html>

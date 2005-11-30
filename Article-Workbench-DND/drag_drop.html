@@ -1,0 +1,620 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title>Drag and Drop in the Eclipse UI</title>
+  <meta name="Author" content="John Arthorne">
+  <link rel="stylesheet" href="../default_style.css"></head>
+
+<body link="#0000ff" vlink="#800080" bgcolor="#ffffff">
+ 
+<div align="right"><font size="-2">Copyright © 2003 International Business Machines Corp.</font>    
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+     <tbody>
+    <tr>
+        <td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b>
+        <font face="Arial,Helvetica" color="#ffffff"> Eclipse Corner Article</font></b></td>
+     </tr>
+  </tbody>
+</table>
+ </div>
+ 
+<div align="left">    
+<h1><img src="images/Idea.jpg" height="86" width="120" align="middle">
+</h1>
+ </div>
+ 
+<p> </p>
+  
+<h1 align="center">Drag and Drop in the Eclipse UI</h1>
+ 
+<blockquote> <b>Summary</b>  <br>
+  In this article, we discuss the drag and drop facilities provided by JFace and 
+  the Eclipse platform UI. After reading this, you will know how to add drag and 
+  drop support to your own Eclipse views, and how that support will interact with 
+  the standard views in the Eclipse platform. Along the way, we'll also discuss 
+  that keyboard relative of drag and drop: cut and paste. You'll learn that putting 
+  your own custom objects on the clipboard is easy once you've figured out the 
+  basics of drag and drop. This article is intended to be read as a companion 
+  to the <a href="../Article-SWT-DND/DND-in-SWT.html">SWT 
+  drag and drop article</a>.<br>
+  <p><b> By John Arthorne, IBM OTI Labs</b><br>
+    <font size="-1">August 25, 2003</font></p>
+ </blockquote>
+ 
+<hr width="100%">  <a name="1"> </a>
+<h2>
+Doing the drag and drop</h2>
+
+<div align="right"><a name="1"><i>Never keep up with the Joneses. Drag them down to your level.</i> <br>
+– Quentin Crisp</a></div>
+
+<p>In keeping with the general philosophy of JFace, the JFace drag and drop 
+adds a layer of functionality on top of the SWT drag and drop support.  This layer
+allows the developer to deal directly with domain objects (such as resources,
+tasks, etc), without having to worry too much about the underlying window
+controls.  Rather than concealing or replacing the drag and drop support in SWT,
+the JFace drag and drop support works as an extension to the same concepts
+found in SWT drag and drop.
+</p>
+<h3>Transfer types</h3>
+As you'll know from the <a href="../Article-SWT-DND/DND-in-SWT.html">SWT drag and drop article</a>,
+the notion of transfer types is central to the drag and drop support in Eclipse-based UIs.
+To recap, transfer types allow drag sources to specify what kinds of object they allow to be 
+dragged out of their widget, and they allow drop targets to specify what kinds of 
+objects they are willing to receive.  For each transfer type, there is a subclass of 
+<code>org.eclipse.swt.dnd.Transfer</code>.  These subclasses implement the marshaling 
+behavior that converts between objects and bytes, allowing drag and drop 
+transfers between applications. The following table summarizes the transfer types 
+provided by the basic Eclipse platform, along with the object they are capable of transferring:
+</p>
+<p>
+<table BORDER COLS=2 WIDTH="90%" >
+<tr>
+<td><b>Transfer class</b></td>
+<td><b>Object it transfers</b></td>
+</tr>
+<tr>
+<td><code>org.eclipse.swt.dnd.FileTransfer</code></td>
+<td><code>java.lang.String[]</code> (list of absolute file paths)</td>
+</tr>
+<tr>
+<td><code>org.eclipse.swt.dnd.RTFTransfer</code></td>
+<td><code>java.lang.String</code> (may contain RTF formatting characters)</td>
+</tr>
+<tr>
+<td><code>org.eclipse.swt.dnd.TextTransfer</code></td>
+<td><code>java.lang.String</code></td>
+</tr>
+<tr>
+<td><code>org.eclipse.ui.part.MarkerTransfer</code></td>
+<td><code>org.eclipse.core.resources.IMarker[]</code></td>
+</tr>
+<tr>
+<td><code>org.eclipse.ui.part.ResourceTransfer</code></td>
+<td><code>org.eclipse.core.resources.IResource[]</code></td>
+</tr>
+<tr>
+<td><code>org.eclipse.ui.part.EditorInputTransfer</code></td>
+<td><code>org.eclipse.ui.part.EditorInputTransfer.EditorInputData[]</code></td>
+</tr>
+<tr>
+<td><code>org.eclipse.ui.part.PluginTransfer</code></td>
+<td><code>org.eclipse.ui.part.PluginTransferData</code></td>
+</tr>
+</table>
+</p>
+<p>
+The set of transfer types is open ended, because third party
+tool writers can implement their own transfer types for their domain objects.
+To implement your own transfer type, it is recommended that you subclass
+<code>org.eclipse.swt.dnd.ByteArrayTransfer</code>.
+See the <a href="../Article-SWT-DND/DND-in-SWT.html">SWT drag and drop article</a> for more information 
+on defining your own transfer types.
+</p>
+<p>
+<p><img src="images/tip.gif">
+An important point about transfer types is that they don't necessarily need to store 
+the entire object as serialized bytes.  In most cases it is simpler and more 
+efficient to just store enough information about where the object is found.  For 
+example, <code>FileTransfer</code> simply encodes a string which represents the 
+absolute path of the file in the file system.  It does not store the entire file in the 
+transfer object.
+</p>
+<h3>Transfer types supported by the standard views</h3>
+<p>
+Many of the basic views you see in Eclipse already support various
+transfer types. It is important to understand what transfer types are supported by
+each view, because this dictates how the drag and drop support in your view will
+interact with other basic views found in the Eclipse platform UI.
+</p>
+<p>
+The Navigator view supports dragging and dropping files (<code>FileTransfer</code>),
+and resources (<code>ResourceTransfer</code>). For example, you can drag a file 
+from the Navigator view into Windows Explorer or the Windows Desktop. Similarly, 
+you can import resources into Eclipse simply by dragging them from Windows into 
+the Navigator view of your workbench. You can also drag files between two instances
+of Eclipse, or drag within a single Navigator to copy and move files within
+your workspace.  If your view supports either <code>FileTransfer</code> or
+<code>ResourceTransfer</code>, then users will be able to transfer resources between
+your view and the Navigator view.
+</p>
+<p>
+The Tasks and Bookmarks views support dragging of markers (<code>MarkerTransfer</code>). 
+Dragging a selection of tasks from the Tasks view into an application such as MS 
+Word will generate a textual marker report (<code>TextTransfer</code>). You can also drag markers 
+out of the Tasks and Bookmarks views into other parts of the workbench, such as 
+the editor area. Dragging a marker to the editor area will open the associated 
+resource in the editor and jump to that marker location in the editor. 
+</p>
+<p>
+Finally, the editor area supports dropping of editor inputs (<code>EditorInputTransfer</code>),
+resources, or markers.  Dragging these objects to the editor will cause it to locate and
+open an appropriate editor for the given resource, editor input or marker.  In the case 
+of markers, it will also jump to that marker location in the editor.
+</p>
+<h3>A running example: go go gadgets!</h3>
+<div align="right"><a name="1"><i>"Gosh, Scotland is beautiful, Uncle Gadget."<br>
+"It certainly is, Penny. This is where they make Scotch tape, ya know."</i> <br>
+– Inspector Gadget</a></div>
+
+<p>
+For the remainder of this article, we'll make use of a running example.  This example
+is an Eclipse plug-in for manipulating a simple object model of <i>gadgets</i>.  Gadgets 
+are simply named objects that can be formed into trees.  Each gadget knows its parent 
+and its children.  The example includes two views, one containing a table viewer, and 
+the other containing a tree viewer.  Drag and drop can be used to copy or move 
+gadgets between these views, and to rearrange the order or hierarchy of gadgets 
+within a view.  There is a <code>GadgetTransfer</code> class for encoding an array
+of gadgets to and from a byte array.  Complete source code for the example is found 
+<a href="gadgetsrc.zip">here</a>.
+</p>
+<h3>Adding JFace viewer drag support</h3>
+Adding drag support to a viewer means that it enables the user to select
+any item in the viewer with the mouse, and drag it into another viewer
+or another application. Drag support can be added to any subclass of 
+<code>org.eclipse.jface.viewers.StructuredViewer</code>
+using the <code>addDragSupport(int, Transfer[], DragSourceListener)</code>
+method. From our gadget example, here is the code for associating a drag listener
+with a tree viewer:
+</p>
+<font color="#4444cc">
+<pre>
+   TreeViewer gadgetViewer = new TreeViewer(...);
+   int ops = DND.DROP_COPY | DND.DROP_MOVE;
+   Transfer[] transfers = new Transfer[] { GadgetTransfer.getInstance()};
+   viewer.addDragSupport(ops, transfers, new GadgetDragListener(viewer));
+</pre>
+</font> 
+<br>
+<p>
+<code>GadgetDragListener</code> is an implementation of the SWT interface
+<code>org.eclipse.swt.dnd.DragSourceListener</code>.  There is nothing specific
+to JFace about the implementation of <code>DragSourceListener</code>, so you
+can learn more about its implementation in the <a href="../Article-SWT-DND/DND-in-SWT.html">SWT drag and drop article</a>.
+</p>
+
+<h3>Adding viewer drop support</h3>
+<p>
+Drop support can be added to viewers using the <code>StructuredViewer.addDropSupport(int,
+Transfer[], DropTargetListener)</code> method. This allows your viewer to
+be the target of a drop operation. The code for adding drop support is almost the
+same as for adding drag support:
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   TreeViewer gadgetViewer = new TreeViewer(...);
+   int ops = DND.DROP_COPY | DND.DROP_MOVE;
+   Transfer[] transfers = new Transfer[] { GadgetTransfer.getInstance()};
+   viewer.addDropSupport(ops, transfers, new GadgetTreeDropAdapter(viewer));
+</pre>
+</font> 
+</p>
+<p>
+JFace provides a standard implementation of <code>DropTargetListener</code> 
+called <code>org.eclipse.jface.viewers.ViewerDropAdapter</code>.
+This adapter makes it easy to add drop support for simple cases.  If you have more
+complex requirements, you can always override the SWT <code>DropTargetListener</code>
+interface directly for ultimate flexibility.
+When sub-classing <code>ViewerDropAdapter</code>, simply implement its two 
+abstract methods: <code>validateDrop(Object target, int operation, TransferData transferType)</code>,
+and <code>performDrop(Object data)</code>.
+</p>
+<p>
+<code>validateDrop</code> is called whenever the user moves over a new item
+in your viewer, or changes the drop type with one of the modifier keys.
+The method provides the current drop target, operation, and transfer type.
+The return value of this method indicates whether a drop at the current location is
+valid or not. A return value of false will change the drag icon to indicate
+to the user that it is illegal to drop what they are dragging at the current
+location.  In our gadget example, it is always legal to drop a gadget, so the 
+<code>validateDrop</code> implementation simply looks like this:
+<font color="#4444cc">
+<pre>
+   public boolean validateDrop(Object target, int op, TransferData type) {
+      return GadgetTransfer.getInstance().isSupportedType(type);
+   }
+</pre>
+</font>
+<p>
+This code just makes sure that the user is indeed dropping a gadget, and not
+some other object such as a resource or marker. If you have more complex
+validation requirements based on the target object, you can do that here.  For example,
+in a file navigator, you may want to allow dropping on top of directories, but not on top of
+files.
+</p>
+<p>
+<code>performDrop</code> is called when the user lets go of the mouse button,
+indicating that they want the drop to occur. Your implementation should
+accordingly perform the expected behavior for that drop. Context for the
+drop is provided by the methods <code>getCurrentTarget</code>, <code>getCurrentOperation</code>,
+and <code>getCurrentLocation</code> on <code>ViewerDropAdapter</code>. Most
+importantly, at the time when <code>performDrop </code>is called, <code>getCurrentTarget</code>
+will provide the object in your viewer that is currently under the mouse.  Here is the 
+<code>performDrop</code> method from our gadget example:
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   public boolean performDrop(Object data) {
+1     Gadget target = (Gadget)getCurrentTarget();
+2     if (target == null)
+3        target = (Gadget)getViewer().getInput();
+4     Gadget[] toDrop = (Gadget[])data;
+5     TreeViewer viewer = (TreeViewer)getViewer();
+6     //cannot drop a gadget onto itself or a child
+7     for (int i = 0; i < toDrop.length; i++)
+8        if (toDrop[i].equals(target) || target.hasParent(toDrop[i]))
+9           return false;
+10    for (int i = 0; i < toDrop.length; i++) {
+11       toDrop[i].setParent(target);
+12       viewer.add(target, toDrop[i]);
+13       viewer.reveal(toDrop[i]);
+14    }
+15    return true;
+   }
+</pre>
+</font>
+</p>
+<p>
+In lines 1-3, it is determining what the target gadget is.  The target is the item that
+is currently under the mouse when the drop occurs.  If there is no item under the mouse, it
+takes the viewer's input element as the target.  On lines 7-9, it is making sure
+that the user is not dropping an item onto itself, or onto a child of itself.  You may 
+be wondering why this validation was not done in the <code>validateDrop</code> 
+method.  In SWT, the transfer of data from the source to the target is done lazily
+when the drop is initiated.  So, as the user is dragging, the destination has no
+way of finding out what source object is being dragged until the drop is performed.
+Returning <code>false</code> from the <code>performDrop</code> method will
+cancel the drop.  On lines 10-13, it is performing the actual drop.  This involves updating
+the gadget with its new parent (line 11), and then adding and revealing the new item
+in the viewer (lines 12-13).  Finally, the method returns true on line 15 to indicate
+that the drop was successful.
+</p>
+<p>
+<code>ViewerDropAdapter</code> has two more interesting methods for controlling
+drag feedback effects. The method <code>setFeedbackEnabled</code> is used to turn
+insertion feedback on or off.  If insertion feedback is on, the cursor will change when
+the mouse is hovering between two items to indicate where the insertion will occur.
+Using this effect, you can allow the user to sort items in a tree using drag and drop.
+In your drop adapter, use the method <code>getCurrentLocation</code> to determine
+if the cursor is currently directly on, before, or after the current target object.  Here
+is how the gadget drop example can be updated to make use of this location 
+information:
+<p>
+<font color="#4444cc">
+<pre>
+   public boolean performDrop(Object data) {
+      //set the target gadget according to current cursor location
+      Gadget target = (Gadget)getCurrentTarget();
+      if (target != null) {
+         int loc = getCurrentLocation();
+         if (loc == LOCATION_BEFORE || loc == LOCATION_AFTER)
+            target = target.getParent();
+      }
+      if (target == null)
+         target = (Gadget)getViewer().getInput();
+      Gadget[] toDrop = (Gadget[])data;
+      TreeViewer viewer = (TreeViewer)getViewer();
+      // ... remainder of method is the same as previous example ...
+</pre>
+</font>
+</p>
+<p>
+In this snippet, it looks at the cursor location to see if it is before or after an
+item in the tree.  When a gadget is dropped between other gadgets, it sets the
+parent to be the parent of the neighboring gadget.  Said another way, the
+dropped gadget will become a sibling of the gadget it is dropped next to.
+</p>
+<p>
+The method <code>ViewerDropAdapter.setScrollExpandEnabled</code> is used to
+turn scroll and expansion effects on or off.  When this is turned on, hovering
+near the bottom of a tree or table will cause the widget to automatically scroll in
+that direction.  Hovering over a collapsed tree item for a sufficient amount of time
+will cause the item to be expanded.  In most cases you should leave these effects
+on, otherwise users will not able to use drag and drop effectively when your tree
+or table contains many items.
+</p>
+
+<h3>Plugin drop handling</h3>
+<div align="right"><a name="1"><i>When I can't handle events, I let them handle themselves.</i> <br>
+– Henry Ford</a></div>
+<p>
+Due to the UI layering imposed by the plug-in mechanism, viewers are often
+not aware of the content and nature of other viewers. This can make drag
+and drop operations between plug-ins difficult. For example, our gadget
+plug-in may want to allow the user to drop gadget objects into the Navigator
+view.  Since the Navigator view doesn't know anything about gadget objects
+(the Navigator only displays <code>org.eclipse.core.resources.IResource</code>
+objects), it would not be able to support this.  Similarly, another plug-in may want
+to drop some other kind of objects into the views from the gadget example. 
+To address this problem, a plug-in drop support mechanism
+is provided by the workbench. This mechanism essentially delegates the
+drop behavior back to the originator of the drag operation. In the gadget example,
+we use this extension point to drop gadgets into the Navigator view, and create
+files containing descriptions of the gadgets that were dropped. Here are the
+steps required to add drag and drop behavior using this mechanism:
+<p>
+Step 1) In your plugin.xml, define an extension on the "org.eclipse.ui.dropActions"
+extension point. Here is an example XML declaration:
+<p>
+<font color="#4444cc">
+<pre>
+   &lt;extension
+         id=&quot;gadgetDrop&quot;
+         name=&quot;Gadget Resource Drop&quot;
+         point=&quot;org.eclipse.ui.dropActions&quot;&gt;
+      &lt;action
+            class=&quot;org.eclipse.ui.examples.gdt.dnd.GadgetPluginDropAdapter&quot;
+            id=&quot;org.eclipse.ui.examples.gdt.gadgetDrop&quot;&gt;
+      &lt;/action&gt;
+   &lt;/extension&gt;
+</pre>
+</font> 
+</p>
+<p>
+Step 2) Implement the code that will perform the drop.  This work is done by
+the class defined in the extension markup above, which must implement
+<code>org.eclipse.ui.part.IDropActionDelegate</code>.
+This interface defines a single run() method that gets called when the
+drop occurs.  The run method is supplied with the object being dragged, as well as the
+object under the cursor when the drop occurs.  Here is an example implementation of
+the drop delegate from the gadget example:
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   public boolean run(Object source, Object target) {
+1     if (target instanceof IContainer) {
+2        GadgetTransfer transfer = GadgetTransfer.getInstance();
+3        Gadget[] gadgets = transfer.fromByteArray((byte[])source);
+4        IContainer parent = (IContainer)target;
+5        for (int i = 0; i < gadgets.length; i++) {
+6           writeGadgetFile(parent, gadgets[i]);
+7        }
+8        return true;
+9     }
+10    //drop was not successful so return false
+11    return false;
+   }
+</pre>
+</font>
+</p>
+<p>
+On line 1, it ensures that the gadget is being dropped on some kind of container.
+In practice, your drop delegate may support being dropped on several different
+types of objects, with different behavior for each type.  On lines 2-3, it makes use
+of a convenience method to extract the transferred gadgets from the byte array in the
+transfer data. Since the plug-in transfer data contains a byte array, this is the exact 
+same code that typically exists in your custom <code>Transfer</code> subclass.
+It then iterates over the transferred gadgets, and creates a file in the target container
+for that gadget.  Finally, it returns true if the drop was successful (line 8), or false if the drop
+occurred on a target object that was not supported (line 11).
+</p>
+
+<p>
+Step 3) In the viewer that will be the source of the drag and drop,
+add drag support using the <code>StructuredViewer.addDragSupport()</code> method
+described earlier. In the array of supported transfer types, include the
+singleton instance of <code>org.eclipse.ui.part.PluginTransfer</code>. In your
+implementation of <code>DragSourceListener</code>, the <code>dragSetData</code>
+method must set the data to be an instance of <code>org.eclipse.ui.part.PluginTransferData</code>.
+This object consists of the id of your drop action,
+along with the data being transferred.  Here is the code in the drag listener from the
+gadget example:
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   public void dragSetData(DragSourceEvent event) {
+1     IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+2     Gadget[] gadgets = (Gadget[])selection.toList().toArray(new Gadget[selection.size()]);
+3     if (GadgetTransfer.getInstance().isSupportedType(event.dataType)) {
+4        event.data = gadgets;
+5     } else if (PluginTransfer.getInstance().isSupportedType(event.dataType)) {
+6        byte[] data = GadgetTransfer.getInstance().toByteArray(gadgets);
+7        event.data = new PluginTransferData("org.eclipse.ui.examples.gdt.gadgetDrop", data);
+8     }
+9  }
+   }
+</pre>
+</font> 
+</p>
+<p>
+Lines 1-2 are the familiar code for creating an array of gadgets from the viewer's
+selection.  Line 4 handles the old case of a gadget transfer by simply setting the
+event data to be the correct type for <code>GadgetTransfer</code>.  Lines 6-7
+are the interesting new code for handling a plug-in drag event.  First, it uses a convenience
+method on the <code>GadgetTransfer</code> class for converting the array of gadgets
+into a byte array.  Next, it creates a <code>PluginTransferData</code> object, passing
+in the id of the plug-in drop action that was declared in the plugin.xml in step 1), along
+with the serialized gadget array.
+</p>
+
+<p>Step 4) In the viewer that will receive the drop, the drop listener
+for that viewer must subclass <code>org.eclipse.ui.part.PluginDropAdapter</code>,
+which in turn subclasses <code>ViewerDropAdapter</code> as described earlier.
+Be sure to invoke the super methods for validateDrop and performDrop in
+cases where your adapter does not understand the transfer type. Following
+from our earlier example, the viewer’s declaration would look
+like this:
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   TreeViewer gadgetViewer = new TreeViewer(...);
+   int ops = DND.DROP_COPY | DND.DROP_MOVE;
+   Transfer[] transfers = new Transfer[] {
+      GadgetTransfer.getInstance(), PluginTransfer.getInstance()};
+   viewer.addDropSupport(ops, transfers, new GadgetTreeDropAdapter(viewer));
+</pre>
+</font> 
+</p>
+<p>
+The basic Workbench views such as the Navigator view 
+already have this support added. It is recommended that anyone defining
+their own views should add the plug-in support, in anticipation of future
+third party plug-ins wanting to drop content into their views. For more information
+about this advanced drag and drop mechanism, refer to the documentation
+for the <code>org.eclipse.ui.dropActions</code> extension point.
+</p>
+<h2>Cut, copy and paste</h2>
+<div align="right"><a name="1"><i>"I'll get you next time Gadget... Next time!" </i> <br>
+– Dr. Claw </a></div>
+<p>
+Cut and paste can be thought of as the keyboard equivalent of drag and drop.  Once you've
+mastered drag and drop support, you'll find that cut and paste is a snap.  Once
+again, the gadgets example provides a complete implementation of cut and paste
+support.  Here is code for adding cut and paste support from within an Eclipse view
+(this code goes in the view's <code>createPartControl</code> method):
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   public void createPartControl(Composite parent) {
+      viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      
+      //... initialize viewer's content and label providers ...
+      
+      clipboard = new Clipboard(getSite().getShell().getDisplay());
+      IActionBars bars = getViewSite().getActionBars();
+      bars.setGlobalActionHandler(
+         IWorkbenchActionConstants.CUT, 
+         new CutGadgetAction(viewer, clipboard));
+      bars.setGlobalActionHandler(
+         IWorkbenchActionConstants.COPY, 
+         new CopyGadgetAction(viewer, clipboard));
+      bars.setGlobalActionHandler(
+         IWorkbenchActionConstants.PASTE, 
+         new PasteTreeGadgetAction(viewer, clipboard));
+   }
+</pre>
+</font> 
+</p>
+<p>
+This code simply creates a new SWT clipboard, and then defines global actions
+for cut, copy, and paste using that clipboard.  The <code>IActionBars</code>
+interface is used for hooking into global actions.  <b>Note:</b> SWT clipboard
+objects are operating system resources that must be disposed when no longer
+needed.  In the gadget example, we <code>dispose()</code> the clipboard
+when the view is disposed. Disposing of an SWT clipboard instance does not remove 
+the data from the operating system's clipboard.
+</p>
+<p>
+The actions that are provided as global action handlers should be subclasses of the 
+<code>org.eclipse.jface.action.Action</code> class.  The code for these actions is 
+similar to the drag and drop code, except that they use the clipboard as the transfer 
+mechanism, rather than the drag and drop event handlers.  Here is the code for the 
+run method of the cut action:
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   public void run() {
+1     IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+2     Gadget[] gadgets = (Gadget[])selection.toList().toArray(new Gadget[selection.size()]);
+3     clipboard.setContents(
+4        new Object[] { gadgets },
+5        new Transfer[] { GadgetTransfer.getInstance()});
+6     for (int i = 0; i < gadgets.length; i++) {
+7        gadgets[i].setParent(null);
+8     }
+9     viewer.refresh();
+   }
+</pre>
+</font> 
+</p>
+<p>
+On lines 3-5, the gadgets are placed on the clipboard, along with the <code>
+Transfer</code> object that will be used for serializing them.  Lines 6-8 remove
+the gadgets from the source view (since they are being cut, not copied), and line 9
+refreshes the view to update it with the new contents.  The copy action is almost
+identical, except lines 6-9 are removed, since we don't want to remove the gadgets
+from the source view on copy.  The paste action for pasting into a tree looks like this:
+</p>
+<p>
+<font color="#4444cc">
+<pre>
+   public void run() {
+1     IStructuredSelection sel = (IStructuredSelection)viewer.getSelection();
+2     Gadget parent = (Gadget)sel.getFirstElement();
+3     if (parent == null)
+4        parent = (Gadget)viewer.getInput();
+5     Gadget[] gadgets = (Gadget[])clipboard.getContents(GadgetTransfer.getInstance());
+6     if (gadgets == null)
+7        return;
+8     //cannot drop a gadget onto itself or a child
+9     for (int i = 0; i < gadgets.length; i++)
+10       if (gadgets[i].equals(parent) || parent.hasParent(gadgets[i]))
+11          return;
+12    for (int i = 0; i < gadgets.length; i++) {
+13       gadgets[i].setParent(parent);
+14    }
+15    viewer.refresh();
+   }
+</pre>
+</font> 
+</p>
+<p>
+Lines 1-4 compute the parent gadget for the gadgets that are about to be pasted.
+If there is a gadget currently selected, it will become the new parent, otherwise the root
+gadget is used.  Line 5 is the crucial step that takes the gadget objects off the clipboard.
+You should always check that the returned value is not null, since there may not be
+an object of the requested type on the clipboard.  Lines 9-15 are the familiar code
+that we had in the drop event handler, first ensuring that we're not dropping a gadget
+onto itself or a child of itself, and then setting the parent elements for the dropped
+gadgets.  
+
+<p><img src="images/tip.gif">
+In your implementation, you will probably want to factor out the paste and drop
+code into a common place, since they both do the same thing.  Likewise, the code for
+the cut action is similar to the code in <code>dragFinished</code> in the drag action 
+handler.  For clarity, the gadget example duplicates the code in both places, but you'll
+make your code easier to maintain if you keep it all in one place.
+</p>
+
+<h3>Summary and further information</h3>
+<p>
+You now have all the information you need for adding drag/drop and cut/paste support 
+in your own JFace viewers.  You should also know all about the standard transfer types
+supplied by the platform, and what transfers are supported by the standard views
+in the platform.
+</p>
+<p>
+For more information, browse through the complete source from the 
+<a href="gadgetsrc.zip">gadgets example</a>.  The UI readme 
+example, available from the eclipse.org 
+<a href="http://www.eclipse.org/downloads/index.php">downloads page</a>, 
+also implements some drag and drop support.  For more in depth examples, you 
+can look at the drag and drop support implemented within the UI plug-in itself. For 
+example, see <code>org.eclipse.ui.views.navigator.ResourceNavigator </code>to 
+see how the Navigator view implements its drag and drop behavior. The Navigator 
+uses two helper classes, <code>NavigatorDragAdapter</code> and 
+<code>NavigatorDropAdapter</code>, which are also instructive to look at.
+</p>
+<h3>Acknowledgements</h3>
+<p> Thanks to Knut Radloff from the Eclipse Platform UI Team and Jim des Rivi&egrave;res 
+  at OTI Labs for proof reading and providing feedback for this article. </p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both.</small></p>
+</body>
+</html>

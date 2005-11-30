@@ -1,0 +1,345 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+
+<title>Preferences and Properties in the Eclipse Workbench UI</title>
+<link rel="stylesheet" type="text/css" href="default_style.css">
+</head>
+
+<body>
+<DIV align=right>&nbsp; <FONT face="Times New Roman, Times, serif" 
+size=2>Copyright © 2001 Object Technology International, Inc.</FONT> </DIV>
+<TABLE border=0 cellPadding=2 cellSpacing=0 width="100%">
+  <TBODY>
+  <TR>
+    <TD align=left bgColor=#0080c0 colSpan=2 vAlign=top><B><FONT 
+      face=Arial,Helvetica><FONT color=#ffffff>&nbsp;Eclipse Corner 
+      Article</FONT></FONT></B></TD></TR></TBODY></TABLE>
+<H1><img align=center 
+src="Idea.jpg" width="120" height="86">
+<center>Preferences in the Eclipse Workbench UI</center></H1>
+<blockquote>
+<b>Summary</b><br>
+In the Eclipse Platform plug-in developers define preference pages for their plug-ins
+for use in the Workbench Preferences Dialog. This article explains when to use a
+preference and some of the features the Eclipse Platform provides to support
+preferences.
+<p><b>By Tod Creasey, OTI<br>
+    </b> December 15, 2001</p>
+</blockquote>
+<HR width="100%">
+
+<h2>Introduction</h2>
+<p>The Eclipse Platform has support for user defined preferences that are
+persisted along with the workbench. This article will discuss what type of data
+should be stored as a preference and will show how to develop and register a
+user interface to allow the user to set these preferences. It will also cover
+how to initialize and retrieve preferences for use by other other plug-ins that
+use your plug-in. This functionality will be shown using an example that
+searches documents for bad words. We will set our preferences for this tool
+using two preference pages, one simple one to set a highlight color and one more
+complex one to set the list of words.
+</p>
+<h2>When to Use a Preference
+</h2>
+<p>A preference is data that is persisted between workbench sessions to allow
+the user to keep the state of a plug-in consistent between Eclipse sessions. Typical preferences are
+default values for new instances, colors for editors and paths, or processing
+information for operations performed on data (such as a build path for a Java&trade;
+file).
+</p>
+<p>Preferences are not intended to reference any resource currently defined in
+the workspace and instead should be used for editors, views or other objects that
+perform operations on a resource. Data persisted on a resource instance is better suited to be
+a property which will be discussed in a later article.
+</p>
+<p>A preference can be made available to any plug-in that has your plug-in as a
+prerequisite. The usual way to do that is to provide API on your plug-in that
+allows for access to the preferences you want to make available. The values of
+these preferences are stored in the .metadata/.plugins directory of the
+workbench on a per plug-in basis. We demonstrate
+how to do this below.
+</p>
+<h2>The Preference Store and the Plug-in</h2>
+<p>Every UI plug-in has it's own preference store provided by the workbench. For 
+  this example we will define a plug-in and use its preference store for our preferences. 
+  As we are going to use this plug-in within the UI we define it as a subclass 
+  of AbstractUIPlugin. Our constructor (see <img border="0" src="tag_2.gif" width="24" height="13">) 
+  will create a singleton to allow easy access to the plug-in instance in the 
+  workbench. We also implement the method initializeDefaultPreferences() to set 
+  up our default values for our two preferences. We are defining a preference 
+  for the bad words and a preference for the color of the highlight. Each preference 
+  value is looked up using a given key. In the code below the keys we are using 
+  are defined by the constants in <img src="tag_1.gif" width="24" height="13">. 
+</p>
+<p>The default value should be set for all preferences to be sure that there is 
+  a value to use at all times. A default value also ensures that the UI can provide 
+  a way to reset a preference value back to a reasonable initial setting via the 
+  Restore Defaults button.The default value of the preference should be initialized 
+  in the plug-in so that it is set before any of the UI is created.&nbsp; </p>
+<p> IAbstractWorkbenchPlugin defines a method called initializeDefaultPreferences(IPreferenceStore) 
+  which is called when the preference store is created the first time. In this 
+  method (see <img border="0" src="tag_3.gif" width="24" height="13">) you should 
+  set the default value for all values that you will be using the preference store 
+  for. We set a default color using the helper methods in the PreferenceConverter 
+  which allows the plug-in developer to set and get values for a preference of 
+  commonly stored types like FontData, Point etc. This API is provided because 
+  preferences are stored and retrieved as Strings in a human readable format in 
+  order to leverage the java properties mechanism.&nbsp; Our more complex bad 
+  words preference is initialized using a set of preselected bad words defined 
+  in the format we are going to store them in as we do not have API on the PreferenceConvertor 
+  to store or retreive arrays of Strings.</p>
+<pre>Color color= Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
+PreferenceConverter.setDefault(store, HIGHLIGHT_PREFERENCE, color.getRGB());</pre>
+<pre>public class BadWordCheckerPlugin extends AbstractUIPlugin {
+	//The shared instance.
+	private static BadWordCheckerPlugin plugin;
+
+	//The identifiers for the preferences	
+<img border="0" src="tag_1.gif" width="24" height="13">	public static final String BAD_WORDS_PREFERENCE =
+		&quot;org.eclipse.ui.articles.badwordchecker.badwords&quot;;
+	public static final String HIGHLIGHT_PREFERENCE =
+		&quot;org.eclipse.ui.articles.badwordchecker.highlight&quot;;
+
+	//The default values for the preferences
+	public static final String DEFAULT_BAD_WORDS = &quot;bug;bogus;hack;&quot;;
+	public static final int DEFAULT_HIGHLIGHT = SWT.COLOR_BLUE;
+
+	/**
+	 * The constructor.
+	 */
+	public BadWordCheckerPlugin(IPluginDescriptor descriptor) {
+		super(descriptor);
+<img border="0" src="tag_2.gif" width="24" height="13">		plugin = this;
+	}
+
+	/**
+	 * Returns the shared instance.
+	 */
+	public static BadWordCheckerPlugin getDefault() {
+		return plugin;
+	}
+
+	/** 
+	 * Initializes a preference store with default preference values 
+	 * for this plug-in.
+	 * @param store the preference store to fill
+	 */
+	protected void initializeDefaultPreferences(IPreferenceStore store) {
+<img border="0" src="tag_3.gif" width="24" height="13">		store.setDefault(BAD_WORDS_PREFERENCE, DEFAULT_BAD_WORDS);
+		Color color= Display.getDefault().getSystemColor(DEFAULT_HIGHLIGHT);
+		PreferenceConverter.setDefault(store,  HIGHLIGHT_PREFERENCE, color.getRGB());
+
+	}
+}</pre>
+<h2>Defining Preference Pages in plugin.xml</h2>
+<p>Now that we have defined the preference we want to provide a way for the user
+to set the preference value. Preference pages for the workbench can be found in
+the preferences dialog. The preferences dialog is accessible via the Window-&gt;Preferences
+menu group. Plug-in developers should add their preference pages to this dialog using the plugin.xml of their
+plug-in in order to maintain a consistent look and feel with other Eclipse
+plug-ins. The definition of the preference pages within plugin.xml looks like
+this:
+</p>
+<pre>&lt;extension point=&quot;org.eclipse.ui.preferencePages&quot;&gt;
+ 	&lt;page id=&quot;org.eclipse.ui.articles.BadWordsPreference&quot;
+<img border="0" src="tag_1.gif" width="24" height="13"> 		name=&quot;Bad Words&quot;
+<img border="0" src="tag_2.gif" width="24" height="13">    		class=&quot;org.eclipse.ui.articles.badwordchecker.BadWordsPreferencePage&quot;&gt;
+   	&lt;/page&gt;
+   	
+ 	&lt;page id=&quot;org.eclipse.ui.articles.BadWordsColorPreference&quot;
+  	      	name=&quot;Colors&quot;
+	      	class=&quot;org.eclipse.ui.articles.badwordchecker.BadWordsColorPreferencePage&quot;
+<img border="0" src="tag_3.gif" width="24" height="13">		category=&quot;org.eclipse.ui.articles.BadWordsPreference&quot;&gt;
+   	&lt;/page&gt;
+&lt;/extension&gt;</pre>
+<p>The definition above sets the name (<img border="0" src="tag_1.gif" width="24" height="13">)
+of the preference page for use in the list
+of pages in the preference dialog and also specifies the class(<img border="0" src="tag_2.gif" width="24" height="13">) to be
+instantiated for creating the preference page. This class must conform to
+IWorkbenchPreferencePage.</p>
+<p>In the second definition there is a category (<img border="0" src="tag_3.gif" width="24" height="13">)
+tag which is used to make one
+page the child of another in the list in the preferences dialog. Preference
+pages can be stored as the children of other pages. This is useful
+for keeping a series of pages together that are related to each other and also
+reduces the clutter in the workbench preferences page. A page can be made the
+child of another page by setting the id of the parent page as the value of the
+category field in the plugin.xml. A page with no parent is displayed as a child
+with no root.</p>
+<p>With the above declarations in our plugin.xml the list of preference pages
+shown in the preference dialog will look like:</p>
+<p align="center"><img border="0" src="tree.jpg" width="179" height="284"></p>
+<p align="center">The Preference Dialog Tree with the Bad Words and Color Page
+Added</p>
+<h2>The Color Preference Page
+</h2>
+<p>The color preference page is an example of a simple page that uses a single
+JFace field editor to manage its values. Initially a preference page class is
+defined.&nbsp; All
+classes used in the preference dialog must conform to IWorkbenchPreferencePage.
+Eclipse includes the class PreferencePage which implements most of the necessary API
+for a preference page. The class definition for our preference page is:</p>
+<pre>BadWordsColorPreferencePage
+	extends PreferencePage
+	implements IWorkbenchPreferencePage</pre>
+<p>Once we have defined the page we want to initialize it.&nbsp; IWorkbenchPreferencePage
+specifies a message init(IWorkbench) for this purpose. We will not use the Workbench
+argument for this page. Our implementation only sets
+the preference store for the page.</p>
+<pre>public void init(IWorkbench workbench) {
+	//Initialize the preference store we wish to use
+	setPreferenceStore(BadWordCheckerPlugin.getDefault().getPreferenceStore());
+}</pre>
+<p>The other required method we must implement is createContents().
+All we are going to do is use a ColorFieldEditor
+to set our preference. It is also suggested that performDefaults is
+implemented so that the current state can be reset to the defaults defined in
+the plug-in. We also need to implement performOK so that the settings defined by the user are
+stored in the preference store for our plug-in. Our
+implementation is simple as the ColorFieldEditor has the code to load defaults
+and store the results of an apply for a preference already defined and performOK
+and performDefaults can call the corresponding methods on ColorFieldEditor.</p>
+<pre>/**
+ * Performs special processing when this page's Restore Defaults button has 
+ * been pressed.
+ * Sets the contents of the color field to the default value in the preference
+ * store.
+ */
+protected void performDefaults() {
+	colorEditor.loadDefault();
+}
+/** 
+ * Method declared on IPreferencePage. Save the
+ * color preference to the preference store.
+ */
+public boolean performOk() {
+	colorEditor.store();
+	return super.performOk();
+}</pre>
+<p>&nbsp;</p>
+<p align="center"><img border="0" src="colorpreference.jpg" width="598" height="541"></p>
+<p align="center">The Color Preference Page</p>
+<h2>The Bad Words Preference Page
+</h2>
+<p>We have seen how to do a simple preference page with just a color and categorize it.
+Now we will show how to use a complex object as a
+preference and still have it persisted by the preference store and editable in a
+preference page. For this example
+we are going to add a bad words preference which is an array of Strings.
+</p>
+<p>As the PreferenceConverter does not have API for conversion of arrays of
+Strings we will implement it ourselves in the BadWordCheckerPlugin.
+By implementing it in the plug-in we put the API for the use of the preference in
+a place visible to all objects that have access to this plug-in. Normally we
+would use the PreferenceConverter for conversion to and from the storage format.</p>
+<p>Methods for getting the default value of the
+preference and a getter and a setter are
+defined first - getBadWordsDefaultPreference (which returns an array of Strings)&nbsp; getBadWordsPreference (which also returns an array of Strings) and
+setBadWordsPreference which takes an array of Strings as its argument. The
+String array is stored in the preference store as a single string separated by semicolons. We choose
+semicolons as this are only ever used as punctuation and will therefore never
+be part of a word we are searching for.</p>
+<pre>/**
+ * Return the bad words preference default
+ * as an array of Strings.
+ * @return String[]
+ */
+public String[] getDefaultBadWordsPreference(){
+	return convert(getPreferenceStore().getDefaultString(BAD_WORDS_PREFERENCE));
+}
+
+/**
+ * Return the bad words preference as an array of
+ * Strings.
+ * @return String[]
+ */
+public String[] getBadWordsPreference() {
+	return convert(getPreferenceStore().getString(BAD_WORDS_PREFERENCE));
+}
+	
+/**
+ * Convert the supplied PREFERENCE_DELIMITER delimited
+ * String to a String array.
+ * @return String[]
+ */
+private String[] convert(String preferenceValue) {
+	StringTokenizer tokenizer =
+		new StringTokenizer(preferenceValue, PREFERENCE_DELIMITER);
+	int tokenCount = tokenizer.countTokens();
+	String[] elements = new String[tokenCount];
+		for (int i = 0; i &lt; tokenCount; i++) {
+			elements[i] = tokenizer.nextToken();
+	}
+
+	return elements;
+}
+
+/**
+ * Set the bad words preference
+ * @param String [] elements - the Strings to be 
+ * 	converted to the preference value
+ */
+public void setBadWordsPreference(String[] elements) {
+	StringBuffer buffer = new StringBuffer();
+	for (int i = 0; i &lt; elements.length; i++) {
+		buffer.append(elements[i]);
+		buffer.append(PREFERENCE_DELIMITER);
+	}
+	getPreferenceStore().setValue(BAD_WORDS_PREFERENCE, buffer.toString());
+}
+</pre>
+<p>There is no field editor defined in JFace
+for&nbsp; editing String arrays so we will define a list that shows the
+items with widgets to add and remove them. Our performOK method will send the
+current contents of the list to the setBadWordsPreference method and the
+performDefaults method will reset the list of strings to be the result of
+getDefaultBadWordsPreference from BadWordCheckerPlugin. As a List widget takes an array of Strings as its
+content we can use the results of these helper methods directly
+in conjunction with the methods we defined for the bad words preference in the
+plug-in. The performOK and performDefaults for this preference page use these
+methods to update the preference and reset the values in the list widget.
+</p>
+<pre>/**
+ * Performs special processing when this page's Restore Defaults button has been pressed.
+ * Sets the contents of the nameEntry field to
+ * be the default 
+ */
+protected void performDefaults() {
+	badWordList.setItems(BadWordCheckerPlugin.getDefault().getDefaultBadWordsPreference());
+}
+/** 
+ * Method declared on IPreferencePage. Save the
+ * author name to the preference store.
+ */
+public boolean performOk() {
+	BadWordCheckerPlugin.getDefault().setBadWordsPreference(badWordList.getItems());
+	return super.performOk();
+}</pre>
+<p align="center"><img border="0" src="badwordpreference.jpg" width="596" height="539"> 
+</p>
+<p align="center">The Bad Word Preference Dialog
+</p>
+<h2>Conclusions
+</h2>
+<p>In this article we have demonstrated how to use the preferences store and
+preferences pages provided by Eclipse to allow a plug-in to maintain and update
+preferences between Eclipse sessions. By use of the preference store in
+conjunction with the preferences dialog and provided field editors a plug-in
+developer can quickly put together a user interface for managing preferences. To
+find out more about the preferences that Eclipse provides see the Platform
+Plug-in Developers Guide in the Help Perspective. The help information is in the
+Programmers Guide Preferences and Properties section.
+</p>
+<p>The full implementation of the example in this article can be found in <a href="preferences.zip">preferences.zip</a>.
+</p>
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+
+</body>
+
+</html>

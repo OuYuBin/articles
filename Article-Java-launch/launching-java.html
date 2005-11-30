@@ -1,0 +1,444 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Launching Java Applications</title>
+<link rel="stylesheet" href="../default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2003 International Business Machines Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Launching Java Applications Programmatically</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  Application developers require the ability to run and debug code in order to 
+  test it. Tool developers require the ability to launch Java&#153; applications 
+  that assist in application development - for example, starting and stopping 
+  a Web server on which servlets, JSPs, and HTML pages can be tested; or launching 
+  a VM on which scrapbook evaluations can be performed. This article focuses on 
+  the high-level API provided by the Java launching plug-in that tool developers 
+  can leverage for the programmatic launching of local Java applications. 
+  <p><b> By Darin Wright, IBM OTI Labs</b> <br>
+    <font size="-1">August 26, 2003</font> </p>
+</blockquote>
+
+<hr width="100%">
+<h2>Prerequisites</h2>
+<p>To get the most out of this article, the reader should have a basic understanding 
+  of the Eclipse plug-in architecture, Java programming, and launching Java programs 
+  from the command line. A basic understanding of the Eclipse launching framework 
+  is also helpful - see the article <a href="http://www.eclipse.org/articles/Article-Launch-Framework/launch.html">We 
+  Have Lift-off: The Launching Framework in Eclipse</a>, by Joe Szurzsewski. Knowledge 
+  of Tomcat is useful, but not required, as the examples are based on launching 
+  a Tomcat server.</p>
+<h2>Introduction</h2>
+<p>Application developers require the ability to run and debug code in order to 
+  test it. This is, of course, the primary use of the Java launching support in 
+  the Eclipse SDK - to launch applications being developed in the IDE. However, 
+  tool developers also require the ability to launch Java applications that assist 
+  in application development - for example, starting and stopping a Web server 
+  on which servlets, JSPs, and HTML pages can be tested; or launching a VM on 
+  which scrapbook evaluations can be performed.</p>
+<p>In the Eclipse SDK, there are a variety of mechanisms available to Java developers 
+  for launching Java VMs. At the most basic level, <code>java.lang.Runtime</code> 
+  provides an API to launch a system process by specifying a raw command line. 
+  At a slightly higher level, the Java launching plug-in provides an API to launch 
+  a particular JRE (defined in the workspace preferences), with a specified raw 
+  classpath, boot path, program arguments, VM arguments, and a main type name. 
+  At the highest level, the Java launching plug-in provides Java launch configurations. 
+  Java launch configurations leverage the debug platform's launching framework, 
+  providing persistence and visibility in the Eclipse user interface - i.e. processes 
+  appear in the debug view, have console I/O, and launched applications appear 
+  in the launch history and launch configuration dialog. Java launch configurations 
+  use high-level abstractions that insulate developers from many of the tedious 
+  details involved in the lower level APIs.</p>
+<h2>Launching a Web Server</h2>
+<p>To illustrate the use of Java launch configurations, this article steps through 
+  an example of translating a command line used to start Tomcat into an equivalent 
+  launch configuration. To run the example you need the following.</p>
+<ul>
+  <li>a local installation of Tomcat, version 4.1.24 (available <a href="http://jakarta.apache.org/builds/jakarta-tomcat-4.0/release/v4.1.24/">here</a>)</li>
+  <li>a Java Development Kit (JDK, version 1.3.1 or higher, available <a href="http://java.sun.com/j2se/">here</a>)</li>
+  <li>an environment variable, <code>JAVA_HOME</code>, set to the installation 
+    location of your JDK</li>
+  <li>an Eclipse SDK, with <a href="org.eclipse.jdt.launching.examples.tomcat.zip">this 
+    example plug-in</a> unzipped into its plugins directory</li>
+  <li>a classpath variable (Preferences &gt; Java &gt; Classpath Variables) named 
+    <code>TOMCAT_HOME</code>, that points to your Tomcat installation directory</li>
+</ul>
+<h3>First a Disclaimer</h3>
+<p>The example used in this article is <b>not</b> <b>intended to be a style guide</b> 
+  for integrating server or application launching into the Eclipse IDE. The sole 
+  intent is to demonstrate the Java launch API.</p>
+<h3>Launching Tomcat from the Command Line</h3>
+<p>The simplest way to launch Tomcat is to use the <code>startup</code> command 
+  provided with the sever. For example, from a DOS prompt, in the <code>bin</code> 
+  directory of your Tomcat installation, type <code>startup</code>. This will 
+  execute the batch file which starts the server. A second DOS shell will appear, 
+  labeled Tomcat, and output messages will appear in the shell as the server starts. 
+  To ensure the server has started properly, you can open a Web browser on this 
+  address <code><a href="http://localhost:8080/">http://localhost:8080</a></code>. 
+  The server can be shut down by using the <code>shutdown</code> command from 
+  the bin directory of the Tomcat installation. The server will be stopped, and 
+  the associated DOS window will close.</p>
+<p>Examining the <code>startup</code> batch file reveals that Tomcat is ultimately 
+  started by launching a Java application. </p>
+<p><img src="images/tryit.gif" width="61" height="13"> From the <code>bin</code> 
+  directory of your Tomcat installation, enter a command line similar to the following. 
+  You will need to substitute the proper location for <code>tools.jar</code> specified 
+  in the classpath parameter, based on the location of your JDK (in this example, 
+  it is found in <code>d:\jdk1.4.1_02\lib\tools.jar</code>).</p>
+<pre>java -Djava.endorsed.dirs=&quot;..\common\endorsed&quot;<br>  -classpath &quot;d:\jdk1.4.1_02\lib\tools.jar;..\bin\bootstrap.jar&quot;<br>  -Dcatalina.base=&quot;..&quot;<br>  -Dcatalina.home=&quot;..&quot;<br>  -Djava.io.tmpdir=&quot;..\temp&quot;<br>  org.apache.catalina.startup.Bootstrap start
+</pre>
+<p>This has the same effect as running the <code>startup</code> batch file, except 
+  this time, the startup messages appear in the same DOS window. Once again, we 
+  can verify the server has started properly by opening a Web browser on this 
+  address <code><a href="http://localhost:8080/">http://localhost:8080</a></code>. 
+  Examining the command line that was entered, we notice the following.</p>
+<ul>
+  <li>a Java VM is launched</li>
+  <li>the main type is <code>org.apache.catalina.startup.Bootstrap</code></li>
+  <li>the main type is passed one program argument - <code>start</code></li>
+  <li>the classpath includes <code>tools.jar</code> from the JDK installation, 
+    and <code>bootstrap.jar</code> from the Tomcat installation</li>
+  <li>several system properties are set - <code>java.endorsed.dirs</code>, <code>catalina.base</code>, 
+    <code>catalina.home</code>, and <code>java.io.tmpdir</code></li>
+</ul>
+<p>The server can be shut down by using the <code>shutdown</code> command (from 
+  another DOS shell). Note that the <code>shutdown</code> command actually results 
+  in the same Java application being launched, with a different program argument 
+  - i.e. <code>stop</code>. Thus, you can also stop the server by entering a command 
+  line similar to the following, from the <code>bin</code> directory of the Tomcat 
+  installation. Once again, you need to substitute the proper location of <code>tools.jar</code>.</p>
+<pre>java -Djava.endorsed.dirs=&quot;..\common\endorsed&quot;<br>  -classpath &quot;d:\jdk1.4.1_02\lib\tools.jar;..\bin\bootstrap.jar&quot;<br>  -Dcatalina.base=&quot;..&quot;<br>  -Dcatalina.home=&quot;..&quot;<br>  -Djava.io.tmpdir=&quot;..\temp&quot;<br>  org.apache.catalina.startup.Bootstrap stop</pre>
+<h3>Launching Tomcat from Eclipse</h3>
+<p>Now let's translate the command line used to start Tomcat from the system command 
+  prompt into a launch configuration that can be used to launch Tomcat from within 
+  Eclipse. To do this, we will create an instance of a local Java application 
+  launch configuration, set various attributes on the configuration corresponding 
+  to our command line, and then launch the configuration.</p>
+<p>The example plug-in provides sample actions to start and stop Tomcat, available 
+  on a Tomcat menu (on window menu bar). The <b>Start Tomcat</b> action provides 
+  a cascading menu of all JREs defined in the workspace. When a JRE is selected, 
+  Tomcat is launched on that JRE. The code snippets below refer to code in the 
+  sample action <code>org.eclipse.jdt.launching.examples.tomcat.StartAction</code>, 
+  which launches Tomcat on a specific JRE.</p>
+<h4>Creating a Launch Configuration</h4>
+<p>The first step is to create an instance of a launch configuration, used for 
+  launching local Java applications.</p>
+ 
+<pre>
+<img src="images/tag_1.gif" width=24 align=CENTER>ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();<br>   ILaunchConfigurationType type =<br>      manager.getLaunchConfigurationType(ID_JAVA_APPLICATION);<br><img src="images/tag_2.gif" width=24 align=CENTER>ILaunchConfiguration[] configurations =<br>      manager.getLaunchConfigurations(type);<br>   for (int i = 0; i &lt; configurations.length; i++) {<br>      ILaunchConfiguration configuration = configurations[i];<br>      if (configuration.getName().equals(&quot;Start Tomcat&quot;)) {<br>         configuration.delete();<br>         break;<br>      }<br>   }<br><img src="images/tag_3.gif" width=24 align=CENTER>ILaunchConfigurationWorkingCopy workingCopy =<br>      type.newInstance(null, &quot;Start Tomcat&quot;);<p></p>
+</pre>
+<ol>
+  <li>The Java Application launch configuration type is retrieved. A launch configuration 
+    type represents a class of launch configurations (much like a type in Java 
+    represents a class of objects, also known as the Type Object pattern). Launch 
+    configuration types are stored with the launch manager in the debug platform. 
+    Each launch configuration type is defined as an extension in plug-in XML, 
+    and has a unique identifier which can be used to access it. The constants 
+    associated with the Java Application launch configuration are defined in <code>org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants</code>.</li>
+  <li>This example deletes any existing launch configuration with the name &quot;<code>Start 
+    Tomcat</code>&quot;. This is done by iterating through all Java application 
+    launch configurations, in search of a configuration with that name, and deleting 
+    it if one is found. A real application might reuse an existing launch configuration, 
+    but for the purposes of this example, we simply delete any previously created 
+    configuration.</li>
+  <li>An instance of a Java Application launch configuration is created and named 
+    &quot;<code>Start Tomcat</code>&quot;. Instances are created as working copies, 
+    which are read-write. In this example, the launch configuration will be persisted 
+    with the workspace metadata. The <code>newInstance</code> method accepts an 
+    <code>IContainer</code> in which to create the launch configuration, and the 
+    name of the configuration to create. When null is specified as the container, 
+    the configuration will be persisted with the workspace metadata. Alternatively, 
+    a workspace project or folder could be specified - in which case the configuration 
+    would be stored as a file in the workspace.</li>
+</ol>
+<p>Launch configurations are simply containers of attribute-value pairs that can 
+  be persisted. Each launch configuration type extension provides a launch delegate 
+  that is capable of interpreting the attributes of a launch configuration and 
+  launching an associated process. </p>
+<h4>Specifying a JRE</h4>
+<p>The JRE used to execute a Java application is, by default, the JRE on the build 
+  path of the project being launched. If a launch configuration is not associated 
+  with a project (as in this example), the workspace default JRE is used. A specific 
+  JRE may be specified on a Java launch configuration, to refer to one of the 
+  JREs defined in the workspace. A workspace may have any number of JREs defined, 
+  which can be configured and displayed on the <b>Java &gt; Installed JREs</b> 
+  preference page.</p>
+<p>The Java launching plug-in allows for different types of JREs, as there are 
+  many vendors and versions of JREs. A type of JRE is represented by the interface 
+  <code>IVMInstallType</code>. For example, VMs which conform to the standard 
+  Sun command line options are represented by one type of JRE. A specific instance 
+  or installation of a type of JRE, is represented by the interface <code>IVMInstall</code>. 
+  (Once again, we see the Type Object pattern).</p>
+<p>The VM install types defined in a workspace can be retrieved from the <code>JavaRuntime</code> 
+  class in the Java launching plug-in (<code>org.eclipse.jdt.launching</code>). 
+  The instances or installations of each VM type, are retrieved from the VM type. 
+  Our cascading sample menu <b>Start Tomcat, </b>loops through each VM install 
+  within each VM type, and populates a submenu of actions - one for each VM install 
+  in the workspace, as shown in the following code snippet from <code>StartMenuAction</code>.</p>
+<pre>IVMInstallType[] types = JavaRuntime.getVMInstallTypes();<br>for (int i = 0; i &lt; types.length; i++) {<br>   IVMInstallType type = types[i];<br>   IVMInstall[] jres = type.getVMInstalls();<br>   for (int j = 0; j &lt; jres.length; j++) {<br>      IAction action = new StartAction(jres[j]);<br>      ActionContributionItem item = new ActionContributionItem(action);<br>      item.fill(menu, -1);<br>   }<br>}</pre>
+<p>Thus, each <code>StartAction</code> is created to launch Tomcat with a specific 
+  JRE, and uses the following code to specify the JRE on the launch configuration.</p>
+<pre>workingCopy.setAttribute(ATTR_VM_INSTALL_NAME, jre.getName());
+workingCopy.setAttribute(ATTR_VM_INSTALL_TYPE, jre.getVMInstallType().getId());</pre>
+<p>The JRE name and type are specified via the attributes <code>ATTR_VM_INSTALL_NAME</code> 
+  and <code>ATTR_VM_INSTALL_TYPE</code>, respectively. Each VM install type has 
+  an associated identifier that uniquely identifies it among other VM install 
+  types, and this identifier is used to specify the VM type. The actual VM installation 
+  is specified by the name of the JRE. Although a JRE also has a unique identifier, 
+  the name of a JRE is used to identify it instead. The identifier for a specific 
+  VM install may be different between workspaces, and has little meaning to a 
+  user (as it is simply a number). Thus, the name is more descriptive and portable 
+  when sharing a launch configuration with other users.</p>
+<h4>Specifying a Main Type and Program Arguments</h4>
+<p>The next step is to specify the main type we want to launch and the arguments 
+  to pass to the main type.</p>
+<pre><img src="images/tag_1.gif" width=24 align=CENTER>workingCopy.setAttribute(ATTR_MAIN_TYPE_NAME,<br>                            &quot;org.apache.catalina.startup.Bootstrap&quot;);<br><img src="images/tag_2.gif" width=24 align=CENTER>workingCopy.setAttribute(ATTR_PROGRAM_ARGUMENTS, &quot;start&quot;);</pre>
+<ol>
+  <li>To specify a main type, we simply set the main type attribute - <code>ATTR_MAIN_TYPE_NAME</code>. 
+    The value is a string containing the fully qualified name of the main type.</li>
+  <li>To specify program arguments, the <code>ATTR_PROGRAM_ARGUMENTS</code> attribute 
+    is used. Its value is a string containing the raw command line arguments to 
+    pass to the main type.</li>
+</ol>
+<h4>Specifying a Classpath</h4>
+<p>By default, the project associated with a Java application launch configuration 
+  is used to determine a runtime classpath for the application (which is specified 
+  by the <code>ATTR_PROJECT_NAME</code> attribute). Generally, the build path 
+  specified for a project in the workspace corresponds to the desired runtime 
+  classpath. Thus, when a classpath is not explicitly specified on a launch configuration, 
+  a default runtime classpath is computed from the associated project's build 
+  path. However, our example launch configuration is not associated with a project 
+  in the workspace - we are launching an application external to the workspace. 
+  Thus, we must specify the runtime classpath to use.</p>
+<p><img src="images/tip.gif" width="62" height="13"> In the Eclipse SDK, the command 
+  line used to launch a Java application can be viewed by selecting the associated 
+  process or debug target in the <b>Debug View</b>, and selecting <b>Properties</b> 
+  from the context menu. This displays a dialog containing the command line (including 
+  the classpath option) generated to launch a Java application. Examining the 
+  command used to launch a process can be useful when diagnosing launch problems.</p>
+<p>In the Eclipse SDK, the runtime classpath can be configured via the <b>Classpath</b> 
+  tab of a Java application launch configuration. On this tab, the user can specify 
+  the order of projects, system libraries, jars, folders, and variables to be 
+  placed on the classpath. Entries can be added to the user application classpath 
+  or the boot path. Similarly, a classpath can be programmatically specified on 
+  a Java application launch configuration as an ordered list of classpath entries. 
+  The attribute used to specify a classpath is <code>ATTR_CLASSPATH</code>, 
+  and its value is a list of <code>String</code>s, 
+  each of which is a memento for an <code>IRuntimeClasspathEntry</code>.</p>
+<p>An <code>IRuntimeClasspathEntry</code> can 
+  be used to describe any of the following:</p>
+<ul>
+  <li>a project in the workspace</li>
+  <li>an archive (jar or zip file) in the workspace</li>
+  <li> an archive in the local file system</li>
+  <li>a folder in the workspace</li>
+  <li>a folder in the local file system</li>
+  <li>a classpath variable with an optional extension</li>
+  <li>a system library (also known as a classpath container, which is a related 
+    group of archives, such as the jars associated with a JDK)</li>
+</ul>
+<p>The classpath specified on a launch configuration is specified in an unresolved 
+  format, and is resolved by the launch delegate at run time. For example, a project 
+  entry on the classpath is resolved to the output locations of that project (i.e. 
+  the folder or folders that contain the compiled class files for the project). 
+  Specifying an unresolved classpath on the launch configuration makes the classpath 
+  portable between workspaces and shareable among users. When a classpath is specified 
+  on a launch configuration, it must be specified completely - that is, including boot path 
+  and user classpath entries.</p>
+<p>Our example requires two entries on the user application classpath - <code>tools.jar 
+  </code>and <code>bootstrap.jar</code>.</p>
+<pre><img src="images/tag_1.gif" width=24 align=CENTER>IVMInstall jre = JavaRuntime.getDefaultVMInstall();			<br>   File jdkHome = jre.getInstallLocation();<br>   IPath toolsPath = new Path(jdkHome.getAbsolutePath())<br>          .append(&quot;lib&quot;)<br>          .append(&quot;tools.jar&quot;);<br>   IRuntimeClasspathEntry toolsEntry =<br>      JavaRuntime.newArchiveRuntimeClasspathEntry(toolsPath);<br>   toolsEntry.setClasspathProperty(IRuntimeClasspathEntry.USER_CLASSES);<br><img src="images/tag_2.gif" width=24 align=CENTER>IPath bootstrapPath = new Path(&quot;TOMCAT_HOME&quot;)<br>          .append(&quot;bin&quot;)<br>          .append(&quot;bootstrap.jar&quot;);<br>   IRuntimeClasspathEntry bootstrapEntry = <br>      JavaRuntime.newVariableRuntimeClasspathEntry(bootstrapPath);<br>   bootstrapEntry.setClasspathProperty(IRuntimeClasspathEntry.USER_CLASSES);			<br><img src="images/tag_3.gif" width=24 align=CENTER>IPath systemLibsPath = new Path(JavaRuntime.JRE_CONTAINER);<br>   IRuntimeClasspathEntry systemLibsEntry =<br>      JavaRuntime.newRuntimeContainerClasspathEntry(systemLibsPath,<br>         IRuntimeClasspathEntry.STANDARD_CLASSES);<br><img src="images/tag_4.gif" width=24 align=CENTER>List classpath = new ArrayList();<br>   classpath.add(toolsEntry.getMemento());<br>   classpath.add(bootstrapEntry.getMemento());<br>   classpath.add(systemLibsEntry.getMemento());<br>   workingCopy.setAttribute(ATTR_CLASSPATH, classpath);<br>   workingCopy.setAttribute(ATTR_DEFAULT_CLASSPATH, false);</pre>
+<ol>
+  <li>The first entry on our classpath is <code>tools.jar</code> from the JDK 
+    install. (This example assumes you have set your workspace default JRE to 
+    a JDK install containing <code>tools.jar</code> in the <code>lib</code> directory). 
+    We create a classpath entry that points to an archive in the local file system, 
+    with an absolute path. We build the path relative to the install location 
+    of the workspace default JRE. The entry's classpath property is set to <code>USER_CLASSES</code>, 
+    to indicate that the classpath entry is to appear on the user application 
+    portion of the classpath.</li>
+  <li>Next, a classpath entry for Tomcat's <code>bootstrap.jar</code> is created. 
+    (This example assumes you have defined a classpath variable, <code>TOMCAT_HOME</code>, 
+    that points to the install location of Tomcat). This entry is created relative 
+    to the Tomcat install location, by creating a variable entry with an extension 
+    of &quot;<code>bin\bootstrap.jar</code>&quot;. This entry is also set to appear 
+    on the user application portion of the classpath.</li>
+  <li>When launching Tomcat from the command line, we did not specify a boot path 
+    (the default boot path was used). However, when specifying a classpath on 
+    a Java launch configuration, the complete path must be specified. Thus, an 
+    entry is created that refers to the system libraries associated with the default 
+    JRE. The classpath property of this entry is set to <code>STANDARD_CLASSES</code>, 
+    indicating that the entry refers to a set of archives that normally appear 
+    on the boot path by default. The Java application launch delegate only generates 
+    a boot path argument when non-default entries appear on the boot path. However, 
+    we must still specify all entries.</li>
+  <li>The classpath attribute is created and set - an <b>ordered</b> list of runtime 
+    classpath entry <b>mementos</b>. It is also important to note that the <code>ATTR_DEFAULT_CLASSPATH</code> 
+    attribute is also set to <code>false</code>. When this attribute is omitted 
+    or set to <code>true</code>, a default classpath is used, rather than the 
+    classpath specified on the launch configuration.</li>
+</ol>
+<h4>Specifying System Properties</h4>
+<p>Next we specify system properties.</p>
+<pre><img src="images/tag_1.gif" width=24 align=CENTER>workingCopy.setAttribute(ATTR_VM_ARGUMENTS,<br>      &quot;-Djava.endorsed.dirs=\&quot;..\\common\\endorsed\&quot;&quot;<br>    + &quot;-Dcatalina.base=\&quot;..\&quot;&quot;<br>    + &quot;-Dcatalina.home=\&quot;..\&quot;&quot;<br>    + &quot;-Djava.io.tmpdir=\&quot;..\\temp\&quot;&quot;);</pre>
+<ol>
+  <li>System properties are specified as VM arguments, using the <code>ATTR_VM_ARGUMENTS</code> 
+    attribute. The value is a string of raw arguments, as they would appear on 
+    the command line.</li>
+</ol>
+<h4>Specifying a Working Directory</h4>
+<p>The working directory associated with a Java runtime can be retrieved at run 
+  time via the system property <code>user.dir</code> (that is, <code>System.getProperty(&quot;user.dir&quot;)</code>). 
+  At run time, file operations are performed relative to the working directory 
+  when absolute paths are not specified. When launching a Java program from the 
+  command line, the working directory is initialized to the location in the file 
+  system from which the VM is launched. When launching a Java program from within 
+  Eclipse, the working directory must be specified. When a working directory is 
+  not specified, it is, by default, the location in the local file system that 
+  corresponds to the directory of the project being launched. When a project is 
+  not associated with a launch configuration, the default working directory is 
+  the directory from which the Eclipse SDK was started.</p>
+<p>When we launched Tomcat from the command line, the working directory was the 
+  <code>bin</code> directory of the Tomcat install - i.e. the directory from which 
+  the command was given. Since we have specified system properties relative to 
+  the working directory, we must also specify the working directory that should 
+  be used on our launch configuration.</p>
+<pre><img src="images/tag_1.gif" width=24 align=CENTER>File workingDir = JavaCore.getClasspathVariable(&quot;TOMCAT_HOME&quot;)<br>      .append(&quot;bin&quot;).toFile();<br>   workingCopy.setAttribute(ATTR_WORKING_DIRECTORY,<br>      workingDir.getAbsolutePath());</pre>
+<ol>
+  <li>The value of the working directory attribute is a string representing a 
+    path. If the path is absolute (that is, begins with a device or path separator), 
+    the path is interpreted as a location in the local file system. If the path 
+    is relative (does not begin with a device or path separator), the path is 
+    interpreted as relative to the workspace root. Our example specifies an absolute 
+    path in the local file system - the <code>bin</code> directory of the Tomcat 
+    install.</li>
+</ol>
+<h4>Launching a Configuration</h4>
+<p>Now we are ready to launch our configuration.</p>
+<pre><img src="images/tag_1.gif" width=24 align=CENTER>ILaunchConfiguration configuration = workingCopy.doSave();<br><img src="images/tag_2.gif" width=24 align=CENTER>DebugUITools.launch(configuration, ILaunchManager.RUN_MODE);</pre>
+<ol>
+  <li>First, the working copy launch configuration is saved. This persists the 
+    launch configuration locally with the workspace metadata.</li>
+  <li>Next, the configuration is launched. This example launches the configuration 
+    in run mode, using the launch API provided by the debug UI plug-in. This convenience 
+    API has several advantages. According to workspace preferences any unsaved 
+    editors are saved, the workspace is built, and then the configuration is launched, 
+    all while displaying a progress dialog.</li>
+</ol>
+<p><img src="images/tip.gif" width="62" height="13"> You can also launch a configuration 
+  via the API <code>ILaunchConfiguration.launch(String mode, IProgressMonitor 
+  monitor)</code>. This avoids saving editors and building the workspace, but 
+  it requires you to provide a progress monitor.</p>
+<p><img src="images/tryit.gif" width="61" height="13"> Display the <b>Tomcat </b>action 
+  set by selecting <b>Window &gt; Customize Perspective</b>, and then checking 
+  the <b>Tomcat Example</b> action set. Run the example by selecting the <b>Start 
+  Tomcat</b> action from the <b>Tomcat</b> menu our example plug-in provides, 
+  and selecting a JRE from the cascading menu. Note that you must choose a JRE 
+  that is a JDK containing a <code>tools.jar</code>. Output will appear in the 
+  console as the server is launched. You can verify the server is up and running 
+  by opening a Web browser on this address <code><a href="http://localhost:8080/">http://localhost:8080</a></code>. 
+  Notice that the launch configuration we created also appears in the launch history 
+  (drop down <b>Run</b> and <b>Debug</b> menus), and the launch configuration 
+  also appears in the launch configuration dialog.</p>
+<p><img src="images/tip.gif" width="62" height="13"> We could avoid having the 
+  launch configuration appear in the launch dialog and launch history by marking 
+  our launch configuration as private. The debug plug-in defines an attribute 
+  common to all launch configurations to control this - <code>IDebugUIConstants.ATTR_PRIVATE</code>. 
+  The value is a boolean indicating if the launch configuration is private, and 
+  the default value is <code>false</code> (i.e. when unspecified).</p>
+<h3>Stopping the Server</h3>
+<p>A <b>Stop Tomcat</b> action is provided to shut down Tomcat as well - available 
+  from the <b>Tomcat</b> menu. This action is almost identical to the start action, 
+  except it creates a launch configuration with a different name (<code>Stop Tomcat</code>), 
+  and specifies the <code>stop</code> argument in place of <code>start</code>.</p>
+<p><img src="images/tryit.gif" width="61" height="13">Shut down the server by 
+  selecting the <b>Stop Tomcat</b> action. You will notice another process is 
+  launched and then both processes (the Tomcat server and the newly launched process) 
+  eventually terminate. </p>
+<h3>Debugging the Server</h3>
+<p>The example has shown how to launch Tomcat in run mode. The VM used to run 
+  Tomcat can also be launched in debug mode, simply by changing the mode specified 
+  in the following line.</p>
+<pre>DebugUITools.launch(configuration, ILaunchManager.DEBUG_MODE);</pre>
+<p><img src="images/tryit.gif" width="61" height="13"> Another way to launch Tomcat 
+  in debug mode is to re-launch Tomcat from the debug drop down menu, or from 
+  the launch configuration dialog when opened in debug mode. Tomcat will launch, 
+  and its process, debug target, and threads will be displayed in the debug view.</p>
+<h2>Other Launch Options</h2>
+<p>Our Tomcat example demonstrates many of the common features/attributes required 
+  for launching Java applications programmatically. However, there are other aspects 
+  of the launch that can be controlled by attributes that were not used in our 
+  example. The following list provides a summary of the options not covered by 
+  the example, and when you might want to use them.</p>
+<ul>
+  <li><code>ATTR_PROJECT_NAME</code> - This attribute specifies the name of a 
+    Java project associated with a launch configuration. When this attribute is 
+    specified, the launch delegate uses the associated project to compute default 
+    values for a launch - such as runtime classpath, working directory, JRE, and 
+    source lookup path.</li>
+  <li><code>ATTR_STOP_IN_MAIN</code> - This attribute is a boolean indicating 
+    whether an application should suspend when the <code>main</code> method is 
+    entered on startup. The default value is <code>false</code>, and this attribute 
+    is only effective when a configuration is launched in debug mode.</li>
+  <li><code>ATTR_VM_INSTALL_TYPE_SPECIFIC_ATTRS_MAP</code> - This attribute is 
+    a map of attribute-value pairs. The interpretation of the attributes is specific 
+    to a VM install type. For example, the Standard VM install type supports the 
+    specification of the name of the executable used to launch a VM - i.e. java, 
+    javaw, etc. This value is specified by the <code>ATTR_JAVA_COMMAND</code> 
+    attribute with in this attribute map. An extension point (<code>org.eclipse.jdt.debug.ui.vmInstallTypePage</code>) 
+    exists for clients to contribute a user interface control to the JRE tab of 
+    a Java application launch configuration, to display and edit JRE specific 
+    attributes.</li>
+  <li><code>ATTR_SOURCE_PATH</code> - This attribute is analogous to the classpath 
+    attribute, except that it specifies where source should be be located. The 
+    value is an ordered list of runtime classpath entry mementos. This attribute 
+    is used mostly in debug mode when stepping through source code, but is also 
+    useful in run mode when navigating from stack traces in the console to corresponding 
+    source.</li>
+  <li><code>ATTR_DEFAULT_SOURCE_PATH</code> - This boolean attribute (analogous 
+    to <code>ATTR_DEFAULT_CLASSPATH</code>) indicates whether a default source 
+    path should be used, based on the default classpath. When unspecified or <code>true</code>, 
+    any explicitly specified source path is ignored.</li>
+  <li><code>ATTR_CLASSPATH_PROVIDER</code> - This attribute specifies an identifier 
+    of a classpath provider extension (extensions of type <code>org.eclipse.jdt.launching.classpathProviders</code>). 
+    When specified, the associated classpath provider is consulted to compute 
+    and resolve a runtime classpath for a launch configuration. This provides 
+    clients with a hook for generating and resolving runtime classpaths.</li>
+  <li><code>ATTR_SOURCE_PATH_PROVIDER</code> - This attribute is analogous to 
+    <code>ATTR_CLASSPATH_PROVIDER</code>, except that it specifies an extension 
+    used to compute and resolve the source lookup path.</li>
+</ul>
+<h2>Summary</h2>
+<p>Launch configurations provide a high-level API for programmatically launching 
+  Java applications. Just as a user can create, modify and launch an application 
+  from the Eclipse user interface, configurations can be created, modified, and 
+  launched programmatically. Java VM command line options correspond to Java launch 
+  configuration attributes. Launch configurations leverage features of the debug 
+  platform launching framework - persistence, launch history, console I/O, and 
+  visibility in the launch configuration dialog.</p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered 
+  trademarks of Sun Microsystems, Inc. in the United States, other countries, 
+  or both.</small></p>
+<p><small>Other company, product, and service names may be trademarks or service marks 
+  of others.</small></p>
+</body>
+</html>

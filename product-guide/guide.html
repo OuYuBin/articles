@@ -1,0 +1,854 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (Win98; I) [Netscape]">
+   <meta name="Author" content="Greg Adams">
+   <title>Creating product branding</title>
+  <link rel="stylesheet" href="default_style.css">
+</head>
+<body>
+                                                                        
+<div align=right><font face="Times New Roman, Times, serif"><font size=-1>Copyright
+&copy; 2001 Object Technology International, Inc.</font></font></div>
+<div ALIGN=right><table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+Corner Article</font></font></b></td>
+</tr>
+</table></div>
+
+<h1>
+<img SRC="idea.jpg" height=86 width=120></h1>
+
+<center>
+<h1>
+Creating product branding</h1></center>
+
+<blockquote><b>Summary</b> <br>
+  In this document we will look at the steps needed to create a product. Before 
+    we get too excited hoping the magic of product building will be revealed, 
+    we should first confess that we will focus only on those aspects of the platform 
+    which you will need to modify in order to give your product some branding. 
+    This will include such items as the splash screen, about dialog, the program 
+    executable and so forth. 
+  <p><b>By Greg Adams, OTI</b> <br>
+    <font size=-1>November 27, 2001</font> 
+  <p>Editor's note: This article describes Eclipse release 1.0. All aspects of 
+    product branding were completely revamped for Eclipse release 2.0; an updated 
+    version of this article is in preparation.
+</blockquote>
+<hr WIDTH="100%">
+
+<h2>The high level picture</h2>
+<p>You have written all the code and now it is time to bundle up your code with 
+  the platform and change the identity to have your product brand. Before diving 
+  into the details of each step let's take a sneak peak at the big picture and 
+  get a flavor for the kinds of things we'll be doing. The high level steps are 
+  as follows:</p>
+<ol>
+  <li>Replace the product level graphics (e.g. splash screen)</li>
+  <li>Create graphics for the executable</li>
+  <li>Create a new executable</li>
+  <li>Create a product configuration </li>
+  <li>Create a product plug-in corresponding to the configuration</li>
+  <li>Update the install information to use your new configuration.</li>
+  <li>Remove any existing license information</li>
+</ol>
+<p>As you work through the steps you may notice the occasional <b><img src="TryIt.gif" width="61" height="13"></b>. 
+  These indicate points at which you may want to test out the work you have done 
+  thus far. Once you have completed the test be sure to delete the <i>eclipse/workspace</i> 
+  directory thus ensuring that the next test starts with a fresh state. Once you 
+  have mastered the steps you should do a final run through the steps (starting 
+  with a clean install) but be sure to skip the &quot;try it&quot; steps. These 
+  steps require you to run the platform and consequently will cause information 
+  to be cached. Your actual product production process should not run the platform 
+  runtime.</p>
+<p>The steps in this document assume that you have the <i>runtime</i> build of 
+  the platform installed on your machine. In some cases you will require access 
+  to the SDK build but it is important to note that we will be working with and 
+  modifying the platform build. In the remaining sections we assume that you have 
+  a working knowledge of plug-ins.</p>
+<p>Before continuing make sure that you have installed a platform runtime build 
+  and installed into it all of your own plug-ins. You should not consider branding/productization 
+  unless you are also including your own plug-ins.</p>
+<p>This article is intended to be a guide to help you produce a release. You need 
+  to ensure that you comply with any terms and conditions of the license under 
+  which you received the platform runtime.</p>
+<p>&nbsp;</p>
+<h2>Replacing the splash screen</h2>
+<p>The splash screen (shown while the program starts) is contained in two files 
+  found in the <i>eclipse/splash</i> directory. You must replace both of these 
+  files with your product splash screens. The file <i>splash_basic</i> and <i>splash_full</i> 
+  correspond to low color and high color versions of the splash screen. The low 
+  color splash screen is used only when the display (color) depth is less than 
+  or equal to eight. Typically most displays have sufficient color depth support 
+  to allow the high color splash to be used. </p>
+<p><img src="win_only.gif" width="51" height="13"> On Windows&reg; replace the following 
+  two files (in eclipse/splash) with your splash screen files: </p>
+<ul>
+  <li>splash_basic.bmp </li>
+  <li>splash_full.bmp </li>
+</ul>
+<p><img src="linux_only.gif" width="51" height="13"> On Linux replace the following 
+  two files (in eclipse/splash) with your splash screen files:</p>
+<ul>
+  <li>splash_basic.xpm</li>
+  <li>splash_full.xpm</li>
+</ul>
+<p>&nbsp;</p>
+<p><b><img src="TryIt.gif" width="61" height="13"> </b>Start the program and confirm 
+  that your splash screen is shown. Exit the program. Don't forget to delete the 
+  <i>eclipse/workspace </i>directory thus ensuring things are in a completely 
+  fresh state for our next test.</p>
+<p>&nbsp;</p>
+<h2>Creating the graphics for our executable</h2>
+<p>The executable is located in the <i>eclipse/ </i>root directory and the process 
+  for replacing it is platform specific. Start by extracting the file <i>eclipse/launchersrc.zip 
+  </i>found in the SDK and opening the resulting <i>library </i>subdirectory<i>. 
+  </i>In the following sections, we will work with the <i>library/</i> directory 
+  and once we are finished we will copy the resulting executable back to the runtime 
+  platform build. This is the only time you will require access to files found 
+  in the SDK.</p>
+<p><b><img src="win_only.gif" width="51" height="13"> </b>On Windows executable 
+  programs can have an associated icon(s). To create our icon we first need to 
+  replace several .BMP graphics located in the <i>library </i>directory<i>. </i>These 
+  graphics represent 16x16, 32x32 and 48x48 pixel versions of both low color and 
+  high color graphics. In the <i>library/ </i>directory replace the following 
+  files:</p>
+<ul>
+  <li>icon16_basic.bmp</li>
+  <li>icon16_full.bmp</li>
+  <li>icon32_basic.bmp</li>
+  <li>icon32_full.bmp</li>
+  <li>icon48_basic.bmp</li>
+  <li>icon48_full.bmp</li>
+</ul>
+<p>Using an appropriate graphics tool (e.g. ICONPRO provided in the MSDN) of your 
+  choice, combine these graphics into a single .ICO (icon) file called<i> eclipse.ico</i> 
+  and replace <i>library/eclipse.ico</i> with your new eclipse.ico file. The <i>eclipse.ico</i> 
+  is referenced by the file<i> library/eclipse.rc</i> which is automatically used 
+  when the executable build script is run. Once the build script has finished 
+  we will have a new program executable with an associated icon.</p>
+<p><img src="linux_only.gif" width="51" height="13"> Linux does not directly associate 
+  an icon with an executable program however we can include an icon that users 
+  can use when associating a shortcut with the program. Create yourself an xpm 
+  graphic (representing your program icon) using your favorite graphics editor 
+  and place it into <i>library/icon.xpm. </i>Once we have built the executable 
+  we will copy both the executable and the <i>.xpm </i>file to the <i>eclipse/</i> 
+  root directory of the platform runtime build.</p>
+<h2>&nbsp;</h2>
+<h2>Creating a new executable program</h2>
+<p>Executable icon in hand, it's time to make the executable. We will continue 
+  to work with the <i>library/ </i>directory and once we have created our executable 
+  we will copy it to the <i>eclipse/</i> root directory of the runtime platform 
+  build. The process for creating the program executable is different for each 
+  platform however the <i>library/</i> directory includes build scripts to help 
+  make the process easier.</p>
+<h3><b>Preparing the build script</b></h3>
+<p><img src="win_only.gif" width="51" height="13"> In the <i>library/</i> directory 
+  you will find the build script <i>build.bat</i>. We will need to edit this build 
+  file to point it to the location of your compiler. To do this, simply uncomment 
+  the following lines (by removing <i>rem</i>) and modify <i>MSVC_HOME </i>to 
+  point to the root directory of your compiler installation.</p>
+<blockquote> 
+  <pre>rem IF NOT &quot;%MSVC_HOME%&quot;==&quot;&quot; GOTO MAKE
+rem set MSVC_HOME=k:\dev\products\msvc60\vc98
+rem call %MSVC_HOME%\bin\vcvars32.bat</pre>
+</blockquote>
+<p>This script has been tested with Microsoft&reg; Visual C/C++ Compiler 6.0 however 
+  it is possible that you may need to make additional modifications for your compiler. 
+  If you are using Windows 98 you will also need to remove the line<i> rem Usage: 
+  build &lt;PROGRAM_OUTPUT&gt; &lt;PROGRAM_NAME&gt;</i> to work around a known 
+  problem.</p>
+<p><img src="linux_only.gif" width="51" height="13"> On Linux, the build script 
+  (<i>build.csh)</i> has been tested against GNU C and C++ Compiler. You typically 
+  should not need to make any changes to the Linux build script.</p>
+<p>&nbsp;</p>
+<h3><b>Running the build script</b></h3>
+<p>The build script takes two arguments, the filename of the executable file to 
+  create and the title (name) of your program. If the program name has spaces 
+  in it (as in the example below) you will need to put double-quotes around it. 
+</p>
+<p>In the example below the program name <i>Cool Stuff &nbsp;</i>will be shown 
+  in the task bar while the program is starting. As we will soon learn the icon 
+  shown in the top left corner of each Workbench window is set separately and 
+  is unrelated to the icons specified for the executable.</p>
+<p><img src="win_only.gif" width="51" height="13"> On Windows you can run the 
+  build script (<i>build.bat)</i> as shown below. Prior to running the build script 
+  you should delete any <i>.res</i> files from the <i>library</i> directory. These 
+  files will typically only be present if you have run the build script previously. 
+  This example will create an executable file named <i>cool.exe</i> with the icon 
+  we created above.</p>
+<blockquote> 
+  <pre>build cool.exe &quot;Cool Stuff&quot;</pre>
+</blockquote>
+<p><img src="linux_only.gif" width="51" height="13"> On Linux you can run the 
+  build script (<i>build.csh)</i> as shown below. This example will create an 
+  executable file named <i>cool</i>. On Linux an icon is not automatically associated 
+  with the executable.</p>
+<blockquote> 
+  <pre>csh build.csh cool &quot;Cool Stuff&quot;</pre>
+</blockquote>
+<p>&nbsp;</p>
+<h3><b>Replacing the existing executable</b> </h3>
+<p>Now that you have your own executable, you can copy it to the <i>eclipse/</i> 
+  root directory of the runtime platform build. Next, delete the current executable 
+  from the <i>eclipse/ </i>root directory. If you forget to delete the existing 
+  executable a user will not know which executable to run so its important not 
+  to forget this little step.</p>
+<p><img src="linux_only.gif" width="51" height="13"> On Linux we also need to 
+  copy the <i>icon.xpm </i>(we created above) to the <i>eclipse/ </i>root replacing 
+  the one already found there. </p>
+<p>&nbsp;</p>
+<p><b><img src="TryIt.gif" width="61" height="13"> </b>Let's give it a whirl! 
+  Go to the<i> eclipse/</i> root directory of the runtime platform build and start 
+  the program by running your executable. Confirm that your executable properly 
+  starts, that your icons and program name are shown in the appropriate places 
+  and that your splash screen is still shown. Don't worry about the icon or title 
+  in the resulting Workbench window we'll fix those in a later section. Exit the 
+  program. Don't forget to delete the <i>eclipse/workspace </i>directory thus 
+  ensuring things are in a completely fresh state for our next test.</p>
+<p>&nbsp;</p>
+<h2>Create a product configuration</h2>
+<p>A product configuration and its corresponding plug-in define several key product 
+  attributes including the icon and title shown in each window, the welcome page, 
+  about dialog information and much more. Product configurations are defined in 
+  the <i>eclipse/install/configurations </i>directory. If you take a glance at 
+  this directory you will likely observe more than one product configuration. 
+  Which one defines the product? The answer lies in the file <i>eclipse/install/install.properties 
+  </i> that specifies which configuration is the <i>dominant</i> configuration. 
+  At any given time only one configuration is the dominant configuration. Each 
+  configuration also has a corresponding plug-in directory. We will start by finding 
+  the dominant configuration and then proceed to create a new product configuration 
+  and corresponding plug-in. Finally we will update the <i>install.properties</i> 
+  file to point to the new configuration. </p>
+<h3><b>Discovering the dominant configuration</b> </h3>
+<p>Open the file <i>eclipse/install/install.properties</i> and go to the line 
+  with <b>application.configuration = .</b> The information appearing on the right 
+  hand side is the name (id and version) of the current <i>dominant</i> configuration. 
+  Typically the <b>application.configuration</b> has the form <i>xyz_version</i>. 
+  For example <i>xyz_1.0.0</i> indicates the configuration id is <i>xyz</i> and 
+  the version level is <i>1.0.0</i>. </p>
+<p>Now that we know the name (id and version) of the dominant configuration take 
+  another look at the <i>eclipse/install/configurations </i>directory<i>. </i>You 
+  should see a subdirectory with the same name as the dominant configuration name. 
+  For example if <i>install.properties </i>had the line <b>application.configuration 
+  = xyz_1.0.0 </b>then we should expect to see a directory <i>xyz_1.0.0</i>. In 
+  addition you should find a plug-in (in <i>eclipse/plugins</i>) with the exact 
+  same name as the configuration directory. </p>
+<p>Make a note of the dominant configuration name (id and version) because we'll 
+  want to copy both the configuration and the plug-in directories in the following 
+  sections.</p>
+<h3><b>Choosing a name for our configuration</b></h3>
+<p>You may recall (from the section on creating the executable) that the name 
+  of our program is &quot;Cool Stuff&quot;. To make things easier to follow let's 
+  assume the id we want to give to our configuration and plug-in is <i>org.cool.stuff</i> 
+  and the version number is <i>1.0.0</i>. Consequently our configuration and plug-in 
+  directories will have the name <i>org.cool.stuff_1.0.0</i> and ultimately we 
+  will edit the <i>install.properties</i> file to have application.configuration 
+  <b>= </b>org.cool.stuff_1.0.0. </p>
+<h3><b></b> <b>Creating the configuration</b> </h3>
+<p>Open the <i>eclipse/install/configurations </i>directory and copy the current 
+  dominant configuration (recall we recorded its name above) to a directory of 
+  your own naming. For our example we need to copy the dominant configuration 
+  to a directory named to <i>eclipse/install/configurations/<b>org.cool.stuff_1.0.0</b></i>. 
+  It is important that you copy the directory, you must not simply rename the 
+  existing dominant configuration directory. </p>
+<p>Next edit the file <i>install.xml</i> found in the new configuration directory. 
+  You will need to edit the fields (lines) as follows:</p>
+<table width="80%" border="1" cellspacing="0" cellpadding="0">
+  <tr bgcolor="#CCCCCC"> 
+    <td width="30%"><b>Field</b></td>
+    <td width="80%"><b>Editing Instructions</b></td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>label</b></td>
+    <td width="70%">Change this to be the name of your product (e.g. Cool Stuff)</td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>id</b></td>
+    <td width="80%">Change this to match the unique name of your configuration 
+      (e.g. org.cool.stuff)</td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>version</b></td>
+    <td width="80%">Change this to the appropriate version number of your configuration 
+      (e.g. 1.0). Note that 1.0 can be used in place of 1.0.0.</td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>provider-name</b></td>
+    <td width="80%">Change this to be the name of your company.</td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>description</b></td>
+    <td width="80%">Change this to be a description of the configuration.</td>
+  </tr>
+</table>
+<p>The following example shows what the<i> install.xml </i>file would look like 
+  for the Cool example. </p>
+<blockquote>
+  <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;configuration 
+   label=&quot;Cool Stuff&quot;  
+   id=&quot;org.cool.stuff&quot; 
+   version=&quot;1.0&quot;
+   provider-name=&quot;Cool Stuff Company&quot;&gt;</pre>
+  <pre>   &lt;description&gt;
+      The Cool Stuff Configuration
+   &lt;/description&gt;<br>&lt;/configuration&gt;</pre>
+</blockquote>
+<p>&nbsp;</p>
+<h2><b>Create a plug-in</b> corresponding to the configuration</h2>
+<p>Every configuration has a corresponding plug-in. The name of the plug-in directory 
+  is identical to the name of the configuration directory. Since our configuration 
+  directory was named org.cool.stuff_1.0.0 we will create a plug-in with the same 
+  name. </p>
+<p>Open the <i>eclipse/plugins </i>directory and copy the plug-in corresponding 
+  to current dominant configuration (see above) to a directory matching the name 
+  of your configuration (e.g. <i>org.cool.stuff_1.0.0</i>). It is important that 
+  you copy the directory, you must not simply rename the existing dominant configuration 
+  plug-in directory. </p>
+<p>Your new plug-in directory should contain the following files. If you do not 
+  see all of these files, you may have copied a regular plug-in directory instead 
+  of the plug-in directory corresponding to the dominant configuration.</p>
+<ol>
+  <ol>
+    <li>plugin.xml</li>
+    <li>plugin.properties</li>
+    <li>about.html</li>
+    <li>product.ini</li>
+    <li>product.properties</li>
+    <li>about_prod.gif</li>
+    <li>about_prod_basic.gif</li>
+    <li>prod.gif</li>
+    <li>prod_basic.gif</li>
+    <li>welcome.xml</li>
+    <li>platform.ini</li>
+    <li>platform.properties</li>
+  </ol>
+</ol>
+<p>Files 1-3 you might recognize because they appear in most other plugins. Files 
+  4-10 are unique to plug-ins corresponding to configurations. These represent 
+  product attribution information including icon and title for Workbench windows, 
+  graphics and text for the about dialog, and the text of the welcome page. Files 
+  11-12 (<i>platform.ini</i> and <i>platform.properties</i>) are also unique however 
+  these <b>must not</b> be edited.</p>
+<h3>Editing the standard files plug-in</h3>
+<p>Let's start by modifying files 1-3 which are the three standard files <i>(plugin.xml, 
+  plugin.properties and about.html) </i>found in most plug-ins.</p>
+<p><b>plugin.xml</b></p>
+<p>Edit the fields of plugin.xml as follows:</p>
+<table width="80%" border="1" cellspacing="0" cellpadding="0">
+  <tr bgcolor="#CCCCCC"> 
+    <td width="30%"><b>Field</b></td>
+    <td width="70%"><b>Editing Instructions</b></td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>id</b></td>
+    <td width="80%">Change this to match the id of your configuration (e.g. <i>org.cool.stuff</i>). 
+      Do not include the version number of your configuration.</td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>version</b></td>
+    <td width="80%">Change this to match the version number of your configuration 
+      (e.g. 1.0). Note that 1.0 can be used in place of 1.0.0.</td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>Provider-name</b></td>
+    <td width="80%">Change this to be the name of your company.</td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td width="20%"><b>name</b></td>
+    <td width="80%">Do not edit this field. It has been externalized and will 
+      edit the plugin.properties file next.</td>
+  </tr>
+</table>
+<p>The <i>plugin.xml</i> file for our Cool example should appear as follows:</p>
+<blockquote> 
+  <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;plugin
+     id=&quot;org.cool.stuff&quot;
+     name=&quot;%pluginName&quot;
+     version=&quot;1.0&quot;
+     provider-name=&quot;Cool Stuff Company&quot;&gt;
+&lt;/plugin&gt;</pre>
+</blockquote>
+<p><b>plugin.properties</b></p>
+<p>Notice that while editing the <i>plugin.xml</i> file we did not modify the 
+  <b>name</b> field. This is because the name field has been externalized into 
+  <i>plugin.properties</i>. Open <i>plugin.properties</i> and edit the <b>pluginName</b> 
+  field. Our Cool example's <i>plugin.properties</i> file is as follows:</p>
+<blockquote> 
+  <pre>pluginName = Cool Stuff Plug-In</pre>
+</blockquote>
+<p><b>about.html</b></p>
+<p> The last file commonly found in most plug-ins is <i>about.html</i>. This HTML 
+  file allows you to provide any arbitrary information about your plug-in or company. 
+  Some plug-in suppliers opt to include links to their company sites. A user can 
+  view a plug-in's about.html by opening the About dialog from the Workbench's 
+  Help menu and clicking &quot;Plugin Info...&quot; to open a dialog listing all 
+  of the installed plug-ins. Selecting a plug-in and clicking &quot;More Info...&quot; 
+  displays the plug-in's about.html.</p>
+<p>Edit the about.html file to include any interesting information about your 
+  plug-in.</p>
+<p><b><img src="TryIt.gif" width="61" height="13"> </b>We have created a configuration 
+  and its corresponding plug-in. We haven't wired in our configuration but we 
+  can do a quick test to see that our plug-in and its about.html show up correctly 
+  in the Workbench's About dialog. Start the platform and open the About dialog 
+  (from the Workbench's Help menu). Click on the &quot;Plugin Info...&quot; button 
+  and confirm the plug-in name, provider and version number are correct for your 
+  plug-in (i.e. correspond to the values you entered above). Next select the plug-in 
+  and choose &quot;More Info..&quot;. and confirm the contents of your about.html 
+  are properly displayed. Exit the program. Don't forget to delete the <i>eclipse/workspace 
+  </i>directory thus ensuring things are in a completely fresh state for our next 
+  test.</p>
+<h3><b>Editing the plug-in product files</b></h3>
+<p>Plug-in's corresponding to configurations contain two special files, <i>product.ini</i> 
+  and <i>product.properties</i>. These files provide product level information. 
+  The latter of these (<i>product.properties</i>) contains strings externalized 
+  from the <i>product.ini</i>. The configuration plug-in also contains two other 
+  files, <i>platform.ini</i> and <i>platform.properties</i>, these files <b>must 
+  not </b>be modified. These files are reserved for the platform itself.</p>
+<p><b>product.ini</b></p>
+<p>Although you are allowed to edit any field in product.ini it is strongly recommended 
+  that you follow the advice provided below. There are several fields which are 
+  either unnecessary to modify, or have potentially serious implications if you 
+  modify them (e.g. <b>application</b>). Some fields have been externalized from 
+  <i>product.ini</i> consequently we will edit them by modifying <i>product.properties</i>. 
+  Fields referencing graphics (e.g. product icon, about graphic) do not need to 
+  be altered, because we will replace their corresponding graphic files in subsequent 
+  sections. </p>
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
+  <tr bgcolor="#CCCCCC"> 
+    <td><b>Field</b></td>
+    <td><b>Editing Instructions</b></td>
+    <td><b>Where is it shown</b></td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td><b>name</b></td>
+    <td>Change this to match the name of your product (e.g. Cool Stuff). If your 
+      product name is lengthy you may want to use a shorter version of it for 
+      this field. The value of this field is shown in the title of Workbench windows.</td>
+    <td>Workbench windows</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>detailedName</td>
+    <td>Do not edit this field since it has been externalized. We will edit it 
+      by changing <i>product.properties</i>. Typically this field is the same 
+      as the <i>name</i> field however if your product name is lengthy you may 
+      opt to use the <i>name</i> field for a shorter version of the product name.</td>
+    <td>About dialog</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>image</td>
+    <td>Do not edit this field. We will replace prod.gif with our product graphic.</td>
+    <td>Workbench windows (icon in top left corner of window)</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>image_basic</td>
+    <td>Do not edit this field. We will replace prod_basic.gif with our product 
+      graphic.</td>
+    <td>Workbench windows (icon in top left corner of window). This image is only 
+      shown for low color displays.</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td><b>Version</b></td>
+    <td>Change this to match the version number of your product. This string is 
+      a &quot;pretty&quot; name (e.g. R1.0, Beta-1) that will appear in the Workbench's 
+      about dialog. It does not have to match the configuration version number 
+      or plug-in version number. </td>
+    <td>About dialog</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>application</td>
+    <td>Do not edit this field. There are very small set of cases under which 
+      this needs to be edited (e.g. headless product). Before attempting to edit 
+      this field you should thoroughly read the Platform Plug-in Developer Guide. 
+      In addition, modifying this attribute may prevent other third party plug-ins 
+      from running. </td>
+    <td>N/A</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td><b>productURL</b></td>
+    <td>Change this to be your company or product URL (e.g. http://www.cool-stuff.org)</td>
+    <td>Currently this field is not automatically shown. Consequently many product 
+      teams include a URL in their copyright text (see product.properties below). 
+    </td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>aboutImage</td>
+    <td>Do not edit this field. We will replace about_prod.gif with our about 
+      graphic.</td>
+    <td>About dialog (large graphic in top left corner)</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>aboutImage_basic</td>
+    <td>Do not edit this field. We will replace about_prod_basic.gif with our 
+      graphic.</td>
+    <td>About dialog (large graphic in top left corner). This image is only shown 
+      for low color displays.</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>welcomePage</td>
+    <td>Do not edit this field. We will replace welcome.xml with our own welcome 
+      page.</td>
+    <td>Shown in the welcome page.</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td><b>baseInfosets</b></td>
+    <td>This field identifies the id's of infosets (documentation books) and the 
+      order they should be shown in the Workbench's help system. You can edit 
+      this list to include the books appropriate to your product, and alter the 
+      order as necessary.</td>
+    <td>Help perspective and associated views.</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td><b>defaultPerspectiveId</b></td>
+    <td>Change this field to be the perspective the Workbench should initially 
+      show. By default the Resources perspective is shown.</td>
+    <td>N/A</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td>copyright</td>
+    <td>Do not edit this field since it has been externalized. We will change 
+      it by editing <i>product.properties</i>.</td>
+    <td>About dialog.</td>
+  </tr>
+  <tr valign="top" align="left"> 
+    <td><b>buildID</b></td>
+    <td>Change this field to describe the build number of your product build (e.g. 
+      2.100). The build version is shown in the Workbench's About dialog. </td>
+    <td>About dialog.</td>
+  </tr>
+</table>
+<p>Following is the product.ini file for our Cool example. The fields we have 
+  changed for the purpose of the example have been marked in bold. For the sake 
+  of illustration the PDE infoset has been moved to be the first infoset listed 
+  in <i>baseInfosets. </i>The default perspective has been left unchanged.</p>
+<blockquote>
+  <pre>   <b>name</b> = Cool Stuff
+   detailedName = %detailedName
+   image = prod.gif
+   image_basic = prod_basic.gif
+   <b>version</b> = R1.0 Sneak Peak
+   application = org.eclipse.ui.workbench
+   <b>productURL</b> = http://www.cool-and-neat-stuff.org
+   aboutImage = about_prod.gif
+   aboutImage_basic = about_prod_basic.gif
+   welcomePage = welcome.xml
+   <b>baseInfosets</b> = org.eclipse.pde.doc.user.infoset_Guide,\
+   org.eclipse.platform.doc.user.infoset_Guide,\
+   org.eclipse.jdt.doc.user.infoset_Guide,\
+   org.eclipse.platform.doc.isv.infoset_Guide,\
+   org.eclipse.jdt.doc.isv.infoset_Guide
+   defaultPerspectiveId = org.eclipse.ui.resourcePerspective
+   copyright = %copyright
+   <b>buildID</b> = 2.345</pre>
+</blockquote>
+<p><b>product.properties</b></p>
+<p>While we were editing the above product.ini file there were several fields 
+  we skipped over because they had been externalized. The time has come to edit 
+  those fields by editing them in the file <i>product.properties</i> as follows:<br>
+</p>
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
+  <tr bgcolor="#CCCCCC"> 
+    <td width="20%"><b>Field</b></td>
+    <td width="80%"><b>Editing Instructions</b></td>
+    <td width="80%"><b>Where is it shown</b></td>
+  </tr>
+  <tr> 
+    <td width="20%">detailedName</td>
+    <td width="80%">Change this to match the name of your product (e.g. Cool Stuff). 
+    </td>
+    <td width="80%">About dialog</td>
+  </tr>
+  <tr> 
+    <td width="20%">copyright</td>
+    <td width="80%">Change this to be the copyright text for your application. 
+      You can use \n and \ (line continuation) for lengthy copyright messages. 
+      You may also want to include a URL in your copyright text.</td>
+    <td width="80%">About dialog</td>
+  </tr>
+</table>
+<p>The <i>product.properties</i> file for our Cool example might look something 
+  like this. <br>
+</p>
+<blockquote>
+  <pre>
+copyright = (c) Copyright Cool and Neat Stuff\n\
+ \n\
+ Visit the website at http://www.cool-and-neat-stuff.org\n\
+detailedName = Cool  Stuff for Developers </pre>
+</blockquote>
+<h3>Editing the welcome page</h3>
+<p>The next plug-in file we need to edit is <i>welcome.xml. </i>When the Workbench 
+  first opens you may recall seeing a Welcome page displayed. This page is defined 
+  by the file <i>welcome.xml</i> found in the dominant configuration's corresponding 
+  plug-in. The purpose of the Welcome page is to provide initial introductory 
+  information to help a user get started. Here is the <i>welcome.xml</i> for our 
+  Cool example. For additional information on the types of things you can include 
+  in the <i>welcome.xml</i> consult the Platform Plug-in Develop Guide.</p>
+<blockquote>
+  <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt; 
+&lt;welcomePage 
+   title=&quot;Welcome to Cool Stuff&quot;&gt;
+   &lt;intro&gt;This page will help familiarize you with many fun things.
+To get started, read the section below and click on the related links. &lt;/intro&gt;</pre>
+  <pre>&lt;item&gt;&lt;b&gt;Create your first cool thing &lt;/b&gt;
+To begin doing cool things you need to start by creating a cool project
+and then creating several cool files.
+&lt;/item&gt;
+&lt;/welcomePage&gt;</pre>
+</blockquote>
+<p>&nbsp;</p>
+<h3><b>Updating some more graphics</b></h3>
+<p>The last thing we need to do with our plug-in is to replace several of the 
+  graphics files. The graphics we are replacing are those referenced from the 
+  <i>product.ini</i> by the fields: image, image_basic, aboutImage and aboutImage_basic. 
+  Files with the suffix &quot;basic&quot; represent low color graphics.</p>
+<p>Replace the following graphic files that are used to provide the icon for the 
+  top left corner of every window.</p>
+<ul>
+  <li>prod.gif</li>
+  <li>prod_basic.gif</li>
+</ul>
+<p></p>
+<p></p>
+<p>Replace the following graphic files that are used for the large graphic in 
+  the top left corner of the about dialog.</p>
+<ul>
+  <li>about_prod.gif</li>
+  <li>about_prod_basic.gif</li>
+</ul>
+<p></p>
+<h2>&nbsp;</h2>
+<h2><b>Updating the install.properties to use our configuration</b></h2>
+<p>We have our configuration and after a number of edits and file replacements 
+  we hopefully have a corresponding plug-in. Now comes the moment of truth as 
+  we edit the<i> install.properties</i> file to point to our new configuration. 
+  Edit <i>eclipse/install/install.properties </i>and change the <b>application.configuration 
+  </b>line to point to the new configuration. You may recall (from above) the 
+  <b>application.configuration</b> has the form <i>xyz_version</i>. For example 
+  <i>xyz_1.0.0</i> indicates the configuration name is <i>xyz</i> and the version 
+  level is <i>1.0.0</i>. For our Cool example the line will need to be:</p>
+<blockquote>
+  <pre>application.configuration=org.cool.stuff_1.0.0</pre>
+</blockquote>
+<p>Remove any other lines that may exist in <i>install.properties</i>. If you 
+  have done any of the earlier &quot;try it&quot; tests, you may have additional 
+  lines in <i>install.properties </i>representing cached information. In addition, 
+  if there is a cached file<i> update.cfg</i> you should delete this. There may 
+  be additional files in this directory (also cached by the platform) but you 
+  do not need to worry about them.</p>
+<h2>&nbsp;</h2>
+<h2>License and notice</h2>
+<p>You should check legal notices such as: license.html, notice.html, cpl-v05.html 
+  and the about.html files in the root directory and plugin subdirectories to 
+  make sure they are appropriate for your distribution and that you comply with 
+  them or their terms. We can't tell you what to do here, you need to get your 
+  own legal advice.</p>
+<p>&nbsp;</p>
+<h2>Wrapping it up</h2>
+<p>Now that all the pieces are in place we can run our program executable one 
+  more time. Our Cool example should look something like the screen snapshot below. 
+</p>
+<p align="center"><img src="final.jpg" width="800" height="602"></p>
+<p>&nbsp;</p>
+<p>Before celebrating the branding of your product you should take a moment to 
+  confirm the following:</p>
+<ul>
+  <li>welcome page is correct</li>
+  <li>the icon and title shown in the window title bar is correct</li>
+  <li>the Help pulldown properly indicate the name of the about dialog (e.g. About 
+    Cool Stuff)</li>
+  <li>the about dialog properly include your graphic, copyright text, version 
+    and build numbers</li>
+  <li>the about dialog properly includes the platform version information in the 
+    lower half of the dialog</li>
+</ul>
+Now that you have mastered the steps you should do a final run through the steps 
+(starting with a clean install) but be sure to skip the &quot;try it&quot; steps. 
+These steps require you to run the platform and consequently will cause information 
+to be cached. Your actual product production process should not run the platform 
+runtime. 
+<h2>&nbsp;</h2>
+<h2>A brief word on NL enablement</h2>
+<p>In the previous sections we did not discuss NL (National Language) support 
+  for your product branding. There are two important parts to localizing the product 
+  branding:</p>
+<ul>
+  <li>localizing the configuration's plug-in</li>
+  <li>localizing the splash screen</li>
+</ul>
+<p>Configuration plug-ins are localized in a manner similar to the many other 
+  plug-ins you have probably seen. That means creating one or more NL plug-in 
+  fragments to contain the localized information. </p>
+<p>To localize the splash screen you will need to create locale subdirectories 
+  under <i>eclipse/splash.</i> The names of these directories follow the standard 
+  Java&trade; locale naming conventions. For example the platform looks up the splash 
+  screen for USA english locale (en_US) as follow:</p>
+<ol>
+  <li>eclipse\splash\en_US\&lt;image file&gt;</li>
+  <li>eclipse\splash\en\&lt;image file&gt;</li>
+  <li>eclipse\splash\&lt;image file&gt;</li>
+</ol>
+<p>where &lt;image file&gt; is the name of the splash file (e.g. splash_full.bmp 
+  or splash_full.xpm).</p>
+<p>For additional information on localizing plug-ins consult the Platform Plug-in 
+  Developer Guide.</p>
+<p>&nbsp;</p>
+<h2>Product directory</h2>
+<p>In the previous sections we have been working in the <i>eclipse/</i> directory. 
+  You are probably asking yourself whether or not you should rename the <i>eclipse</i> 
+  directory. The answer is no. Doing so may prevent future fixes and updates from 
+  installing. The correct approach is to include the <i>eclipse/</i> directory 
+  inside your own product directory. For example our Cool product would look as 
+  follows:</p>
+<blockquote> 
+  <p>\cool<br>
+    \cool\<b>eclipse<br>
+    </b>\cool\<b>eclipse\cool.exe</b><br>
+    \cool\product-readme<br>
+    \cool\.... </p>
+  </blockquote>
+It is also worth noting that the steps we have gone through describe the complete 
+set of steps you need to follow in order to productize/brand your work. Other 
+than adding more of your own plug-ins you should not make other modifications 
+in the <i>eclipse/</i> directory.
+<h2>Summary</h2>
+<p>We have covered the tasks required to add branding to a product based on the 
+  platform. The process involves rebuilding the executable, replacing a number 
+  of graphics and creating a product configuration and corresponding plug-in. 
+  Once you have mastered the steps you should do a final run through the steps 
+  but be sure to skip the &quot;try it&quot; steps. These steps require you to 
+  run the platform and consequently will cause information to be cached. Your 
+  actual product production process should not run the platform runtime. Here 
+  is a quick checklist (ignoring NL issues) to help refresh your memory on what 
+  we modified.</p>
+<table width="80%" border="1" cellspacing="0" cellpadding="0">
+  <tr bgcolor="#CCCCCC"> 
+    <td width="20%"><b>Item</b></td>
+    <td width="40%"><b>Windows</b></td>
+    <td width="40%"><b>Linux</b></td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Splash</td>
+    <td> 
+      <p>Replace the following:</p>
+      <ul>
+        <li>eclipse/splash/splash_basic.bmp</li>
+        <li>eclipse/splash/splash_full.bmp</li>
+      </ul>
+    </td>
+    <td> 
+      <p>Replace the following: </p>
+      <ul>
+        <li>eclipse/splash/splash_basic.xpm</li>
+        <li>eclipse/splash/splash_full.xpm</li>
+      </ul>
+    </td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Executable graphics</td>
+    <td> 
+      <p>Replace the following in <i>library/</i> (obtained from the SDK)</p>
+      <ul>
+        <li>icon16_basic.bmp</li>
+        <li>icon16_full.bmp</li>
+        <li>icon32_basic.bmp</li>
+        <li>icon32_full.bmp</li>
+        <li>icon48_basic.bmp</li>
+        <li>icon48_full.bmp</li>
+      </ul>
+      <p>and build them into single ICO file by replacing:</p>
+      <ul>
+        <li>library/eclipse.ico</li>
+      </ul>
+    </td>
+    <td> 
+      <p>Replace the following:</p>
+      <ul>
+        <li>eclipse/icon.xpm</li>
+      </ul>
+    </td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Executable</td>
+    <td colspan="2"> 
+      <p>Remove existing executable from eclipse/ and replace with your product's 
+        executable program built using the build scripts in <i>library/ </i>of 
+        the SDK<i> </i>. </p>
+    </td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Product configuration</td>
+    <td colspan="2"> 
+      <p>Copy the dominant configuration directory to eclipse/install/configurations/<i>your_configuration_id_and_version</i></p>
+      <p>Modify the following files in the new configuration directory</p>
+      <ul>
+        <li>install.xml</li>
+      </ul>
+    </td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Product plug-in</td>
+    <td colspan="2">Copy the dominant configuration plug-in directory to eclipse/plugins/<i>your_configuration_id_and_version</i></td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Standard plug-in files </td>
+    <td colspan="2"> 
+      <p>Modify the following files in eclipse/plugins/<i>your_configuration_id_and_version</i></p>
+      <ul>
+        <li>plugin.xml</li>
+        <li>plugin.properties</li>
+        <li>about.html</li>
+      </ul>
+    </td>
+  </tr>
+  <tr align="left" valign="top">
+    <td>Plug-in product files</td>
+    <td colspan="2">
+      <p>Modify the following product files in eclipse/plugins/<i>your_configuration_id_and_version. 
+        </i>These provide product naming, About dialog text and the welcome page.</p>
+      <ul>
+        <li>product.ini</li>
+        <li>product.properties</li>
+        <li>welcome.xml</li>
+      </ul>
+    </td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Plug-in product graphics</td>
+    <td colspan="2"> 
+      <p>Replace the following product graphics files in eclipse/plugins/<i>your_configuration_id_and_version</i>. 
+        These represent the about dialog and the icon shown in the top left corner 
+        of all windows:</p>
+      <ul>
+        <li>about_prod.gif</li>
+        <li>about_prod_basic.gif</li>
+        <li>prod.gif</li>
+        <li>prod_basic.gif</li>
+      </ul>
+    </td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>Installation </td>
+    <td colspan="2">Update eclipse/install/install.properties to reference <i>your_configuration_id_and_version</i></td>
+  </tr>
+  <tr align="left" valign="top"> 
+    <td>License</td>
+    <td colspan="2">You should check legal notices such as: license.html, notice.html, 
+      cpl-v05.html and the about.html files in the root directory and plugin subdirectories 
+      to make sure they are appropriate for your distribution and that you comply 
+      with them or their terms. We can't tell you what to do here, you need to 
+      get your own legal advice.</td>
+  </tr>
+</table>
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+both.</small></p>
+<p><small>Microsoft, Windows, Windows NT, and the Windows logo are trademarks of Microsoft Corporation in the United States, other countries, or both.</small></p>
+</body>
+</html>

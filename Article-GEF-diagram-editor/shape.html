@@ -1,0 +1,1289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <title>A Shape Diagram Editor</title>
+  <link rel="stylesheet" href="default_style.css">
+  <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+  <meta name="author" content="Bo Majewski">
+</head>
+
+<body>
+<div align="right">
+  &nbsp; <span style="font-family:Times New Roman, Times, serif; font-size: small;">Copyright &copy; 2004 Cisco Systems Inc.</span> 
+  <table border="0" cellspacing="0" cellpadding="2" width="100%">
+  <tbody>
+    <tr> 
+      <td align="left" valign="top" colspan="2" bgcolor="#0080C0">
+        <span style="font-family: Arial,Helvetica; font-weight: bold; color: #ffffff;">&nbsp;Eclipse 
+        Corner Article</span>
+      </td>
+    </tr>
+  </tbody>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align="middle" alt="tag"></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 align="center">A Shape Diagram Editor</h1>
+
+<blockquote>
+  <b>Summary</b>
+  <br>
+  <p> Graphical Editing Framework (GEF) provides a powerful foundation for creating 
+    editors for visual editing of arbitrary models. Its effectiveness lies in 
+    a modular build, fitting use of design patterns, and decoupling of components 
+    that comprise a full, working editor. To a newcomer, the sheer number and 
+    variety of concepts and techniques present in GEF may feel intimidating. However, 
+    once learned and correctly used, they help to develop highly scalable and 
+    easy to maintain software. This article aims to provide a gentle yet comprehensive 
+    introduction to GEF. It describes a shape diagram editor - a small, fully 
+    functional test case of core concepts. </p>
+  
+  <p>
+    <b> By Bo Majewski, Cisco Systems, Inc.</b> 
+    <br>
+    <font size="-1">December 8, 2004</font> </p>
+</blockquote>
+
+<hr width="100%">
+
+<h2>Introduction</h2>
+
+<p> <a href="http://www.eclipse.org/gef/">Graphical Editing Framework</a> (GEF) 
+  has been designed to allow editing of user data, generally referred to as <em>the 
+  model</em>, using graphical rather than textual format. It becomes an invaluable 
+  tool when dealing with entities that contain many-to-many, one-to-many and other 
+  complex relationships. With the popularity of the Eclipse <a href="../Article-RCP-1/tutorial1.html">Rich 
+  Client Platform</a>, which leads to development of editors for more than just 
+  code, the importance of GEF is certain to increase. A few existing examples, 
+  such as database schema editor <a class="cite" href="#zoio">[7]</a>, logical 
+  circuits editor, and a task flow manager nicely illustrate both the power and 
+  flexibility of the framework that may be applied to such varied and disparate 
+  domains. </p>
+
+<p> Yet the trouble with any generic framework, and GEF is no exception, is that 
+  its comprehensive design makes it hard to learn. Until recently, the smallest 
+  available example came with over 75 classes. Trying to understand nuances of 
+  GEF from interaction of that many user defined types and hundreds more native 
+  to GEF is certain to test the patience and acumen of even the most diligent 
+  developers. To rectify this issue, a new, much smaller example editor has been 
+  added and will appear in the upcoming 3.1 release. The shape diagram editor 
+  (see <a href="#fig1">Figure&nbsp;1</a>) allows you to create and edit simple 
+  diagrams. It manipulates two types of objects, represented by rectangles and 
+  ellipses. You may connect any two objects with one of the two connection types. 
+  The two connection types are represented by solid and dashed lines. Each connection 
+  is directed, in the sense that it starts at a source object and terminates in 
+  the target object. The direction of each connection is indicated by an arrow. 
+  A connection may be reattached by dragging its source or target to a new object. 
+  Objects in the editor may be selected either by clicking on them or by dragging 
+  a rubber band around them. Selected objects can be deleted. All model manipulations, 
+  such as adding or deleting objects, moving them, resizing them, etc., may be 
+  undone or redone. Finally, the editor integrates with the <em>Properties</em> 
+  and <em>Outline</em> standard views of Eclipse. The editor's virtue comes not 
+  from its usefulness, but rather from the fact its limited number of user defined 
+  types serve as examples of a large percentage of concepts and techniques that 
+  one could encounter in a mature GEF editor. </p>
+
+<a name="fig1"></a>
+<div class="figure">
+<center style="margin-bottom: 1em;">
+  <img src="images/shape_screenshot2.jpg" alt="Screen shot of the diagram editor" width="673" height="464">
+</center>
+<div class="figure-caption">
+  <span class="figure-number">Fig 1</span>. The shape diagram editor running under Linux
+</div>
+</div>
+
+<p>
+   <img src="images/tryit.gif" alt="Try it!" align="middle"> Download and unzip 
+   the latest 3.1 GEF Examples from the 
+   <a href="http://download.eclipse.org/tools/gef/downloads/">GEF Project
+   Downloads</a> 
+   into your main Eclipse directory. To create 
+   a new diagram, launch the wizard by pressing <em>Ctrl-N</em>. Expand the
+   <em>Examples</em> folder and select <em>Shapes Diagram</em>. The following
+   sections give a detailed overview of the shape diagram inner workings. Before
+   we dive into code, let us start with a big picture tour of the main
+   GEF ideas.
+</p>
+
+
+<h2>Core GEF concepts</h2>
+
+<p> GEF assists you in building a visual editor of your data. The data may be 
+  as simple as a thermostat with a single temperature knob, or as complex as a 
+  virtual private network with hundreds of routers, connections, and quality of 
+  service policies. To the credit of the GEF designers, they managed to create 
+  a framework that works with any data, or in GEF terminology, with any <b>model</b>. 
+  This is achieved by strictly following the Model-View-Controller pattern. The 
+  model is your data. To GEF, a model is any plain old Java object. The model 
+  should not know anything about either the controller or the view. The <b>view</b> 
+  is the visual representation of the model or one of its parts on the screen. 
+  It may be as simple as a rectangle, line or ellipse, or as complex as a nested 
+  logical circuit. Again, the view should remain ignorant about both the model 
+  and the controller. GEF uses Draw2D figures as views, although anything that 
+  implements the <code>IFigure</code> interface will do. The controller, known 
+  as an <b>edit part</b>, is the one that brings the two together. A top level 
+  controller is created when you start editing your model. If the model consists 
+  of many fragments, the top level controller informs GEF about that fact. In 
+  turn, child controllers for each fragment are created. If those again consists 
+  of subparts, the process is repeated until all objects that comprise a model 
+  have their controllers built. The other task of the controller is to create 
+  a figure representing the model. Once the model has been set on a particular 
+  controller, the GEF asks it for the congruous <code>IFigure</code> object. Since 
+  neither the model nor the view know about each other, it is the task of the 
+  controller to listen to changes in the model and update the visual representation 
+  of it. As a result, a common pattern in many GEF editors is a model that posts 
+  <code>PropertyChangeEvent</code> notifications. When an edit part receives an 
+  event notification it reacts appropriately by adjusting visual or structural 
+  representation of the model. </p>
+<p>
+  Another aspect of visual editing is reacting to user actions and mouse
+  or keyboard events. The challenge here is to provide a mechanism that
+  comes with sensible defaults, yet at the same time is flexible enough to
+  allow those defaults to be replaced by interactions appropriate for
+  the edited model.  Take a mouse drag event as an example. If we were
+  to assume every time a mouse drag event is detected that all selected
+  objects are moved, we'd limit the freedom of the editor developer. It
+  is quite likely that somebody might wish to provide zoom in or out
+  operations on a mouse being dragged. GEF solves this issue by using
+  tools, requests, and policies.
+</p>
+<p>
+  A <b>tool</b> is a stateful object that translates low level events,
+  such as mouse pressed, mouse dragged, and so on, into high level
+  <b>requests</b>, represented by a <code>Request</code> object.
+  Which request is posted depends on which tool is active. For example,
+  the connection tool, upon receiving a mouse pressed event, posts a
+  connection start or connection end request. If it was a create tool,
+  we'd receive a create request. GEF comes with a number
+  of predefined tools and means of creating application specific
+  tools. Tools may be activated programmatically or as a response to a
+  user action. Most of the time, tools post requests to the <code>EditPart</code>
+  whose figure was underneath the mouse. For example, if you click on a rectangle
+  representing a widget, the edit part associated with it receives a
+  selection or direct edit request. Sometimes, like the <code>MarqueeSelectionTool</code> 
+  does, the request
+  is posted to all parts whose figures are contained within a given area. Regardless of
+  how one or more edit parts are chosen as the target of requests,
+  they do not handle requests themselves.  Instead, they delegate this
+  task to registered <b>edit policies</b>. Each policy is asked for a command
+  for a given request. A policy not wishing to handle the request may
+  return a <code>null</code>.  The mechanism of having policies
+  rather than an edit part respond
+  to requests allows to keep both of them small
+  and highly specialized. This, in turn, means easy to debug and more
+  maintainable code.
+  The final piece of the puzzle is <b>commands</b>. Rather than
+  modifying the model directly, GEF requires that you do it with the help of
+  commands. Each command should implement applying and undoing
+  changes to the model or its part. This way GEF editors automatically
+  support the undo/redo of model alterations.
+</p>
+
+<p>
+  A significant benefit of using GEF, in addition to being able to boast about
+  your skills and design pattern knowledge, is the fact that it fully
+  integrates with the Eclipse platform. Objects selected in the editor
+  may provide properties for the standard <em>Properties</em> view. Eclipse wizards
+  may be used to create and initialize models edited by GEF editors. <em>Undo</em>
+  and <em>Redo</em> items of the <em>Edit</em> menu may trigger undoing or redoing of
+  GEF editing changes. Simply put, GEF editors are first class citizens
+  of the regular Eclipse platform, with the same level of integration as
+  a text editor or any other workbench editor, implementing <code>IEditorPart</code>
+  interface.
+
+  
+<h2>The Model</h2>
+
+<p>
+  The first step when building a GEF editor is to create a model. In our case 
+  the model consists of four types of objects: a shape diagram, which holds shapes, 
+  two shape types, and shape connections.
+  Before we start writing code for those classes, we  prepare some
+  basic infrastructure. 
+</p>
+
+<h3>Core model classes</h3>
+<p>
+  When creating a model use the following guidelines:
+</p>
+<ul>
+  <li>
+    <b>The model stores  all data that may be edited or viewed by
+    the user</b>. In particular, this also means data pertinent to the
+    visual representation, such as bounds. You may not rely on either
+    edit parts or figures to keep such data, as they may be created and
+    discarded at will. If you dislike storing visual data together with
+    your business data, consider the suggestion made in
+    <a class="cite" href="#hudson">[3]</a>.
+  </li>
+  <li>
+    <b>Provide ways of persisting the model</b>. Ensure that when an
+    editor is closed your model is persisted. When the same editor is
+    opened, implement a method for the model to restore its state from
+    permanent storage.
+  </li>
+  <li>
+    <b>The model must remain ignorant of the view or the
+    controller</b>. Never store any references to either the view or
+    the controller. GEF may discard a view or a controller under certain
+    circumstances. If you keep references to them, you are left with
+    an inactive figure or an edit part.
+  </li> 
+  <li><b>Provide a way for others to listen to changes in your
+    model</b>. This allows the
+    controller to react to changes and appropriately adjust the
+    view. Since you are not allowed to keep a reference to the controller,
+    the only way to deal with it is to provide a way for a controller to
+    register (and unregister!) with your model as a receiver of events. A
+    good choice is a property change event notification defined in the
+    <code>java.beans</code> package.
+  </li>
+</ul> 
+
+<p>
+  As the above outlined rules are common for all models, it is beneficial
+  to create a hierarchy of base classes that enforces them. The 
+  <code>ModelElement</code> extends Java's <code>Object</code> class, adding
+  three features: persistence, property change, and property source support. 
+  Simple model persistence is guaranteed by implementing 
+  <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> the 
+  <code>java.io.Serializable</code> interface together with 
+  <img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> the 
+  <code>readObject</code> method. This solution permits one to save the 
+  editor's model in a binary
+  format. While it may work for certain applications, it does not provide
+  format portability. In more complex cases, one may implement 
+  saving the model in XML or similar format. Model changes are communicated
+  using property change events. The base class allows edit parts to 
+  <img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag"> 
+  register and 
+  <img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag"> 
+  unregister as receivers of property change notifications.
+  Those are posted by calling 
+  <img src="images/tag_6.gif" height=13 width=24 align="middle" alt="tag">
+  the <code>firePropertyChange</code> method.
+  Finally, in order to aid integration with the <em>Properties</em> view of the workbench,
+  <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  the <code>IPropertySource</code> interface is implemented (details of which
+  are omitted in Figure&nbsp;2).
+</p>
+
+<div class="figure">
+<pre class="program">public abstract class ModelElement implements <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> IPropertySource, <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> Serializable {
+
+    private transient PropertyChangeSupport pcsDelegate = 
+        new PropertyChangeSupport(this);
+    
+<img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag"> public synchronized void addPropertyChangeListener(PropertyChangeListener l) {
+        if (l == null) {
+            throw new IllegalArgumentException();
+        }
+        
+        pcsDelegate.addPropertyChangeListener(l);
+    }
+    
+<img src="images/tag_6.gif" height=13 width=24 align="middle" alt="tag"> protected void firePropertyChange(String property, 
+                                      Object oldValue, 
+                                      Object newValue) {
+        if (pcsDelegate.hasListeners(property)) {
+            pcsDelegate.firePropertyChange(property, oldValue, newValue);
+        }
+    }
+    
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> private void readObject(ObjectInputStream in) throws IOException, 
+                                                         ClassNotFoundException {
+        in.defaultReadObject();
+        pcsDelegate = new PropertyChangeSupport(this);
+    }
+    
+<img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag"> public synchronized void removePropertyChangeListener(PropertyChangeListener l) {
+        if (l != null) {
+            pcsDelegate.removePropertyChangeListener(l);
+        }
+    }
+    
+    ...
+}</pre>
+<div class="figure-caption">
+  <span class="figure-number">Fig 2</span>. The base class of all model objects
+</div>
+</div>
+
+<p>
+  Two types of objects, ellipse and rectangle shapes, share further common
+  functionality that may be factored out into a common class. In particular,
+  both represent objects that occupy certain locations and have a non-zero
+  size. Both may have connections ending or originating at them. Any changes
+  to these properties need to be communicated to all listeners. Furthermore,
+  the location and size property are also exposed through the 
+  <code>IPropertySource</code> interface, allowing the user to inspect and 
+  modify them via the <em>Properties</em> view.
+</p>
+
+<p>
+  Management of connections between objects is worth a more detailed look. 
+  There is no concept of a global store of all connections. Instead, GEF 
+  requires model parts to report any connections that start
+  or terminate in them. These must be reported as <code>Lists</code>
+  of objects. The <code>Shape</code> class maintains two array lists
+  of <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> 
+  source and 
+  <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  target connections. The source connections are those
+  which have the given shape as the source, and target connections
+  are those in which the given shape is recorded as the target. Two
+  methods
+  (<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">,
+  <img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag">), 
+  with package level visibility, are added that allow shapes
+  and connections to communicate about their mutual relationship. In
+  addition, two public methods 
+  (<img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag">,
+  <img src="images/tag_6.gif" height=13 width=24 align="middle" alt="tag">)
+  are defined that allow classes external
+  to the <code>model</code> package learn about connectivity of a shape.
+  These are used by shape controllers, explained in the subsequent part
+  of this article.
+</p>
+
+<div class="figure">
+<pre class="program">public abstract class Shape extends ModelElement {
+
+    private Point location = new Point(0, 0);
+    private Dimension size = new Dimension(50, 50);
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> private List sourceConnections = new ArrayList();
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> private List targetConnections = new ArrayList();
+
+    public Point getLocation() {
+        return location.getCopy();
+    }
+    
+    public void setLocation(Point newLocation) {
+        if (newLocation == null) {
+            throw new IllegalArgumentException();
+        }
+        location.setLocation(newLocation);
+        firePropertyChange(LOCATION_PROP, null, location);
+    }
+    
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> void addConnection(Connection conn) {
+        if (conn == null || conn.getSource() == conn.getTarget()) {
+            throw new IllegalArgumentException();
+        }
+        if (conn.getSource() == this) {
+            sourceConnections.add(conn);
+            firePropertyChange(SOURCE_CONNECTIONS_PROP, null, conn);
+        } else if (conn.getTarget() == this) {
+            targetConnections.add(conn);
+            firePropertyChange(TARGET_CONNECTIONS_PROP, null, conn);
+        }
+    }
+    
+<img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag"> void removeConnection(Connection conn) {
+        if (conn == null) {
+            throw new IllegalArgumentException();
+        }
+        if (conn.getSource() == this) {
+            sourceConnections.remove(conn);
+            firePropertyChange(SOURCE_CONNECTIONS_PROP, null, conn);
+        } else if (conn.getTarget() == this) {
+            targetConnections.remove(conn);
+            firePropertyChange(TARGET_CONNECTIONS_PROP, null, conn);
+        }
+    }
+    
+<img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag"> public List getSourceConnections() {
+        return new ArrayList(sourceConnections);
+    }
+    
+<img src="images/tag_6.gif" height=13 width=24 align="middle" alt="tag"> public List getTargetConnections() {
+        return new ArrayList(targetConnections);
+    }
+    
+    ...
+}</pre>
+<div class="figure-caption">
+  <span class="figure-number">Fig 3</span> Shape functionality
+</div>
+</div>
+
+
+<h3>Top level model classes</h3>
+
+<p>
+  With the above preparation we may start coding top level model classes.
+  The <code>Connection</code> class represents a connection between two
+  shapes. It stores the source and target of a connection. Changes in
+  connectivity are effected by invoking <code>disconnect</code> or
+  <code>reconnect</code> methods. Connections maintain a boolean
+  flag indicating if they are currently connected or disconnected. 
+  The flag is used by commands to verify legitimacy of certain 
+  operations. Both source and target retain
+  references to the original shapes allowing disconnected connections
+  to be easily reconnected. Connections maintain one attribute,
+  the line style. The <code>EllipticalShape</code> and 
+  <code>RectangularShape</code> classes
+  provide an extension to the above described <code>Shape</code>
+  class, with a minimum of functionality added. 
+</p>
+
+<p>
+  The <code>ShapeDiagram</code> class extends the <code>ModelElement</code>
+  class with the container functionality. It maintains a collection of 
+  shapes and notifies listeners about collection changes. The boolean values
+  returned by <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> 
+  the <code>addChild</code> and
+  <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  <code>removeChild</code> methods
+  are used by commands to perform validation of their operations. Public access to all
+  shapes in a diagram is <img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">
+  provided for the benefit of the controller class.
+</p>
+
+<div class="figure">
+<pre class="program">public class ShapesDiagram extends ModelElement {
+
+    ...    
+    private Collection shapes = new Vector();
+    
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> public boolean addChild(Shape s) {
+        if (s != null && shapes.add(s)) {
+            firePropertyChange(CHILD_ADDED_PROP, null, s);
+            return true;
+        }
+        return false;
+    }
+    
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> public List getChildren() {
+        return new Vector(shapes);
+    }
+    
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> public boolean removeChild(Shape s) {
+        if (s != null && shapes.remove(s)) {
+            firePropertyChange(CHILD_REMOVED_PROP, null, s);
+            return true;
+        }
+        return false;
+    }
+}</pre>
+<div class="figure-caption">
+  <span class="figure-number">Fig 4</span>. <code>ShapeDiagram</code> - a container
+  of shapes
+</div>
+</div>
+
+<h3>A note on implementation</h3>
+<p>
+  A careful reader is certain to recognize that the model effectively 
+  created a specific implementation
+  of a directed graph, with shapes acting as vertices, connections 
+  representing edges, and shape diagrams playing the role of the graph. The
+  representation built here is known as adjacency list representation
+  and is suitable for sparse graphs. With minimal effort, one could
+  transform the model's code into a generic graph representation. The only additions to
+  the implementation regularly presented in books on algorithms is the
+  fact that the graph, its nodes, and its edges post events when their
+  states change. Also nodes, unlike in mathematical graphs, rather than
+  being zero-dimensional points, have rectangular bounds. Finally, while
+  regular graphs act as a central global storage of edges, a diagram does not 
+  hold connections, as GEF does not require it.
+</p>
+<p>
+  It is worth noting that the solutions employed by the above presented classes
+  are not the only ones possible. Those who developed computer representations
+  of graphs may prefer alternative ways of storing connections
+  or arranging communications between nodes and edges. However, such
+  details are not important. Designers are free to choose their own more
+  generic, faster, or otherwise enhanced model representation. The vital part is 
+  event based notification of model changes, maintenance of all, including
+  visual attributes of the model, and support for model persistence. 
+  Depending on your experience and needs, the rest are traits which you should
+  feel free to alter.
+</p>
+
+<h2>The Views</h2>
+
+<p>
+  Due to the simplicity of the shape diagram editor, we do not have to create figures
+  representing our model, but use predefined figures instead. A
+  diagram is represented by the <code>Figure</code> class equipped with the
+  <code>FreeformLayout</code> manager. This gives
+  us the freedom to drag and drop objects at any location. Objects
+  are represented either by the <code>RectangleFigure</code> or
+  by <code>Ellipse</code>. Relying on predefined figures to represent parts of
+  the model is uncustomary. Even though your view may not have any
+  references to either the model or the controller, it must have a
+  visual attribute for every important aspect of the model that the
+  user may wish to inspect or change. It is thus much more common
+  to define intricate figures with the number of visual attributes,
+  such as color, text, nested figures, etc., matching the number
+  of attributes of the model they represent. For a more 
+  thorough treatment about creating complex figures please see
+  <a class="cite" href="#lee">[4]</a>.
+</p>
+
+<h2>The Parts</h2>
+
+<p>
+  For each independent piece of the model we must define a controller. By
+  "independent" we mean an element that may be subject to user
+  manipulations. A good rule of thumb to follow is that anything that
+  may be selected or deleted should have its own edit part. 
+</p>
+<p>
+  The role of edit parts is to understand the model, listen to events about 
+  its changes, and update views, correspondingly. Due to the choices made
+  at the model level, all edit parts follow the pattern shown in 
+  Figure&nbsp;5. Each part <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  implements the <code>PropertyChangeListener</code>
+  interface. When <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  activated, it registers with the model as the receiver of 
+  the property change events. Upon 
+  <img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">
+  deactivation, it removes itself from the
+  list of listeners. Finally, when it 
+  <img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag">
+  receives a property change event, based
+  on the name of the property and the new and old values it refreshes one 
+  or more visual aspects of the figure representing the model. In fact, this
+  pattern is so common that in a larger application it would justify creating
+  a base class factoring out this behavior.
+</p>
+<div class="figure">
+<pre class="program">public abstract class SpecificPart extends AbstractGraphicalEditPart
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">    implements PropertyChangeListener {
+    
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> public void activate() {
+        if (!isActive()) {
+            super.activate();
+            ((PropertyAwareModel) this.getModel()).addPropertyChangeListener(this);
+        }
+    }
+
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> public void deactivate() {
+        if (isActive()) {
+            ((PropertyAwareModel) this.getModel()).removePropertyChangeListener(this);
+            super.deactivate();
+        }
+    }
+    
+<img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag"> public void propertyChage(PropertyChangeEvent evt) {
+        String prop = evt.getPropertyName();
+		...    
+    }
+}</pre>
+<div class="figure-caption">
+  <span class="figure-number">Fig 5</span>. Property aware part
+</div>
+</div>
+
+<h3>The <tt>DiagramEditPart</tt> class</h3>
+
+<p>
+  When the editor successfully loads and sets a shape diagram object on a
+  graphical viewer, the <code>ShapesEditPartFactory</code> is asked to
+  create a part controlling the diagram. It creates a new <code>DiagramEditPart</code>
+  and sets the diagram as its model. The newly created part is activated, 
+  registers itself with the model, and creates a figure, with a free form layout 
+  manager that allows positioning of diagram figures based on their constraints
+  (bounds). The <code>DiagramEditPart</code> reports all shapes contained
+  in the diagram via the <code>getModelChildren</code>. As mentioned before,
+  GEF repeats the process of generating parts and figures for all returned
+  model children.
+</p>
+
+<p>
+  The <code>DiagramEditPart</code> class installs three policies. All policies
+  should be installed in the <code>createEditPolicies</code> method that
+  is declared by the <code>AbstractEditPart</code> class, and must be implemented
+  by all concrete classes extending the <code>AbstractGraphicalEditPart</code>.
+  Policies are delegates used by edit parts to handle requests posted by
+  tools. In the simplest cases, policies take care of generating
+  commands. A policy is registered with the <code>String</code> key, referred
+  to as the policy's role.
+  The key has no meaning to edit parts. However, it should have meaning to a software
+  developer, as it allows others, specifically those who extend your
+  controller, to disable or remove the policy by specifying its key. As far
+  as GEF is concerned, your key could be <code>"foobar"</code>. However,
+  you'd better tell your fellow developers that in order to, say, set a new
+  layout policy when the layout manager is changed, they need to 
+  install a new <code>"foobar"</code> policy. As this might be amusing, but not
+  obvious, it is recommended that you use keys defined in
+  the <code>EditPolicy</code> interface, whose names
+  try to convey the role the given policy plays in an edit part.
+</p>
+<p>
+  The <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  first policy installed using the <code>EditPolicy.COMPONENT_ROLE</code> key
+  has the task of preventing the root of the model from being deleted. It overrides
+  the <code>createDeleteCommand</code> method to return an unexecutable
+  command. The <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  second policy, installed with the <code>LAYOUT_ROLE</code>
+  key, handles create and constraint change requests. The first request is
+  posted when a new shape is dropped into a diagram. The layout policy
+  returns a command that adds a new shape to the diagram editor and places
+  it at the drop location. The constraint change request is posted whenever
+  the user resizes or moves shapes already present in the diagram. The 
+  <img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">
+  third call to the <code>installEditPolicy</code> removes rather than
+  installs a policy. This prevents the root part from providing selection
+  feedback when the user clicks on the area of the diagram corresponding
+  to the root of the model. This call also illustrates the importance of
+  meaningful keys used to register part's policies.
+</p>
+  
+<div class="figure">
+<pre class="program">protected void createEditPolicies() {
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> installEditPolicy(EditPolicy.COMPONENT_ROLE, new RootComponentEditPolicy());
+    XYLayout layout = (XYLayout) getContentPane().getLayoutManager();
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> installEditPolicy(EditPolicy.LAYOUT_ROLE, new ShapesXYLayoutEditPolicy(layout));
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE, null);
+}</pre>
+<div class="figure-caption">
+  <span class="figure-number">Fig 6</span>. Policies installed by the diagram
+  edit part.
+</div>
+</div>
+
+<p>
+  The diagram edit part monitors child added and child removed property events.
+  These are posted by the <code>ShapesDiagam</code> class whenever new
+  shapes are added or removed. Upon detecting either type of a property
+  change event, the diagram edit part invokes the <code>refreshChildren</code>
+  method, defined in the <code>AbstractEditPart</code>. This method traverses
+  all model children and creates, removes, or re-orders edit part children
+  appropriately.
+</p>
+
+<h3>The <tt>ShapeEditPart</tt> class</h3>
+
+<p>
+  Diagram shapes are managed by the <code>ShapeEditPart</code>. The part itself
+  is created by the <code>ShapesEditPartFactory</code> in response to 
+  <code>DiagramEditPart</code> returning a list of model children. Each
+  part created by the factory is given the child model which it controls.
+  Once the model is set, the part is asked to create a figure representing it.
+  Depending on the type of the model, it returns either an ellipse or a
+  rectangle. 
+</p>
+
+<p>
+  Shape edit parts monitor four types of property change events: size,
+  location, source, and target connections. If the shape changes size or location, 
+  the <img src="images/tag_6.gif" height=13 width=24 align="middle" alt="tag">
+  <code>refreshVisual</code> method is called. This method is automatically 
+  invoked by GEF the first time a figure is created.  In it, the visual
+  attributes of the figure should be adjusted based on the state of the
+  model. Reusing the same method for model updates is another frequently
+  encountered pattern in GEF editors. In the case of the shape editor part,
+  the new location and size are fetched and stored with the figure representing
+  the shape. In addition, the new bounds are passed as the constraint to the
+  layout manager of the parent controller. When source or target connections
+  change, the source or target connection edit parts are refreshed by a call
+  to the methods defined in the <code>AbstractGraphicalEditPart</code>. 
+  Similarly to the <code>refreshChildren</code> method, these methods go
+  through the list of connections and add, remove, or reposition edit parts
+  corresponding to them.
+</p>
+
+<div class="figure">
+ <pre class="program">class ShapeEditPart extends AbstractGraphicalEditPart 
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">     implements PropertyChangeListener, NodeEditPart {
+    
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> protected List getModelSourceConnections() {
+        return getCastedModel().getSourceConnections();
+    }
+    
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> protected List getModelTargetConnections() {
+        return getCastedModel().getTargetConnections();
+    }
+    
+<img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag"> public ConnectionAnchor getSourceConnectionAnchor(ConnectionEditPart connection) {
+        return new ChopboxAnchor(getFigure());
+    }
+    
+<img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag"> public ConnectionAnchor getSourceConnectionAnchor(Request request) {
+        return new ChopboxAnchor(getFigure());
+    }
+    
+    public void propertyChange(PropertyChangeEvent evt) {
+        String prop = evt.getPropertyName();
+        
+        if (Shape.SIZE_PROP.equals(prop) || Shape.LOCATION_PROP.equals(prop)) {
+            refreshVisuals();
+        }
+        if (Shape.SOURCE_CONNECTIONS_PROP.equals(prop)) {
+            refreshSourceConnections();
+        }
+        if (Shape.TARGET_CONNECTIONS_PROP.equals(prop)) {
+            refreshTargetConnections();
+        }
+    }
+    
+<img src="images/tag_6.gif" height=13 width=24 align="middle" alt="tag"> protected void refreshVisuals() {
+        Rectangle bounds = new Rectangle(getCastedModel().getLocation(),
+                                         getCastedModel().getSize());
+        figure.setBounds(bounds);
+        ((GraphicalEditPart) getParent()).setLayoutConstraint(this, figure, bounds);
+    }
+}</pre>
+ <div class="figure-caption">
+  <span class="figure-number">Fig 7</span>. Controller of shapes
+ </div>
+</div>
+
+<p>
+  As shapes may be connected to other shapes, the shape edit part overrides the
+  <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  <code>getModelSourceConnections</code> and the 
+  <img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">
+  <code>getModelTargetConnections</code> methods. The role of these methods
+  is to inform GEF about connections that originate or terminate at the
+  given shape. In addition, the <code>ShapeEditPart</code> implements 
+  the <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  <code>NodeEditPart</code> interface. By implementing it, the edit part is
+  able to define source and target anchors, i.e., points to which connections 
+  attach. The logic circuit editor example uses this feature to indicate 
+  where a wire would attach to a logical gate. Since shapes do not have 
+  any specific connection points, we use a chop box anchor which clips the 
+  connection against the rectangular bounds of the figure. If you wish,
+  you can return the <code>EllipseAnchor</code> for ellipse shapes, which 
+  returns a point on the ellipse's boundary. For more complex shapes, you should 
+  extend the <code>AbstractConnectionAnchor</code> class and implement the 
+  <code>getLocation</code> method. Notice that two types of methods are 
+  implemented: one taking a <code>ConnectionEditPart</code>, and one
+  taking a <code>Request</code> as the parameter. The 
+  <img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag">
+  second method is invoked to provide a user with feedback while a new 
+  connection is being created. The 
+  <img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag">
+  first one is used for
+  established connections.
+</p>
+
+<p>
+  Shape edit part installs two policies. The <code>ShapeComponentEditPolicy</code>
+  supplies a command for removing a shape from the diagram. The second policy,
+  installed with the <code>GRAPHICAL_NODE_ROLE</code> key, handles the task of
+  creating and reattaching connections between shapes. A new connection is 
+  created in two steps by the connection creation tool. When a user clicks on a 
+  figure corresponding to an element of the model, the policy is requested to 
+  <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  create a connection command. Returning <code>null</code> from this method 
+  indicates that the connection may not originate from the given element of 
+  the model. If the connection is possible, a new command should be created and 
+  stored in the request as the start command. When another figure is 
+  clicked, the policy is required to supply a 
+  <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  connection complete command. This 
+  could be a new command built from the start command, or the start command tag  
+  supplied with the information about the terminating point of the connection.
+</p>
+
+<div class="figure">
+ <pre class="program">new GraphicalNodeEditPolicy() {
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> protected Command getConnectionCreateCommand(CreateConnectionRequest request) {
+       Shape source = (Shape) getHost().getModel();
+       int style = ((Integer) request.getNewObjectType()).intValue();
+       ConnectionCreateCommand cmd = new ConnectionCreateCommand(source, style);
+       request.setStartCommand(cmd);
+       return cmd;
+    }
+
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> protected Command getConnectionCompleteCommand(CreateConnectionRequest request) {
+        ConnectionCreateCommand cmd = 
+            (ConnectionCreateCommand) request.getStartCommand();
+        cmd.setTarget((Shape) getHost().getModel());
+        return cmd;
+    }
+    
+    ...
+}</pre>
+ <div class="figure-caption">
+  <span class="figure-number">Fig 8</span>. Graphical node edit policy
+ </div>
+</div>
+
+<p>
+   The other task of the graphical node edit policy is to provide connection 
+   reattachment commands. Connection reattachment may change the source or the 
+   target of the connection. The same rules apply to these commands as to the 
+   connection creation command. In particular, if a given connection should not
+   be reattached, the policy must return null. It is also possible for the policy 
+   to return a command that refuses to be executed, by returning false from the 
+   <code>canExecute</code> method. Due to space limitation, details of these 
+   commands are left out and the reader is referred to the source code.
+</p>
+
+<h3>The <tt>ConnectionEditPart</tt> class</h3>
+
+<p>
+  As connections are user editable parts of the model, they
+  must have their own controller. It is implemented
+  by the <code>ConnectionEditPart</code> class, which extends
+  the <code>AbstractConnectionEditPart</code>
+  class. Similar to other controllers, it implements the 
+  <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  <code>PropertyChangeListener</code> interface
+  and registers the part for the events with the model on activation. 
+  The connection part 
+  <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  returns a polyline decorated with an arrow as the figure. 
+  It installs two edit policies. The
+  first one, the <img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">
+  <code>ConnectionComponentPolicy</code>, supplies
+  a delete command needed by the action associated with the <em>Delete</em>
+  menu item. The <img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag">
+  second one is of greater interest. It equips
+  a selected connection with handles, placed at the start and the
+  end. Without this policy, reattaching connections
+  is impossible, as the GEF has no handles to grab onto when the
+  end of the connection is being dragged.  The authors of the GEF
+  recommend that all <code>ConnectionEditParts</code> should have
+  this policy, even if their ends are not draggable. At minimum this
+  policy provides a visual selection feedback. The 
+  <code>propertyChange</code> method watches for
+  <img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag">
+  changes in the line 
+  style property and adjusts the polyline figure appropriately.
+</p>
+
+<div class="figure">
+<pre class="program">class ConnectionEditPart extends AbstractConnectionEditPart 
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">     implements PropertyChangeListener {
+    
+    protected IFigure createFigure() {
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">     PolylineConnection connection = (PolylineConnection) super.createFigure();
+        connection.setTargetDecoration(new PolygonDecoration());
+        connection.setLineStyle(getCastedModel().getLineStyle());
+        return connection;
+    }
+    
+    protected void createEditPolicies() {
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">     installEditPolicy(EditPolicy.CONNECTION_ROLE, new ConnectionEditPolicy() {
+            protected Command getDeleteCommand(GroupRequest request) {
+                return new ConnectionDeleteCommand(getCastedModel());
+            }
+        });
+<img src="images/tag_4.gif" height=13 width=24 align="middle" alt="tag">     installEditPolicy(EditPolicy.CONNECTION_ENDPOINTS_ROLE,
+                          new ConnectionEndpointEditPolicy());
+    }
+    
+    public void propertyChange(PropertyChangeEvent event) {
+        String property = event.getPropertyName();
+<img src="images/tag_5.gif" height=13 width=24 align="middle" alt="tag">     if (Connection.LINESTYLE_PROP.equals(property)) {
+            ((PolylineConnection) getFigure()).
+                setLineStyle(getCastedModel().getLineStyle());
+        }
+    }
+    ...    
+}</pre>
+<div class="figure-caption">
+  <span class="figure-number">Fig 9</span>. Controller of connections
+</div>
+</div>
+
+
+<h2>Shape Editor</h2>
+
+<p>
+  The shape editor extends the <code>GraphicalEditorWithFlyoutPalette</code>
+  class. This class is a specialized form of a graphical editor, a type
+  of an editor part, equipped with a palette hosting tool entries. The
+  extending class must implement two methods, <code>getPaletteRoot</code>
+  and <code>getPalettePreferences</code>. The first method must return a
+  palette root populated with tool entries. Tool entries are specialized
+  types of palette entries capable of installing tools on the edit 
+  domain of the editor. They may be hosted in palette drawers, which 
+  provide convenient way of grouping them. It is recommended that
+  one tool entry is set as the default entry of the palette root. A typical
+  solution is to use an instance of the <code>SelectionToolEntry</code> 
+  class in that role. Palette preferences, returned by the second method,
+  specify whether the palette is visible or collapsed, the location where it
+  is docked, and the palette width. A commonly found solution is to save them
+  to and restore them from the plug-in's preference store.
+</p>
+
+<p>
+  The already mentioned edit domain plays the role of a central controller. It 
+  holds a palette of tools, loads the default tool, maintains the active tool 
+  to which it forwards mouse and key events, and deals with the command stack. 
+  GEF provides the default implementation, the <code>DefaultEditDomain</code>, 
+  which you should set on your editor in the constructor.
+</p>
+
+<p>
+  Part of the job that a graphical editor must perform is to create and 
+  initialize a graphical viewer. A graphical viewer is a specialized 
+  <code>EditPartViewer</code> capable of performing hit testing. Again, we may 
+  rely on the default viewer supplied by the 
+  <code>GraphicalEditor</code> class. There are, however, a few things that 
+  need to be done. In the <code>configureGraphicalViewer</code>  method 
+  <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  set a factory of edit parts. The factory must implement 
+  the sole method of the <code>EditPartFactory</code> interface, 
+  <code>createEditPart(EditPart, Object)</code>. The first argument is the 
+  edit part that returned the second argument, a (part of your) model, through 
+  the <code>getModelChildren</code> method. Other things to do here 
+  may include setting up a key handler, context menus, etc.
+</p>
+
+<div class="figure">
+<pre class="program">protected void configureGraphicalViewer() {
+    super.configureGraphicalViewer();
+    
+    GraphicalViewer viewer = getGraphicalViewer();
+    viewer.setRootEditPart(new ScalableRootEditPart());
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> viewer.setEditPartFactory(new ShapesEditPartFactory());
+    viewer.setKeyHandler(
+        new GraphicalViewerKeyHandler(viewer).setParent(getCommonKeyHandler()));
+    ContextMenuProvider cmProvider = 
+        new ShapesEditorContextMenuProvider(viewer, getActionRegistry());
+    viewer.setContextMenu(cmProvider);
+    getSite().registerContextMenu(cmProvider, viewer);
+}
+
+protected void initializeGraphicalViewer() {
+    super.initializeGraphicalViewer();
+    GraphicalViewer graphicalViewer = getGraphicalViewer();
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> graphicalViewer.setContents(getModel());
+<img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag"> graphicalViewer.addDropTargetListener(createTransferDropTargetListener());
+}</pre>
+<div class="figure-caption">
+  <span class="figure-number">Fig 10</span>. Configuring and initializing a graphic viewer
+</div>
+</div>
+
+<p>
+  Once the factory is set, you should 
+  <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">
+  set the contents on the graphical viewer.
+  The contents naturally should be the object restored from the 
+  <code>IEditorInput</code> passed to the editor in the <code>setInput</code>
+  method. The shape example also adds 
+  <img src="images/tag_3.gif" height=13 width=24 align="middle" alt="tag">
+  a drop target listener to the graphical 
+  viewer. This allows one to use the drag and drop gesture rather than select and
+  click when adding new shapes to the diagram. The drop target listener
+  uses a subclassed <code>TemplateTransferDropTargetListener</code> that
+  uses a <code>CreateRequest</code> to fetch a command for adding an 
+  object to the model owned by the edit part above which the drag and
+  drop gesture was finalized.
+</p>
+
+<p>
+  In addition to the described tasks, the editor takes care of reporting
+  the dirty flag by monitoring a command stack. This is a preferred 
+  solution, as this keeps the flag in synch with any undo or redo
+  actions that the user may perform. Notice that the command stack
+  has the save location marked in both <code>doSave</code> and 
+  <code>doSaveAs</code> methods. Other details of the editor, such
+  as actual saving and restoring of the model, are not discussed here
+  as they tend to be very application specific. The editor's functionality
+  that deals with exposing editor content to other views, connecting
+  menu items to editor actions, and other workbench cooperation techniques
+  is described next.
+</p>
+
+<h2>Integrating with the workbench</h2>
+
+<p>
+  The editor, as presented so far, would be fully operational.  However,
+  it would not integrate well with the workbench. For example, the
+  <em>Edit</em> menu actions, such as <em>Delete</em>, <em>Undo</em>, and
+  <em>Redo</em> could not be used. Other views could not show alternative
+  presentations of the editor content. In other words, the editor would
+  not get the benefits of being part of the Eclipse workbench. The task
+  of transforming an isolated editor into a proper participant of the
+  workbench is explained in the following three sections.
+</p>
+
+<h3>Editor Actions</h3>
+
+<p>
+  The <code>ShapesEditor</code> class creates a number of default
+  actions in the <code>createActions</code> method invoked during editor
+  initialization. These are undo, redo, select all, delete, save, and print 
+  actions. In order to 
+  connect standard menu items to them, you should define an action bar 
+  contributor and list it, in the <code>plugin.xml</code> file, as
+  the editor contributor. In the action bar contributor you need to
+  implement two methods. The first one, 
+  <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> 
+  the <code>buildActions</code> method,
+  should create retargetable actions for undo, redo, and delete. If you 
+  wish to enable keyboard selection of all widgets, you need 
+  to <img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag"> add a global 
+  action key for the selected action in the second method,
+  <code>declareGlobalActionKeys</code>.  
+</p>
+
+<div class="figure">
+ <pre class="program">public class ShapesEditorActionBarContributor extends ActionBarContributor {
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> protected void buildActions() {
+        this.addRetargetAction(new UndoRetargetAction());
+        this.addRetargetAction(new RedoRetargetAction());
+        this.addRetargetAction(new DeleteRetargetAction());
+    }
+
+    public void contributeToToolBar(IToolBarManager toolBarManager) {
+        super.contributeToToolBar(toolBarManager);
+        toolBarManager.add(getAction(ActionFactory.UNDO.getId()));
+        toolBarManager.add(getAction(ActionFactory.REDO.getId()));
+    }
+
+    protected void declareGlobalActionKeys() {
+<img src="images/tag_2.gif" height=13 width=24 align="middle" alt="tag">     this.addGlobalActionKey(ActionFactory.SELECT_ALL.getId());
+    }
+}</pre>
+ <div class="figure-caption">
+  <span class="figure-number">Fig 11</span>. Connecting menu actions
+ </div>
+</div>
+
+<p>
+  It may be illustrative to trace what happens when the user selects
+  the <em>Delete</em> item in the <em>Edit</em> menu (see Figure&nbsp;12). The
+  delete action, which is added to the action registry by the
+  parent class of the <code>ShapesEditor</code> class, traces the
+  current selection.  When the delete action is executed, it checks
+  if any of the currently selected objects are instances of the
+  <code>EditPart</code> class. For each such object it requests a command
+  from the edit part. In turn, each edit part checks if any of the
+  edit policies created on it understand and are willing to handle
+  the delete request. For shapes, the <code>ShapeComponentEditPolicy</code>
+  claims it can handle the delete request, and when asked for a command
+  it returns a <code>ShapeDeleteCommand</code> instance. The
+  action executes the command, which removes the shape from
+  the diagram. The diagram fires a property change event that is
+  handled by the <code>DiagramEditPart</code> and ultimately leads to
+  a rectangle or ellipse representing the deleted shape to be removed from the
+  display. 
+</p>
+<div class="figure">
+<center>
+  <img src="images/delete_action3.gif" alt="Delete action call sequence" width="575" height="340"/>
+</center>
+<div class="figure-caption">
+  <span class="figure-number">Fig 12</span>. Delete action call sequence
+</div>
+</div>
+
+<h3>Exposing properties</h3>
+
+<p>
+  Every graphical editor is a source of selection events. You can test this
+  by creating a view that registers with the workbench site's page as a selection listener.
+  Every time you select an object in your graphical editor, your view 
+  receives a notification in the <code>selectionChanged</code> method. One
+  of Eclipse's standard views, <em>Properties</em> view, listens to 
+  selection events, and for every selection checks if its objects implement
+  the <code>IPropertySource</code> interface. If so, it uses the methods of
+  the interface to interrogate the selected object or objects about their
+  properties and displays them in a tabular format.
+</p>
+
+<p>
+  Thanks to the above described infrastructure, exposing properties of objects
+  edited in graphical editor is a matter of implementing methods of the
+  <code>IPropertySource</code> interface. By inspecting the <code>Shape</code>
+  class you can view how position and size of objects are made
+  available to the <em>Properties</em> view. 
+</p>
+
+<h3>Providing an Outline</h3>
+
+<p>
+  The <em>Outline</em> view is used to provide an alternative and often more
+  succinct view of edited data. In Java editors it is used to show
+  imports, variables, and methods of the edited class, without going into
+  code details. Graphical editors  can also benefit from such a high level
+  view. The shape diagram editor, similarly to the logic circuit editor,
+  exposes the edited contents in the form of a tree (see 
+  <a href="#fig1">Figure&nbsp;1</a>). The database schema editor
+  <a class="cite" href="#zoio">[7]</a> provides a view of the entire editor window
+  with a thumb for panning.
+</p>
+
+<p>
+  In order to expose edited content to the <em>Outline</em> view, you need to 
+  override the <code>getAdapter</code> method and 
+  <img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag">
+  return an outline
+  implementation when the adapter class is the <code>IContentOutlinePage</code>
+  interface. The easiest way to implement an outline is to extend
+  the <code>ContentOutlinePage</code> class by supplying it with an
+  appropriate configured <code>EditPartViewer</code>.
+</p>
+
+<div class="figure">
+ <pre class="program">public Object getAdapter(Class type) {
+    // returns the content outline page for this editor
+<img src="images/tag_1.gif" height=13 width=24 align="middle" alt="tag"> if (type == IContentOutlinePage.class) {
+        if (outlinePage == null) {
+            outlinePage = new ShapesEditorOutlinePage(this, new TreeViewer()); 
+        }
+        return outlinePage;
+    }
+    return super.getAdapter(type);
+}</pre>
+ <div class="figure-caption">
+  <span class="figure-number">Fig 13</span>. Providing an overview
+ </div>
+</div>
+
+<p>
+  In the case of the shape diagram editor, the edit part view is implemented by
+  a tree viewer. You should supply it with the same edit domain as your
+  main editor. A tree viewer, just like any other <code>EditPartViewer</code>,
+  requires a method for creating child edit parts. The editor uses the same
+  mechanism as that employed with the <code>DiagramEditPart</code>, by
+  setting an edit part factory on it. In addition, the selection of the
+  overview and the main editor window is synchronized using a
+  selection synchronizer, a GEF utility class that reconciles the selection
+  state of two edit parts. The <code>ShapesTreeEditPartFactory</code>
+  returns either a <code>ShapeTreeEditPart</code> or a
+  <code>DiagramTreeEditPart</code> instance, depending on the model type. By
+  inspecting those classes, the reader should have no difficulty recognizing
+  already familiar patterns. Both edit parts implement the
+  <code>PropertyChangeListener</code> interface and react to property changes
+  by adjusting visual representation of the model. Both install edit policies
+  to control types of interactions exposed through them. 
+</p>
+
+<h2>Design patterns used by GEF</h2>
+
+<p>
+  GEF attains its flexibility through an extensive use of design patterns. Provided 
+  here is a brief summary of those most commonly encountered. For a more
+  detailed treatment on patterns please see <a class="cite" href="#gamma">[2]</a>.
+<p>
+<dl>
+  <dt>Model-View-Controller</dt>
+  <dd>
+    The MVC pattern is used by GEF to decouple user interface, behavior,
+    and presentation. The model is represented by any Java <code>Object</code>.
+    The view must implement the <code>IFigure</code> interface. The controller
+    is a type of an <code>EditPart</code>.
+  </dd>
+  <dt>Command</dt>
+  <dd>
+    Commands encapsulate model changes, therefore providing support for undoable 
+    operations.
+  </dd>
+  <dt>Chain of Responsibility</dt>
+  <dd>
+    Decouples senders of requests (tools) from receivers by giving more than
+    one object a chance to handle the request. In the case of GEF, multiple edit
+    policies may respond to a request with <code>Commands</code> which then
+    are chained together.
+  </dd>
+  <dt>State</dt>
+  <dd>
+    Allows editor to alter its behavior when its internal state changes. With
+    GEF editors, this change is implemented by switching tools. For 
+    example, a marquee tool causes the editor to respond differently to a 
+    mouse down event than when a create tool is active.
+  </dd>
+  <dt>Abstract Factory</dt>
+  <dd>
+    Provides an interface for creating families of related or dependent
+    objects. This pattern is used when creating edit parts controlling 
+    given model parts.
+  </dd>
+  <dt>Factory Method</dt>
+  <dd>
+    Defines a method for creating an object, but lets subclasses decide
+    which class to instantiate. While not explicitly discussed, this is
+    an alternative method for creating an edit part. The method
+    <code>createChild</code> allows you to explicitly create child
+    edit parts without using a factory.
+  </dd>
+</dl>
+
+<h2>Summary</h2>
+
+<p>
+  I tried giving a detailed description of most aspects of a very simple 
+  graphical editor. Hopefully there is enough information provided to allow 
+  anybody patient enough to read this lengthy essay to inspect larger examples, 
+  such as the logic circuit editor.
+  By immediately understanding roles of classes such as
+  <code>CircuitEditPart</code>, <code>AndGateFigure</code>, and a few others
+  that directly correspond to classes present in the simple shape editor,
+  you may focus your attention on more complex aspects of larger examples.
+  There exists a plethora of subjects and techniques in GEF whose surface I have not
+  even scratched. However, they should be studied only after the base is
+  well understood. After all, what is the purpose of trying to design 
+  a drag feedback, if it takes you a few hours to enable the <em>Select All</em> 
+  menu item?
+</p>
+
+<h2>Acknowledgments</h2>
+<p>
+  I would like to thank Randy Hudson for his comments that helped improve 
+  the structure and accuracy of this article. My thanks also go to Jill
+  Sueoka for tirelessly reviewing numerous versions that I managed to 
+  produce.
+</p>
+
+<h2>Bibliography</h2>
+
+<table>
+<tbody>
+  <tr>
+    <td valign="top"><a name="bordeau"></a>[1]</td>
+      <td> Eric Bordeau, <a href="../Article-GEF-dnd/GEF-dnd.html"><i>Using 
+        Native Drag and Drop with GEF</i></a>, Eclipse Corner Article, August 
+        2003 </td>
+  </tr>
+  <tr>
+    <td valign="top"><a name="gamma"></a>[2]</td>
+      <td> Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides, <i>Design 
+        Patterns: Elements of Reusable Object-Oriented Software</i>, Addison Wesley, 
+        1995, ISBN 0-201-63361-2</td>
+  </tr>
+  <tr>
+    <td valign="top"><a name="hudson"></a>[3]</td>
+      <td> Randy Hudson, <a href="http://www-106.ibm.com/developerworks/opensource/library/os-gef/" target="_blank"><i>Create 
+        an Eclipse-based application using the Graphical Editing Framework</i></a>, 
+        <a href="http://www-136.ibm.com/developerworks/java/">IBM developerWorks</a>, 
+        July 2003 </td>
+  </tr>
+  <tr>
+    <td valign="top"><a name="lee"></a>[4]</td>
+      <td> Daniel Lee, <a href="../Article-GEF-Draw2d/GEF-Draw2d.html"><i>Display 
+        a UML Diagram using Draw2D Diagram</i></a>, Eclipse Corner Article, August 
+        2003 </td>
+  </tr>
+  <tr>
+    <td valign="top"><a name="mehaut"></a>[5]</td>
+      <td> Xavier Mehaut et al., <a href="http://eclipsewiki.editme.com/GefDescription" target="_blank"><i>Synthetic 
+        GEF description</i></a>, June 2004 </td>
+  </tr>
+  <tr>
+    <td valign="top"><a name="moore"></a>[6]</td>
+      <td> William Moore, David Dean, Anna Gerber, Gunnar Wagenknecht and Philippe 
+        Vanderheyden, <i><a href="http://www.redbooks.ibm.com/abstracts/sg246302.html" target="_blank">Eclipse 
+        Development using the Graphical Editing Framework and the Eclipse Modeling 
+        Framework</a></i>, IBM RedBooks, 2004, ISBN 0738453161</td>
+  </tr>
+  <tr>
+    <td valign="top"><a name="zoio"></a>[7]</td>
+      <td> Phil Zoio, <a href="../Article-GEF-editor/gef-schema-editor.html"><i>Building 
+        a Database Schema Diagram Editor with GEF</i></a>, Eclipse Corner Article, 
+        September 2004 </td>
+  </tr>
+</tbody>
+</table>
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both.</small></p>
+</body>
+
+</body>
+</html>

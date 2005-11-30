@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+
+                            
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
+                           
+  <meta name="Author" content="Greg Adams">
+  <meta name="Author" content="Dorian Birsan">
+
+  <title>Help Part 1</title>
+                                               
+  <link rel="stylesheet" href="../../default_style.css">
+</head>
+  <body>
+ 
+<div align="right"><font face="Times New Roman, Times, serif"><font
+ size="-1"> Copyright &copy; 2001, 2003 Object Technology International, Inc.</font></font></div>
+   
+<div align="right">  
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+    <tbody>
+      <tr>
+        <td align="left" valign="top" colspan="2" bgcolor="#0080c0"><b><font
+ face="Arial,Helvetica"><font color="#ffffff">     &nbsp;Eclipse Corner Article</font></font></b></td>
+      </tr>
+       
+  </tbody>  
+</table>
+  </div>
+   
+<h1><img src="Idea.jpg" height="86" width="120">
+  </h1>
+   
+<center>  
+<h1> Help &#8211; Part 1<br>
+       Contributing a little help</h1>
+  </center>
+  <b>Summary</b><br>
+      The Eclipse Platform&#8217;s help system defines two extension points (<code>
+ "toc"   </code>and<code> "contexts"</code>) that allow individual plug-ins to
+contribute    online help and context-sensitive help for their components.
+In this article    we will investigate the <code>"toc"</code> extension point and how
+you can use it to  contribute  documentation for your plug-in.       
+<p><b>By Greg Adams, OTI and Dorian Birsan, IBM</b><br>
+  <font size="-1">Updated August 9, 2002</font></p>
+<p>Editor's note: This article describes the help system for Eclipse release 2.1, 
+  which differs in minor ways from the previous Eclipse release. If you are working 
+  with Eclipse release 1.0, you should consult <a href="../Article-Online%20Help%20for%201_0/help1.htm">the 
+  original version of this article</a>.</p>
+<center>
+  <hr size="2" width="100%" align="center"></center>
+   
+<h2> Introduction</h2>
+       The Eclipse Platform&#8217;s help system allows you to contribute your plug-in&#8217;s
+   online  help using the org.eclipse.help.toc extension point. You can either
+    contribute the online help as part of your code plug-in or provide it
+separately    in its own documentation plug-in. This separation is beneficial
+in those   situations  where the code and documentation teams are different
+groups or  where you want  to reduce the coupling/dependency between the
+documentation   and code. The Platform&#8217;s  help facilities provide you with
+the raw building   blocks to structure and contribute  your help without
+dictating the structure   or granularity of documentation. The  Platform
+does however provide and control  the integrated help viewers thus ensuring
+ seamless integration of your documentation.         <br>
+<br>
+The org.eclipse.help.toc contribution specifies one or more associated  
+ XML files that contain the structure of your help and its integration with
+help contributed by other plug-ins. In the remainder   of this article we
+will create a documentation plug-in, so by the time your're   done you can
+browse your own documentation using the Eclipse Help System.         
+<h2> Making the plug-in and content</h2>
+       A content author supplies one or more HTML files containing the actual 
+  documentation. There are no restrictions imposed by the Platform on the 
+granularity  of the HTML files or on their content. We will start by assuming 
+that you  already have some HTML files that you want to integrate into the 
+Eclipse Platform. Let&#8217;s assume your content is arranged into the following 
+directory tree.       
+<blockquote><tt>html/</tt><tt>&nbsp;&nbsp; <br>
+    &nbsp; &nbsp;overview.html</tt><br>
+    <tt>&nbsp;&nbsp; concepts/</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; concept1.html</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; concept1_1.html</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; concept1_2.html</tt><br>
+    <tt>&nbsp;&nbsp; tasks/</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; task1.html</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; task2.html</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; task3_1.html</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; task3_2.html</tt><br>
+    <tt>&nbsp;&nbsp; ref/</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ref1.html</tt><br>
+    <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ref2.html</tt></blockquote>
+       Create a plug-in directory called org.eclipse.helparticle and place
+ the   above  <code>html/</code> sub-tree into it. Now create an initial
+plugin.xml    file with  the following content:                  
+<blockquote><tt>&lt;?xml version="1.0"?&gt;</tt><br>
+      <tt>&lt;plugin</tt><br>
+      <tt>&nbsp;&nbsp; name = "Online Help Sample"</tt><br>
+      <tt>&nbsp;&nbsp; id = "org.eclipse.helparticle"</tt><br>
+      <tt>&nbsp;&nbsp; version = "1.0"</tt><br>
+      <tt>&nbsp;&nbsp; provider-name = "Eclipse.org&gt;</tt><br>
+      <tt>&lt;/plugin&gt;</tt></blockquote>
+       To help you get started here is a zip file containing the above <a
+ href="initialstructure.zip">     initial  plug-in structure</a>     . This 
+plug-in manifest file doesn't actually integrate anything  yet  but  soon 
+we will add our contributions to it. <br>
+       &nbsp; <br>
+      &nbsp;                           
+<h2> Topics &amp; HTML Content</h2>
+       Now that we have our sample content files we are ready to create our 
+     <b>   toc </b>file. A toc file defines the key entry points into the 
+HTML content  files by defining labeled topics mapped to the&nbsp; individual
+HTML files.  A toc file acts like a table of contents for a set of HTML content.
+Teams  migrating onto the Eclipse Platform can quickly reuse existing HTML
+documentation   by defining entry points into their existing documentation 
+via the toc file.  A plug-in can have one or more toc files. Toc files are 
+sometimes referred  to as navigation files since they describe how to navigate 
+the HTML content.  We have three main content areas, concepts, tasks and reference.
+Our obvious  choices are one big toc file, or a toc file for each main content
+area. Keep  in mind this decision is ours to make, and is not a decision
+the Platform  dictates to us. If we were &#8220;really&#8221; writing our documentation
+we would have  a larger number of files so, with that in mind we will try
+and keep things  manageable by creating a toc file for each of the three
+content areas as follows:                            
+<p class="MsoNormal"><b>toc_Tasks.xml</b></p>
+       
+<blockquote><tt>&lt;toc label="Tasks"&gt;</tt><br>
+        <tt>&nbsp;&nbsp;&nbsp; &lt;topic label="Plain Stuff"&gt;</tt><br>
+        <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;topic label="Task1" 
+   href="html/tasks/task1.html"/&gt;</tt><br>
+        <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;topic label="Task2" 
+   href="html/tasks/task2.html"/&gt;</tt><br>
+        <tt>&nbsp;&nbsp;&nbsp; &lt;/topic&gt;</tt>&nbsp;<tt>&nbsp;&nbsp;&nbsp; 
+         <br>
+      &nbsp; &nbsp; &lt;topic label="Fun Stuff" &gt;</tt><br>
+        <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;topic label="Task3_1" 
+   href="html/tasks/task3_1.html"/&gt;</tt><br>
+        <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;topic label="Task3_2" 
+   href="html/tasks/task3_2.html"/&gt;</tt><br>
+        <tt>&nbsp;&nbsp;&nbsp; &lt;/topic&gt;</tt><br>
+        <tt>&lt;/toc&gt;</tt></blockquote>
+        <b>toc_Concepts.xml</b>        
+<blockquote><tt>&lt;toc label="Concepts"&gt;</tt><br>
+          <tt>&nbsp;&nbsp;&nbsp; &lt;topic label="Concept1" href="html/concepts/concept1.html"&gt;</tt><br>
+          <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;topic label="Concept1_1" 
+   href="html/concepts/concept1_1.html"/&gt;</tt><br>
+          <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;topic label="Concept1_2" 
+   href="html/concepts/concept1_2.html"/&gt;</tt><br>
+          <tt>&nbsp;&nbsp;&nbsp; &lt;/topic&gt;</tt><tt><br>
+      &lt;/toc&gt;</tt></blockquote>
+          <b>toc_Ref.xml</b>          
+<blockquote><tt>&lt;toc label="Refs"&gt;</tt><br>
+            <tt>&nbsp;&nbsp;&nbsp; &lt;topic label="Ref1" href="html/ref/ref1.html"/&gt;</tt><br>
+            <tt>&nbsp;&nbsp;&nbsp; &lt;topic label="Ref2" href="html/ref/ref2.html"/&gt;</tt><br>
+            <tt>&lt;/toc&gt;</tt></blockquote>
+       Topics are contributed as part of the <code>&lt;toc&gt;</code> container element.
+ A            <code>&lt;topic&gt;</code>  can be a simple link to content (e.g. Task1)
+ or  a hierarchical  grouping of sub-topics  (e.g. Fun Stuff), or both (e.g.
+ Concept1).  When used  as  a link, the argument to href is assumed to be
+relative to the current  plug-in.  Later we will modify the plugin.xml to
+add the actual contributions  consisting of these files. Notice that the
+hierarchical structure of topics is  not the same as the file system structure:
+all the "Concepts" topics files  in one directory, but the table of contents
+nests them differently.                                                 
+        
+<h2> Creating a book</h2>
+       Now that we have our raw content and toc files it&#8217;s time to create 
+our   book. A book is just table of contents. In fact, we could make a book 
+out of  each of the three toc files above, but we will treat them as sections 
+of a larger book instead. So, we will create another toc file that defines 
+the  main sections of the book and will link the three toc files  above to
+create a larger table of contents (our book).<br>
+            <br>
+            <b>book.xml</b>            
+<blockquote><tt>&lt;toc label="Online Help Sample" &nbsp;topic="html/book.html"&gt;</tt><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <tt>&lt;topic label="Overview"
+ href="html/overview.html"/&gt;</tt><br>
+              <tt>&nbsp;&nbsp;&nbsp; &lt;topic label="Concepts"&gt;</tt><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+               <tt>&lt;<b>link toc="toc_Concepts.xml"/&gt;</b></tt><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <tt>&lt;/topic&gt;</tt><br>
+              <tt>&nbsp;&nbsp;&nbsp; &lt;topic label="Tasks"&gt;</tt><br>
+              <tt>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;<b>link toc="toc_Tasks.xml</b>"/&gt;</tt><br>
+              <tt>&nbsp;&nbsp;&nbsp; &lt;/topic&gt;</tt><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <tt>&lt;topic label="Reference"&gt;</tt><br>
+              <tt>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </tt><tt>&lt;<b>link
+   toc="toc_Ref.xml"</b>/&gt;</tt><br>
+              <tt>&nbsp;&nbsp;&nbsp; &lt;/topic&gt;</tt><br>
+              <tt>&lt;/toc&gt;</tt></blockquote>
+      The Eclipse Platform can display any number of books/tables of contents.
+   Each table of contents contains a collection of topics. Sometimes a higher-level
+   component or product team is responsible for weaving together the documentation
+   and topics supplied by a number of its component teams. For our purposes
+  we&#8217;ll assume that our plug-in should supply both the topics and the book
+ that integrates the topics. Towards the end of the article we will look
+at  how to make your documentation plug-in live happily in both a component
+world   and a product world. <br>
+      The following figure shows the book called "Online Help Sample" in
+the  list of &nbsp;all available books.<br>
+ <br>
+               
+<blockquote><img src="books.jpg" alt="books" width="677" height="505"
+ border="0">
+              <br>
+ </blockquote>
+                <br>
+                 
+<h2> Finishing our plug-in</h2>
+                 
+<p><br>
+      The one remaining piece of work is to update our plugin.xml to actually 
+  contribute the toc files that we created. Start with updating the plugin.xml 
+  to contribute our book. The important thing here is to define this table 
+ of contents as a primary <code>&lt;toc&gt;</code>.</p>
+                 
+<blockquote><tt>&lt;extension point="org.eclipse.help.toc"&gt;</tt><br>
+                  <tt>&nbsp;&nbsp;&nbsp; &lt;toc file="book.xml" <b>primary="true"</b>
+     /&gt;<br>
+      &lt;/extension&gt;<br>
+                  </tt></blockquote>
+       Next we contribute the section toc files, and the important thing
+here   is that primary is not set, so its default value (false) gets picked
+up:                                                                     
+                  
+<blockquote><tt>&lt;extension point="org.eclipse.help.toc"&gt;</tt><br>
+                    <tt>&nbsp;&nbsp;&nbsp; &lt;toc file="toc_Concepts.xml"
+  /&gt;</tt><br>
+                    <tt>&nbsp;&nbsp;&nbsp; &lt;toc file="toc_Tasks.xml" /&gt;</tt><br>
+                    <tt>&nbsp;&nbsp;&nbsp; &lt;toc file="toc_Ref.xml" /&gt;</tt><br>
+                    <tt>&lt;/extension&gt;</tt></blockquote>
+       That&#8217;s it, you&#8217;re done. Now take your plug-in (click here for a <a
+ href="final.zip">     zip  file</a>      of the final plug-in) and drop it 
+into the Platform&#8217;s <i>plugins</i> directory,    start Eclipse and choose 
+Help -&gt; Help Contents. Once you select the Online Help Sample and expand 
+the topics&nbsp; you will see the following.                   <br>
+ &nbsp;                                                                 
+                                <br>
+ 
+<blockquote><img src="expanded_book.jpg" alt="expanded book" width="631"
+ height="520">
+ &nbsp;     &nbsp;</blockquote>
+                     
+<p><br>
+       Before we continue a brief recap is in order: </p>
+                     
+<ul>
+                      <li> We started by creating our plug-in and document
+ files.</li>
+                      <li> Next we created toc files to describe the structure/navigation
+   of our content.</li>
+                      <li>We then created the toc file for the book and linked
+   the other toc files as sections of the book.</li>
+                      <li>Finally we &nbsp;contributed all the files in the
+   plugin.xml in the org.eclipse.help.toc extension point.<br>
+                      </li>
+                     
+</ul>
+                     
+<p>&nbsp; &nbsp;</p>
+                     
+<h2>Integration of Tables of Contents</h2>
+                     
+<div align="left">In our example we defined four tables of contents, of which 
+one was viewed as the book, the other three as sections of the book. Since 
+the book is aware of what sections to link we call this a top-down integration. 
+It is possible to do it the other way around, i.e. bottom-up integration, 
+where the sections specify which book (or section) to link to. A table of 
+contents indicates its willingness to allow others to link to by providing 
+anchors (&lt;anchor id=..."/&gt;) at the desired linking points.<br>
+ Most often a plug-in defines a primary table of contents to which other plug-ins 
+integrate their own table of contents. Tables of contents that are not primary 
+or are not (directly or indirectly) integrated into other primary tables of
+contents are discarded from the final help navigation.<br>
+ Linking is specified by using the fully qualified reference to a table of 
+contents, such as<br>
+ 
+<ul>
+   <li>top-down:&nbsp; &lt;link toc="../the_other_plugin_id/path/to/toc.xml" 
+/&gt; or</li>
+   <li>bottom-up: &nbsp;&lt;toc link_to="../the_other_plugin_id/path/to/toc.xml#anchor_id"/&gt;<br>
+   </li>
+ 
+</ul>
+   </div>
+                     
+<p>Since the participating tables of contents are sometimes located in other 
+plug-ins, and these plug-ins may not be installed, it is possible that some 
+tables of contents remain unintegrated.<br>
+ What if we expect our plug-in will sometimes be installed by itself,  and 
+ in other  cases it will be installed as part of a larger component or  product. 
+ When deploying  a free floating plug-in we want to ensure that our book is
+visible. When topics  from a plug-in are integrated into a larger web it
+probably doesn&#8217;t make sense  for their standalone book to show up anymore. 
+ To support this nonintegrated or  loosely integrated documentation,  a plug-in 
+ can define a table of contents as a book by setting its <b>primary</b>  
+ attribute to true (inside plugin.xml) and having a <b>link_to </b>attribute 
+pointing to the desired anchor in the larger web. This has the effect  of the
+table of contents appearing as a book when the plug-in defining the anchor 
+is not installed, and appearing as a section of the target book when the plug-in
+defining the anchor is installed.<br>
+<br>
+ </p>
+                       
+<h2>Localization</h2>
+       Plugin manifest files externalize their strings by replacing the string 
+with   a key (e.g. %pluginName) and creating an entry in the plugin.properties 
+file  of the form: <br>
+                    <tt>&nbsp;&nbsp;&nbsp; pluginName = &#8220;Online Help Sample
+   Plugin&#8221;</tt><br>
+                    <br>
+Strings from the contribution XML files and the topic HTML files are not
+externalized.    The toc XML files and the HTML documentation must be translated
+and packaged in the appropriate NL directory structure or in an NL fragment,
+  making sure files do not change their names. The NL directory structure
+inside a plug-in is <br>
+<br>
+<tt>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; myplugin/<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; nl/<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <em>langCode</em>/<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 
+<em>countryCode</em>/<br>
+</tt>&nbsp; <br>
+Here is how the plug-in with Japanese documentation is <a href="final_ja_JP.zip">packaged</a> (note: the files are not translated, 
+just packaged in the appropriate location).
+                                    
+<h2> Server and zip files</h2>
+       The Platform utilizes its own help server to provide the
+actual    web pages  from within the document web.&nbsp; A help server
+allows the    Platform to handle  the wide variety of web browsers in a browser
+independent    way while also providing  plug-in aware support. The Platform's
+help server    allows the documentation to also  be packaged in zip files
+thus avoiding   problems that may result when a large number  of files are
+present. In our example, we put the HTML files in subdirectories of the plug-in directory. 
+Alternatively, we could have placed them in a .zip file, called doc.zip, in the plug-in directory, 
+maintaining the directory structure underneath. In general, the recommended way is to actually zip all the documentation.
+Here is how the plug-in is <a href="zipped_plugin.zip">packaged.</a><br>
+       &nbsp;                                                           
+                                       
+<h2> Conclusions</h2>
+       We have seen how we can use the tables of contents to declare books 
+the   user can see. We then used the linking mechanism to integrate our topics. 
+The Platform&#8217;s mechanisms can be used    to integrate new documentation, or
+to quickly wire in existing HTML based    documentation without rewriting 
+it. The mechanisms allow you to create multiple  different views/books onto 
+your documentation web. In our plug-in we only created  a single book but 
+additional books could easily be created. Lastly, we observed that the  Platform
+provides the building blocks for documentation integration, provides minimal packaging guidelines, 
+and lets the documentation authors have full control over structuring their HTML files. <br>
+      &nbsp; <br>
+      &nbsp;                                                            
+                                     <br>
+ <br>
+</body>
+</html>
+
+<!-- ZoneLabs Popup Blocking Insertion -->
+<script language='javascript'>postamble();</script>

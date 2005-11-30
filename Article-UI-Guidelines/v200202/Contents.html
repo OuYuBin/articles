@@ -1,0 +1,3887 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Build">
+<meta name="GENERATOR" content="Mozilla/4.72 [en] (Windows NT 5.0; U) [Netscape]">
+<title>Eclipse UI Guidelines</title>
+<link HREF="default_style.css" REL="stylesheet">
+<style type="text/css">
+<!--
+.tocstyle {  font-family: Arial, Helvetica, sans-serif; font-size: 10px}
+-->
+</style>
+</head>
+<body>
+		
+<div align="right"> <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2001-2002 Object Technology International, Inc. and others.</font>&nbsp; 
+  <table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+				<tr>
+					<td ALIGN=LEFT VALIGN=TOP COLSPAN="2" BGCOLOR="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse
+Corner Article</font></font></b></td>
+				</tr>
+			</table>
+		</div>
+
+<h1>
+<img SRC="Idea.jpg" height=86 width=120 align=CENTER></h1>
+
+<center>
+<h1>
+Eclipse User Interface Guidelines</h1></center>
+
+<center>
+<p><br><b><font color="#000000">By: Dave Springgay (OTI), Jin Li (IBM),</font></b>
+<br><b><font color="#000000">Julian Jones (IBM), and Greg Adams (OTI).</font></b>
+<p><b><font color="#000000">Last Updated: Feb. 27, 2002</font></b></center>
+
+<h3>
+<font color="#000000">Notice</font></h3>
+<font color="#000000">This is a living document.&nbsp; In other words, your feedback 
+can influence the ideas and guidelines described here.&nbsp; If you have comments, 
+please join the Eclipse Project community and give us your feedback.&nbsp; The 
+Eclipse Project web site can be found at <a href="http://www.eclipse.org" target="_top">www.eclipse.org</a>.</font> 
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="Introduction"></a>Introduction</h2>
+In this document the Eclipse User Interface Guidelines are defined.
+<p>Eclipse is a universal tool platform - an open, extensible IDE for anything,
+but nothing in particular. The real value comes from tool plug-ins that
+"teach" Eclipse how to work with things - Java&trade; files, Web content, graphics,
+video - almost anything you can imagine. Eclipse allows you to independently
+develop tools that integrate with other people's tools so seamlessly, you
+won't know where one tool ends and another starts. The very notion of a
+tool, as we know it, disappears completely.
+<p>The platform is very flexible and extensible, but this flexibility has
+a serious drawback.&nbsp; In particular, there is no way within the program
+to ensure User Interface consistency between the registered components
+within the platform.&nbsp; This document attempts to reconcile this problem,
+by defining standard User Interface guidelines for the creation of new
+components.&nbsp; If these guidelines are adopted within your own tools,
+it will lead to greater consistency with the platform and other tools,
+and an easier learning curve for your customers.
+<p>These guidelines are intended for use by designers and implementors
+of an Eclipse user interface extension.
+<br>&nbsp;
+<h3>
+<a NAME="The Workbench"></a>The Workbench</h3>
+To start out, let's take a look at the workbench user interface, and the
+various components within it.
+<p>The workbench is a collection of windows.&nbsp; Each window contains
+a menu, a toolbar, and one or more perspectives (see below).&nbsp; A perspective
+is a visual container for a set of views and editors (parts).&nbsp; These
+parts exist wholly within the perspective and are not shared.&nbsp; A perspective
+is like a page within
+a book.&nbsp; It exists within a window along with any number of other
+perspectives and, like a page within a book, only one perspective is visible
+at any time.
+<center>
+<p><img SRC="workbench_decomposed.jpg" height=578 width=480></center>
+
+<p>In the File menu you will find a New submenu, which contains menu items
+for Project, Folder, and File creation.&nbsp; The File menu also contains
+menu items for Import and Export, which are used to import files into the
+Workbench, and export them out again.&nbsp; In the Edit menu, you will
+find familiar actions like Cut, Copy, Paste, and Delete.&nbsp; These actions
+are known as global actions, and target the active part (as indicated by
+a shaded title bar). In other words, if the Delete action is invoked with
+the Navigator active, the actual implementation is performed by the Navigator.
+In the Perspective menu, you will find menu items to add views to the window,
+or change the layout of the window completely.&nbsp; In the Window menu
+you'll find the Preferences menu item, which is used to modify the functional
+preferences of Eclipse.
+<p>As a plug-in developer, you can contribute new views, editors, wizards,
+menu, and tool items to the platform.&nbsp; These contributions are defined
+using XML, and once registered, integrate seamlessly with the components
+which already exist in the platform.
+<h3>
+<a NAME="Projects, Folder and Files"></a>Projects, Folder and Files</h3>
+Eclipse can be used to create anything - java files, web content, graphics,
+video - almost anything you can imagine.&nbsp; These objects are stored
+as regular files within the Eclipse workspace.&nbsp; The workspace consists
+of one or more top level projects.&nbsp; Each project contains a collection
+of folders and files.&nbsp; These objects are known as <i>resources</i>.
+<br>&nbsp;
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="Getting Started"></a>Getting Started</h2>
+For most developers, an introduction to the platform can be overwhelming,
+and you may ask "where do I get started?".&nbsp; Here are a few basic guidelines
+which will help you.
+<p>This document is intended for UI developers.&nbsp; With this audience
+in mind, we can talk about the two main layers of any application: the
+model layer and the user interface layer.&nbsp; In Eclipse the model layer,
+known as the Workspace, is a collection of resources (projects, folders
+and files).&nbsp; The user interface, or Workbench, defines the presentation
+for those resources.
+<p>As a UI developer, you will also have a model and a presentation.&nbsp;
+If we assume that your goal is to make the model visible, through some
+presentation, most developers will start out by adding a new view or editor
+to the workbench.
+<p><font color="#000000">In Eclipse, an editor is used to interact with
+the primary focus of attention, which may be a document, data object, or
+person.&nbsp; In every case, the primary focus of attention is a reflection
+of the primary task.&nbsp; To illustrate this concept, let's look at some
+common examples.</font>
+<p><font color="#000000">To do Java programming, the primary task is to
+create, edit, and debug Java code. The primary focus is the Java code,
+so an editor is used to interact with that code.&nbsp; The navigator, outline,
+and properties view exist to support the primary task, but rarely hold
+your attention for an extended period of time while you are writing Java
+code.</font>
+<p><font color="#000000">To read email, the primary task is to create,
+send, read, and reply to email. The primary focus is a particular email
+message, so an editor is used to view or reply to an email message.&nbsp;
+A view may be used to select an email message to read, and open an editor.</font>
+<p><font color="#000000">To communicate using instant messenging, the primary
+task is the conversation.&nbsp; The primary focus is a particular conversation,
+so an editor is used to carry on that conversation.&nbsp; A view may be
+used to list people with whom you can initiate a conversation.</font>
+<p><font color="#000000">To browse the Web, the primary task is reading.
+The primary focus is a particular web page, so an editor is used to browse
+the web page. A</font>
+<br>
+  <font color="#000000">view may be used to save your favorite links, and reopen 
+  them.&nbsp; At any time, you may decide to edit the page you are looking at.&nbsp; 
+  This causes a new</font> <font color="#000000">editor to open.</font> 
+<p><font color="#000000">In each case, the primary task determines the primary 
+  focus of attention. As the primary focus of attention, it deserves a primary 
+  position in the UI</font> <font color="#000000">(as an editor), and can contribute 
+  actions to the window menu bar and toolbar.</font> 
+<p><font color="#000000">Views are used to support the primary task.&nbsp; You 
+  use them to navigate a hierarchy of information, open an editor, or view properties 
+  for the active</font> <font color="#000000">editor.&nbsp; In reflection of their 
+  support role, they can not contribute actions to the window menu bar and toolbar.</font> 
+<p>Once you have added a view or editor, an interesting question arises.&nbsp;
+Where did this model come from?&nbsp; In Eclipse, most data is created
+using a Creation Wizard.&nbsp; You may want to add a Creation wizard too.
+And once an object exists, you may need a way to edit the properties for
+that object using a Properties page, or the Properties dialog.
+<p>All of these ideas will be discussed, in detail, in the following sections.
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="General UI Guidelines"></a>General UI Guidelines</h2>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<br>This document defines UI guidelines that are unique and specific to
+the Eclipse platform. It is a supplement to the other standard UI guidelines
+such as Microsoft&reg; User Experience, Macintosh Human Interface Guidelines,
+and Java Look and Feel Guidelines. You should continue to consult those
+guidelines for basic UI design and implementation recommendations.
+<p>It is expected that you already have a basic understanding of the Eclipse
+UI architecture and APIs, and the basic UI design principles: user in control,
+directness, consistency, forgiveness, feedback, aesthetics, and simplicity.
+If you do not currently have the prerequisite knowledge, please read the
+relevant documentation first.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 1.1</font></b>
+<blockquote><font color="#3333FF">Follow and apply good user interface
+design principles: user in control, directness, consistency, forgiveness,
+feedback, aesthetics, and simplicity.</font></blockquote>
+
+<h3>
+<a NAME="The Spirit of Eclipse"></a>The Spirit of Eclipse</h3>
+At its heart, Eclipse is a platform for tool plug-ins.&nbsp; These plug-ins
+may be developed by a single team or by a partnership of teams, or the
+user may assemble a set of plug-ins from diverse sources.&nbsp; In either
+case, the usability of an individual tool, and Eclipse as a whole, will
+be positively influenced by user interface consistency.
+<p>If you're in doubt about the appropriate look and feel for a tool, look
+to the platform first, then the Java development tooling in Eclipse for
+guidance. In many cases, the workflow you imagine may already exist in
+Eclipse.&nbsp; If so, adopt the platform's workflow and user interface
+conventions. This will lead to greater consistency with the platform and
+other plugins, and an easier learning curve for your customers.
+<p>In some scenarios, it may be tempting to ignore the workflow of Eclipse and 
+  implement a "custom" user interface.&nbsp; This interface will almost certainly 
+  stand out like a sore thumb in an integrated environment, where other tools 
+  adopt the platform conventions.&nbsp; You lose the benefit of past experience, 
+  and force your customers to learn new ideas. 
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 1.2</font></b>
+<blockquote><font color="#3333FF">Follow the platform lead for user interface
+conventions.</font></blockquote>
+If you decide to reuse the conventions of Eclipse, be careful not to misappropriate
+Eclipse specific UI conventions.&nbsp; For instance, the active part in
+a workbench window is indicated by a shaded title.&nbsp; The use of shaded
+titles within an editor (see below) may be one way to indicate where the
+focus is, within that part, but it will also blur the concept of part activation
+in the window.
+<br>&nbsp;
+<p><img SRC="badHilight.jpg" HSPACE=50 height=427 width=706>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 1.3</font></b>
+<blockquote><font color="#3333FF">Be careful not to mix UI metaphors.&nbsp;
+It may blur the original concept, and your own application.</font></blockquote>
+Eclipse is an open source project.&nbsp; If you feel your ideas are generally
+useful, join the Eclipse community, write a proposal, and work with the
+Eclipse community to make Eclipse a better platform for product development
+and customer satisfaction.
+<p>Visit www.eclipse.org and join the Eclipse UI mailing list platform-ui-dev.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 1.4</font></b>
+<blockquote><font color="#3333FF">If you have an interesting idea, work
+with the Eclipse community to make Eclipse a better platform for all.</font></blockquote>
+
+<h3>
+<a NAME="Capitalization"></a>Capitalization</h3>
+Consistent capitalization of text within a plug-in leads to a more polished
+feel, and greater perception of quality.&nbsp; Within a dialog or window,
+headline capitalization should be applied to all titles, menus, toolbar
+items, tabs, and push buttons.&nbsp; Sentence style capitalization should
+be applied to all check boxes, radio buttons, and group labels.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b> <font color="#3333FF">Guideline
+1.5</font></b>
+<blockquote><font color="#3333FF">Use Headline style capitalization for
+all titles, including those used for windows, dialogs, tabs, column headings
+and push buttons. Capitalize the first and last words, and all nouns, pronouns,
+adjectives, verbs and adverbs.&nbsp; Do not include ending punctuation.</font></blockquote>
+<img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 1.6</font></b>
+<blockquote><font color="#3333FF">Use Sentence style capitalization for
+all control labels in a dialog or window, including those for check boxes,
+radio buttons, group labels, and simple text fields.&nbsp; Capitalize the
+first letter of the first word, and any proper names.</font></blockquote>
+
+<h3>
+<a NAME="Colors"></a>Colors</h3>
+Eclipse provides full support for indexed and true color display.&nbsp;
+On paletted devices, true colors will be mapped to the appropriate palette
+color using a best fit approach, so no work is required of the plug-in
+developer to support these devices.&nbsp; Images associated with a menu
+item, toolbar item, or control icon may be defined with 256 colors or greater.
+<br>&nbsp;
+<h3>
+<a NAME="Language"></a>Language</h3>
+Eclipse will ship on a variety of different platforms, in a variety of
+locales.&nbsp; In reflection of the different languages and numeric formats
+in each, a localization strategy should be adopted for the text and images
+within each plug-in.&nbsp; This involves the separation of all resources
+from the source code of a plug-in itself, so that those resources can be
+translated to a new locale.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 1.7</font></b>
+<blockquote><font color="#3333FF">Localize the resources within your plug-in.</font></blockquote>
+
+<h3>
+<a NAME="Error Handling"></a>Error Handling</h3>
+If an error occurs in Eclipse, the appropriate response will be dependent
+on the context of the error.
+<p>When a user input error occurs in a wizard, please refer to <a href="#Wizards">Wizards</a>
+section on how to handle the error.
+<p>When an error occurs in an editor, please refer to <a href="#Editors">Editors</a>
+section on how to handle the error.
+<p>When an error occurs which requires either an explicit user input or
+immediate attention from users, a modal dialog should be used to communicate
+the error to the user.&nbsp; This forces the user to notice, and deal with
+the problem. It is not appropriate to activate a part and display the error
+in the part.&nbsp; If this approach is taken, the user may fail to notice
+the activation and the error.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+1.8</font></b>
+<blockquote><font color="#3333FF">When an error occurs which requires either
+an explicit user input or immediate attention from users, communicate the
+occurrence with a modal dialog.</font></blockquote>
+If a programming error occurs in the product, an error dialog should be
+used to communicate the occurrence to the user.&nbsp; The error should
+also be logged using the workbench error logging facility.&nbsp; This gives
+the user an opportunity to restart the platform, remove the offending plugin,
+and contact their system administrator.
+<p>The plug-in should provide the following information in the detail area
+of the error dialog:
+<ul>
+<li>
+Provider name</li>
+
+<li>
+Plug-in name (user friendly name)</li>
+
+<li>
+Plug-in ID</li>
+
+<li>
+Version</li>
+</ul>
+<img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+1.9</font></b>
+<blockquote><font color="#3333FF">If a programming error occurs in the
+product, communicate the occurrence with a dialog, and log it.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="Component Development"></a>Component Development</h2>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Actions"></a>Actions</h3>
+An <i>action</i> is a command which can be triggered by the user.&nbsp;
+An action may appear as an item in a menu, or an item in a toolbar.&nbsp;
+In reflection of this, it has attributes for the menu or tool item label,
+tooltip, and image.
+<p>As a plug-in developer, you can contribute actions to the window menu
+bar and toolbar, or to individual views and editors.&nbsp; Contribution
+to the window is performed using an <i>action set</i>, a set of task oriented
+actions which the user can show or hide.&nbsp; Contribution to a view or
+editor is performed using individual actions.
+<p>Here is an illustration of the main areas of contribution.
+<p><img SRC="actionExamples.jpg" HSPACE=50 height=562 width=474>
+<p>In this section we'll look at general action guidelines.&nbsp; For information
+on window, view, or editor specific guidelines, see <a href="#Windows">Windows</a>,
+<a href="#Views">Views</a>,
+and <a href="#Editors">Editors</a>.
+<h4>
+Appearance</h4>
+Each action must have a label, tool tip, and image.&nbsp; If the action
+appears in a toolbar, the action image will be displayed on all platforms.&nbsp;
+If the action appears in a menu, the image will only be displayed on some
+platforms, such as Windows&reg; 2000.&nbsp; The label and tool tip should use
+Headline style capitalization, as defined in General UI Guidelines.
+<p>Each action must provide one full color image.&nbsp; This image will
+be displayed if the mouse is placed over the action.&nbsp; It will also
+be used to generate the enabled, disabled, and pressed images which appear
+in normal action use.&nbsp; Actions which are contributed in code also
+have the option to define explicit images for enabled, disabled, and roll
+over.&nbsp; This option can be used for greater control over image appearance.
+<p>The following snapshot shows the valid use of Headline capitalization
+in a toolbar.
+<p><img SRC="tooltipCaps.jpg" height=141 width=244>
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+2.1</font></b>
+<blockquote><font color="#3333FF">Each action must have a label, tool tip,
+and full color image.&nbsp; The label and tool tip must use Headline style
+capitalization.</font></blockquote>
+The tool tips for an action should describe the <i>behavior which occurs</i>
+if the action is invoked.&nbsp; For instance, in the following snapshot
+the behavior of the Field button is shown.&nbsp; If the action is unpressed,
+pressing the action will hide the fields.&nbsp; If the action is pressed,
+unpressing the action will show the fields.&nbsp; This behavior is shown
+using two tool tips.
+<p><img SRC="goodTooltips.jpg" height=203 width=437>
+<p>A single tool tip should not be used to convey the behavior of both
+cases.&nbsp; It is too ambiguous.
+<p><img SRC="badTooltips.jpg" height=116 width=640>
+<p>Nor should it label the state the toolbar button is currently in.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+2.2</font></b>
+<blockquote><font color="#3333FF">The action tooltip should describe the
+result of the action, not the current state of the action.</font></blockquote>
+For consistency, any action which has a similar behavior to existing actions
+in the workbench, should adopt the same terminology.
+<p>When creating a resource, the term "New" should be used in an action
+or wizard.&nbsp; For instance, "New File", "New Project" and "New Java
+Class".&nbsp; The term "Delete" should be used when deleting an existing
+resource.
+<p>When creating an object inside a resource (e.g., a tag in an XML file;
+a method or field in a Java class), the term "Add" should be used; the
+user is adding something to an existing resource.&nbsp; The term "Remove"
+should be used to remove an object from a resource.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+2.3</font></b>
+<blockquote><font color="#3333FF">Adopt the labeling terminology of the
+workbench for New, Delete, Add, and Remove actions.</font></blockquote>
+
+<h4>
+Enablement</h4>
+An action should only be enabled if it can be completed successfully.&nbsp;
+If this is not the case, the action should be disabled.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+2.4</font></b>
+<blockquote><font color="#3333FF">An action should only be enabled if it
+can be completed successfully.</font></blockquote>
+Action enablement should be quick to calculate.&nbsp; If it is too expensive
+to calculate the enablement of an action, the action should be optimistically
+enabled.&nbsp; If the action is invoked, it should calculate the real enablement,
+and show a dialog to the user if it is not available.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+2.5</font></b>
+<blockquote><font color="#3333FF">Action enablement should be quick.&nbsp;
+If action enablement cannot be quick, enable the action optimistically
+and display an appropriate message if the action is invoked, but cannot
+be completed.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Dialogs"></a>Dialogs</h3>
+A dialog is used for modal interaction with the user.&nbsp; It can be used
+to solicit information, or provide feedback.
+<br>&nbsp;
+<h4>
+Initialization</h4>
+When a dialog first opens, the initial focus should be given to the first
+control where information is required from the user.&nbsp; This control
+can be determined by the tab order of controls until a control is found
+where information is required.&nbsp; If the dialog provides simple feedback,
+or requires simple confirmation from the user, the initial focus may also
+be assigned to the default button.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 3.1</font></b>
+<blockquote><font color="#3333FF">When a dialog opens, set the initial
+focus to one of the controls in the container.</font></blockquote>
+
+<h4>
+Multiple Item Selection</h4>
+Slush Bucket widgets (also known as the Twin Box design) should flow from
+the left to the right with the source objects on the left and selected
+files on the right.
+<p>Slush Buckets should also have the following control buttons, in this
+order, for moving objects from the source the selected buckets.
+<br>&nbsp;
+<center><table BORDER=3 CELLSPACING=3 CELLPADDING=3 >
+<tr>
+<td><b>Button</b></td>
+
+<td><b>Function</b></td>
+</tr>
+
+<tr>
+<td>></td>
+
+<td>Add whatever is selected on the left to the right</td>
+</tr>
+
+<tr>
+<td>&lt;</td>
+
+<td>Remove selected items from the right</td>
+</tr>
+
+<tr>
+<td>>></td>
+
+<td>Add all (whether they are selected or not)</td>
+</tr>
+
+<tr>
+<td>&lt;&lt;</td>
+
+<td>Remove&nbsp; all</td>
+</tr>
+</table></center>
+
+<p><img SRC="slushBucket.jpg" height=278 width=533>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">
+Guideline 3.2</font></b>
+<blockquote><font color="#3333FF">Slush Bucket widget (or Twin Box) should
+flow from left to right with the source objects on the left hand side.
+It should have the >, &lt;, >>, &lt;&lt; control buttons in this order.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Wizards"></a>Wizards</h3>
+In Eclipse, a wizard is commonly used for the creation of new resources,
+resource import, or resource export.&nbsp; It can also be used for the
+execution of any task involving a sequential series of steps.&nbsp; A wizard
+should be used if there are many steps in the task, and they must be completed
+in a specific order.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.1</font></b>
+<blockquote><font color="#3333FF">Use a wizard for any task consisting
+of many steps, which must be completed in a specific order.</font></blockquote>
+
+<h4>
+Appearance</h4>
+At the top of each wizard is a header, containing a banner graphic and
+a text area.&nbsp; The banner graphic contains an image representing the
+wizard task, and should be created with a white to blue, gray scale palette
+for consistency with other banners in Eclipse.&nbsp; These colors also
+avoid distracting the user from the important fields of the wizard.&nbsp;
+The text area is used to prompt the user for information which is absent,
+and display error messages if information is invalid.&nbsp; The presence
+of the header, with banner graphic and text area, creates a more polished
+feel, and greater perception of quality to the wizard.
+<p>At the bottom of each wizard, a Back, Next, Finish, and Cancel button
+should appear.
+<p><img SRC="wizardAppearance.jpg" HSPACE=40 height=390 width=500>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.2</font></b>
+<blockquote><font color="#3333FF">Each wizard must contain a header with
+a banner graphic and a text area for user feedback.&nbsp; It must also
+contain Back, Next, Finish, and Cancel buttons in the footer.</font></blockquote>
+
+<h4>
+Initialization</h4>
+When a wizard first opens, the focus should be placed in the first field
+requiring information (see Guidelines 3.1).&nbsp; The header should be
+used to prompt the user for the first piece of required information.
+<p><img SRC="goodWizardInit.jpg" height=122 width=570>
+<p>It is not appropriate to display an error message.&nbsp; At this point,
+the user hasn't done anything yet.
+<p><img SRC="badWizardInit.jpg" height=124 width=576>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.3</font></b>
+<blockquote><font color="#3333FF">Start the wizard with a prompt, not an
+error message.</font></blockquote>
+The initial state of the wizard should be derived from the context where
+it is opened.&nbsp; For instance, in the New File wizard, the current workbench
+selection is examined.&nbsp; If it points to a valid project or folder,
+the wizard will pre-populate the parent field with the parent project or
+folder name, and put cursor focus in the next field requiring user input.&nbsp;
+If the user's selection does not point to a valid parent project or folder,
+the wizard will not pre-populate the folder name. Instead, it will leave
+the field blank and put the cursor focus in the field.&nbsp;&nbsp; When
+the user's selection is on a file, a wizard may also go through these calculations
+using the parent folder or project of the file.
+<p><img SRC="wizardFieldPopulation.jpg" height=279 width=533>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.4</font></b>
+<blockquote><font color="#3333FF">Seed the fields within the wizard using
+the current workbench state.</font></blockquote>
+
+<h4>
+Validation of Data</h4>
+Information validation within a wizard should be done in tab order.&nbsp;
+If the first required field is empty, an informative prompt should be shown
+in the text area, directing the user to fill in the field.&nbsp; If the
+first required field is in error, an error message should be shown in the
+text area.&nbsp; If the first required field is valid, check the next field,
+and so on.&nbsp; The text area should not be used to display more than
+one prompt or error at a time.
+<p>If dialog information is absent or invalid, the Next or Finish buttons
+should be disabled until the situation is resolved.&nbsp; When resolution
+occurs, and all of the information has been provided, the Next or Finish
+buttons may be enabled.
+<p><img SRC="wizardErrorMsgs.jpg" height=527 width=540>
+<p>Error messages should only be displayed when user input is invalid.
+<p><img SRC="wizardErrorMsgs2.jpg" height=199 width=454>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.5</font></b>
+<blockquote><font color="#3333FF">Validate the wizard data in tab order.&nbsp;
+Display a prompt when information is absent, and an error when information
+is invalid.</font></blockquote>
+<img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.6</font></b>
+<blockquote><font color="#3333FF">Only enable the Next / Finish buttons
+if all required information in the dialog is present and valid.</font></blockquote>
+The error messages in a wizard should be intended for the end user, not
+the developer.&nbsp; With this in mind, message IDs should never be presented
+as part of the error text in the wizard's header area.
+<p><img SRC="wizardMsgs.jpg" height=98 width=543>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.7</font></b>
+<blockquote><font color="#3333FF">Remove all programming message ID's from
+wizard text.</font></blockquote>
+
+<h4>
+Browse Buttons</h4>
+An edit field and "Browse..." button combination should be used whenever
+an existing object is referenced within a wizard.&nbsp; The edit field
+is used for direct input of the existing object, and the Browse button
+is used to browse and select the object from a list of all possible choices.
+<p>For instance, in the New Java Class wizard, a "Browse..." button is
+placed beside the "Super Class" edit field.&nbsp; If the browse button
+is pressed, a Browse Dialog will appear, and the user can select a super
+class.&nbsp; This pattern should be used whenever a link will be established
+between a new object and an old one.&nbsp; The "Browse..." button should
+be located to the right of the edit field.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.8</font></b>
+<blockquote><font color="#3333FF">Use a Browse Button whenever an existing
+object is referenced in a wizard.</font></blockquote>
+In the Browse Dialog, invalid choices should not appear.&nbsp; When the
+dialog is closed, and focus returns to the parent control, refresh the
+enablement state of controls within the dialog.&nbsp; In particular, refresh
+the enablement of Next, Finish, and OK buttons.
+<p>An example of valid and invalid filtering is shown in the following
+snapshot.
+<p><img SRC="folderSelection.jpg" height=1220 width=611>
+<br>&nbsp;
+<h4>
+Wizard Completion</h4>
+The New Resource and Import Wizards commonly create new files, folders,
+and projects within the workbench.&nbsp; If a single file is created, the
+wizard should open the file in an editor in the active page.&nbsp; If more
+than one file is created, open the most important, or central file.&nbsp;
+This makes it easier to modify and save the file.
+<p>Have a readme.html file for every example project, and opening that
+readme.html automatically upon project creation.&nbsp; This will give users
+an immediate overview of the example: what it does, prerequisites, limitations,
+steps to take, and so on.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.9</font></b>
+<blockquote><font color="#3333FF">If a new file is created, open the file
+in an editor.&nbsp; If a group of files are created, open the most important,
+or central file in an editor. Open the readme.html file upon creation of
+an example project.</font></blockquote>
+If a new project is created, the wizard should change the active perspective
+within the workbench to one which is appropriate for the new project type.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.10</font></b>
+<blockquote><font color="#3333FF">If a new project is created, change the
+active perspective to suit the project type.</font></blockquote>
+In either case, where a file, folder, or project is created, the wizard
+should select and reveal the new object in the appropriate view.&nbsp;
+This provides concrete evidence to the user that, yes, the new object was
+created and now exists.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.11</font></b>
+<blockquote><font color="#3333FF">If a new object is created, select and
+reveal the new object in the appropriate view.</font></blockquote>
+In many situations, the creation of a resource may involve the creation
+of a project or folder to contain the resource.&nbsp; If the containing
+project or folder can be created from within the wizard (with a very reasonable
+set of defaults), the wizard should allow it. If the creation of such resources
+requires detailed user interaction in order for parent project or folder
+to be set up correctly, the wizard should not attempt to do this. Instead,
+the wizard error text should instruct the user that "The specified project
+does not exist".
+<p>The EAR Import wizard is an example where allowing the user to specify
+the name of the parent project in place makes for a much more usable interaction.
+In this case, based on the user provided name, the wizard goes off and
+creates not only the EAR project itself, but also any web projects, etc.,
+that may be needed as well.
+<p><img SRC="goodParentCreation.jpg" height=299 width=506>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.12</font></b>
+<blockquote><font color="#3333FF">Create folder objects in a wizard if
+reasonable defaults can be defined.</font></blockquote>
+
+<h4>
+Terminology</h4>
+Within a creation wizard, if the item being created must be a Project (not
+a folder below a project) the label "Project Name" should be used to receive
+the project name.&nbsp; If it can be a folder below the project, the term
+"Folder" should be used.&nbsp; Do not qualify the term (e.g., do not use
+"Server Folder").
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+4.13</font></b>
+<blockquote><font color="#3333FF">Use the label "Project Name" when the
+item must be a Project; otherwise, use the label "Folder". Do not qualify
+the term.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Editors"></a>Editors</h3>
+An editor is a visual component within a workbench page. It is <font color="#000000">used
+to interact with the primary focus of attention, which may be a document,
+data object, or person.&nbsp; The primary focus of attention is a reflection
+of the primary task.</font>
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.1</font></b>
+<blockquote><font color="#3333FF">Use a editor to edit or browse a file,
+document, or other input object.</font></blockquote>
+Modifications made in an editor follow an open-save-close lifecycle model.&nbsp;
+When an editor first opens, the editor contents should be unmodified (clean).&nbsp;
+If the contents are modified, the editor should communicate this change
+to the platform.&nbsp; In response, an asterisk will appear in the editor
+tab.&nbsp; The modifications should be buffered within the edit model,
+until such a time as the user explicitly saves them.&nbsp; At that point,
+the modifications should be committed to the model storage.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.2</font></b>
+<blockquote><font color="#3333FF">Modifications made in an editor must
+follow an open-save-close lifecycle model.</font></blockquote>
+An editor is document or input-centric.&nbsp; Each editor has an input,
+and only one editor can exist for each editor input within a page.&nbsp;
+This policy has been designed to simplify part management.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.3</font></b>
+<blockquote><font color="#3333FF">Only one instance of an editor may exist,
+for each editor input, within a perspective.</font></blockquote>
+In addition, it should be possible to open a separate instance of an editor
+for each input.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.4</font></b>
+<blockquote><font color="#3333FF">It must be possible to open a separate
+instance of an editor for each input.</font></blockquote>
+
+<h4>
+Appearance</h4>
+The editor should be labeled with the name of the resource being edited;
+not with the name of the editor.
+<p><img SRC="editorTitles.jpg" height=84 width=562>
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.5</font></b>
+<blockquote><font color="#3333FF">The editor should be labeled with the
+name of the file, document, or input being edited.</font></blockquote>
+If the editor contains more than one page, a tab control should be used
+for page activation.&nbsp; The use of this control is demonstrated by the
+plugin file and html editors.
+<p>Tab labels should be kept to one word, and two words at most.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.6</font></b>
+<blockquote><font color="#3333FF">In multipage editors, use a tab control
+for page activation.Tab labels should be kept to one word, and two words
+at most.</font></blockquote>
+
+<h4>
+Menus</h4>
+An editor may contribute items directly to the window menu bar.&nbsp; All
+of the actions available in the editor should be displayed in the window
+menu bar, for accessibility and clarity.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.7</font></b>
+<blockquote><font color="#3333FF">All of the actions available in the editor
+should be added to the window menu bar.</font></blockquote>
+The following format is recommended, to ensure consistency across Eclipse
+and better ease of use.
+<br>&nbsp;
+<center><table BORDER COLS=4 WIDTH="80%" >
+<tr>
+<td>Edit</td>
+
+<td>Insert</td>
+
+<td>Format</td>
+
+<td>Perspective</td>
+</tr>
+
+<tr>
+<td>Add any object centric actions here</td>
+
+<td>Add any "insert" actions here</td>
+
+<td>Format actions for the current selection.</td>
+
+<td>Actions to control what you see in the editor.</td>
+</tr>
+</table></center>
+
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.8</font></b>
+<blockquote><font color="#3333FF">Use the standard format for editor contributions
+in the window menu bar.</font></blockquote>
+The window menu bar contains a number of global actions, such as Cut, Copy,
+and Paste in the Edit menu.&nbsp; These actions target the active part,
+as indicated by a shaded title area.&nbsp; If these actions are supported
+within an editor, the editor should hook these window actions, so that
+selection in the window menu bar or toolbar produces the same result as
+selection of the same action in the editor.&nbsp; The editor should not
+ignore these actions, and contribute duplicate actions to the window menu
+bar or toolbar.
+<p>A complete list of the global actions is declared in the IWorkbenchActionConstants.java
+(see below).
+<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /**</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * From IWorkbenchActionConstants.</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Standard global
+actions in a workbench window.</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final
+String [] GLOBAL_ACTIONS = {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+UNDO,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+REDO,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CUT,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COPY,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PASTE,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PRINT,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DELETE,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+FIND,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SELECT_ALL,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+BOOKMARK</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; };</tt>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.9</font></b>
+<blockquote><font color="#3333FF">If an editor has support for Cut, Copy,
+Paste, or any of the global actions, these actions must be executable from
+the same actions in the window menu bar and toolbar.</font></blockquote>
+
+<h4>
+Toolbars</h4>
+An editor may contribute actions directly to the window toolbar.&nbsp;
+The toolbar is used to expose the most commonly used actions in an editor.&nbsp;
+Any action which appears in the toolbar must also appear in the menu, but
+there is no need to duplicate every action in the menu within the toolbar.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.10</font></b>
+<blockquote><font color="#3333FF">Fill the editor toolbar with the most
+commonly used items in the view menu.</font></blockquote>
+The use of a local toolbar within an editor is contrary to the design of
+the workbench.&nbsp; Within the workbench, the toolbar for an editor is
+shared with editors of the same type.&nbsp; This reduces the flash which
+occurs when you switch between editors, reduces the number of images and
+actions in the product, and creates a better feel of integration.
+<h4>
+Context Menus</h4>
+A context menu should be used for context sensitive interaction with the
+objects in an editor.&nbsp; If an object is selected in an editor, and
+the context menu is opened, the context menu should only contain actions
+which are appropriate for the selection.&nbsp; Actions which affect the
+presentation of the view should not appear in the context menu.
+<p>In a text editor, you may assume that there is only one type of selection:
+text.&nbsp; In this case, the contents of the context menu will remain
+consistent for any selection in the editor.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.11</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with selection
+oriented actions, do not presentation or global actions.</font></blockquote>
+For consistency with other editors in Eclipse, each editor should adopt
+a common order for actions within the context menu.&nbsp; This format is
+shown in the following table.&nbsp; Within this table, each item represents
+a category of actions.&nbsp; The categories within the context menu should
+be kept distinct from one another through the use of separators.
+<br>&nbsp;
+<center><table BORDER COLS=1 WIDTH="200" >
+<tr>
+<td>Undo / Redo</td>
+</tr>
+
+<tr>
+<td>Add</td>
+</tr>
+
+<tr>
+<td>Show In</td>
+</tr>
+
+<tr>
+<td>Cut Copy Paste</td>
+</tr>
+
+<tr>
+<td>Delete</td>
+</tr>
+
+<tr>
+<td>Other Plugin Additions</td>
+</tr>
+
+<tr>
+<td>Save</td>
+</tr>
+</table></center>
+
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.12</font></b>
+<blockquote><font color="#3333FF">Use the standard format for editor context
+menus.</font></blockquote>
+For good spatial navigation, fill the context menu with a fixed set of
+actions for each selection type.&nbsp; Once the contents have been defined,
+the enablement state of each action should determined using the selected
+object state.&nbsp; In doing so, you establish a consistency which makes
+the menu more predictable, and easier to navigate.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.13</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with a fixed set
+of actions for each selection type, and then enable or disable each to
+reflect the selection state.</font></blockquote>
+One of the primary goals for the platform UI is extensibility.&nbsp; In
+fact, it is this extensibility which gives you the freedom to add new views,
+editors, perspectives, and actions to the platform.&nbsp; Of course, extensibility
+is a two way street.&nbsp; While you may wish to extend the platform, others
+may wish to extend your view or editor.&nbsp; It is common for one plug-in
+to add actions to the menu, toolbar, or context menu of an editor from
+another plugin.
+<p>In the platform, the menu and toolbar for an editor are automatically extended 
+  by the platform.&nbsp; In contrast, context menu extension is supported in collaboration 
+  between the editor and the platform.&nbsp; To achieve this collaboration, an 
+  editor must register each context menu it contains with the platform.&nbsp; 
+  It should also define an action filter for each object type in the editor.&nbsp; 
+  An action filter makes it easier for one plug-in to add an action to objects 
+  in an editor defined by another plug-in.&nbsp; The target is described using 
+  object type and attributes.&nbsp;&nbsp; For more information on the implementation 
+  of this concept, refer to <a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" target="_top">Creating 
+  an Eclipse View.</a> 
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.14</font></b>
+<blockquote><font color="#3333FF">Register all context menus in the editor
+with the platform.</font></blockquote>
+<img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.15</font></b>
+<blockquote><font color="#3333FF">Implement an Action Filter for each object
+type in the editor.</font></blockquote>
+
+<h4>
+Resource Deletion</h4>
+When a resource is deleted from one of the navigators (e.g., Navigator
+view, J2EE view, Data view, or DBA Explorer view), the handling of any
+editor that is currently open on that resource should be dependent on the
+change state of the editor.
+<p>If the editor does not contain any changes since the resource was last
+saved then the editor should be immediately closed.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.16</font></b>
+<blockquote><font color="#3333FF">If the input to an editor is deleted,
+and the editor contains no changes, the editor should be closed.</font></blockquote>
+If the editor contains changes to the resource since the resource was last
+saved (i.e., it is "dirty"), the editor should give the user a chance to
+save their changes to another location, and then close.&nbsp; Here is a
+sample of the dialog which should be displayed:
+<p><img SRC="fileDeletedDialog.jpg" HSPACE=50 height=124 width=436>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.17</font></b>
+<blockquote><font color="#3333FF">If the input to an editor is deleted,
+and the editor contains changes, the editor should give the user a chance
+to save their changes to another location, and then close.</font></blockquote>
+
+<h4>
+Unsaved Changes</h4>
+If the editor contains changes to the resource since the resource was last
+saved (i.e., it is "dirty"), an asterisk should be used to prefix the resource 
+name presented in the editor tab:
+<p><img SRC="dirtyEditor.jpg" HSPACE=50 height=331 width=334>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.18</font></b>
+<blockquote><font color="#3333FF">If the resource is dirty, prefix the resource 
+name presented in the editor tab with an asterisk.</font></blockquote>
+
+<h4>
+Read Only Files</h4>
+With a name like "editor", it's not surprising that the issue of read-only
+files may cause confusion.&nbsp; If it's read-only, how can you edit it?&nbsp;
+In this case, you should fall back to first principles.
+<blockquote>A view is typically used to navigate a hierarchy of information,
+open an editor, or display properties for the active editor.&nbsp; An editor
+is typically used to edit or browse a file, document or other input object.</blockquote>
+This statement is appropriate whether a file is read-only or not.&nbsp;
+In either case, the user should be able to select the file, open it, and
+browse the contents within an editor. If the file is read-only, the File
+> Save action should be disabled and the File > Save As should be enabled.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.19</font></b>
+<blockquote><font color="#3333FF">Treat read-only editor input as you would
+any other input.&nbsp; Enable the Save As if possible.</font></blockquote>
+
+<h4>
+Integration with Other Views</h4>
+In Eclipse, there is a special relationship between each editor and the
+Outline view.&nbsp; When an editor is opened, the Outline view will connect
+to the editor, and ask it for an outline model.&nbsp; If the editor answers
+an outline model, that model will be displayed in the Outline view whenever
+the editor is active.&nbsp; The outline is used to navigate through the
+edit data, or interact with the edit data at a higher level of abstraction.
+<p>For instance, if you open a .java file in an editor, the structure of
+the class is displayed in the Outline view.&nbsp; If you select a method
+or field in the outline, the text declaration of that item will be selected
+and revealed in the editor.&nbsp;&nbsp; If you select a method or field,
+and open the context menu, you can interact with the item as a conceptual
+unit, rather than just a bunch of text.
+<p>In general, an editor should provide an outline model to the Outline
+view if the data within the editor is too extensive to see on a single
+screen, and will yield a structured outline.&nbsp; This structured outline
+makes it very easy to navigate through objects like a java file or html
+file.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.20</font></b>
+<blockquote><font color="#3333FF">If the data within an editor is too extensive
+to see on a single screen, and will yield a structured outline, the editor
+should provide an outline model to the Outline view.</font></blockquote>
+
+<p><br>When an Editor has an interaction with the Outline view, notification
+about location should be two-way. That is, the user should be able to select
+something in the outline and have the editor position updated, and the
+user should be able to select something in the Editor pane and have the
+outline view updated.
+<p>Context&nbsp; menu should be available, as appropriate, in the outline
+view which should support creation operations as appropriate.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.21</font></b>
+<blockquote><font color="#3333FF">Notification about location between an
+Editor and the Outline view should be two-way. Context menu should be available
+in the Outline view as appropriate.</font></blockquote>
+
+<p><br>If the edit model contains errors or warnings, they should be indicated
+in the Outline view.&nbsp; An error or warning image should be added to
+the item with the error or warning respectively.&nbsp; If the item is part
+of a tree, the error or warning image should also be propagated to each
+ancestor of the item. If the ancestor of the item doesn't contain errors
+or warnings, a different error or warning image -- for example, a grayed
+X icon for error -- should be used for the ancestor. For instance, in the
+following line, the addFastView method has an error, so an error image
+is added to the item and its parent.
+<br>&nbsp;
+<p><img SRC="errorsInOutline.jpg" HSPACE=50 height=284 width=223>
+<br>&nbsp;
+<p>For this to work, care must be taken to design icons with overlay in
+mind, so that glyphs can be applied to the ancestor's icon.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.22</font></b>
+<blockquote><font color="#3333FF">An error or warning image should be added
+to items with the error or warning respectively. If the item is part of
+a tree, the error or warning image should also be propagated to each ancestor
+of the item. If the ancestor of the item doesn't contain errors or warnings,
+a different error or warning image should be used for the ancestor..</font></blockquote>
+In an editor, task objects are commonly used to mark a location within
+a document.&nbsp; Once a task has been created, it appears in the Task
+view.&nbsp; If the task is selected, you may reopen the editor at the location
+defined in the Task.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.23</font></b>
+<blockquote><font color="#3333FF">If appropriate, implement the "Add Task"
+feature in your editor.</font></blockquote>
+A bookmark object can also be used mark a location within a document.&nbsp;
+Once a bookmark has been created, it appears in the Bookmarks view.&nbsp;
+If the bookmark is selected, you may reopen the editor at the location
+defined in the Task.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.24</font></b>
+<blockquote><font color="#3333FF">If appropriate, implement the "Add Bookmark"
+feature in your editor.</font></blockquote>
+
+<h4>
+Line Numbers</h4>
+Editors with source lines of text should have line numbers, and optionally
+column numbers.&nbsp; Editors should also support a “Goto Line…” feature
+available in the context menu allowing users to quickly jump to a desired
+line.&nbsp; This functionality should be implemented along with line numbering
+in the editor.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.25</font></b>
+<blockquote><font color="#3333FF">Editors with source lines of text should
+have line numbers, and optionally column numbers..</font></blockquote>
+
+<h4>
+Table Cell Editors</h4>
+A single-click over a cell should select the current item and put the cell
+into edit mode. In edit mode, any dropdowns, buttons, or other controls
+in the cell should be rendered upon the single-click.
+<br>&nbsp;
+<p><img SRC="cellTableEditor.jpg" height=383 width=284>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.26</font></b>
+<blockquote><font color="#3333FF">Table cell editors should support the
+single-click activation model, and in edit mode, they should render complex
+controls upon single-click.</font></blockquote>
+
+<p><br>In addition, changes should be committed once a user clicks off
+the cell or hits ENTER.
+<p>The following are examples of good behaviour for a table cell Editor:
+<p>- when put in edit mode, drop-down appears with current selection active
+&amp; highlighted
+<br><img SRC="cell1.jpg" height=16 width=114>
+<p>- when cursoring through drop-down using arrow keys, it is possible
+to move up and down any number of choices and the drop-down stays visible
+until user makes an explicit selection
+<br><img SRC="cell2.jpg" height=97 width=56>
+<p>- first letter navigation is supported as a cursoring technique when
+the drop-down is visible
+<br>- supports the "Enter" key as a way of making an explicit selection
+via the keyboard when the drop-down is visible
+<br>- supports the "Esc" key as a way of canceling a selection via the
+keyboard when the drop-down is visible
+<br>- when put in edit mode, drop-down appears with current selection active
+&amp; highlighted
+<br><img SRC="cell3.jpg" height=15 width=142>
+<p>- when put in edit mode, it is possible to arrow key through the choices
+to make a selection without needing to invoke the drop-down
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.27</font></b>
+<blockquote><font color="#3333FF">Changes made in a table cell editor should
+be committed when a user clicks off the cell or hits the "Enter" key. Selection
+should be cancelled when user hits the "Esc" key.First letter navigation
+should be supported as a cursoring mechanism within a cell.</font></blockquote>
+
+<h4>
+Error Notification</h4>
+If you are doing keystroke by keystroke validation in an Editor, put error
+message in the workbench status area. Error text in the status area should
+be in red, while information text should be in black.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.28</font></b>
+<blockquote><font color="#3333FF">When performing fine-grain error validation
+in an Editor, use the workbench status area for message output.</font></blockquote>
+When the Save action is invoked in an editor, use the Task view for showing
+errors which are persisted.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.29</font></b>
+<blockquote><font color="#3333FF">Use the Task view to show errors found
+when the Save action is invoked.</font></blockquote>
+
+<h4>
+Interaction With External Editors</h4>
+While a resource is opened within the workbench, if modifications are made
+to it outside of the workbench, we recommend the following approach to
+handle this situation. When the Save action is invoked in the editor, users
+should be prompted to either override the changes made outside of the workbench,
+or back out of the Save operation.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+5.30</font></b>
+<blockquote><font color="#3333FF">If modifications to a resource are made
+outside of the workbench, users should be prompted to either override the
+changes made outside of the workbench, or back out of the Save operation
+when the Save action is invoked in the editor.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Views"></a>Views</h3>
+A view is a visual component within a workbench page.&nbsp; It is<font color="#000000">
+used in a support role for the primary task.&nbsp; You use them to navigate
+a hierarchy of information, open an editor, or view properties for the
+active editor.</font>
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.1</font></b>
+<blockquote><font color="#3333FF">Use a view to navigate a hierarchy of
+information, open an editor, or display the properties of an object.</font></blockquote>
+Modifications made in a view should be saved immediately.&nbsp; For instance,
+if a file is modified in the Navigator, the changes are committed to the
+workspace immediately.&nbsp; A change made in the Outline view is committed
+to the edit model of the active editor immediately.&nbsp; For changes made
+in the Properties view, if the property is a property of an open edit model,
+it should be persisted to the edit model. If it is a property of a file,
+persist to file.
+<p>In the past, some views have tried to implement an editor style lifecycle,
+with a Save action.&nbsp; This can cause confusion.&nbsp; The File menu
+within a workbench window contains a Save action, but it only applies to
+the active editor.&nbsp; It will not target the active view.&nbsp; This
+leads to a situation where the File > Save action is in contradiction to
+the Save action within the view.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.2</font></b>
+<blockquote><font color="#3333FF">Modifications made within a view must
+be saved immediately.</font></blockquote>
+Within a perspective, only one instance of a particular view can be opened.&nbsp;
+This policy is designed to simplify part management for a user.&nbsp; The
+user opens a view by invoking Perspective > Show View.&nbsp; If, for any
+reason, they lose a view, or forget about its existence, they can simply
+invoke Perspective > Show view again to make the view visible.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.3</font></b>
+<blockquote><font color="#3333FF">Only one instance of a view may exist
+in a perspective.</font></blockquote>
+In a multi-tasking world, humans often perform more than one task at a
+time.&nbsp; In Eclipse, task separation can be achieved by creating a separate
+perspective for each task.&nbsp; In reflection of this, it should be possible
+to open a particular view in more than one perspective.&nbsp; If only one
+instance of a view may exist, the ability to multi-task is taken away.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.4</font></b>
+<blockquote><font color="#3333FF">A view must be opened in one or more
+perspectives.</font></blockquote>
+A view can be opened in two ways: by invoking Perspective > Show View >
+X menu, where X is the name of the view, or by invoking another action
+within the workbench.&nbsp; For instance, if you select a class in the
+Packages view, and invoke Open Type Hierarchy, a Hierarchy view opens with
+the class hierarchy for the selection.
+<p>It should be possible to open any view from the Perspective > Show View
+menu, either as an explicit item within the menu, or as an item within
+the Perspective > Show View > Other dialog.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.5</font></b>
+<blockquote><font color="#3333FF">A view can be opened from the Perspective
+> Show View menu.</font></blockquote>
+
+<h4>
+Appearance</h4>
+A view consists of a title area, a toolbar, a pulldown menu, and an embedded
+control.
+<p>The view label in the title bar must be prefixed with label of the view
+in Perspective > Show View menu.&nbsp; Given that it is impossible to change
+the entry in the Show View menu, this means you cannot change the name
+of a view.&nbsp; However, you can add additional text to the view label,
+to clarify the state of the view.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.6</font></b>
+<blockquote><font color="#3333FF">The view label in the title bar must
+be prefixed with the label of the view in the Perspective > Show View menu.</font></blockquote>
+In most cases, a view will contain a single control or viewer.&nbsp; However,
+it is possible to embed more than one viewer or control in the view.&nbsp;
+If these controls are linked, such that selection in one control changes
+the input of another, it may be better to separate the view into two. Users
+will have greater freedom to open one of the results views, as their needs
+arise. Special relationships can alos be set up between these views to
+support the user task. In addition, this makes it easier for users to create
+a new perspective with a diverse set of views.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.7</font></b>
+<blockquote><font color="#3333FF">If a view contains more than one control,
+it may be advisable to split it up into two or more views.</font></blockquote>
+
+<h4>
+Initialization</h4>
+When a view is opened, the input of the view should be derived from the
+state of the perspective.&nbsp; The view may consult the perspective input
+or selection, or the state of another view.&nbsp; For instance, if the
+Outline view is opened, it will determine the active editor, query the
+editor for an outline model, and display the outline model.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.8</font></b>
+<blockquote><font color="#3333FF">When a view first opens, derive the view
+input from the state of the perspective.</font></blockquote>
+If the view is used to navigate a hierarchy of resources (i.e., the Navigator
+or Packages view), the input of the view may be derived from the perspective
+input.&nbsp; The perspective input defines the scope of visible resources
+within the perspective, and is defined by the user if they select a resource
+in the Navigator and invoke Open Perspective.&nbsp; For instance, if the
+Navigator view is opened, it will ask its perspective for the perspective
+input.&nbsp; The result is used as the initial input for the view.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.9</font></b>
+<blockquote><font color="#3333FF">If a view displays a resource tree, consider
+using the perspective input as the root of visible information in the view.</font></blockquote>
+
+<h4>
+Menus</h4>
+The pulldown menu for a view should be used for presentation actions.&nbsp;
+These are actions which affect the presentation of the view, but not the
+objects within the view.&nbsp; For instance, the Sort and Filter actions
+within the Navigator view affect the presentation of resources, but do
+not affect the resources themselves.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.10</font></b>
+<blockquote><font color="#3333FF">Fill the view pulldown menu with presentation
+actions, not selection oriented actions.</font></blockquote>
+For consistency with other views in Eclipse, each view should adopt a common
+order for actions within the pulldown menu.&nbsp; This format is shown
+in the following table.
+<br>&nbsp;
+<center><table BORDER COLS=1 WIDTH="200" >
+<tr>
+<td>Sorting</td>
+</tr>
+
+<tr>
+<td>Filtering</td>
+</tr>
+
+<tr>
+<td>Decorators</td>
+</tr>
+
+<tr>
+<td>Other Plugin Additions</td>
+</tr>
+</table></center>
+
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.11</font></b>
+<blockquote><font color="#3333FF">Use the standard format for view pulldown
+menus.</font></blockquote>
+
+<h4>
+Toolbars</h4>
+The toolbar is used to expose the most commonly used actions in a view.&nbsp;
+Any action which appears in the toolbar must also appear in the menu, but
+there is no need to duplicate every action in the menu within the toolbar.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.12</font></b>
+<blockquote><font color="#3333FF">Fill the view toolbar with the most commonly
+used items in the view menu.</font></blockquote>
+
+<h4>
+Context Menus</h4>
+A context menu should be used for context sensitive interaction with the
+objects in a view.&nbsp; If an object is selected in a view, and the context
+menu is opened, the context menu should only contain actions which are
+appropriate for the selection.&nbsp; Actions which affect the presentation
+of the view should not appear in the context menu.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.13</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with selection
+oriented actions, not presentation actions.</font></blockquote>
+For consistency with other views in Eclipse, each view should adopt a common
+order for actions within the context menu.&nbsp; This format is shown in
+the following table.&nbsp; Within this table, each item represents a category
+of actions.&nbsp; The categories within the context menu should be kept
+distinct from one another through the use of separators.
+<br>&nbsp;
+<center><table BORDER COLS=1 WIDTH="200" >
+<tr>
+<td>New</td>
+</tr>
+
+<tr>
+<td>Open</td>
+</tr>
+
+<tr>
+<td>Navigate + Show In</td>
+</tr>
+
+<tr>
+<td>Cut Copy Paste</td>
+</tr>
+
+<tr>
+<td>Delete</td>
+</tr>
+
+<tr>
+<td>Other Plugin Additions</td>
+</tr>
+
+<tr>
+<td>Properties</td>
+</tr>
+</table></center>
+
+<p>The New category contains actions which create new objects.&nbsp; The
+Open category contains actions which open the selection in an editor.&nbsp;
+Navigate contains actions to refocus the view input, or reveal the view
+selection in another view.&nbsp; And the other categories are self explanatory.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.14</font></b>
+<blockquote><font color="#3333FF">Use the standard format for view context
+menus.</font></blockquote>
+For good spatial navigation, fill the context menu with a fixed set of
+actions for each selection type.&nbsp; Once the contents have been defined,
+the enablement state of each action should determined using the selected
+object state.&nbsp; In doing so, you establish a consistency which makes
+the menu more predictable, and easier to navigate.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.15</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with a fixed set
+of actions for each selection type, and then enable or disable each to
+reflect the selection state.</font></blockquote>
+An object in one view may be visible in many other views or editors.&nbsp;
+For instance, a .java file is visible in the Navigator, the Hierarchy view,
+and the Packages view.&nbsp; To the user, these objects are all the same,
+regardless of location, so the context menu for the .java file should be
+the same in each.
+<p>To achieve a consistent context menu, plug-in developers which introduce
+a new object type should contribute actions to the context menu using an
+action factory, a Java class which populates the context menu.&nbsp; If
+this approach is used, the factory can be reused by other views where the
+same objects appear.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.16</font></b>
+<blockquote><font color="#3333FF">If an object appears in more than one
+view, it should have the same context menu in each.</font></blockquote>
+One of the primary goals for the platform UI is extensibility.&nbsp; In
+fact, it is this extensibility which gives you the freedom to add new views,
+editors, perspectives, and actions to the platform.&nbsp; Of course, extensibility
+is a two way street.&nbsp; While you may wish to extend the platform, others
+may wish to extend your view or editor.&nbsp; It is common for one plug-in
+to add actions to the menu, toolbar, or context menu of a view from another
+plugin.
+<p>In the platform, the menu and toolbar for a view are automatically extended 
+  by the platform.&nbsp; In contrast, context menu extension is supported in collaboration 
+  between the view and the platform.&nbsp; To achieve this collaboration, a view 
+  must register each context menu it contains with the platform.&nbsp; It should 
+  also define an action filter for each object type in the view.&nbsp; An action 
+  filter makes it easier for one plug-in to add an action to objects in a view 
+  defined by another plug-in.&nbsp; The action target is described using object 
+  type and attributes.&nbsp;&nbsp; For more information on the implementation 
+  of this concept, refer to <a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" target="_top">Creating 
+  an Eclipse View.</a> 
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.17</font></b>
+<blockquote><font color="#3333FF">Register all context menus in the view
+with the platform.</font></blockquote>
+<img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.18</font></b>
+<blockquote><font color="#3333FF">Implement an Action Filter for each object
+type in the view.</font></blockquote>
+
+<h4>
+Integration with the Window Menu Bar and Toolbar</h4>
+The window menu bar contains a number of global actions, such as Cut, Copy,
+and Paste within the Edit menu.&nbsp; These actions target the active part,
+as indicated by a shaded title area.&nbsp; If these actions are supported
+within a view, the view should hook these window actions, so that selection
+in the window menu bar or toolbar produces the same result as selection
+of the same action in the view.
+<p>A complete list of the global actions is declared in the IWorkbenchActionConstants.java
+(see below).
+<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /**</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * From IWorkbenchActionConstants.</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Standard global
+actions in a workbench window.</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final
+String [] GLOBAL_ACTIONS = {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+UNDO,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+REDO,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CUT,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COPY,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PASTE,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PRINT,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DELETE,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+FIND,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SELECT_ALL,</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+BOOKMARK</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; };</tt>
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.19</font></b>
+<blockquote><font color="#3333FF">If a view has support for Cut, Copy,
+Paste, or any of the global actions, these actions must be executable from
+the same actions in the window menu bar and toolbar.</font></blockquote>
+<font color="#000000">It is not possible to contribute view actions to
+the window menu bar or toolbar.&nbsp; A</font> view is typically used as
+an auxiliary view, to support the task of editing another object.&nbsp;
+In reflection of this, editor actions are given prominence in the window
+menu bar and toolbar, while view actions appear within the local menu and
+toolbar.
+<h4>
+Persistence</h4>
+One of the primary goals for the platform UI is to provide efficient interaction
+with the workspace.&nbsp; In the platform this is promoted by saving the
+state of the workbench when a session (the workbench is shut down) ends.&nbsp;
+When a new session (the workbench is opened) is started, this state is
+restored, reducing the time required for the user to get back to work.
+<p>If a view has a static input object, in the sense that its input is not derived 
+  from selection in other parts, the state of the view should be persisted between 
+  sessions. If a view has a dynamic or transient input object, there is no need 
+  to persist its state between sessions. Within the workbench, the state of the 
+  Navigator view, including the input and expansion state, is saved between sessions. 
+  For more information on the implementation of persistence, see "<a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" target="_top">Creating 
+  an Eclipse View</a>". <br>
+  &nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+6.20</font></b>
+<blockquote><font color="#3333FF">Persist the state of each view between
+sessions.</font></blockquote>
+
+<p><br>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Perspectives"></a>Perspectives</h3>
+A perspective is a visual container for a set of views and editors (parts).&nbsp;
+These parts exist wholly within the perspective and are not shared.&nbsp;
+A perspective is like
+a page within a book.&nbsp; It exists within a window along with any number
+of other perspectives and, like a page within a book, only one perspective
+is visible at any time.
+<p>A new perspective is opened by invoking Perspective > Open > X, where
+X identifies a particular perspective in Eclipse.&nbsp; The result is a
+new perspective in the workbench window with <i>type</i> X.&nbsp; For instance,
+if you invoke Perspective > Open > Resource, a new perspective is opened
+with type <i>Resource</i>.&nbsp; Eclipse comes with a pre-defined number
+of perspective types, including Resource, Java, and Team.&nbsp; The perspective
+type determines the initial layout of views, and visibility of action sets
+within the perspective.
+<p>As a plug-in developer, you may contribute new perspective types to Eclipse.&nbsp; 
+  To do this, you must define a perspective extension.&nbsp; Each extension has 
+  a <i>perspective factory</i>, a Java class which defines the initial layout 
+  of views, and visibility of action sets within the perspective.&nbsp; You can 
+  also add your own actions or views to an existing perspective type.&nbsp; For 
+  more information on the implementation of these concepts, see <a href="http://www.eclipse.org/articles/using-perspectives/PerspectiveArticle.html" target="_top">Using 
+  Perspectives in the Eclipse UI</a>. 
+<p>A new perspective type should be created when there is a group of related
+tasks which would benefit from a predefined configuration of actions and
+views, and these tasks are long lived.&nbsp; A task oriented approach is
+imperative.&nbsp; As a development environment, Eclipse was designed to
+fulfill the needs of a large product development team, from product manager
+to content developer to product tester.&nbsp; It is fully extensible and
+may be configured with hundreds of action, wizard, view and editor extensions.&nbsp;
+In other words, it may contain a lot of junk you'll never use.&nbsp; To
+avoid the visual overload and confusion which would occur if everything
+was visible in the UI, a perspective can be used to define together a task
+oriented set of views and action sets.
+<p>For instance, the task of Java code creation is long lived and complex,
+so the creation of a Java perspective is warranted.&nbsp; In Eclipse, the
+Java perspective contains an editor area, Packages view, Hierarchy view,
+Tasks view, and Outline view.&nbsp; The Java and Debug action sets are
+also visible.&nbsp; Together, these components are useful for a variety
+of long lived, Java coding tasks.
+<p>It is not appropriate to create a new perspective type for short lived
+tasks.&nbsp; For instance, the task of resource check-in is short lived,
+so it may be better performed using a view in the current perspective.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.1</font></b>
+<blockquote><font color="#3333FF">Create a new perspective type for long
+lived tasks, which involve the performance of smaller, non modal tasks.</font></blockquote>
+If your plug-in contributes a small number of views, and these augment
+an existing task, it is better to add those views to an existing perspective.&nbsp;
+For instance, if you create a view which augments the task of Java code
+creation, don't create a new perspective.&nbsp; Instead, add it to the
+existing Java perspective.&nbsp; This strategy provides better integration
+with the existing platform.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.2</font></b>
+<blockquote><font color="#3333FF">If you just want to expose a single view,
+or two, extend an existing perspective type.</font></blockquote>
+
+<h4>
+View Layout</h4>
+If the user opens a new perspective, the initial layout of views will be
+defined by the perspective type (i.e., Resource, Java, Team).&nbsp; This
+layout is performed in the <i>perspective factory</i>, a Java class associated
+with the perspective type.&nbsp; When the perspective is initialized, it
+consists of an editor area with no additional views.&nbsp; The perspective
+factory may add new views, using the editor area as the initial point of
+reference.
+<p>The size and position of each view is controlled by the perspective
+factory.&nbsp;&nbsp; These attributes should be defined in a reasonable
+manner, such that the user can resize or move a view if they desire it.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.3</font></b>
+<blockquote><font color="#3333FF">The size and position of each view in
+a perspective should be defined in a reasonable manner, such that the user
+can resize or move a view if they desire it.</font></blockquote>
+A perspective should have at least two parts, including the visible views
+and the editor area.&nbsp; If this is not the case, then the perspective
+should be re-examined to determine if it is better suited as a view or
+editor.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.4&nbsp;</font></b>
+<blockquote><font color="#3333FF">If a perspective has just one part, it
+may be better suited as a view or editor.</font></blockquote>
+In some scenarios, it may be undesirable to have an editor area within
+a perspective.&nbsp; In this case, the perspective factory should hide
+the editor area, using the existing java methods.&nbsp; It is not acceptable
+to resize the editor area to a point where it is no longer visible.&nbsp;
+If the user does open an editor in the perspective, for whatever reason,
+they will be unable to see or resize it.
+<p>When the editor area is programmatically hidden, if the user opens an
+editor in the perspective, the editor area will become visible. The view
+that occupied the editor area before will be shrinked. Therefore, it is
+important to define a non-empty editor area even when the editor is programmatically
+hidden.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.5</font></b>
+<blockquote><font color="#3333FF">If it is undesirable to have an editor
+area in a perspective, hide it.&nbsp; Do not resize the editor area to
+the point where it is no longer visible.</font></blockquote>
+
+<h4>
+Action Contribution</h4>
+The perspective factory may add actions to the File > New, Perspective
+> Open, and&nbsp; Perspective > Show View menus.&nbsp; It is also possible
+to add one or more action sets to the window.&nbsp; In each case, you should
+choose actions which are relevant to the task orientation of the perspective.
+<p>The File > New menu should be populated with wizards for the creation
+of objects commonly used in the task.&nbsp; For instance, in the Java perspective
+the File > New menu contains menu items for the creation of packages, classes,
+and interfaces.
+<p>The Perspective > Show View menu should be populated with the initial
+views in the perspective, as well as any extra views that may be important
+for the task at hand.
+<p><img SRC="showViewMenu.jpg" height=493 width=421>
+<br>&nbsp;
+<p>The application development lifecycle should be considered when populating
+the the Perspective > Open menu.&nbsp; The development of most applications
+follow a well defined lifecycle, from designing / modeling, to editing
+/ creating, to debugging / testing, to assembling / deploying.&nbsp; Each
+perspective will fall into one of these steps.&nbsp; The Perspective Open
+menu should be used to linking the current perspective to perspectives
+that support tasks immediately downstream of the current one, as well as
+tasks further upstream, to allow for iterative development.
+<p>For instance, the Java perspective is used in a larger lifecycle, involving
+Java, Debug, and Team tasks.&nbsp; The Perspective > Open menu is populated
+with each of these perspectives.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.6</font></b>
+<blockquote><font color="#3333FF">Populate the window menu bar with actions
+and action sets which are appropriate to the task orientation of the perspective,
+and any larger workflow.</font></blockquote>
+
+<h4>
+Opening a Perspective in Code</h4>
+An action should only open a new perspective if the user explicitly states
+a desire to do so.&nbsp; If the user does not state a desire to do so,
+it may cause loss of context.
+<p>For instance, imagine a scenario where the user selects an object and
+invokes an action.&nbsp; In the perspective where the action is invoked,
+the user may have a set of views and editors open.&nbsp; These represent
+the working state, or context, of the user.&nbsp; If a new perspective
+is created, that context will be left behind, forcing the user to recreate
+the context.&nbsp; This is time wasted.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.7 </font></b>
+<blockquote><font color="#3333FF">A new perspective should be opened only
+if the user explicitly states a desire to do so.&nbsp; In making this statement,
+the user agrees to leave their old context, and create a new one.</font></blockquote>
+In some cases, a new perspective is opened as the side effect of another
+action.&nbsp; For instance, if Project > Open Type is invoked, the resulting
+editor may open in the current perspective, or a new one.&nbsp; If this
+behavior is implemented, the user should have the option to turn this behavior
+off.&nbsp; The option can be exposed in the action dialog, or within a
+Preference page.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.8</font></b>
+<blockquote><font color="#3333FF">If a new perspective is opened as a side
+effect of another action, the user should be able to turn this behavior
+off.</font></blockquote>
+If a new perspective is opened, it may be opened as a page within the current
+window, or in a new window.&nbsp; The user controls this option using the
+Workbench Preferences.&nbsp; If code within a plug-in opens a new perspective,
+the plug-in should honor the user preference.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.9</font></b>
+<blockquote><font color="#3333FF">If a new perspective is opened, it should
+be opened as a page within the current window, or in a new window, depending
+on the user preference.</font></blockquote>
+In many scenarios, it may be better to replace the current perspective
+<i>type</i>,
+rather than open a new perspective.&nbsp; For instance, if the Debug action
+is invoked in the Java perspective, the action may replace the perspective
+type to Debug.&nbsp; When this approach is taken, the open editors and
+views are carried forward to the new perspective, so no loss of context
+is occurs.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.10</font></b>
+<blockquote><font color="#3333FF">Consider replacing the perspective type
+before you open a new perspective.</font></blockquote>
+With regard to action contributions applied to the New, Open Perspective,
+and Show View menus, the list of wizards, perspectives, and views added
+as shortcuts to these menus should be at most 7 plus / minus 2 items.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+7.11</font></b>
+<blockquote><font color="#3333FF">The list of shortcuts added to the New,
+Open Perspective, and Show View menus should be at most 7 plus / minus
+2 items.</font></blockquote>
+
+<p><br>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Windows"></a>Windows</h3>
+In this section we look at the window menu bar, toolbar, and layout.&nbsp;
+As a plug-in developer, you can contribute actions to the menu bar and
+toolbar using an <i>action set</i>, a set of task oriented actions which
+the user can show or hide.&nbsp; You can control the layout of views within
+a window by defining a <i>perspective</i>.&nbsp; In this section we'll
+look at action extension.&nbsp; For more information on perspectives, see
+<a href="#Perspectives">Perspectives</a>.
+<h4>
+Actions</h4>
+Each workbench window contains a menu bar and toolbar.&nbsp; These are
+pre-populated by the platform, but a plug-in developer may add additional
+items to each.&nbsp; This is done by defining an <i>action set</i>, a set
+of task oriented actions which the user can show or hide.&nbsp; The actions
+within an action set may be distributed through-out the window menu bar
+and toolbar.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.1</font></b>
+<blockquote><font color="#3333FF">Use an Action Set to contribute actions
+to the window menu bar and toolbar.</font></blockquote>
+The window menu bar contains a number of pulldown menus: File, Edit, Perspective,
+Project, Window, and Help.&nbsp; Each of these has a different purpose,
+which will be explained in the following paragraphs.&nbsp; For consistency
+with the action sets contributed by other plug-ins, the actions within
+an action set should conform to the existing distribution of actions in
+the window.&nbsp; There is no need to group the actions in a separate pulldown
+menu of the menu bar.
+<p>The File menu contains file oriented actions, such as Save, Close, Print,
+Import, Export and Exit.&nbsp; The contents of the File > New menu are
+determined by the perspective type.&nbsp; However, the user may add or
+remove items using the Perspective > Customize menu item.&nbsp; The contents
+of the Import and Export dialogs are populated with every import and export
+wizard, respectively.
+<p>The Edit menu contains editor oriented actions, such as Undo, Redo,
+Cut, Copy, and Paste.&nbsp; These actions target the active part (as indicated
+by a shaded title bar) .&nbsp; It is very common for an editor to add items
+to this menu.&nbsp; However, it is uncommon for an action set to add actions
+to the Edit Menu; action sets tend to be global in nature, while the edit
+menu targets a specific part, and interaction with the data in that part.
+<p>The Perspective menu contains actions which affect the state of the
+window contents, such as Open Perspective, Show View and Close Perspective.
+<p>The Project menu contains actions which apply to the contents of the
+workspace, such as Rebuild All and Open Type.&nbsp; An action set may add
+actions which search the entire workspace, generate project info, open
+editors, etc.
+<p>The Window menu contains actions which apply to window management and
+system preferences.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.2</font></b>
+<blockquote><font color="#3333FF">Follow the platform lead when distributing
+actions within an Action Set.</font></blockquote>
+The toolbar contains the most commonly used actions of the menu bar.&nbsp;
+In reflection of this, you should contribute actions to the menu bar first,
+and then to the toolbar if they will be frequently used.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.3</font></b>
+<blockquote><font color="#3333FF">Contribute actions to the window menu
+bar first, and then to the window toolbar if they will be frequently used.</font></blockquote>
+The contents of each action set should be defined using a task oriented
+approach.&nbsp; For instance, the Java action set contains actions to create
+a new package, class and interfaces.&nbsp; It also contains an action to
+open an editor on a class, Goto Type. These form a cohesive set of related
+actions, which can be turned on and off by the user, depending on the active
+task.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.4</font></b>
+<blockquote><font color="#3333FF">Define each action set with a specific
+task in mind.</font></blockquote>
+The size of an action set is also important.&nbsp; If an action set is
+too large, it will flood the menu or toolbar, and reduce the users ability
+to customize the menu and toolbar.&nbsp; At the same time, if an action
+set is too small, the user may find customization of the menu and toolbar
+is too labor intensive.&nbsp; Break an action set up when it has more than
+about 7 items.
+<p>There is no magic number for the size of an action set, but it should
+be carefully designed to contain the smallest possible semantic chunking
+of actions. Avoid the temptation to provide only one action set for an
+entire plug-in.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.5</font></b>
+<blockquote><font color="#3333FF">An action set should contain the smallest
+possible semantic chunking of actions. Avoid the temptation to provide
+only one action set for an entire plug-in.</font></blockquote>
+An action set can be used to share a set of actions between two or more
+views and editors.&nbsp; For instance, a Java Refactor action set may be
+applicable to the selection within a Java Editor, an Outline view, and
+a Hierarchy View.&nbsp; In this situation the actions can be shared by
+defining an action set extension for the workbench.&nbsp; Once this action
+set has been defined, it can be automatically included in a perspective
+by the perspective developer, or added to a perspective by the user.
+<p>An action set should not be used to promote action from a single view
+to the window menu bar and toolbar.&nbsp; This simply clutters up the user
+interface.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.6</font></b>
+<blockquote><font color="#3333FF">Use an action set to share a set of actions
+which are useful in two or more views or editors.</font></blockquote>
+The set of visible action in a window may be changed by invoking Perspective
+> Customize.&nbsp; Within the resulting dialog, you can add or remove items
+from the File > New menu, Perspective > Open menu, or Perspective > Show
+View menu.&nbsp; It is also possible to add or remove action sets.&nbsp;
+In general, the visible action sets should be controlled by the user, and
+should never be changed programmatically.&nbsp; There are two reasons for
+this.&nbsp; First, users like to control the environment, not be controlled.&nbsp;
+And second, the user is in the best position to understand the active task,
+and the appropriate action sets for its completion.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.7</font></b>
+<blockquote><font color="#3333FF">Let the user control the visible action
+set.&nbsp; Don't try to control it for them.</font></blockquote>
+
+<h4>
+Common Window Actions</h4>
+A common example of an action which may be added to an action set is Project
+> Open Type.&nbsp; This action can be used to open an editor on a type
+which is not visible in the current window, and is a form of lateral navigation.&nbsp;
+In general, all Open actions which take the form should be added to the
+Project menu, for consistency.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.8</font></b>
+<blockquote><font color="#3333FF">"Open Object" actions must appear in
+the Project pulldown menu of the window.</font></blockquote>
+Any action within an action set, which opens another application, should
+be added to the Window pulldown menu.&nbsp; This approach is consistent
+with the existing functionality of the Window menu, where you can navigate
+from one window to another within the workbench.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.9</font></b>
+<blockquote><font color="#3333FF">"Open Application" actions must appear
+in the Window pulldown menu of the window.</font></blockquote>
+
+<h4>
+Status Bar</h4>
+If there is a need for a plug-in to show non-modal contextual information
+in the status bar area, always use the global status bar.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+8.10</font></b>
+<blockquote><font color="#3333FF">Always use the global status bar to display
+status related messages.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Properties"></a>Properties</h3>
+A Properties dialog or view is used to view / modify the properties of
+an object which are not visible in the normal presentation of that object.
+For instance, the Read Only attribute for a file is modified in the Properties
+Dialog.&nbsp; The build path for a Java Project is modified in the Properties
+Dialog.
+<p>Within Eclipse, there are two ways to edit the properties of an object:
+in the Properties dialog, and in the Properties view.&nbsp; Each of these
+is applicable in different situations.
+<p>The Properties view is commonly used to edit the properties for a set
+of objects in an editor, where quick access to the properties is important,
+and you switch from one object to another quickly.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+9.1</font></b>
+<blockquote><font color="#3333FF">Use the Properties view to edit the properties
+of an object when quick access is important, and you will switch quickly
+from object to object.</font></blockquote>
+The properties for an object should be quick to calculate.&nbsp; If it
+is too expensive to calculate the properties for an object, the quick access
+to properties offered by the Properties view becomes worthless.&nbsp; In
+this situation, where quick access is not possible, a Properties Dialog
+should be used.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+9.2</font></b>
+<blockquote><font color="#3333FF">Use a Properties Dialog to edit the properties
+of an object which are expensive to calculate.</font></blockquote>
+In some cases, the properties for an object are dependent upon one another,
+such that a change in one will affect another, or even enable / disable
+the option to change another.&nbsp; In this situation, a Properties Dialog
+may be a better way to represent the semantic link between these properties.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+9.3</font></b>
+<blockquote><font color="#3333FF">&nbsp;Use a Properties Dialog to edit
+the properties of an object which contain complex relationships to one
+another.</font></blockquote>
+When both the Properties view and the Properties Dialog are used to present
+and edit properties of an object, the Properties Dialog should contain
+the superset of items shown in the Properties view.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+9.4</font></b>
+<blockquote><font color="#3333FF">&nbsp;Properties Dialog should contain
+the superset of items shown in the Properties view.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="Standard Components"></a>Standard Components</h2>
+In this section we'll look at the standard components which ship with Eclipse.&nbsp;
+The Eclipse SDK contains a number of views, including the Navigator, Outline,
+Properties, Tasks, and Bookmarks view.&nbsp; Eclipse also contains a default
+text editor and a Resource perspective.
+<p>As a plug-in developer, you should try to add new actions to the existing
+parts.&nbsp; This leads to better integration with the platform, and the
+existing knowledge of the user.
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+10.1</font></b>
+<blockquote><font color="#3333FF">If appropriate, add actions to standard
+components of Eclipse using the plug-in registry.</font></blockquote>
+
+<p><br>When extending the standard components such as the Navigator, Outline,
+Properties, Tasks, and Bookmark views, make sure your specialized components
+carry over the base component's characteristics (drag and drop support,
+keyboard navigation, selection behaviour, etc.)
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+10.2</font></b>
+<blockquote><font color="#3333FF">If you subclass or copy any of the standard
+components, always carry over the standard components' characteristics.</font></blockquote>
+
+<p><br>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Navigator"></a>The Navigator View</h3>
+The Navigator is used to navigate the workspace, create new resources,
+modify resources, and open an editor on a resource.&nbsp; Plug-in developers
+may contribute new actions to the menu, toolbar, and context menu.
+<br>&nbsp;
+<h4>
+Adding Actions</h4>
+This is done by adding an extension to the plug-in registry.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+11.1</font></b>
+<blockquote><font color="#3333FF">Add actions to the Navigator View menu,
+toolbar, and context menu using the plug-in registry.</font></blockquote>
+If object contributions are made to the context menu, try to qualify the
+target object as much as possible, to avoid adding the action to the wrong
+objects in the Navigator.&nbsp; For instance, a Java action may target
+IFiles with a .java extension, or IProjects with a Java nature.&nbsp; It
+will cause confusion if Java actions appear on non-java objects.
+<p>Some actions are a reflection of tool use, rather than object type.&nbsp;
+For instance, a repository plug-in may provide actions for file check in,
+check out, etc.&nbsp; These actions should only appear on the resources
+in the Navigator if the user has actively chosen to use the repository
+tool.&nbsp; To control the visibility of these actions, the plug-in should
+apply a project nature to the managed resources, and use the project nature
+attribute in all context menu contributions.
+<p>For more information on action filtering,&nbsp; refer to <a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" target="_top">Creating 
+  an Eclipse View</a>.&nbsp; The standard attributes for resources are defined 
+  in IResourceActionFilter.java (see below). 
+<pre>public interface IResourceActionFilter extends IActionFilter {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String NAME = "name";&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String EXTENSION = "extension";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String PATH = "path";&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String READ_ONLY = "readOnly";&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String PROJECT_NATURE = "projectNature";&nbsp;&nbsp;
+}</pre>
+The standard attributes for project filtering are defined in IProjectActionFilter.java.
+<pre>public interface IProjectActionFilter extends IResourceActionFilter {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String NATURE = "nature";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String OPEN = "open";
+}</pre>
+<img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+11.2</font></b>
+<blockquote><font color="#3333FF">Use the attributes defined in IResourceActionFilter.java&nbsp;
+and IProjectActionFilter.java to control the visibility of context menu
+actions in the Navigator.</font></blockquote>
+
+<h4>
+Integration with Other Views and Editors</h4>
+In Eclipse, the use of a "Show In" action is a common way to link the selection
+in one view to the input of another.&nbsp; For instance, a "Show in Packages"
+action is visible in the context menu for a class in the Outline view.&nbsp;
+When invoked, the class in the Outline view is selected and revealed in
+the Packages view.&nbsp; This approach should be used as a general, non
+intrusive pattern for view or editor linking.&nbsp; It is context sensitive,
+and reflects the intentions of the user.
+<p>A "Show In Navigator" action should be included in any view where a
+resource may appear.&nbsp; If invoked, the action should select and reveal
+the resource in the navigator.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+11.3</font></b>
+<blockquote><font color="#3333FF">Use a "Show In Navigator" action in each
+view, to link resources back to the Navigator.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Tasks"></a>The Tasks View</h3>
+The Tasks view is used to display the current tasks, errors and warnings
+in the workspace.&nbsp; A plug-in developer may contribute new tasks, errors,
+and warnings to the workspace, and rely upon the Tasks view to display
+those objects.&nbsp; You can also contribute new actions to the menu, toolbar,
+and context menu.&nbsp; This is done by adding an extension to the plug-in
+registry.
+<h4>
+Adding Tasks</h4>
+A new task, error or warning can be created using the Marker Manager services
+from the Core Resources Management plugin.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+12.1</font></b>
+<blockquote><font color="#3333FF">Add markers (tasks, errors and warnings)
+to the Tasks view using the Marker Manager services from the Core Resources
+Management plugin.</font></blockquote>
+The Tasks view is a table, containing columns for the task image, completion
+status, priority, description, resource, and line number.&nbsp; The description
+text of each marker should be short and concise, so that it will fit in
+the status line of Eclipse.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+12.2</font></b>
+<blockquote><font color="#3333FF">The description text of each marker should
+be short and concise, so that it will fit in the status line of Eclipse.</font></blockquote>
+
+<h4>
+Adding Actions</h4>
+You can contribute new actions to the menu, toolbar, and context menu.&nbsp;
+This is done by adding an extension to the plug-in registry.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+12.3</font></b>
+<blockquote><font color="#3333FF">Add actions to the Tasks view menu, toolbar,
+and context menu using the plug-in registry.</font></blockquote>
+If object contributions are made to the context menu, try to qualify the target 
+object as much as possible, to avoid adding the action to the wrong objects in 
+the Tasks view.&nbsp; At an implementation level, each object in the Tasks view 
+is a <i>marker</i>, a general mechanism for associate notes with a resource.&nbsp; 
+Use the attributes within IMarkerActionFilter.java to control the visibility of 
+Task object actions (see below).&nbsp; For more information on action filtering,&nbsp; 
+refer to <a href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" target="_top">Creating 
+an Eclipse View</a>. 
+<pre>public interface IMarkerActionFilter extends IActionFilter {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String TYPE = "type";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String SUPER_TYPE = "superType";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String PRIORITY = "priority";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String SEVERITY = "severity";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String DONE = "done";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String MESSAGE = "message";
+}</pre>
+
+<p><br><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+12.4</font></b>
+<blockquote><font color="#3333FF">Use the attributes defined in IMarkerActionFilter.java
+to control the visibility of context menu actions in the Tasks view.</font></blockquote>
+
+<h4>
+Integration with Other Views and Editors</h4>
+In an editor, task objects are commonly used to mark a location within
+a document.&nbsp; Once a task has been created, it appears in the Task
+view.&nbsp; If this task is selected (via double clicking), you should
+reopen the editor at the location defined in the task. The focus should
+be changed from the Task view to the editor.
+<p>If appropriate, support for the creation of new task objects in an editor
+should be implemented by the editor.&nbsp; For more information on this,
+see <a href="#Editors">Editors</a>.
+<br>&nbsp;
+<h4>
+Adding F1 Help to Task View</h4>
+Plug-ins should support F1 keyboard action and link it to an infopop that
+gives a detailed description of the selected item in the Task view.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+12.5</font></b>
+<blockquote><font color="#3333FF">Support F1 keyboard action and link it
+to an infopop that gives a detailed description of the selected item in
+the Task view.</font></blockquote>
+
+<p><br>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="The Preference Dialog"></a>The Preference Dialog</h3>
+The Preference Dialog is used to edit the global preference for a feature
+in the workbench.
+<p>A new preference page should be created when you need to expose global
+options to the user.&nbsp; For instance, the global preferences for Java
+compilation are exposed as a group of preference pages in the Preference
+Dialog.&nbsp; If these preferences are changed, they affect the entire
+Java plug-in.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+13.1</font></b>
+<blockquote><font color="#3333FF">Global options should be exposed within
+the Preferences Dialog.</font></blockquote>
+A preference page should not be used to expose the local options for a
+particular instance of a view, editor, or window.&nbsp;&nbsp; In this situation,
+the user will look to the menu and toolbar of the control itself to customize
+it.&nbsp; If these options are exposed in the Preference Dialog, it will
+blur the location of customization, and confuse the user.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+13.2</font></b>
+<blockquote><font color="#3333FF">Expose the preferences for a particular
+view, editor or window in the view itself, via a menu or tool item.</font></blockquote>
+
+<h4>
+Preference Page Design</h4>
+In the simplest case, any plug-in which needs to expose an option to the
+user will define a single preference page.&nbsp; This preference page should
+contain all of the options for the plug-in, until the number of options
+starts to overload the page.&nbsp; At that point a nested design for preference
+pages should be adopted.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+13.3</font></b>
+<blockquote><font color="#3333FF">Start out with a single preference page.&nbsp;
+Then evolve to more if you need to.</font></blockquote>
+In a nested design, a root preference page is added to the preference dialog,
+and then sub pages are added to the root preference page.&nbsp; The root
+preference page should never be blank.&nbsp; Instead, it should contain
+the most commonly used preferences, or those preferences which have a wide
+spread effect upon the plug-in behavior.&nbsp; Beneath the root page, a
+sub page should be created for each major chunk of functionality within
+the plug-in.
+<p>There is no reason to set the focus in a preference page, because focus
+is always set to the tree, by the Eclipse platform, after the preference
+page is made visible.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+13.4</font></b>
+<blockquote><font color="#3333FF">If you create a preference group, use
+the root page for frequently used preferences, or those preferences which
+have wide spread effect.&nbsp; Specialize within the sub pages. The root
+preference page should not be blank.</font></blockquote>
+
+<p><br>Each new plug-in should integrate its plug-in preferences, wizards,
+and views into existing preference, wizard, and view categories where it
+makes sense, rather than the blind creation of new categories for itself.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+13.5</font></b>
+<blockquote><font color="#3333FF">Attempt to integrate plug-in preferences,
+wizards, and views into existing categories for a new plug-in first, before
+considering the creation of a new category.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Outline"></a>The Outline View</h3>
+In Eclipse, there is a special relationship between an editor and the Outline
+view.&nbsp; When an editor is opened, the Outline view will connect to
+the editor, and ask it for an outline model.&nbsp; If the editor answers
+an outline model, that model will be displayed in the Outline view whenever
+the editor is active.&nbsp; The outline is used to navigate through the
+edit data, or interact with the edit data at a higher level of abstraction.
+<p>If you are an editor developer, the relationship between an editor and
+the Outline view is important.&nbsp; For more information on the collaboration
+between these two, see <a href="#Editors">Editors</a>.
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="The Properties View"></a>The Properties View</h3>
+The Properties view shows the properties for the active part in the workbench,
+or the selection within that part. These properties are supplied by the
+active part itself.&nbsp; The Properties view is simply a container for
+their presentation.
+<p>Within Eclipse, the properties for an object can be exposed using a
+Properties dialog, or the Properties view.&nbsp; The Properties view is
+commonly used to edit the properties for a set of objects in an editor,
+where quick access to the properties is important, and you switch from
+one object to another quickly.
+<p>For more information on the use of the Properties view, or Properties
+dialog, refer to <a href="#Properties">Properties</a>.
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Bookmarks"></a>The Bookmarks View</h3>
+The Bookmarks view is used to bookmark files, and open them quickly.&nbsp;
+A plug-in developer may contribute new bookmarks to the workspace, and
+rely upon the Bookmarks view to display those bookmarks.&nbsp; You can
+also contribute new actions to the menu, toolbar, and context menu.&nbsp;
+This is done by adding an extension to the plug-in registry.
+<p>In an editor, bookmark objects are commonly used to mark a location
+within a document.&nbsp; Once a bookmark has been created, it appears in
+the Bookmarks view.&nbsp; If this bookmark is selected, you&nbsp; may reopen
+the editor at the location defined in the bookmark.
+<p>If appropriate, support for the creation of new bookmark objects should
+be implemented by the editor.&nbsp; For more information on this, see <a href="#Editors">Editors</a>.
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Text Editor"></a>The Text Editor</h3>
+The Text Editor is commonly used to edit text files.&nbsp; A plug-in developer
+can contribute new actions to the menu, toolbar, and context menu.&nbsp;
+This is done by adding an extension to the plug-in registry. For more information
+on this, see <a href="#Editors">Editors</a>.
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h3>
+<a NAME="Resource Perspective"></a>The Resource Perspective</h3>
+The Resource perspective contains a Navigator, Outline, Task view, and
+editor area.&nbsp; Plug-in developers may contribute a new action, action
+set, or view to the Resource perspective.&nbsp; For more information, refer
+to
+<a href="#Perspectives">Perspectives</a>..
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="The Tao of IResource"></a>The Tao of Resource</h2>
+In Eclipse, the notion of a tool disappears.&nbsp; In its place, is the
+idea of a universal tool platform - an open, extensible IDE - where tool
+plug-ins are added to extend the capabilities of the platform.&nbsp; These
+plug-ins "teach" Eclipse how to work with things - java files, web content,
+graphics, video - almost anything you can imagine.&nbsp; At an implementation
+level, these plug-ins communicate using resources (projects, folders, and
+files).&nbsp; The resource is the common medium for integration between
+plugins and external tools.
+<p>The resource concept was developed for a number of reasons:
+<br>&nbsp;
+<ol>
+<li>
+Integration between a plug-in from one vendor, and a plug-in from another,
+is only possible if there is a common, well known data abstraction.</li>
+
+<li>
+Integration with external tools is only possible if everything, at some
+level, is a file.</li>
+</ol>
+
+<p><br>Resources are also important at the UI level.&nbsp; If an object
+action, decorator, or property page contribution is made to an IResource,
+the platform will ensure that this contribution is visible in any view
+or editor where the resource appears.&nbsp; For instance, a .java file
+will be visible in the Navigator, the Hierarchy view, and the Packages
+view.&nbsp; To the user, the .java file is the same object, regardless
+of the view where it appears, so the object appearance, context menu, and
+properties should be consistent in each view.
+<p>In some cases, the implementation of a particular view or editor may
+wrap a resource within another object, for presentation purposes.&nbsp;
+If the wrapper is equivalent to a resource, it is important to expose this
+equivalence to the platform.&nbsp; If the resource is exposed, the platform
+may apply resource contributions to the resource equivalent object.&nbsp;
+This ensures presentation consistency for an object in the platform.
+<p>The underlying resource for an object is exposed by implementing IAdaptable
+on the model object, and answering an IContributorResourceAdapter.&nbsp;
+For more information on the implementation of an IContributorResourceAdapter,
+refer to Eclipse Corner.
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+14.1</font></b>
+<blockquote><font color="#3333FF">Expose the resource for resource equivalent
+model objects using an IContributorResourceAdapter.</font></blockquote>
+
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="Accessability"></a>Accessibility</h2>
+In a view, editor, or other control, every features should be accessible
+using a mouse or the keyboard.
+<p><font color="#000000">In a dialog or wizard, a shortcut key should be
+defined for each button or control.&nbsp; The shortcut key should be displayed
+with an underline beneath the appropriate shortcut character.</font>
+<br>&nbsp;
+<p><img SRC="guidelineIndicator.gif" height=16 width=16><b><font color="#3333FF">Guideline
+15.1</font></b>
+<blockquote><font color="#3333FF">All of the features provided by a tool
+should be accessible using a mouse or the keyboard.</font></blockquote>
+
+<h3>
+<a NAME="Standard Accelerators"></a>Standard Accelerators</h3>
+The Eclipse platform has defined a large number of shortcut keys.&nbsp;
+Plug-in developers should make sure that the existing shortcut keys do
+not conflict with the shortcut keys defined in the plug-in.
+<br>&nbsp;
+<br>&nbsp;
+<table BORDER >
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT><b>Key</b></td>
+
+<td ALIGN=LEFT><b>{Key} by itself</b></td>
+
+<td ALIGN=LEFT><b>SHIFT+{Key}</b></td>
+
+<td ALIGN=LEFT><b>CTRL+{Key}</b></td>
+
+<td ALIGN=LEFT><b>CTRL+SHIFT+{Key}</b></td>
+
+<td ALIGN=LEFT><b>ALT+{Key}</b></td>
+
+<td ALIGN=LEFT><b>CTRL+ALT+{Key}</b></td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>A</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Select All</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>B</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Project / Build</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(View) Bookmarks</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>C</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Copy</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>D</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT editor) Display</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>E</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT editor) Next Problem</td>
+
+<td ALIGN=LEFT>(JDT editor) Previous Problem</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Find/Replace…</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>G</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>H</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Search…</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>I</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>J</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>K</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(View) Tasks</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>L</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Go to Line…</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>M</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT editor) Add Import</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT) Refactor / Move…</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>N</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>File / New / Other…</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(View) Navigator</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>O</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT editor) Organize Imports</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(View) Outline</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>P</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>File / Print</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(View) Properties</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Q</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT editor) Inspect</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>R</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>S</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>File / Save</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>File / Save All</td>
+
+<td ALIGN=LEFT>Window / Switch to Editor…</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>T</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT) Open Type…</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>U</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>V</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Paste</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>W</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>X</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Cut</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT) Refactor / Extract method…</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Y</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Redo</td>
+
+<td ALIGN=LEFT>(JDT) Refactor / Redo</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Z</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>Edit / Undo</td>
+
+<td ALIGN=LEFT>(JDT) Refactor / Undo</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Space</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=RIGHT BGCOLOR="#C0C0C0">&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT editor) Content Assist</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Backspace</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>Windows: Undo</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Tab</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(JDT editor) Shift Right</td>
+
+<td ALIGN=LEFT>(JDT editor) Shift Left</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Insert</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>Windows: Paste</td>
+
+<td ALIGN=LEFT>Windows: Copy</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Delete</td>
+
+<td ALIGN=LEFT>Edit / Delete</td>
+
+<td ALIGN=LEFT>Windows: Cut</td>
+
+<td ALIGN=LEFT>Edit / Delete</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Home</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>End</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Page Up</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Page Down</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Insert</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Delete</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Hyphen (-)</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>Show System Menu</td>
+
+<td ALIGN=LEFT>Show View Menu</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Left Arrow</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Right Arrow</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Up Arrow</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>Down Arrow</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F1</td>
+
+<td ALIGN=LEFT>Help</td>
+
+<td ALIGN=LEFT>Help</td>
+
+<td ALIGN=LEFT>Help</td>
+
+<td ALIGN=LEFT>Help</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F2</td>
+
+<td ALIGN=LEFT>(Navigator view) Rename, (JDT editor) Open JavaDoc</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F3</td>
+
+<td ALIGN=LEFT>(JDT editor) Open on Selection</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F4</td>
+
+<td ALIGN=LEFT>(JDT editor) Open Type Hierarchy</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>File / Close All</td>
+
+<td ALIGN=LEFT>File / Close</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F5</td>
+
+<td ALIGN=LEFT>(Navigator view) Refresh, (Properties view) Refresh, (Debug)
+Step Into</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F6</td>
+
+<td ALIGN=LEFT>(Debug) Step Over</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>Next Editor</td>
+
+<td ALIGN=LEFT>Previous Editor</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F7</td>
+
+<td ALIGN=LEFT>(Debug) Run to Return</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>Next View</td>
+
+<td ALIGN=LEFT>Previous View</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F8</td>
+
+<td ALIGN=LEFT>(Debug) Resume</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F9</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F10</td>
+
+<td ALIGN=LEFT>(Debug) Relaunch last</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F11</td>
+
+<td ALIGN=LEFT>(Debug) Debug</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>(Debug) Run</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+
+<tr VALIGN=BOTTOM>
+<td ALIGN=LEFT>F12</td>
+
+<td ALIGN=LEFT>Activate Editor</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=LEFT>Activate Editor</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+
+<td ALIGN=RIGHT>&nbsp;</td>
+</tr>
+</table>
+
+<p>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="Checklist For Developers"></a>Checklist For Developers</h2>
+Here is a checklist for developers who are developing UI plugins.&nbsp;
+This <i>could</i> be used for certification purposes.
+<br>&nbsp;
+<h3>
+General</h3>
+
+<p><br><img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">
+Guideline 1.1</font></b>
+<blockquote><font color="#3333FF">Follow and apply good user interface
+design principles: user in control, directness, consistency, forgiveness,
+feedback, aesthetics, and simplicity.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">
+Guideline 1.2</font></b>
+<blockquote><font color="#3333FF">Follow the platform lead for user interface
+conventions.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">
+Guideline 1.3</font></b>
+<blockquote><font color="#3333FF">Be careful not to mix UI metaphors.&nbsp;
+It may blur the original concept, and your own application.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">
+Guideline 1.4</font></b>
+<blockquote><font color="#3333FF">If you have an interesting idea, work
+with the Eclipse community to make Eclipse a better platform for all.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b> <font color="#3333FF">Guideline
+1.5</font></b>
+<blockquote><font color="#3333FF">Use Headline style capitalization for
+all titles, including those used for windows, dialogs, tabs, column headings
+and push buttons. Capitalize the first and last words, and all nouns, pronouns,
+adjectives, verbs and adverbs.&nbsp; Do not include ending punctuation.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">
+Guideline 1.6</font></b>
+<blockquote><font color="#3333FF">Use Sentence style capitalization for
+all control labels in a dialog or window, including those for check boxes,
+radio buttons, group labels, and simple text fields.&nbsp; Capitalize the
+first letter of the first word, and any proper names.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">
+Guideline 1.7</font></b>
+<blockquote><font color="#3333FF">Localize the resources within your plug-in.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+1.8</font></b>
+<blockquote><font color="#3333FF">When an error occurs which requires either
+an explicit user input or immediate attention from users, communicate the
+occurrence with a modal dialog.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+1.9</font></b>
+<blockquote><font color="#3333FF">If a programming error occurs in the
+product, communicate the occurrence with a dialog, and log it.</font></blockquote>
+
+<h3>
+Actions</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+2.1</font></b>
+<blockquote><font color="#3333FF">Each action must have a label, tool tip,
+and full color image.&nbsp; The label and tool tip must use Headline style
+capitalization.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+2.2</font></b>
+<blockquote><font color="#3333FF">The action tooltip should describe the
+result of the action, not the current state of the action.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+2.3</font></b>
+<blockquote><font color="#3333FF">Adopt the labeling terminology of the
+workbench for New, Delete, Add, and Remove actions.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+2.4</font></b>
+<blockquote><font color="#3333FF">An action should only be enabled if it
+can be completed successfully.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+2.5</font></b>
+<blockquote><font color="#3333FF">Action enablement should be quick.&nbsp;
+If action enablement cannot be quick, enable the action optimistically
+and display an appropriate message if the action is invoked, but cannot
+be completed.</font></blockquote>
+
+<h3>
+Dialogs</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+3.1</font></b>
+<blockquote><font color="#3333FF">When a dialog opens, set the initial
+focus to one of the controls in the container.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+3.2</font></b>
+<blockquote><font color="#3333FF">Slush Bucket widget (or Twin Box) should
+flow from left to right with the source objects on the left hand side.
+It should have the >, &lt;, >>, &lt;&lt; control buttons in this order.</font></blockquote>
+
+<h3>
+Wizards</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.1</font></b>
+<blockquote><font color="#3333FF">Use a wizard for any task consisting
+of many steps, which must be completed in a specific order.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.2</font></b>
+<blockquote><font color="#3333FF">Each wizard must contain a header with
+a banner graphic and a text area for user feedback.&nbsp; It must also
+contain Back, Next, Finish, and Cancel buttons in the footer.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.3</font></b>
+<blockquote><font color="#3333FF">Start the wizard with a prompt, not an
+error message.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.4</font></b>
+<blockquote><font color="#3333FF">Seed the fields within the wizard using
+the current workbench state.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.5</font></b>
+<blockquote><font color="#3333FF">Validate the wizard data in tab order.&nbsp;
+Display a prompt when information is absent, and an error when information
+is invalid.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.6</font></b>
+<blockquote><font color="#3333FF">Only enable the Next / Finish buttons
+if all required information in the dialog is present and valid.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.7</font></b>
+<blockquote><font color="#3333FF">Remove all programming message ID's from
+wizard text.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.8</font></b>
+<blockquote><font color="#3333FF">Use a Browse Button whenever an existing
+object is referenced in a wizard.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.9</font></b>
+<blockquote><font color="#3333FF">If a new file is created, open the file
+in an editor.&nbsp; If a group of files are created, open the most important,
+or central file in an editor. Open the readme.html file upon creation of
+an example project.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.10</font></b>
+<blockquote><font color="#3333FF">If a new project is created, change the
+active perspective to suit the project type.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.11</font></b>
+<blockquote><font color="#3333FF">If a new object is created, select and
+reveal the new object in the appropriate view.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.12</font></b>
+<blockquote><font color="#3333FF">Create container objects in a wizard
+if reasonable defaults can be defined.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+4.13</font></b>
+<blockquote><font color="#3333FF">Use the label "Project Name" when the
+item must be a Project; otherwise, use the label "Folder". Do not qualify
+the term.</font></blockquote>
+
+<h3>
+Editors</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.1</font></b>
+<blockquote><font color="#3333FF">Use a editor to edit or browse a file,
+document, or other input object.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.2</font></b>
+<blockquote><font color="#3333FF">Modifications made in an editor must
+follow an open-save-close lifecycle model.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.3</font></b>
+<blockquote><font color="#3333FF">Only one instance of an editor may exist,
+for each editor input, within a page.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.4</font></b>
+<blockquote><font color="#3333FF">It must be possible to open a separate
+instance of an editor for each input.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.5</font></b>
+<blockquote><font color="#3333FF">The editor should be labeled with the
+name of the file, document, or input being edited.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.6</font></b>
+<blockquote><font color="#3333FF">In multipage editors, use a tab control
+for page activation.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.7</font></b>
+<blockquote><font color="#3333FF">All of the actions available in the editor
+should be added to the window menu bar.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.8</font></b>
+<blockquote><font color="#3333FF">Use the standard format for editor contributions
+in the window menu bar.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.9</font></b>
+<blockquote><font color="#3333FF">If an editor has support for Cut, Copy,
+Paste, or any of the global actions, these actions must be executable from
+the same actions in the window menu bar and toolbar.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.10</font></b>
+<blockquote><font color="#3333FF">Fill the editor toolbar with the most
+commonly used items in the view menu.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.11</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with selection
+oriented actions, do not presentation or global actions.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.12</font></b>
+<blockquote><font color="#3333FF">Use the standard format for editor context
+menus.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.13</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with a fixed set
+of actions for each selection type, and then enable or disable each to
+reflect the selection state.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.14</font></b>
+<blockquote><font color="#3333FF">Register all context menus in the editor
+with the platform.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.15</font></b>
+<blockquote><font color="#3333FF">Implement an Action Filter for each object
+type in the editor.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.16</font></b>
+<blockquote><font color="#3333FF">If the input to an editor is deleted,
+and the editor contains no changes, the editor should be closed.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.17</font></b>
+<blockquote><font color="#3333FF">If the input to an editor is deleted,
+and the editor contains changes, the editor should give the user a chance
+to save their changes to another location, and then close.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.18</font></b>
+<blockquote><font color="#3333FF">If the resource is dirty, prefix the resource 
+name presented in the editor tab with an asterisk.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.19</font></b>
+<blockquote><font color="#3333FF">Treat read-only editor input as you would
+any other input.&nbsp; Enable the Save As if possible.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.20</font></b>
+<blockquote><font color="#3333FF">If the data within an editor is too extensive
+to see on a single screen, and will yield a structured outline, the editor
+should provide an outline model to the Outline view.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.21</font></b>
+<blockquote><font color="#3333FF">Notification about location between an
+Editor and the Outline view should be two-way. Context menu should be available
+in the Outline view as appropriate.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.22</font></b>
+<blockquote><font color="#3333FF">An error or warning image should be added
+to items with the error or warning respectively. If the item is part of
+a tree, the error or warning image should also be propagated to each ancestor
+of the item. If the ancestor of the item doesn't contain errors or warnings,
+a different error or warning image should be used for the ancestor..</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.23</font></b>
+<blockquote><font color="#3333FF">If appropriate, implement the "Add Task"
+feature in your editor.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.24</font></b>
+<blockquote><font color="#3333FF">If appropriate, implement the "Add Bookmark"
+feature in your editor.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.25</font></b>
+<blockquote><font color="#3333FF">Editors with source lines of text should
+have line numbers, and optionally column numbers..</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.26</font></b>
+<blockquote><font color="#3333FF">Table cell editors should support the
+single-click activation model, and in edit mode, they should render complex
+controls upon single-click.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.27</font></b>
+<blockquote><font color="#3333FF">Changes made in a table cell editor should
+be committed when a user clicks off the cell or hits the "Enter" key. Selection
+should be cancelled when user hits the "Esc" key.First letter navigation
+should be supported as a cursoring mechanism within a cell.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.28</font></b>
+<blockquote><font color="#3333FF">When performing fine-grain error validation
+in an Editor, use the workbench status area for message output.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.29</font></b>
+<blockquote><font color="#3333FF">Use the Task view to show errors found
+when the Save action is invoked.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+5.30</font></b>
+<blockquote><font color="#3333FF">If modifications to a resource are made
+outside of the workbench, users should be prompted to either override the
+changes made outside of the workbench, or back out of the Save operation
+when the Save action is invoked in the editor.</font></blockquote>
+
+<h3>
+Views</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.1</font></b>
+<blockquote><font color="#3333FF">Use a view to navigate a hierarchy of
+information, open an editor, or display the properties of an object.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.2</font></b>
+<blockquote><font color="#3333FF">Modifications made within a view must
+be saved immediately.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.3</font></b>
+<blockquote><font color="#3333FF">Only one instance of a view may exist
+in a perspective.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.4</font></b>
+<blockquote><font color="#3333FF">A view can be opened in one or more perspectives.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.5</font></b>
+<blockquote><font color="#3333FF">A view can be opened from the Perspective
+> Show View menu.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.6</font></b>
+<blockquote><font color="#3333FF">The view label in the title bar must
+be prefixed with the label of the view in the Perspective > Show View menu.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.7</font></b>
+<blockquote><font color="#3333FF">If a view contains more than one control,
+it may be advisable to split it up into two or more views.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.8</font></b>
+<blockquote><font color="#3333FF">When a view first opens, derive the view
+input from the state of the perspective.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.9</font></b>
+<blockquote><font color="#3333FF">If a view displays a resource tree, consider
+using the perspective input as the root of visible information in the view.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.10</font></b>
+<blockquote><font color="#3333FF">Fill the view pulldown menu with presentation
+actions, not selection oriented actions.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.11</font></b>
+<blockquote><font color="#3333FF">Use the standard format for view pulldown
+menus.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.12</font></b>
+<blockquote><font color="#3333FF">Fill the view toolbar with the most commonly
+used items in the view menu.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.13</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with selection
+oriented actions, not presentation actions.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.14</font></b>
+<blockquote><font color="#3333FF">Use the standard format for view context
+menus.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.15</font></b>
+<blockquote><font color="#3333FF">Fill the context menu with a fixed set
+of actions for each selection type, and then enable or disable each to
+reflect the selection state.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.16</font></b>
+<blockquote><font color="#3333FF">If an object appears in more than one
+view, it should have the same context menu in each.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.17</font></b>
+<blockquote><font color="#3333FF">Register all context menus in the view
+with the platform.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.18</font></b>
+<blockquote><font color="#3333FF">Implement an Action Filter for each object
+type in the view.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.19</font></b>
+<blockquote><font color="#3333FF">If a view has support for Cut, Copy,
+Paste, or any of the global actions, these actions must be executable from
+the same actions in the window menu bar and toolbar.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+6.20</font></b>
+<blockquote><font color="#3333FF">Persist the state of each view between
+sessions.</font></blockquote>
+
+<h3>
+Perspectives</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.1</font></b>
+<blockquote><font color="#3333FF">Create a new perspective type for long
+lived tasks, which involve the performance of smaller, non modal tasks.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.2</font></b>
+<blockquote><font color="#3333FF">If you just want to expose a single view,
+or two, extend an existing perspective type.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.3</font></b>
+<blockquote><font color="#3333FF">The size and position of each view in
+a perspective should be defined in a reasonable manner, such that the user
+can resize or move a view if they desire it.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.4&nbsp;</font></b>
+<blockquote><font color="#3333FF">If a perspective has just one part, it
+may be better suited as a view or editor.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.5</font></b>
+<blockquote><font color="#3333FF">If it is undesirable to have an editor
+area in a perspective, hide it.&nbsp; Do not resize the editor area to
+the point where it is no longer visible.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.6</font></b>
+<blockquote><font color="#3333FF">Populate the window menu bar with actions
+and action sets which are appropriate to the task orientation of the perspective,
+and any larger workflow.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.7 </font></b>
+<blockquote><font color="#3333FF">A new perspective should be opened only
+if the user explicitly states a desire to do so.&nbsp; In making this statement,
+the user agrees to leave their old context, and create a new one.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.8</font></b>
+<blockquote><font color="#3333FF">If a new perspective is opened as a side
+effect of another action, the user should be able to turn this behavior
+off.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.9</font></b>
+<blockquote><font color="#3333FF">If a new perspective is opened, it should
+be opened as a page within the current window, or in a new window, depending
+on the user preference.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.10</font></b>
+<blockquote><font color="#3333FF">Consider changing the perspective type
+before you open a new perspective.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+7.11</font></b>
+<blockquote><font color="#3333FF">The list of shortcuts added to the New,
+Open Perspective, and Show View menus should be at most 7 plus / minus
+2 items.</font></blockquote>
+
+<h3>
+Windows</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.1</font></b>
+<blockquote><font color="#3333FF">Use an Action Set to contribute actions
+to the window menu bar and toolbar.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.2</font></b>
+<blockquote><font color="#3333FF">Follow the platform lead when distributing
+actions within an Action Set.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.3</font></b>
+<blockquote><font color="#3333FF">Contribute actions to the window menu
+bar first, and then to the window toolbar if they will be frequently used.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.4</font></b>
+<blockquote><font color="#3333FF">Define each action set with a specific
+task in mind.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.5</font></b>
+<blockquote><font color="#3333FF">An action set should contain the smallest
+possible semantic chunking of actions. Avoid the temptation to provide
+only one action set for an entire plug-in.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.6</font></b>
+<blockquote><font color="#3333FF">Use an action set to share a set of actions
+which are useful in two or more views or editors.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.7</font></b>
+<blockquote><font color="#3333FF">Let the user control the visible action
+set.&nbsp; Don't try to control it for them.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.8</font></b>
+<blockquote><font color="#3333FF">"Open Object" actions must appear in
+the Project pulldown menu of the window.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.9</font></b>
+<blockquote><font color="#3333FF">"Open Application" actions must appear
+in the Window pulldown menu of the window.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+8.10</font></b>
+<blockquote><font color="#3333FF">Always use the global status bar to display
+status related messages.</font></blockquote>
+
+<h3>
+Properties</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+9.1</font></b>
+<blockquote><font color="#3333FF">Use the Properties view to edit the properties
+of an object when quick access is important, and you will switch quickly
+from object to object.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+9.2</font></b>
+<blockquote><font color="#3333FF">Use a Properties Dialog to edit the properties
+of an object which are expensive to calculate.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+9.3</font></b>
+<blockquote><font color="#3333FF">&nbsp;Use a Properties Dialog to edit
+the properties of an object which contain complex relationships to one
+another.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+9.4</font></b>
+<blockquote><font color="#3333FF">&nbsp;Properties Dialog should cotain
+the superset of items shown in the Properties view.</font></blockquote>
+
+<h3>
+Standard Components</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+10.1</font></b>
+<blockquote><font color="#3333FF">If appropriate, add actions to standard
+components of Eclipse using the plug-in registry.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+10.2</font></b>
+<blockquote><font color="#3333FF">If you subclass or copy any of the standard
+components, always carry over the standard components' characteristics.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+11.1</font></b>
+<blockquote><font color="#3333FF">Add actions to the Navigator View menu,
+toolbar, and context menu using the plug-in registry.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+11.2</font></b>
+<blockquote><font color="#3333FF">Use the attributes defined in IResourceActionFilter.java&nbsp;
+and IProjectActionFilter.java to control the visibility of context menu
+actions in the Navigator.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+11.3</font></b>
+<blockquote><font color="#3333FF">Use a "Show In Navigator" action in each
+view, to link resources back to the Navigator.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+12.1</font></b>
+<blockquote><font color="#3333FF">Add markers (tasks, errors and warnings)
+to the Tasks view using the Marker Manager services from the Core Resources
+Management plugin.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+12.2</font></b>
+<blockquote><font color="#3333FF">The description text of each marker should
+be short and concise, so that it will fit in the status line of Eclipse.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+12.3</font></b>
+<blockquote><font color="#3333FF">Add actions to the Tasks view menu, toolbar,
+and context menu using the plug-in registry.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+12.4</font></b>
+<blockquote><font color="#3333FF">Use the attributes defined in IMarkerActionFilter.java
+to control the visibility of context menu actions in the Tasks view.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+12.5</font></b>
+<blockquote><font color="#3333FF">Support F1 keyboard action and link it
+to an infopop that gives a detailed description of the selected item in
+the Task view.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+13.1</font></b>
+<blockquote><font color="#3333FF">Global options should be exposed within
+the Preferences Dialog.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+13.2</font></b>
+<blockquote><font color="#3333FF">Expose the preferences for a particular
+view, editor or window in the view itself, via a menu or tool item.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+13.3</font></b>
+<blockquote><font color="#3333FF">Start out with a single preference page.
+Then evolve to more if you need to.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+13.4</font></b>
+<blockquote><font color="#3333FF">If you create a preference group, use
+the root page for frequently used preferences, or those preferences which
+have wide spread effect.&nbsp; Specialize within the sub pages.</font></blockquote>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+13.5</font></b>
+<blockquote><font color="#3333FF">Attempt to integrate plug-in preferences,
+wizards, and views into existing categories for a new plug-in first, before
+considering the creation of a new category.</font></blockquote>
+
+<h3>
+Resource</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+14.1</font></b>
+<blockquote><font color="#3333FF">Expose the resource for resource equivalent
+model objects using an IContributorResourceAdapter.</font></blockquote>
+
+<h3>
+Accessibility</h3>
+<img SRC="guidelineCheckbox.jpg" height=16 width=16><b><font color="#3333FF">Guideline
+15.1</font></b>
+<blockquote><font color="#3333FF">All of the features provided by a tool
+should be accessible using a mouse or the keyboard.</font></blockquote>
+
+<p><br>
+<hr ALIGN="LEFT" WIDTH="100%">
+<h2>
+<a NAME="Glossary"></a>Glossary</h2>
+
+<dl>
+<dt>
+<b>Action</b></dt>
+
+<dd>
+An <i>action</i> represents a command which can be triggered by the user
+from a menu or toolbar.&nbsp; It has a run method, plus other methods which
+return the menu or tool item presentation (text, image, etc.).&nbsp; In
+Eclipse, you can add actions to a menu or toolbar in a view, editor, or
+window.&nbsp; In a view or editor, actions are added individually, one
+by one.&nbsp; In the window, actions are added using an <i>action set</i>,
+a set of actions which can be turned on or off by the user.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Bookmarks View</b></dt>
+
+<dd>
+A view used to browse the bookmarks in the workbench.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Editor</b></dt>
+
+<dd>
+An editor is a visual component within a workbench page. It is typically
+used to edit or browse a document or input object. The input is identified
+using an &lt;code>IEditorInput&lt;/code>.&nbsp; Modifications made in an
+editor part follow an open-save-close lifecycle model (in contrast to a
+view part, where modifications are saved to the workbench immediately).</dd>
+
+<br>&nbsp;
+<dt>
+<b>File</b></dt>
+
+<dd>
+An object in the workspace, analogous to files in the file system.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Folder</b></dt>
+
+<dd>
+A container for files in the workspace.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Navigator View</b></dt>
+
+<dd>
+A view used to browse the files in the workspace</dd>
+
+<br>&nbsp;
+<dt>
+<b>Outline View</b></dt>
+
+<dd>
+A view, commonly used to view the outline of the active editor.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Perspective</b></dt>
+
+<dd>
+A perspective is a visual container for a set of views and editors (parts).&nbsp;
+These parts exist wholly within the perspective and are not shared.&nbsp;
+A perspective is also like a page within a book.&nbsp; It exists within
+a window along with any number of other perspectives and, like a page within
+a book, only one perspective is visible at any time.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Platform</b></dt>
+
+<dd>
+A generic framework for the integration of tools.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Preferences</b></dt>
+
+<dd>
+A Preference Page is used to edit the preferences for a feature in the
+platform.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Project</b></dt>
+
+<dd>
+A group of files and folders within the workspace.&nbsp; Each project maps
+to a corresponding user specified directory in the file system.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Properties View</b></dt>
+
+<dd>
+A view, typically used to browse the properties for an object in the active
+editor or view.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Properties Dialog</b></dt>
+
+<dd>
+A dialog for editing the properties of an object.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Property Page</b></dt>
+
+<dd>
+A page within a Properties Dialog.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Resource</b></dt>
+
+<dd>
+The generic name for projects, folders and files.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Tasks View</b></dt>
+
+<dd>
+A view used to browse the tasks, errors, and warnings within the workspace.</dd>
+
+<br>&nbsp;
+<dt>
+<b>View</b></dt>
+
+<dd>
+A view is a visual component within a workbench page.&nbsp; It is typically
+used to navigate a hierarchy of information (like the workspace), open
+an editor, or display properties for the active editor.&nbsp; Modifications
+made in a view are saved immediately (in contrast to an editor part, which
+conforms to a more elaborate open-save-close lifecycle).</dd>
+
+<br>&nbsp;
+<dt>
+<b>Wizard</b></dt>
+
+<dd>
+A Wizard is typically used to create new resources, import resources, or
+export resources.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Workbench</b></dt>
+
+<dd>
+The Workbench provides the user interface structure for Eclipse. The purpose
+of the Workbench is to facilitate the seamless integration of tools. These
+tools contribute to extension points defined by the Workbench.&nbsp; The
+Workbench is responsible for the presentation and coordination of the user
+interface.</dd>
+
+<br>&nbsp;
+<dt>
+<b>Workspace</b></dt>
+
+<dd>
+The various tools plugged in to the Eclipse Platform operate on regular
+files in the user's workspace.&nbsp; The workspace consists of one or more
+top level projects, where each project maps to a corresponding user specified
+directory in the file system.&nbsp; Each project contains a collection
+of folders and files.</dd>
+</dl>
+
+<h2>
+
+<hr ALIGN="LEFT" WIDTH="100%"><a NAME="Acknowledgement"></a>Acknowledgement</h2>
+Screenshots contributed to Eclipse.org and used in this document, 
+originate from plugins released or under development by the following teams:
+<p>
+<ul>
+<li>
+Java Development Tooling, Eclipse Subproject</li>
+<li>
+WebSphere&reg; Studio Application Developer, IBM Corporation</li>
+<li>
+Rational XDE Professional,  Rational Corporation.</li>
+</ul>
+<p>By agreeing to share selected elements of their user interface designs
+(both positive and negative), we feel that these teams have helped make
+the UI guidelines stronger.
+<br>&nbsp;
+<h2>
+
+<hr ALIGN="LEFT" WIDTH="100%"><a NAME="Revision History"></a>Revision History</h2>
+
+<table BORDER WIDTH="100%" >
+<tr>
+<td WIDTH="20%"><b>Date</b></td>
+
+<td><b>Comment</b></td>
+</tr>
+
+<tr>
+<td>Nov. 21, 2001</td>
+
+<td>Created.&nbsp; Dave Springgay, OTI</td>
+</tr>
+
+<tr>
+<td>Dec. 7, 2001&nbsp;</td>
+
+<td>Second Draft.&nbsp; D. Springgay, OTI</td>
+</tr>
+
+<tr>
+<td>Dec. 13, 2001</td>
+
+<td>Third Draft. Jin Li, IBM</td>
+</tr>
+
+<tr>
+<td>Jan. 3, 2002</td>
+
+<td>Fourth Draft. J. Li, IBM</td>
+</tr>
+
+<tr>
+<td>Feb. 27, 2002</td>
+
+<td>Fifth Draft. A. Cho, OTI</td>
+</tr>
+
+</table>
+
+<p>
+<hr WIDTH="100%">
+<br><font face="Times New Roman, Times, serif"><font size=-1>Copyright
+&copy; 2001 - 2002 Object Technology International, Inc. and others</font></font>
+
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States, other countries, or both.</small></p>
+<p><small>Microsoft, Windows, Windows NT, and the Windows logo are trademarks of Microsoft Corporation in the United States, other countries, or both.</small></p>
+
+</body>
+</html>
