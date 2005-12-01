@@ -54,7 +54,7 @@ function get_recent_articles_summary($count) {
  * is at most $max characters in length containing only full words.
  * That is, the break will occur on whitespace.
  */
-function full_word_substr($text, $max=80) {
+function full_word_substr($text, $max=120) {
 	while ($max > 0 && substr($text, $max, 1) != ' ') $max--;
 	return substr($text, 0, $max) . '...';
 }
