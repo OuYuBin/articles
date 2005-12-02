@@ -75,6 +75,7 @@
 			<ul>
 			<li><a href="http://dev2dev.bea.com/eclipse/" target="_blank">dev2dev Online</a></li>
 			<li><a href="http://www.ibm.com/developer" target="_blank">developerWorks</a></li>
+			<li><a href="http://eclipse.sys-con.com/" target="_blank">Eclipse Developer's Journal</a></li>
 			<li><a href="http://www.eclipse-magazin.de/" target="_blank">Eclipse Magazin</a></li>
 			<li><a href="http://eclipse.techforge.com/" target="_blank">Eclipse TechForge</a></li>
 			<li><a href="http://www.eclipsesource.com/" target="_blank">Eclipse Source</a></li>
