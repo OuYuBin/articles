@@ -41,7 +41,8 @@
 			<p>
 				Please note that not all articles have been migrated over
 				to the new site. This process is ongoing and should be completed
-				soon.
+				soon. In the meantime, the <a href="index.html">old articles page</a>
+				still exists (for now).
 			<p>
 			
 			<p>The following articles have been written by members of the 
@@ -60,11 +61,24 @@
 			$articles
 		</div>
 	</div>
-		<div id="rightcolumn">
+	<div id="rightcolumn">
 		<div class="sideitem">
 			<h6>Filter</h6>
 			<ul>
 			$categories
+			</ul>
+		</div>
+	</div>
+	<div id="rightcolumn">
+		<div class="sideitem">
+			<h6>Other Sources of Eclipse Information</h6>
+			<ul>
+			<li><a href="http://dev2dev.bea.com/eclipse/" target="_blank">dev2dev Online</a></li>
+			<li><a href="http://www.ibm.com/developer" target="_blank">developerWorks</a></li>
+			<li><a href="http://www.eclipse-magazin.de/" target="_blank">Eclipse Magazin</a></li>
+			<li><a href="http://eclipse.techforge.com/" target="_blank">Eclipse TechForge</a></li>
+			<li><a href="http://www.eclipsesource.com/" target="_blank">Eclipse Source</a></li>
+			<li><a href="http://www.eclipsezone.com/" target="_blank">Eclipse Zone</a></li>
 			</ul>
 		</div>
 	</div>
