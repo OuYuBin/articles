@@ -122,6 +122,7 @@ class ArticleListing {
 	}
 
 	function add_article(& $article) {
+		if (!$article->show) return;
 		foreach ($article->categories as $category_id) {
 			$category = $this->categories[$category_id];
 			if ($category) {
@@ -230,6 +231,7 @@ class Article {
 	var $categories = array();
 	var $date;
 	var $updates = array();
+	var $show = true;
 
 
 	function add_author(&$author) {

@@ -225,6 +225,7 @@ class ArticleHandler extends XmlElementHandler {
 	function ArticleHandler(& $article, & $attributes) {
 		$this->article = & $article;
 		$this->article->link = $attributes['LINK'];
+		$this->article->show = strcasecmp($attributes['SHOW'], "false") != 0;
 	}
 
 	function & get_title_handler($attributes) {
