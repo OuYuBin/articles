@@ -84,6 +84,14 @@
 		</div>
 	</div>
 <!--</div>-->
+<script language="javascript">
+<!--
+	if (top.location != location) {
+		top.location.href = document.location.href ;
+	}
+
+-->
+</script>
 EOHTML;
 
 	# Generate the web page
