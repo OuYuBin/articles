@@ -313,7 +313,6 @@ class UpdateHandler extends XmlElementHandler{
 
 	function UpdateHandler(& $attributes) {
 		$this->update = new Update();
-		$this->update->date = strtotime($attributes['DATE']);
 	}
 
 	function & get_author_handler($attributes) {
