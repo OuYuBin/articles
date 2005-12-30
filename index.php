@@ -37,26 +37,29 @@
 <!--<div id="maincontent">-->
 	<div id="midcolumn">
 		<h1>$pageTitle</h1>
-			<img src="images/articles.gif" align="right">
-			<p>
-				Please note that not all articles have been migrated over
-				to the new site. This process is ongoing and should be completed
-				soon. In the meantime, the <a href="index.html">old articles page</a>
-				still exists (for now).
-			<p>
-			
-			<p>The following articles have been written by members of the 
+		<img src="images/articles.gif" align="right">
+		<p>
+			Please note that not all articles have been migrated over
+			to the new site. This process is ongoing and should be completed
+			soon. In the meantime, the <a href="index.html">old articles page</a>
+			still exists (for now).
+		<p>			
+		<p>
+			The following articles have been written by members of the 
 			development team and other members of the eclipse community. 
+			<i>All articles are listed here by date (most recent first).</i> You
+			can filter the list by clicking a category filter to the right. 
+		</p>
+		<p>
 			You too can contribute! Eclipse Corner depends on contributions 
-			from people like you.</p>
-      
-      		<p>Interested in writing an article? See <a href="contributing.php">how
-          	to contribute an article</a>.</p>
-          	
-          	<p>Besides these, a number of other web sites carry technical articles about
+			from people like you. Interested in writing an article? See <a href="contributing.php">how
+       		to contribute an article</a>.
+       	</p>
+    	<p>
+      		Besides these, a number of other web sites carry technical articles about
 			Eclipse. You can find pointers to these on the 
 			<a href="/community/">Eclipse Community page</a>.
-	
+		</p>
 		<div class="homeitem3col">
 			$articles
 		</div>
@@ -66,6 +69,16 @@
 			<h6>Filter</h6>
 			<ul>
 			$categories
+			</ul>
+		</div>
+	</div>
+	<div id="rightcolumn">
+		<div class="sideitem">
+			<h6>Eclipse Rich Client Platform Tutorial</h6>
+			<ul>
+			<li><a href="http://eclipse.org/articles/Article-RCP-1/tutorial1.html">Part 1</a></li>
+			<li><a href="http://eclipse.org/articles/Article-RCP-2/tutorial2.html">Part 2</a></li>
+			<li><a href="http://eclipse.org/articles/Article-RCP-3/tutorial3.html">Part 3</a></li>
 			</ul>
 		</div>
 	</div>
