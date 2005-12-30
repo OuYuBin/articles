@@ -10,6 +10,6 @@
 	$Nav->addNavSeparator("Articles", "index.php");
 	$Nav->addCustomNav("RCP Articles", "index.php?filter=rcp", "_self", 1);
 	$Nav->addCustomNav("Contributing", "contributing.php", "_self", 1);
-	$Nav->addCustomNav("Contact the editor", "mailto:articles_editor@eclipse.org", "_self", 1);
+	#$Nav->addCustomNav("Contact the editor", "mailto:articles_editor@eclipse.org", "_self", 1);
 
 ?>
