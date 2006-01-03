@@ -1,0 +1,37 @@
+<project basedir="." name="build-pdf" default="main">
+	<property name="pdfdir" value="pdfs" />
+
+	<!-- 
+		first declare the fop task and where to 
+		find the jar-libraries
+		
+		the libraries are expected in 
+		sub-folder "lib" of the working directory
+	-->
+	<taskdef name="fop" classname="org.apache.fop.tools.anttasks.Fop">
+		<classpath>
+			<pathelement location="lib\fop.jar" />
+			<pathelement location="lib\avalon.jar" />
+			<pathelement location="lib\batik.jar" />
+		</classpath>
+	</taskdef>
+
+	<mkdir dir="${pdfdir}" />
+
+	<target name="main">
+		<!-- 
+			create output of type pdf and generate output in 
+			directory ${pdfdir}
+		-->
+		<fop format="application/pdf" outdir="${pdfdir}"
+			messagelevel="debug">
+			<!-- 
+				convert all fo files in 
+				working directory into pdf
+			-->
+			<fileset dir=".">
+				<include name="*.fo" />
+			</fileset>
+		</fop>
+	</target>
+</project>
