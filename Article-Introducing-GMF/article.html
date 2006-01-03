@@ -1,0 +1,351 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Introducing the GMF Runtime</title>
+<link rel="stylesheet" href="default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2005 International Business Machines Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">DRAFT: Introducing the GMF Runtime</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+<a href="http://www.eclipse.org/gmf">Graphical Modeling Framework (GMF)</a> is a new Eclipse project with the potential to become a keystone framework for the rapid development of standardized Eclipse graphical modeling editors. GMF is divided in two main components: the runtime, and the tooling used to generate editors capable of leveraging the runtime. Architects and developers involved in the development of graphical editors or of plug-ins integrating both EMF and GEF technologies should consider building 
+their editors against the GMF Runtime component.
+ This article is designed to help understand the benefits of the GMF Runtime by presenting its various value-added features.
+
+  <p><b>By Frederic Plante, IBM</b> <br>
+    <font size="-1">December 8th, 2005</font> </p>
+</blockquote>
+
+<hr width="100%">
+
+
+<h2>Introduction</h2>
+<p>
+The Graphical Modeling Framework (GMF) is a framework for building modeling-like graphical Eclipse-based editors. Examples of such editors are: UML editors, ECore editors, business process editors, flow editors, XSD editors, etc...
+</p>
+
+<p>
+The framework can be divided in two main components: the tooling and the runtime. The tooling consists of editors to create/edit models describing the notational, semantic and tooling aspects of a graphical editor as well as a generator to produce the implementation of graphical editors. The generated plug-ins depend on the GMF Runtime component to produce a world class extensible graphical editor.
+</p>
+
+<p>
+This article briefly presents the workflow used to create a graphical editor using GMF and then focuses on presenting the benefits and features of the runtime component of GMF.
+</p>
+
+<blockquote>
+<p>
+<img src="images/tip.gif" align=CENTER>
+Although pictures in this article were taken from screenshots of a GMF Runtime client implementing a UML2 modeling application, the use of the GMF Runtime is not confined to the modeling space since any application that displays and/or edits the graphical representation of EMF models can leverage the framework.
+</p>
+</blockquote>
+
+<h3>Workflow</h3>
+<p>
+Developers who create graphical modeling-like editors using GMF follow this simplified workflow:
+</p>
+  <img src="article-images/workflow.gif" align=CENTER>
+
+<p>
+Steps are:
+<ul>
+<li>Create a domain model, this model defines the non-graphical information managed by the editor</li>
+<li>Create a diagram definition model, this model defines graphical elements to be displayed in the editor</li>
+<li>Create a diagram mapping model, this model defines mapping between domain model elements and graphical elements</li>
+<li>Generate the graphical editor</li>
+<li>Enhance the graphical editor by editing the generated plug-in code</li>
+</ul>
+</p>
+
+<h3>Components</h3>
+<p>
+The following UML 2.0 component diagram shows the dependencies between the generated graphical editor, the GMF Runtime, EMF, GEF, and the Eclipse Platform:
+</p>
+  <img src="article-images/RuntimeComponentDiagram.gif" align=CENTER>
+
+<p>
+As you can see, a GMF graphical editor depends on the GMF runtime component, but also makes direct use of EMF, GEF and the Eclipse platform.
+</p>
+
+<h3>Benefits of using the Runtime</h3>
+<p>
+Before delving into some of the features that graphical editors can leverage from the GMF Runtime, lets quickly outline the benefits of basing your editor on the GMF Runtime:
+<ul>
+<li>Its features provide a consistent look and feel with other GMF-based graphical editors</li>
+<li>Its editors can be created manually from the ground up and/or be generated from the great tooling currently being developed as part GMF's SDK</li>
+<li>It manages diagram persistence, allowing clients to focus on their business logic</li>
+<li>Its extensible nature allows GMF Runtime clients to be fully open editors that in turn can be extended by third-parties</li>
+<li>It is already integrated with various new EMFT components such as validation and OCL should you need such support</li>
+<li>It defines an extensible notation meta-model to enable the isolation of notation from semantic concerns</li>
+<li>Its features are well designed, coded, tested, and deployed</li>
+<li>Future community enhancements to the runtime will easily be integrated with your editor</li>
+</ul>
+</p>
+
+
+<h2>Runtime Features</h2>
+<p>
+Your graphical editors built on the GMF Runtime have the option of inheriting quite a few very nice features. Below is a non-exhaustive list of such features.
+</p>
+
+<h3>Collapsed and Expanded Compartment</h3>
+<p>
+Composite figures within your editor, also often called "compartment" figures, can optionally be collapsed or expanded as can be seen below:
+</p>
+<p>
+Attribute Compartment Collapsed:
+</p>
+
+  <img src="article-images/collapsed.gif" align=CENTER>
+<br>
+<p>
+Attribute Compartment Expanded:
+</p>
+  <img src="article-images/expanded.gif" align=CENTER>
+
+<h3>Direct Editing</h3>
+<p>
+Text within labels can be edited directly and interpreted to produce a set of commands.
+</p>
+  <img src="article-images/inline-edit-1.gif" align=CENTER>
+<p>
+In the above picture, the user clicked on the name compartment of the UML Class view and started editing the name of the class.
+</p>
+  <img src="article-images/inline-edit-2.gif" align=CENTER>
+<p>
+Here, the user created a new operation within a UML Class and typed the full signature for the operation. Upon pressing enter, a command will be executed to generate all model elements 
+required by the signature. Notice the Quick Assist capability this particular client built on top of GMF.
+</p>
+
+
+<h3>Diagram Assistants</h3>
+<p>
+Diagram Assistants are floating user interface objects displayed over a diagram at mouse location after a pre-defined delay without activity, much like tooltips. 
+Their behaviour is capabilities aware and context-sensitive based on the object below the mouse location. There are two types of Diagram Assistant: Pop-up Bars and Connection Handles.
+</p>
+
+<h4>Pop-up Bars</h4>
+<p>
+The user interface objects appearing in Popup-Bars are buttons in a bubble-like shape. The buttons are generally used to create elements in the context of the diagram 
+element below the mouse location.
+</p>
+  <img src="article-images/actionBars.gif" align=CENTER>
+<p>
+
+In the above picture, a user left the mouse pointer motionless over a figure representing a UML Class. The Pop-up Bar appeared and offered a list of UML elements to create within the UML Class: 
+attribute, operation and a template parameter.
+</p>
+
+<h4>Connection Handles</h4>
+<p>
+The user interface objects appearing in Connection Handles are incoming and outgoing floating arrow shape buttons. These can be double-clicked to trigger an action or can be dragged out to create connectors to existing or new objects.
+</p>
+  <img src="article-images/diagramAssistant-1.gif">
+<p>
+
+Above, the Connection Handles are displayed beside a UML Class.
+</p>
+  <img src="article-images/diagramAssistant-2.gif">
+<p>
+
+Above, we can appreciate an example of how the double-click user gesture over the outgoing Connection Handle is handled. Here, a list of query commands is offered.
+</p>
+  <img src="article-images/diagramAssistant-3.gif">
+<p>
+
+Above, we can appreciate an example of how the drag-and-drop user gesture from the outgoing Connection Handle to the diagram surface is handled. Here, a list of connector creation commands isfirst offered and a list of target element creation commands are then offered in sub-menus.
+</p>
+
+<h3>Common Tools</h3>
+<p>
+Your graphical editor tool will define its own palette entries, but it may also leverage some of the following tools available from the GMF Runtime:
+</p>
+  <img src="article-images/tool-1.gif">
+<p>
+The Note tool allows the creation of comment boxes on the diagram, while the Note Attachment tool allows connecting a note and an arbitrary shape as follows:
+</p>
+  <img src="article-images/tool-2.gif">
+<p>
+The Geometric Shapes and the Text tools allow the creation of miscellaneous geometric shapes and text on the diagram.
+</p>
+  <img src="article-images/tool-3.gif">
+<p>
+Other tools, such as the zoom tool, are also reusable.
+</p>
+
+<h3>Common Menus Commands</h3>
+<p>
+The GMF Runtime makes available a number of standard diagram related menu commands that you can use in your own graphical editor.
+</p>
+  <img src="article-images/menu-1.gif">
+
+<p>
+The Font menu command will invoke the system font dialog and is used to modify the font associated with the selected diagram element.
+</p>
+
+<p>
+The Fill Color and the Line Color commands will apply a color to the selected diagram element's interior and lines respectively.
+</p>
+
+<p>
+The Line Style commands will modify the routing style of the selected diagram connector element to one of: rectilinear, oblique or tree style routing.
+</p>
+
+<p>
+The Select commands will selected all diagram elements, all shapes, or all connectors.
+</p>
+
+<p>
+The Arrange commands will apply a layout to all diagram elements, or to the selected ones only.
+</p>
+
+<p>
+The Align commands will align all selected diagram elements to: the left, the right, the center, the top, the bottom, or the middle of the selection.
+</p>
+
+<p>
+The Order commands will re-order the selected diagram elements to: the front, the back, forward once, or backward once.
+</p>
+
+<p>
+The Auto Size command will reset the size of the selected diagram elements to the default size, usually just enough to see an embedded label within the shape.
+</p>
+
+<p>
+The Make Same Size commands will set the size of the selected diagram elements to the size of the last selected element, either horizontally, vertically, or both.
+</p>
+
+
+<p>
+The View commands will show or to hide various diagram features: ruler, grid, page breaks, as well as controlling the snap to grid behaviour.
+</p>
+
+<p>
+The Zoom commands will change the diagram zoom to one of: in, out, 100%, To Fit, To Width, To Height or To Selection
+</p>
+
+<p>
+The Apply Appearance Properties commands will copy various appearance properties, such as fill color, of the first selected diagram element to the other selected ones.
+</p>
+
+
+<h3>Common Toolbars</h3>
+<p>
+Advanced toolbar controls are available to support the commands accessible from the menu bar.
+</p>
+  <img src="article-images/toolbar-1.gif">
+
+<p>
+The above toolbar shows the following commands:
+</p>
+<ul>
+<li>Font Family</li>
+<li>Font Size</li>
+<li>Bold</li>
+<li>Italic</li>
+<li>Font Color</li>
+<li>Fill Color</li>
+<li>Line Color</li>
+<li>Line Style</li>
+<li>Apply Apperance Properties</li>
+<li>Select</li>
+<li>Arrange</li>
+<li>Align</li>
+<li>Make Same Size</li>
+</ul>
+
+
+
+<h3>Animated Zoom and Layout</h3>
+<p>
+Changing the zoom level or layout results in a nice animation that ease user's perception of the spacial movement.
+</p>
+
+  <img src="article-images/animated-zoom.gif">
+
+
+<h3>Common Properties</h3>
+<p>
+The GMF Runtime component also offers a default implementation for the editing of appearance related attributes applied to diagram elements using the Properties View.
+</p>
+
+  <img src="article-images/properties-1.gif">
+<p>
+The above displays properties of a standard shape.
+</p>
+
+  <img src="article-images/properties-2.gif">
+<p>
+The above displays properties of a standard connector.
+
+</p>
+
+
+<h3>Print and Print Preview</h3>
+<p>
+Using the GMF Runtime component, your graphical modeling tool inherits many print related features:
+</p>
+<ul>
+<li>Enhanced Print Dialog</li><br>
+  <img src="article-images/printing-1.gif">
+<li>Global or per Diagram Page Setup Options</li><br>
+  <img src="article-images/printing-2.gif">
+<li>Page Breaks</li><br>
+  <img src="article-images/printing-3.gif">
+<li>Print Preview</li><br>
+  <img src="article-images/printing-4.gif">
+</ul>
+
+
+<h3>SVG and Clipboard Support</h3>
+<p>
+Another freebee is the ability to support multiple export formats such as SVG, GIF, BMP, and JPEG:
+</p>
+  <img src="article-images/svg-1.gif">
+
+<p>
+The GMF Runtime supports the system clipboard. The following screenshot shows a Windows paste special dialog demonstrating the formats made available 
+by the GMF Runtime during a copy operation.
+</p>
+  <img src="article-images/window-paste-special.gif">
+
+
+<h2>Conclusion</h2>
+<p>
+The GMF Runtime represents an amazing opportunity for the community to reuse high quality standardized components for Eclipse-based graphical modeling editors.
+</p>
+<p> 
+
+While the initial release of the GMF Project coincides with the release of Eclipse 3.2, you don't have to wait that long to use it. GMF already includes tutorials, examples, and javadoc. Also, API changes are communicated on the development mailing list. Create your first GMF-Based editor today 
+and start taking advantage of its many benefits. Even better, help us enhance GMF by contributing to it!
+</p>
+
+
+<h2>Where to learn more</h2>
+<ul>
+<li><a href="http://www.eclipse.org/gmf">GMF Project Web Site</a></li>
+<li><a href="http://www.eclipse.org/gmf/tutorial/index.php">GMF Tutorial</a></li>
+<li><a href="http://www.eclipse.org/downloads/download.php?file=/technology/gmf/downloads/drops/S-1.0M3-200511232200/GMF-docs-1.0M3.zip">GMF Runtime Tutorials</a></li>
+<li><a href="http://www.eclipse.org/downloads/download.php?file=/technology/gmf/downloads/drops/S-1.0M3-200511232200/GMF-examples-1.0M3.zip">GMF Runtime Examples</a></li>
+</ul>
+
+</body>
+</html>
