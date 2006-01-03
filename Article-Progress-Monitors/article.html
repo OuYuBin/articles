@@ -375,7 +375,7 @@ As it turns out, this is because the implementation (as of Eclipse
 3.2M3) blindly uses the incoming ticks as a scaling factor. However, it
 goes haywire when it receives a negative value (and <span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> happens to have a value of -1). It does computations with it, and it ends up calling <span style="font-style: italic;">worked()</span>
 with negative values which my monitor tried to process...that code is
-now fixed to be more resilient in such cases. I've filed bug #114074 [ed: this is not the correct bug number] to
+now fixed to be more resilient in such cases. I've filed <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=119018">bug #119018</a> to
 request that <span style="font-style: italic;">SubProgressMonitor</span> handles it better and/or document that negative values is a bad idea for the constructor call.<br>
 
 <br>
