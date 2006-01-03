@@ -1,0 +1,433 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+
+
+  
+  
+  <title>Creating a New Article</title>
+  <link rel="stylesheet" href="default_style.css">
+</head>
+
+
+<body link="#0000ff" vlink="#800080">
+
+
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2005 Kenneth &Ouml;lwing</font> 
+  
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+
+
+    <tbody>
+
+    <tr>
+
+ 
+      <td colspan="2" align="left" bgcolor="#0080c0" valign="top"><b><font face="Arial,Helvetica"><font color="#ffffff">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+
+
+    </tr>
+
+
+  
+  
+  </tbody>
+</table>
+
+
+</div>
+
+
+<div align="left"> 
+  
+<h1><img src="images/Idea.jpg" align="middle" height="86" width="120"></h1>
+
+
+</div>
+
+
+<p>&nbsp;</p>
+
+
+
+<h1 align="center">How to Correctly and Uniformly Use Progress Monitors</h1>
+
+
+
+<blockquote>
+  <b>Summary</b>
+
+  <br>
+
+Handling a progress monitor instance is deceptively simple. It seems to
+be straightforward but it is easy to make a mistake when using them.
+And, depending on numerous factors such as the underlying
+implementation, how it is displayed, if it&rsquo;s set to use a fixed
+number of work items or &lsquo;unknown&rsquo;, if used through a <span style="font-style: italic;">SubProgressMonitor</span> wrapper etc., the result can range from completely ok, mildly confusing or outright silliness. <br>
+
+  <br>
+
+In this article I hope I can lay down a few ground rules that will help
+anyone use progress monitors in a way that will work with the explicit
+and implicit contract of <span style="font-style: italic;">IProgressMonitor</span>. Also, understanding the usage side makes it easier to understand how to implement a monitor.<br>
+
+  
+  <p><b> By Kenneth &Ouml;lwing, BEA JRPG</b> <br>
+January 3, 2006<font size="-1"></font> </p>
+
+
+</blockquote>
+
+
+
+<hr width="100%">
+
+<h2>Using a progress monitor - what's up with that?</h2>
+
+It all really comes down to a few, not too complex, rules. A common
+theme is 'know what you know - but only that'. This means that you
+shouldn't assume you know things you really don't know, and this
+includes the common mistake of only considering progress monitors you
+have seen, i.e. typically the graphical ones when using the IDE.
+Another thing to watch out for is the fact that commonly you design a
+number of tasks that may call each other using sub progress monitors,
+and while doing that make assumptions based on your knowledge that they
+will be called in this manner - never forget that sometime maybe your
+separate subtasks may be called from not-yet-written routines. It's
+then vitally important that your subtasks act exactly in a 'neutral'
+manner, i.e. with no 'implicit assumptions' on what happened before or
+what will happen after.<br>
+
+<br>
+
+One of the motivations for this article is when I tried my hand at
+implementing a progress monitor intended for headless/console use - and
+realised that code using it could make it look really wacky when the
+monitor was wrongly used, and this was issues that were not as readily
+apparent with a graphical monitor. Also, code (including my own)
+frequently abuses the explicit and implicit (which admittedly are my
+interpretation of reasonable behavior) contract that the
+IProgressMonitor interface states, and this makes for dicey decisions
+for a monitor implementor - should it complain (and how) when it gets
+conflicting orders? If not, how should it then behave to make for a
+reasonable and intuitive user experience?<br>
+
+<br>
+
+<!-- Anyway, since an article of this type would have helped me immensely
+when I started working in the Eclipse environment, I figured I should
+try my hand at summing up my view of how the interaction with <span style="font-style: italic;">IProgressMonitor</span> should work.<br>-->
+
+<h3>The protocol of <span style="font-style: italic;">IProgressMonitor</span></h3>
+
+Generally, all interaction with a progress monitor is through the interface <span style="font-style: italic;">IProgressMonitor</span>
+and this interface defines the protocol behavior expected. It does
+leave some things up in the air though; for example, the description
+states some things that should be true, but the methods have no <span style="font-style: italic;">throws</span>
+clause that helps enforce some invariants. I have chosen to interpret
+the descriptions &lsquo;hard&rsquo;, even to the point of saying
+it&rsquo;s valid to throw an (unchecked) exception if a described rule
+is violated (this is somewhat controversial of course - if you
+implement a monitor doing this you should probably provide a way to
+turn off 'strictness'). Hopefully we could eventually see a new
+interface that deprecates the old methods and provides new ones that
+better reflect the contract. The discussion below is based on the
+assumption that the reader is familiar with the general API; review it
+in the Eclipse help.<br>
+
+<br>
+
+The first important consideration is the realization that a monitor
+(contract wise) can be in basically four states. Any given
+implementation may or may not track those state changes and may or may
+not do anything about them, which is part of the reason that
+misbehaving users of a monitor sometimes gets away with it. Only one of
+these states are readily testable using the interface however (if the
+monitor is canceled); the other states are just a given from correct
+use of the interface.<br>
+
+<br>
+
+Essentially, the state changes are governed by the methods <span style="font-style: italic;">beginTask()</span>, <span style="font-style: italic;">done()</span> and <span style="font-style: italic;">setCanceled()</span>,
+plus the implicit initial state of a new instance. Note that for the
+purposes discussed here the perceived &lsquo;changes in state&rsquo;
+occurring as a result from calling <span style="font-style: italic;">worked()</span> is not relevant. A separate discussion below details how to deal with <span style="font-style: italic;">worked()</span> calls.<br>
+
+<br>
+
+NB: The states described here are not any &lsquo;officialese&rsquo;
+that can be found as constants or anything like that; they&rsquo;re
+only here to serve so they can be used for discussion.<br>
+
+<br>
+
+<ul>
+
+  <li>PRISTINE<br>
+
+This is the initial state of a newly created instance of an <span style="font-style: italic;">IProgressMonitor</span> implementation, i.e. before <span style="font-style: italic;">beginTask()</span>
+has been called. In principle a given implementation may handle a
+single instance such that it is reusable and reverted back to the
+PRISTINE state after a done() call, but that is opaque from the point
+of the contract. In this state it should be essentially correct and
+possible to go to any of the other states, but the typical and expected
+transition should be from PRISTINE to IN_USE as a result from a
+successful beginTask() call. The transition to FINISHED should result
+only in a very particular situation, see more below.</li>
+
+  <li>IN_USE<br>
+
+This is the state the monitor after the first and <span style="text-decoration: underline;">only</span> call to <span style="font-style: italic;">beginTask()</span>. This is one of those things that are very easy to get wrong; contract wise, <span style="font-style: italic;">beginTask()</span>
+can and should only be called at most once for a given instance. A more
+detailed discussion on the code pattern required to deal with this
+obligation can be found below.</li>
+
+  <li>FINISHED<br>
+
+The transition to this state is achieved by calling <span style="font-style: italic;">done()</span>. As with <span style="font-style: italic;">beginTask()</span>, <span style="font-style: italic;">done()</span> should only be called <span style="text-decoration: underline;">once</span> and should <span style="text-decoration: underline;">always</span> be called on a monitor when <span style="font-style: italic;">beginTask()</span> has been called (i.e. it is ok to not call <span style="font-style: italic;">done()</span>
+only if the monitor is still in the PRISTINE state). Again, the
+discussion below is more detailed on how to ensure proper protocol.</li>
+
+  <li>CANCELED<br>
+
+Actually, this state is slightly murky; it&rsquo;s possible that
+canceled/not canceled should be tracked separately from the others.
+But, contract wise it should be adequate if this state is either
+achieved directly from PRISTINE and just left that way, or if <span style="font-style: italic;">done()</span> is called (likely as a result of detecting the canceled status), it is cleared and the monitor then transitions to FINISHED.</li>
+
+</ul>
+
+<br>
+
+Now, one contract pattern described above is that if <span style="font-style: italic;">beginTask()</span> is ever called, <span style="font-style: italic;">done()</span> MUST be called. This is achieved by always following this code pattern (all code is simplified):<br>
+
+<pre style="margin-left: 40px;">monitor = &hellip; // somehow get a new progress monitor which is in a pristine state<br>// figure some things out such as number of items to process etc&hellip;<br>try<br>	{<br>	monitor.beginTask(&hellip;)<br>	// do stuff and call worked() for each item worked on, and check for cancellation<br>	}<br>finally<br>	{<br>	monitor.done()<br>	}	<br></pre>
+
+The important thing here then is to ensure that <span style="font-style: italic;">done()</span> is always called (by virtue of being in the <span style="font-style: italic;">finally</span> clause) but (normally) only if <span style="font-style: italic;">beginTask()</span> has been successfully called (by virtue of being the first thing called in the <span style="font-style: italic;">try</span> clause). There is a small loophole that could cause <span style="font-style: italic;">done()</span>
+to be called without the monitor actually transitioning from PRISTINE
+to IN_USE. This loophole can&nbsp;with this pattern only happen if a
+particular <span style="font-style: italic;">beginTask()</span> implementation throws an unchecked exception (The interface itself declares no <span style="font-style: italic;">throws</span>
+clause) before it internally makes a note of the state change (if the
+specific implementation even tracks state in this manner and/or is too
+loose in its treatment of the interface contract).<br>
+<br>
+<img style="width: 62px; height: 13px;" alt="tip" src="images/note.gif"> Arguably, you should <span style="font-weight: bold; text-decoration: underline;">always</span> strive for calling <span style="font-style: italic;">beginTask()</span>/<span style="font-style: italic;">done()</span>.
+The reasons for this are buried in the fact that you in principle never
+know when you are being called as a subtask. If you don't 'complete'
+the monitor, the parent can end up with an incorrect count for its own
+task. The full rationale is covered more below, in the section <a href="#Ensure_to_always_complete_your_monitor">"Ensure to always complete your monitor!"</a>.<br>
+
+<h3>Delegating use of a progress monitor to subtasks</h3>
+
+Above for the IN_USE state I mentioned that it&rsquo;s very easy to get things wrong; <span style="font-style: italic;">beginTask()</span>
+should never be called more than once. This frequently happens in code
+that doesn&rsquo;t correctly understand the implications of the
+contract. Specifically, such code pass on the same instance it has been
+given to subtasks, and those subtasks; not aware that the caller
+already has begun following the contract, also tries following the
+contract in the expected manner &ndash; i.e. they start by doing a <span style="font-style: italic;">beginTask()</span>.<br>
+
+<br>
+
+Thus, passing on a monitor instance is almost always wrong unless the
+code knows exactly what the implications are. So the rule becomes: In
+the general case, a piece of code that has received a progress monitor
+from a caller should always assume that the instance they are given is
+theirs and thus completely follow the <span style="font-style: italic;">beginTask()</span>/<span style="font-style: italic;">done()</span>
+protocol, and if it has subtasks that also needs a progress monitor,
+they should be given their own monitor instances through further use of
+the <span style="font-style: italic;">SubProgressMonitor</span> implementation that wraps the &lsquo;top-level&rsquo; monitor and correctly passes on <span style="font-style: italic;">worked()</span> calls etc (more on this below).<br>
+
+<br>
+
+Sample code to illustrate this:<br>
+
+<div style="margin-left: 40px;">
+<pre>monitor = &hellip; // somehow get a new progress monitor which is in a pristine state<br>// figure some things out such as number of items to process etc&hellip;<br>try<br>	{<br>	monitor.beginTask(&hellip;)<br>	// do stuff and call worked() for each item processed, and check for cancellation<br>	&hellip;<br>	// farm out a piece of the work that is logically done by &lsquo;me&rsquo; to something else<br>	someThing.doWork(new SubProgressMonitor(monitor,&hellip;))<br>	// farm out another piece of the work that is logically done by &lsquo;me&rsquo; to something else<br>	anotherThing.doWork(new SubProgressMonitor(monitor,&hellip;))<br>	}<br>finally<br>	{<br>	monitor.done()<br>	}<br></pre>
+
+</div>
+
+Note that each <span style="font-style: italic;">doWork()</span> call gets a new instance of a <span style="font-style: italic;">SubProgressMonitor</span>; such instances can and should not be reused for all the protocol reasons already discussed.<br>
+
+<br>
+
+The only time a single instance of a monitor passed to, or retrieved
+by, a certain piece code can be reused in multiple places (e.g.
+typically methods called by the original receiver), is when the code in
+such methods is so intimately coupled so that they in effect
+constitute a single <span style="font-style: italic;">try</span>/<span style="font-style: italic;">finally</span> block. Also, for this to work each method must know exactly who does <span style="font-style: italic;">beginTask()</span>/<span style="font-style: italic;">done()</span> calls, and also (don&rsquo;t forget this) how many work items they represent of the total reported to <span style="font-style: italic;">beginTask()</span>
+so that they can make the correct reports. Personally, I believe this
+is generally more trouble than it&rsquo;s worth &ndash; always follow
+the regular pattern of one receiver, one unique monitor instead and the
+code as a whole is more maintainable.<br>
+
+<h3>Managing the item count</h3>
+
+This section is about how to do the initial <span style="font-style: italic;">beginTask()</span> call and report the amount of total work expected, and then ideally report <span style="text-decoration: underline;">exactly</span>
+that many items to the monitor. It is ok to end up not reporting all
+items in one particular case: when the job is aborted (due to
+cancellation by user, an exception thrown and so on) &ndash; this is
+normal and expected behavior and we will wind up in the <span style="font-style: italic;">finally</span> clause where <span style="font-style: italic;">done()</span> is called.<br>
+
+<br>
+
+It is however sloppy technique to &lsquo;just pick a number&rsquo; for the total and then call <span style="font-style: italic;">worked()</span>,
+reporting a number and hope that the total is never exceeded. Either
+way this can cause very erratic behavior of the absolute top level and
+user visible progress bar (it is for a human we&rsquo;re doing this
+after all) &ndash; if the total is too big compared to the actual items
+reported, a progress bar will move slowly, perhaps not at all due to
+scaling and then suddenly (at the <span style="font-style: italic;">done()</span>
+call) jump directly to completed. If the total is too small, the bar
+will quickly reach &rsquo;100%&rsquo; or very close to it and then stay
+there &lsquo;forever&rsquo;. <br>
+
+<br>
+
+So, first and foremost: do <span style="text-decoration: underline;">not</span>
+guess on the number of work items. It&rsquo;s a simple binary answer:
+either you know exactly how many things that will be
+processed&hellip;or you don&rsquo;t know. It IS ok to not know! If you
+don't know, just report&nbsp;<span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> as the total number, call <span style="font-style: italic;">worked()</span>
+to your hearts content and a clever progress monitor implementation
+will still do something useful with it. Note that each (sub)task can
+and should make its own decision on what it knows or not. If all are
+following the protocol it will ensure proper behavior at the outer,
+human visible end. A heads up though: never call the <span style="font-style: italic;">SubProgressMonitor(parentMonitor, subticks)</span> constructor using&nbsp;<span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> for subticks - this is wrong! More on this later.<br>
+
+<h3>How to call <span style="font-style: italic;">beginTask()</span> and <span style="font-style: italic;">worked()</span></h3>
+
+There are typically two basic patterns where you know how many items
+you want to process: either you are going to call several different
+methods to achieve the full result, or you are going to call one method
+for each instance in a collection of some sort. Either way you know the
+total item count to process (the number of methods or the size of the
+collection). Variations of this are obviously combinations of these
+basic patterns&nbsp;so just multiply and sum it all up.<br>
+
+<br>
+
+There is sometimes a benefit of scaling your total a bit. So, instead of reporting &lsquo;3&rsquo; as the total (and do <span style="font-style: italic;">worked(1)</span> for each item) you may consider scaling with, say 1000, and reporting &lsquo;3000&rsquo; instead (and do <span style="font-style: italic;">worked(1000)</span>
+for each item). The benefit comes up when you are farming out work to
+subtasks through a SubProgressMonitor; since they may internally have a
+very different total, especially one that is much bigger than your
+total, you give them (and the monitor instance) some &lsquo;room&rsquo;
+to more smoothly consume and display the allotment you&rsquo;ve given
+them (more explanations below on how to mix <span style="font-style: italic;">worked()</span> and <span style="font-style: italic;">SubProgressMonitor</span>
+work below). Consider that you say &lsquo;my total is 3&rsquo; and you
+then give a subtask &lsquo;1&rsquo; of these to consume. If the subtask
+now will report several thousand <span style="font-style: italic;">worked()</span>
+calls, and assuming that the actual human visible progress bar also has
+the room, the internal protocol between a SubProgressMonitor and
+it&rsquo;s wrapped monitor will scale better and give more smooth
+movement if you instead would have given it &lsquo;1000&rsquo; out of
+&lsquo;3000&rsquo;. Or not - the point is really that you don't know
+what monitor implementation will be active, all you can do is give some
+information. How it's then displayed in reality is a matter of how
+nifty the progress monitor implementation is.<br>
+
+<br>
+
+A sample of simple calls:<br>
+
+<pre style="margin-left: 40px;">monitor = &hellip; // somehow get a new progress monitor which is in a pristine state<br>int total = 3 // hardcoded and known<br>try<br>	{<br>	monitor.beginTask(total)<br>	<br>	// item 1<br>	this.doPart1()<br>	monitor.worked(1)<br><br>	// item 2<br>	this.doPart2()<br>	monitor.worked(1)<br><br>	// item 3<br>	this.doPart3()<br>	monitor.worked(1)<br>	}<br>finally<br>	{<br>	monitor.done()<br>	}</pre>
+
+No reason to scale and no collection to dynamically compute.<br>
+
+<br>
+
+A more elaborate sample:<br>
+
+<pre style="margin-left: 40px;">monitor = &hellip; // somehow get a new progress monitor which is in a pristine state<br>int total = thingyList.size() * 3 + 2<br>try<br>	{<br>	monitor.beginTask(total)<br>	<br>	// item 1<br>	this.doBeforeAllThingies()<br>	monitor.worked(1)<br>		<br>	// items 2 to total-1<br>	for (Thingy t : thingyList)<br>		{<br>		t.doThisFirst()<br>		monitor.worked(1)<br>		t.thenDoThat()<br>		monitor.worked(1)<br>		t.lastlyDoThis()<br>		monitor.worked(1)<br>		}<br><br>	// final item <br>	this.doAfterAllThingies()<br>	monitor.worked(1)<br>	}<br>finally<br>	{<br>	monitor.done()<br>	}<br></pre>
+
+<h3>Mixing straightforward calls with subtasks</h3>
+
+I was initially confused by how to report progress when I farmed out
+work to subtasks. I experienced &lsquo;reporting too much work&rsquo;
+since I didn&rsquo;t understand when to call and when to not call <span style="font-style: italic;">worked()</span>. Once I caught on, the rule is very simple however: calling a subtask with a <span style="font-style: italic;">SubProgressMonitor</span> is basically an implicit call to <span style="font-style: italic;">worked()</span> with the amount allotted to the subtask. So instead of this:<br>
+
+<pre style="margin-left: 40px;">monitor = &hellip; // somehow get a new progress monitor which is in a pristine state<br>int scale = 1000<br>int total = 3 // hardcoded and known<br>try<br>	{<br>	monitor.beginTask(total * scale)<br>	<br>	// item 1<br>	this.doPart1()<br>	monitor.worked(1 * scale)<br><br>	// item 2<br>	this.doPart2(new SubProgressMonitor(monitor, 1 * scale)) // allot 1 item<br>	monitor.worked(1 * scale) // WRONG! Not needed, already managed by the SubProgressMonitor<br><br>	// item 3<br>	this.doPart3()<br>	monitor.worked(1 * scale)<br>	}<br>finally<br>	{<br>	monitor.done()<br>	}</pre>
+
+You should just leave out the second call to <span style="font-style: italic;">worked()</span>.<br>
+
+<h4><img style="width: 62px; height: 13px;" alt="Tip" src="images/note.gif"> Never pass <span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> (or any other <span style="text-decoration: underline;">negative</span> value) when creating a <span style="font-style: italic;">SubProgressMonitor()</span> wrapper!</h4>
+
+A
+situation I just the other day experienced was when doing an <span style="font-style: italic;">IProgressMonitor.UNKNOWN</span>
+number of&nbsp;things - I needed to call a subtask, and hence I set up to
+call it using a <span style="font-style: italic;">SubProgressMonitor(parent, subticks)</span> but
+I realized that I hadn't ever considered how the sub monitor should be
+created - how many subticks it should be given - in the unknown case. I
+figured it should be ok to pass&nbsp;<span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> there also. However, when
+later trying my code I saw to my horror that my progress bar went
+backwards! Not the effect I figured on...<br>
+
+<br>
+
+As it turns out, this is because the implementation (as of Eclipse
+3.2M3) blindly uses the incoming ticks as a scaling factor. However, it
+goes haywire when it receives a negative value (and <span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> happens to have a value of -1). It does computations with it, and it ends up calling <span style="font-style: italic;">worked()</span>
+with negative values which my monitor tried to process...that code is
+now fixed to be more resilient in such cases. I've filed bug #114074 [ed: this is not the correct bug number] to
+request that <span style="font-style: italic;">SubProgressMonitor</span> handles it better and/or document that negative values is a bad idea for the constructor call.<br>
+
+<br>
+
+Whatever, passing&nbsp;<span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> is incorrect in any case. If you have called <span style="font-style: italic;">beginTask()</span> using&nbsp;<span style="font-style: italic;">IProgressMonitor.UNKNOWN</span> you can gladly pass in any reasonable tick value to a <span style="font-style: italic;">SubProgressMonitor</span>, it will give the correct result.<br>
+<h3><a name="Ensure_to_always_complete_your_monitor"></a>Ensure to always complete your monitor!</h3>
+Consider the concept described in the previous section: the important
+thing here is that basically, you say that you have three distinct and
+logical things to do, and then you tick them off - but one of the ticks
+is actually farmed out to a subtask through a <span style="font-style: italic;">SubProgressMonitor</span>. You don't really know how many distinct and logical things the subtask has to do, nor should you care. The mechanics of using a <span style="font-style: italic;">SubProgressMonitor</span> makes the advancement of one of&nbsp;<span style="font-weight: bold;">your</span>
+ticks happen in the correct way. So, the end&nbsp;expectation is that
+once you reach the end of your three things, the monitor you have, have
+actually fulfilled the count you intended - the internal state of it
+should reflect this: &quot;the user said three things should happen and my
+work count is now indeed '3'&quot;.<br>
+<br>
+But, as I recently found out, this can fail. Specifically, I blindly invoked <span style="font-style: italic;">IProject.build()</span> on a project which had no builders configured. To this method I sent in a <span style="font-style: italic;">SubProgressMonitor</span>
+and allotted it one 'tick' of mine. But, as it turned out, internally
+it never used the monitor it got, presumably because there was no work
+to perform - not very unreasonable in a sense. However, this did have
+the effect that one of my ticks never got, well, 'tocked' :-). I could
+solve this specific problem by simply checking if there was any
+builders configured, and if there were none, I simply advanced the tick
+by&nbsp;<span style="font-style: italic;">worked(1)</span> instead. But, it requires me, the caller, to make assumptions on the internal workings of the subtask, which is never good.<br>
+<br>
+This is not a huge problem of course. But, I think it would make sense to always act the same. The code resulting from <span style="font-style: italic;">IProject.build()</span> could just call <span style="font-style: italic;">beginTask(&quot;&quot;, countOfBuilders)</span> regardless of if countOfBuilders was 0, iterate over the empty array or whatever, and then call <span style="font-style: italic;">done()</span>. This would correctly advance <span style="font-weight: bold;">my</span> tick.
+<h3>Cancellation</h3>
+
+The sample code above does not show cancellation checks. However, it
+is obviously recommended that users of a progress monitor actively
+check for cancellation to timely break out of the operation. The more
+(potentially) long-running, the more important of course. And remember:
+you don't know if the operation is running in a context that allows it
+to be canceled or not - so you just have to code defensively. A sample
+of how it should look could be this:<br>
+
+<pre style="margin-left: 40px;">monitor = &hellip; // somehow get a new progress monitor which is in a pristine state<br>try<br>	{<br>	monitor.beginTask(thingyList.size())<br>	<br>	for (Thingy t : thingyList)<br>		{<br>		if(monitor.isCanceled())<br>			throw new OperationCanceledException();<br>		t.doSomething()<br>		monitor.worked(1)		<br>		}<br>	}<br>finally<br>	{<br>	monitor.done()<br>}<br></pre>
+
+<h3>The <span style="font-style: italic;">NullProgressMonitor</span></h3>
+
+A common pattern is to allow callers to skip sending a monitor, i.e. sending &lsquo;<span style="font-style: italic;">null</span>&rsquo;. A simple and convenient way to deal with such calls is this:<br>
+
+<pre style="margin-left: 40px;">public void doIt(IProgressMonitor monitor)<br>{<br>	// ensure there is a monitor of some sort<br>	if(monitor == null)<br>		monitor = new NullProgressMonitor();<br><br>	try<br>	{<br>		monitor.beginTask(thingyList.size())<br>	<br>		for (Thingy t : thingyList)<br>			{<br>			if(monitor.isCanceled())<br>				throw new OperationCanceledException();<br>			t.doSomething()<br>			monitor.worked(1)		<br>			}<br>	}<br>finally<br>	{<br>		monitor.done()<br>	}	<br>}<br></pre>
+
+<h2>Conclusion</h2>
+
+I believe that by diligently following these rules and patterns, you
+will never have a problem in using the progress monitor mechanism.
+Obviously, it requires implementations to follow the contract as well.
+But remember, if you mistreat the protocol you will sooner or later end
+up talking to a progress monitor implementation that is stern and will
+simply throw an exception or give strange visual effects if you call
+it&rsquo;s <span style="font-style: italic;">beginTask()</span> one time too many. It&rsquo;s essentially valid if the <span style="font-style: italic;">IProgressMonitor</span> interface description is to be believed &ndash; and you will get blamed by your customer&hellip;
+</body>
+</html>
