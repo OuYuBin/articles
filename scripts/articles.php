@@ -264,10 +264,17 @@ class Article {
 			$html .= "<br />";
 			$html .= date("F Y", $this->date);
 		}
-		foreach ($this->updates as $update) {
-			$html .= "<br>";
+		$update_count = count($this->updates);
+		if ($update_count > 0) {
+			$update = $this->updates[$update_count - 1];
+			$html .= ' (';
 			$update->to_html($html);
+			$html .= ')';
 		}
+//		foreach ($this->updates as $update) {
+//			$html .= "<br>";
+//			$update->to_html($html);
+//		}
 		$description = $this->description;
 		$html .= "<blockquote>$description</blockquote>";
 	}
