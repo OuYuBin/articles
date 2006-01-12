@@ -39,13 +39,7 @@
 		<h1>$pageTitle</h1>
 		<img src="images/articles.gif" align="right">
 		<p>
-			Please note that not all articles have been migrated over
-			to the new site. This process is ongoing and should be completed
-			soon. In the meantime, the <a href="index.html">old articles page</a>
-			still exists (for now).
-		<p>			
-		<p>
-			The following articles have been written by members of the 
+			These following articles have been written by members of the 
 			development team and other members of the eclipse community. 
 			<i>All articles are listed here by date (most recent first).</i> You
 			can filter the list by clicking a category filter to the right. 
@@ -53,7 +47,10 @@
 		<p>
 			You too can contribute! Eclipse Corner depends on contributions 
 			from people like you. Interested in writing an article? See <a href="contributing.php">how
-       		to contribute an article</a>.
+       		to contribute an article</a>. If you are writing an article, please
+       		consider leveraging our new Eclipse-based <a href="http://docbook.sourceforge.net/">DocBook</a>
+       		authoring template. For more information, please see the Eclipse Corner
+       		article <a href="Article-Authoring-With-Eclipse/AuthoringWithEclipse.html">Authoring with Eclipse</a>.
        	</p>
     	<p>
       		Besides these, a number of other web sites carry technical articles about
