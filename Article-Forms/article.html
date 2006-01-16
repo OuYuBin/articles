@@ -1,0 +1,1786 @@
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+    <title>Eclipse Forms: Rich UI for Rich Client Applications</title>
+    <link href="default_style.css" rel="stylesheet"/>
+  </head>
+  <body>
+    <div align="right">
+      Copyright � 2005 International Business Machines Corp.
+      <table border="0" cellpadding="2" cellspacing="0" width="100%">
+        <tr>
+          <td bgcolor="#0080C0" colspan="2" valign="top">
+            <p><font color="#FFFFFF"><b> Eclipse Corner 
+            Article</b></font></p>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h1><img class="center" height="86" src="images/Idea.jpg" width="120"/></h1>
+    </div>
+    <h1 class="center">Eclipse Forms: Rich UI for the Rich Client</h1>
+    <blockquote>
+      <p><b>Summary</b></p>
+
+      <p>Spice up your rich client with rich user experience using 
+      Eclipse Forms. Written as a thin layer on top of SWT, Eclipse 
+      Forms allow you to achieve the Web look in your desktop 
+      applications without using the embedded browser. This allows you 
+      to retain full control of the widgets in the UI and to maintain 
+      portability across all operating systems Eclipse already runs on. 
+      This article will take you from baby steps to advanced topics of 
+      the rich user interface experience of Eclipse Forms.</p>
+
+      <p><b>By Dejan Glozic, IBM Canada Ltd.</b></p>
+      <p>January 16, 2005</p>
+    </blockquote>
+
+    <hr width="100%"/>
+
+    <h2>The History (as we see it)</h2>
+
+    <p>One of the fundamental features of the Eclipse platform is that 
+    applications built on top of it look, feel and smell like genuine 
+    native applications. Thanks to SWT, menus, windows, trees, tables, 
+    buttons and other widgets all feel 'right' no matter what 
+    OS or windowing system you are on. Being one of the first members 
+    of the Eclipse team, I remember the days when I could get hours 
+    of joy by playing with our prototype Eclipse code. Menus are 
+    real. Tool bars are real. Combos, text, button, check boxes, radios are
+    all real. There is not a drawn widget in sight, all are native widgets.</p>
+
+    <p>For a long time, if your plug-ins contributed Eclipse user 
+    interface artifacts, they would generally fall into the following 
+    categories:</p>
+
+    <ol>
+      <li>Editors</li>
+      <li>Views</li>
+      <li>Wizards</li>
+      <li>Dialogs</li>
+    </ol>
+
+    <p>There are clear presentation rules for artifacts in these categories.
+    We are used to seeing trees and 
+    tables in views, documents in editors and grids of simple widgets 
+    like buttons and text fields in wizards and dialogs. These rules 
+    are easy to follow and live by as long as your application is 
+    similar in principle to Eclipse SDK.</p>
+
+    <p>The RCP (Rich Client Platform) concept in Eclipse 3.x represents 
+    a fundamental broadening of the platform scope. It brought as a 
+    corollary an effective explosion of the problem domains. You can now build Rich 
+    client applications on top of Eclipse that have 
+    little in common with IDEs. While generic workbench parts like 
+    views and editors continue to work well, the widgets that are 
+    populating these parts in IDEs (trees, tables, text editors, etc...) 
+    may not be the best solution for this class of applications. 
+    Available since Eclipse 3.0, Eclipse Forms are designed to offer 
+    appealing alternatives.</p>
+
+    <p>Ironically, we developed Eclipse Forms as a solution for a 
+    concrete problem in the Eclipse SDK long before RCP existed as a 
+    concept. Developers of the PDE (Plug-in Development Environment) 
+    working on the plug-in manifest editor did not feel happy with 
+    following a Java editor paradigm of offering a color-coded, 
+    context-assisted text editor for the plugin.xml file. There is 
+    nothing wrong with Java editor in Eclipse by itself - in fact, it 
+    is very powerful and ideally suited for the task. However, it was 
+    designed for editing Java source files. In plug-in manifests, XML 
+    was used as a format to describe data at a higher level of 
+    abstraction. Editing XML by hand, even with color-coding and 
+    context assist/code completion was not perceived as the correct 
+    level of abstraction for the majority of users. In a plug-in 
+    manifest, the syntax itself is not important (yet another thing to 
+    learn). It is the data and what it represents that is important.</p>
+
+    <p>A good example of different ways of looking at markup 
+    is HTML authoring tools. At the source code level, all we can see 
+    are nested elements with the associated attributes. Although we see   
+    the syntax, it is hard to visualize what it really represents. A 
+    WYSIWYG view of the document can reveal a table, colors, some texts that span tables, images, etc. 
+    Working with HTML files at this level of 
+    abstraction is vastly more productive because syntax and markup are 
+    hidden in the background (which is the reason why I am typing this 
+    article on a WYSIWYG HTML authoring tool instead of hacking HTML 
+    tags).</p>
+
+    <p>It is easy to understand what WYSIWYG concept means for HTML 
+    documents. Since the HTML tags represent instructions for the web 
+    browser on how to compose a document from text, presentation 
+    attributes, hyperlinks and images, WYSIWYG in this context means 
+    editing the document in its final form -- as close as possible to 
+    the way it will appear in the browser. It was harder to figure out 
+    what the alternative presentation would mean for the plug-in 
+    manifest editor. Ultimately, the team made the following decisions:</p>
+
+    <ol>
+
+      <li>Represent each section of the manifest in the way 
+       most suitable for its nature. For example, vital information 
+      like plug-in name, provider etc. can be easily edited in a text 
+      field. Hierarchical structure of extensions maps nicely into the 
+      tree widget etc.</li>
+
+      <li>Show sections of the manifest on separate editor pages, 
+      regardless of their physical order in the source</li>
+
+      <li>Pages of the editor would keep a document feel and would be 
+      able to host a mix of widgets, hyperlinks, images and text, and 
+      offer scroll bars when content is too large for the page 
+      size.</li>
+
+    </ol>
+
+    <p class="center"><img border="0" height="488"
+     src="images/plugin-overview.jpg" width="546"/></p>
+
+    <p class="center"><b>Figure 1: </b>The Plug-in manifest editor as it 
+    first appeared in Eclipse SDK 1.0. It offered a mixture SWT 
+    widgets, hyperlinks and images that could scroll when there is not 
+    enough space (as you would expect in a web browser). Note how all 
+    the widgets have the 'flat' look that was selected for 
+    less clutter and better fit in the document context.</p>
+
+    <p>The third point effectively spelled the birth of a plug-in that 
+    now goes by the name of Eclipse Forms. Soon after release 1.0, 
+    other developers wanted to replicate the rich user interface that 
+    appeared in PDE multi-page editors. It was finally made available 
+    as a plug-in with public APIs in Eclipse 3.0. </p>
+
+    <p>In the following text, we will show you what Eclipse Forms are 
+    (and what they are not) and how to use them to create rich UI with 
+    little effort.</p>
+
+    <h2>Eclipse Forms Mission</h2>
+
+    <p>Now that we know how Eclipse Forms came into being, it is useful 
+    to describe their mission before going into details:</p>
+
+    <blockquote>
+
+      <p><i><b>Eclipse Forms is an</b></i> <img align="baseline"
+       height="13" src="images/tag_1.gif" width="24"/><i><b>optional 
+      Rich Client plug-in</b></i> <img align="baseline" height="13"
+       src="images/tag_2.gif" width="24"/><i><b>based on SWT and JFace 
+      that provides the support for creating</b></i> 
+      <img align="baseline" height="13" src="images/tag_3.gif"
+       width="24"/><i><b>portable web-style user interfaces</b></i> 
+      <img align="baseline" height="13" src="images/tag_4.gif"
+       width="24"/><i><b>across all Eclipse UI categories.</b></i></p>
+
+    </blockquote>
+
+    <p>Let's look at the mission statement in more detail:</p>
+
+    <blockquote>
+
+      <table border="0" bordercolor="#111111" cellpadding="0" cellspacing="0" id="AutoNumber1" style="border-collapse: collapse" width="90%">
+
+        <tr>
+
+          <td valign="top" width="25"><img class="center" alt="1"
+           height="13" src="images/tag_1.gif" width="24"/></td>
+
+          <td width="744">
+
+            <b>Optional Rich Client plug-in</b> - Eclipse Forms have 
+            been rewritten in the 3.0 release to depend only on the 
+            platform UI plug-in, and no longer rely on the PDE UI 
+            plug-in. Despite they are not part of the minimal RCP 
+            layer, you can add Eclipse Forms to any RCP application. 
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td valign="top" width="25"><img class="center" alt="2"
+           height="13" src="images/tag_2.gif" width="24"/></td>
+
+          <td width="744"><b>Based on SWT and JFace</b> - Eclipse Forms 
+          were not designed to compete with or offer an alternative to 
+          SWT or JFace. The plug-in consists of a few carefully chosen 
+          custom widgets, layouts and support classes to achieve the 
+          desired effect when used with SWT and JFace.</td>
+
+        </tr>
+
+        <tr>
+
+          <td valign="top" width="25"><img class="center" alt="3"
+           height="13" src="images/tag_3.gif" width="24"/></td>
+
+          <td width="744"><b>Portable web-style user interfaces</b> -- 
+          obviously, an Eclipse Form often looks like a web page. 
+          The fact that each aspect of the form is 
+          programmatically accessible at all times makes forms
+          powerful and attractive. Achieving the same flexibility in a 
+          browser would require extensive DOM support and often 
+          proprietary interactions. Eclipse Forms are portable, 
+          being written on top of SWT and JFace.</td>
+
+        </tr>
+
+        <tr>
+
+          <td valign="top" width="25"><img class="center" alt="4"
+           height="13" src="images/tag_4.gif" width="24"/></td>
+
+          <td width="744"><b>Across all Eclipse UI categories</b> - 
+          Eclipse Forms breaks the mode by which certain classes of 
+          widgets are be expected only in certain Eclipse UI categories 
+          (editors, views, wizards, dialogs). An Eclipse form can 
+          appear in any UI category, expanding development 
+          possibilities. The UI developers can use the most appropriate 
+          concept for the task.</td>
+
+        </tr>
+
+      </table>
+
+    </blockquote>
+
+    <p>Point <img align="baseline" alt="2" height="13"
+     src="images/tag_2.gif" width="24"/> cannot be underestimated. When 
+    building interfaces in Eclipse Forms, you are using SWT. There is 
+    no Eclipse Forms button, or Eclipse Forms tree widget as an 
+    alternative to SWT widget. Instead, you are using Eclipse Forms 
+    support to tweak subtly the existing widget set to achieve a richer 
+    user experience.</p>
+
+    <p>Eclipse Forms make these rich user interfaces possible with the 
+    following elements:</p>
+
+    <ul>
+
+      <li>A concept of a 'form' that is suitable for 
+      inclusion in content areas such as views and editors</li>
+
+      <li>A toolkit to manage colors, hyperlink groups and other 
+      aspects of a form, and serve as a factory for many SWT 
+      controls</li>
+
+      <li>A new layout manager that lays out controls in a manner 
+      similar to an HTML table layout algorithm</li>
+
+      <li>A set of custom controls designed to fit in the form 
+      (hyperlink, image hyperlink, scrollable composite, section)</li>
+
+      <li>A multi-page editor where most or all of the pages are forms 
+      (e.g. PDE manifest editors)</li>
+
+    </ul>
+
+    <p><img border="0" height="13" src="images/tip.gif" width="62"/> 
+    Although nothing in the design of Eclipse Forms prevents you from 
+    creating a form in a dialog, most of the usage scenarios have been 
+    focused on using forms in views and editors, rather than dialog and 
+    wizards. It is a matter of consistency -- having only a few 
+    form-based dialogs or wizards would look very strange when all 
+    other dialogs are 'normal'. Nevertheless, it is an 
+    interesting area to explore in the future.</p>
+
+    <h2>Baby steps</h2>
+
+    <p>It is very easy to start using Eclipse Forms in your user 
+    interfaces. You can start by adding a dependency on 
+    <b>org.eclipse.ui.forms</b> plug-in. We will create an Eclipse view 
+    that hosts a form and gradually fill in the content. Note that the 
+    plug-in with all the source code used in this article is available 
+    as a <a>zip archive</a>.</p>
+
+    <h3>Hello, Eclipse Forms</h3>
+
+    <p>We will start playing by adding an empty form to a view:</p>
+
+    <blockquote>
+
+      <pre>public class FormView extends ViewPart {
+ private FormToolkit toolkit;
+ private ScrolledForm form;
+
+ /**
+  * The constructor.
+  */
+ public FormView() {
+ }
+
+ /**
+  * This is a callback that will allow us to create the viewer and
+  * initialize it.
+  */
+ public void createPartControl(Composite parent) {
+ <img align="baseline" height="13" src="images/tag_1.gif" width="24"/> toolkit = new FormToolkit(parent.getDisplay());
+ <img align="baseline" height="13" src="images/tag_2.gif" width="24"/> form = toolkit.createScrolledForm(parent);
+ <img align="baseline" height="13" src="images/tag_3.gif" width="24"/> form.setText(&quot;Hello, Eclipse Forms&quot;);
+ }
+
+ /**
+  * Passing the focus request to the form.
+  */
+ public void setFocus() {
+  form.setFocus();
+ }
+
+ /**
+  * Disposes the toolkit
+  */
+ public void dispose() {
+  toolkit.dispose();
+  super.dispose();
+ }
+}</pre>
+    </blockquote>
+
+    <p>As you can see from this code snippet, it does not take much to 
+    create a form. We start by creating an instance of a toolkit ( 
+    <img align="baseline" height="13" src="images/tag_1.gif"
+     width="24"/>). We use the toolkit to <img align="baseline"
+     height="13" src="images/tag_2.gif" width="24"/>create a scrolled 
+    form using the provided composite as a parent. We set the 
+    <img align="baseline" height="13" src="images/tag_3.gif"
+     width="24"/> title of the form. We also make sure to transfer 
+    focus to the form when needed and dispose the toolkit when the view 
+    is disposed.</p>
+
+    <p>When we register the view using the class shown above and launch 
+    the second Eclipse instance, the view should look like this:</p>
+
+    <p class="center"><img border="0" height="221"
+     src="images/hello1.gif" width="217"/> <img border="0"
+     src="images/hello2.gif"/></p>
+
+    <p class="center"><b>Figure 2:</b> A simple empty form in a view. 
+    Making the view narrower will cause the form title to wrap. Once 
+    there is no more space to fit the entire form, scroll bars will 
+    appear.</p>
+
+    <p>Note that we have used scrolled form because we placed it in a 
+    view that can be resized. In the more complex situations where a 
+    form needs to be a child in a layout, a non-scrolled version is 
+    available. In this case, we would have called 
+    <code>FormToolkit.createForm()</code> instead and let the outmost 
+    parent worry about scrolling the overall content.</p>
+
+    <h3>Adding some content</h3>
+
+    <p>Now that we have the form view running, we can start adding some 
+    content to it. Eclipse forms have a body and we should create all 
+    the content there:</p>
+
+    <pre>public void createPartControl(Composite parent) {
+  toolkit = new FormToolkit(parent.getDisplay());
+  form = toolkit.createForm(parent);
+  form.setText(&quot;Hello, Eclipse Forms&quot;);
+  GridLayout layout = new GridLayout();
+ <img align="baseline" height="13" src="images/tag_1.gif" width="24"></img> form.getBody().setLayout(layout);
+ <img align="baseline" height="13" src="images/tag_2.gif" width="24"></img> Hyperlink link = toolkit.createHyperlink(form.getBody(), 
+    &quot;Click here.&quot;, SWT.WRAP);
+ <img align="baseline" height="13" src="images/tag_3.gif" width="24"></img> link.addHyperlinkListener(new HyperlinkAdapter() {
+   public void linkActivated(HyperlinkEvent e) {
+    System.out.println(&quot;Link activated!&quot;);
+   }
+  });
+ }</pre>
+    <p>The body of the form is the usable space below the form title. 
+    Since this space is a SWT <code>Composite</code>, it can serve as a 
+    parent for other widgets. In the code above, we 
+    <img align="baseline" height="13" src="images/tag_1.gif"
+     width="24"/> set the layout on the body, then <img align="baseline"
+     height="13" src="images/tag_2.gif" width="24"/> create a 
+    hyperlink. The hyperlink is one of the few custom widgets that 
+    Eclipse Forms provide. The widget allows us to <img align="baseline"
+     height="13" src="images/tag_3.gif" width="24"/> add a hyperlink 
+    listener so that we can be notified when the user clicks on the 
+    link.</p>
+
+    <p>The updated view should look like this:</p>
+
+    <p align="center"><img border="0" height="222"
+     src="images/click-here.gif" width="198"/></p>
+
+    <p align="center"><b>Figure 3</b>: A simple form with a 
+    hyperlink</p>
+
+    <p>Note how hyperlink has a focus rectangle painted around it. Upon 
+    view activation, focus is transferred to the form, which passes it 
+    to the first control capable of accepting focus -- our link in this 
+    case. With the keyboard focus in the link, simply pressing the 
+    'Enter' key would activate the link.</p>
+
+    <h4>Hyperlink Groups</h4>
+
+    <p>Form toolkit has a hyperlink group object. Each created 
+    hyperlink is added to this group object. Hyperlink groups serve 
+    several roles. They define colors -- for normal, hover and active states -- for all links in the group. They change colors of the managed links based on their 
+        state. They change underline style of the managed links based on 
+        their state. They manage cursors and show busy cursor before link 
+        listeners process the link activation, and revert it after.
+        </p>
+
+    <p>You can change the default settings of the hyperlink group by 
+    getting the object from the toolkit with 
+    <code>getHyperlinkGroup()</code>.</p>
+
+    <h3>Creating common controls</h3>
+
+    <p>One of the design goals of Eclipse Forms was to allow the 
+    creation of common SWT controls in the editor/view content space. 
+    Since form body is a normal composite, you can use any layout and 
+    control you want inside it. However, remember that 'raw' 
+    SWT controls come with a widget background. We will now create some 
+    controls using their constructors:</p>
+
+    <pre>  layout.numColumns = 2;
+  GridData gd = new GridData();
+  gd.horizontalSpan = 2;
+  link.setLayoutData(gd);
+  Label label = new Label(form.getBody(), SWT.NULL);
+  label.setText(&quot;Text field label:&quot;);
+  Text text = new Text(form.getBody(), SWT.BORDER);
+  text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+  Button button = new Button(form.getBody(), SWT.CHECK);
+  button.setText(&quot;An example of a checkbox in a form&quot;);
+  gd = new GridData();
+  gd.horizontalSpan = 2;
+  button.setLayoutData(gd);</pre>
+    <p>We are now using two columns and creating a label, a text field 
+    and a checkbox. The result is below:</p>
+
+    <p class="center"><img border="0" height="183"
+     src="images/no-toolkit.gif" width="240"/></p>
+
+    <p class="center"><b>Figure 4</b>: A form with SWT controls created 
+    directly using their constructors</p>
+
+    <p>What is wrong with this picture? The background of controls we 
+    created directly matches the system dialog background, not the form 
+    background. In addition, the text field looks fine because the 
+    screen capture was taken on Windows XP. On other windowing systems, 
+    it would look out of place due to the addition of a 3D border. To 
+    fix this problem, we will create these controls using the 
+    toolkit's factory methods instead:</p>
+
+    <pre>  Label label = toolkit.createLabel(form.getBody(), &quot;Text field label:&quot;);
+  Text text = toolkit.createText(form.getBody(), &quot;&quot;);
+  text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+  Button button = toolkit.createButton(form.getBody(), &quot;A checkbox in a form&quot;, SWT.CHECK);
+  gd = new GridData();
+  gd.horizontalSpan = 2;
+  button.setLayoutData(gd);</pre>
+    <p>The view will now look better:</p>
+
+    <p class="center"><img border="0" height="177"
+     src="images/with-toolkit.gif" width="233"/></p>
+
+    <p class="center"><b>Figure 5:</b> A form with SWT controls created 
+    using the form toolkit as a factory</p>
+
+    <p>Factory methods provided by the form toolkit are there for your 
+    convenience. The toolkit is not all-inclusive --even for the SWT 
+    widget set-- and definitely not for the custom controls that you may 
+    have. A utility method <code>FormToolkit.adapt(Control control, 
+    boolean trackFocus, boolean trackKeyboard)</code> should be used to 
+    adapt an existing SWT control to fit into the form. Most of 
+    the factory methods call <code>adapt</code> themselves.</p>
+
+    <h4>Achieving the 'flat' look</h4>
+
+    <p>One of the recognizable attributes of Eclipse Forms used in PDE 
+    editors was the elegant 'flat' look of the controls. All 
+    the controls used there were without 3D borders that look fine in 
+    dialogs but less appealing in editors or views. This support is 
+    built into the FormToolkit class. However, on some platform it 
+    comes at a price of some custom rendering. For example, look at 
+    this screen capture from PDE editor (version 2.1):</p>
+
+    <p class="center"><img border="0" height="507"
+     src="images/plugin-dependencies.gif" width="545"/></p>
+
+    <p class="center"><b>Figure 6:</b> The flat look of Eclipse Forms 
+    circa Eclipse 2.1</p>
+
+    <p>Controls like tables, text entries, combo box etc. are rendered 
+    with a flat one-pixel border. These borders do not come from the 
+    controls themselves (SWT.BORDER style is not used). Instead -- if 
+    instructed -- the toolkit will add itself as a paint listener to 
+    each control's parent, and draw borders around controls during 
+    paint events. To make this happen, you need to call the toolkit 
+    method <code>paintBordersFor(parent)</code> for each composite 
+    where you created controls like text, tree, table etc. Note that 
+    one call per parent is enough: there is no need to make a call for 
+    each control of this type.</p>
+
+    <p>The Form toolkit knows which controls require a custom border. 
+    However, you may create a new one that also needs a border that is 
+    not on the list. You can give a hint to the toolkit by adding the 
+    following code:</p>
+
+    <div>
+
+      <blockquote>
+
+        <pre>Control myControl = new MyControl(parent);
+myControl.setData(FormToolkit.KEY_DRAW_BORDER, <strong>FormToolkit.TEXT_BORDER</strong>);
+// or myControl.setData(FormToolkit.KEY_DRAW_BORDER, <strong>FormToolkit.TREE_BORDER</strong>);
+toolkit.paintBordersFor(parent);</pre>
+      </blockquote>
+
+    </div>
+
+    <p>As you can see from the picture above, 'structural' 
+    controls like trees and tables have a border style different from 
+    text areas and you can choose which one to render for your control. 
+    Note that this is not needed for controls created using 
+    toolkit's factory methods.</p>
+
+    <p><img height="13" src="images/win_only.gif" width="49"/> Since 
+    Eclipse 3.0 and on Windows XP, no border rendering is done when the 
+    file <code>javaw.exe.manifest</code> file is present in the 
+    Java virtual machine bin folder (I took all the screen shots in this article  on Windows XP). 
+    The presence of this file -- you can download 
+    one from the 
+    <a href="http://dev.eclipse.org/viewcvs/index.cgi/~checkout~/platform-swt-home/faq.html#xpthemes"
+    >SWT home page</a> -- instructs the toolkit to use XP skins for 
+    native widgets. With XP skins, controls like text, table and tree 
+    are already flat and there is no need to adjust the look. For 
+    your code to be portable, you should always call 
+    <code>paintBordersFor(Composite)</code>, and let the toolkit choose 
+    what to do depending on the windowing system.</p>
+
+    <h2>Custom layouts</h2>
+
+    <p>Eclipse Forms offer two new layouts in addition to the base SWT layouts. 
+    These layouts extend the SWT <code>Layout</code> base class and 
+    can be used on any SWT composite, but are typically used in 
+    conjunction with Eclipse Forms.</p>
+
+    <h3>TableWrapLayout</h3>
+
+    <p>Now that we know how to populate the form, let's throw it a 
+    curve. We will change the hyperlink text to be much longer:</p>
+
+    <pre> link.setText(&quot;This is an example of a form that is much longer &quot;+
+                     &quot;and will need to wrap.&quot;);</pre>
+    <p>Let's see the result on screen:</p>
+
+    <p class="center"><img border="0" height="177"
+     src="images/long-link.gif" width="233"/></p>
+
+    <p class="center"><b>Figure 7</b>: A form laid out using 
+    <code>GridLayout</code></p>
+
+    <p>What happened? Remember that we are using 
+    <code>GridLayout</code>. When it asked the link control to compute 
+    its size, it gave it the size needed to render the text in one long 
+    line. Although we instructed the control to wrap, it did not 
+    matter because <code>GridLayout</code> requires that a control 
+    return its size in isolation. The link itself -- as well as other 
+    SWT controls like <code>Label</code> -- is capable of computing the 
+    height given its width if you pass the width instead of 
+    <code>SWT.DEFAULT</code> in <code>computeSize</code>, but 
+    <code>GridLayout</code> is not passing the width as an argument.</p>
+
+    <p>What we need is a different layout algorithm that works more 
+    like HTML tables. We want the content to try to fit in the provided 
+    client area, and grow vertically to compensate. Eclipse Forms 
+    provide an alternative layout for just such a purpose called 
+    <code>TableWrapLayout</code>. There are many similarities between 
+    <code>GridLayout</code> and <code>TableWrapLayout</code>. Both 
+    organize parent's children in grids. Both have layout data 
+    that instructs the layout how to treat each control. Both can 
+    accept hints on which control should grab excess space etc.</p>
+
+    <p>However, they fundamentally differ in the approach to the 
+    layout. <code>TableWrapLayout</code> starts with columns. It 
+    computes minimal, preferred and maximum widths of each column and 
+    uses this information to assign excess space. It also tries to be 
+    fair when dividing space across columns so that there is no excess 
+    wrapping of some controls.</p>
+
+    <p>It is possible to mix <code>GridLayout</code> and 
+    <code>TableWrapLayout</code> but the branch of widgets tree where 
+    <code>GridLayout</code> is used is the one where wrapping stops. 
+    This is quite acceptable if you do not want it to wrap, 
+    typically if the composite contains controls that cannot wrap 
+    anyway, like text, buttons, trees etc... However, you should have an 
+    un-broken path from the form body to each text control that needs 
+    to wrap.</p>
+
+    <p>Let's rework our example to use <code>TableWrapLayout</code> 
+    (with changes highlighted):</p>
+
+    <pre> public void createPartControl(Composite parent) {
+  toolkit = new FormToolkit(parent.getDisplay());
+  form = toolkit.createForm(parent);
+  form.setText(&quot;Hello, Eclipse Forms&quot;);
+  <b><font color="#ff0000">TableWrapLayout layout = new TableWrapLayout();</font></b>
+  form.getBody().setLayout(layout);
+  Hyperlink link = toolkit.createHyperlink(form.getBody(),&quot;Click here.&quot;, SWT.WRAP);
+  link.addHyperlinkListener(new HyperlinkAdapter() {
+   public void linkActivated(HyperlinkEvent e) {
+    System.out.println(&quot;Link activated!&quot;);
+   }
+  });
+  link.setText(&quot;This is an example of a form that is much longer and will need to wrap.&quot;);
+  layout.numColumns = 2;
+  <b><font color="#ff0000">TableWrapData td = new TableWrapData();
+  td.colspan = 2;
+  link.setLayoutData(td);</font></b>
+  Label label = toolkit.createLabel(form.getBody(), &quot;Text field label:&quot;);
+  Text text = toolkit.createText(form.getBody(), &quot;&quot;);
+  <b><font color="#ff0000">td = new TableWrapData(TableWrapData.FILL_GRAB);
+  text.setLayoutData(td);</font></b>
+  Button button = toolkit.createButton(form.getBody(), &quot;A checkbox in a form&quot;, SWT.CHECK);
+  <b><font color="#ff0000">td = new TableWrapData();
+  td.colspan = 2;
+  button.setLayoutData(td);</font></b>
+ }</pre>
+    <p>We used the same concepts that for GridData. Some of 
+    the variables have different names (for example, 
+    <code>colspan</code> and <code>rowspan</code>, <code>align</code> 
+    and <code>valign</code> are taken from HTML TABLE attributes), but 
+    you are doing the same thing -- creating a grid with two columns 
+    where link and button span two columns. Since margins are the same 
+    as in <code>GridLayout</code>, the result will look similar except 
+    the link will now wrap:</p>
+
+    <p class="center"><img border="0" height="177"
+     src="images/wrapped-link.gif" width="233"/></p>
+
+    <p class="center"><b>Figure 8:</b> A form laid out using 
+    <code>TableWrapLayout</code></p>
+
+    <p>One of the main differences between <code>TableWrapLayout</code> 
+    and <code>GridLayout</code> is that with the former you should stop 
+    thinking about the vertical dimension. In <code>GridLayout</code>, 
+    you would typically let the 'rigid' controls assume their 
+    natural positions and sizes and let 'flexible' controls 
+    (text, tree and table) grab horizontal and/or vertical excess space. 
+    In contrast, <code>TableWrapLayout</code> works top-down and when 
+    it places all the controls, its work is complete. The concept of grabbing 
+    excess space still exists in the horizontal dimension (as shown 
+    above). However, vertically you can only choose to FILL the cell in 
+    case it is taller than the control, or pick TOP, MIDDLE or BOTTOM 
+    vertical alignment.</p>
+
+    <p>You may notice one thing that may seem contradictory to the 
+    previous claim: <code>TableWrapData</code> still has 
+    <code>grabVertical</code> variable. However, the variable is here 
+    for a distinct purpose: when a fixed height control spans 
+    multiple rows, its height will create a local condition where vertical 
+    dimension is known, and controls in the spanned cells need to 
+    divide the extra space between them.</p>
+
+    <p>In order to have good results with <code>TableWrapLayout</code>, 
+    ensure that controls that can wrap have the appropriate style bit 
+    (<code>SWT.WRAP</code>). Composite custom controls provided by 
+    Eclipse Forms are wrap-enabled out of the box. This is achieved by 
+    using internal layouts that implement <code>ILayoutExtension</code> 
+    interface:</p>
+
+    <blockquote>
+
+      <pre>public interface ILayoutExtension {
+   /**
+    * Computes the minimum width of the parent. All widgets capable of word
+    * wrapping should return the width of the longest word that cannot be
+    * broken any further.
+    * 
+    * @param parent the parent composite
+    * @param changed &lt;code&gt;true&lt;/code&gt; if the cached information should be
+    * flushed, &lt;code&gt;false&lt;/code&gt; otherwise.
+    * @return the minimum width of the parent composite
+    */
+   public int computeMinimumWidth(Composite parent, boolean changed);
+
+   /**
+    * Computes the maximum width of the parent. All widgets capable of word
+    * wrapping should return the length of the entire text with wrapping
+    * turned off.
+    * 
+    * @param parent the parent composite
+    * @param changed &lt;code&gt;true&lt;/code&gt; if the cached information
+    * should be flushed, &lt;code&gt;false&lt;/code&gt; otherwise.
+    * @return the maximum width of the parent composite
+    */
+   public int computeMaximumWidth(Composite parent, boolean changed);
+}</pre>
+    </blockquote>
+
+    <p><code>TableWrapLayout</code> implements this interface itself, 
+    which allows it to handle cases where composites with this layout 
+    are children of the composite that is laid out. The additional two 
+    methods allow it to compute the two extreme cases - the absolute 
+    minimum width and the maximum width if all the controls are spread 
+    as wide as possible. The difference between the two allows the 
+    algorithm to distribute extra space fairly between columns to 
+    minimize excess wrapping.</p>
+
+    <p>Let's take a closer look at space distribution. We will comment 
+    the code we wrote so far in the view and replace it with the 
+    following:</p>
+
+    <pre> layout.numColumns = 3;
+ Label label;
+ TableWrapData td;
+ 
+ label = toolkit.createLabel(form.getBody(), 
+  &quot;Some text to put in the first column&quot;, SWT.WRAP);
+ label = toolkit.createLabel(form.getBody(),
+  &quot;Some text to put in the second column and make it a bit &quot;+
+  &quot;longer so that we can see what happens with column &quot;+
+  distribution. This text must be the longest so that it can &quot;+
+  &quot;get more space allocated to the columns it belongs to.&quot;, 
+  SWT.WRAP);
+ td = new TableWrapData();
+ td.colspan = 2;
+ label.setLayoutData(td);
+ label = toolkit.createLabel(form.getBody(), 
+  &quot;This text will span two rows and should not grow the column.&quot;, 
+  SWT.WRAP);
+ td = new TableWrapData();
+ td.rowspan = 2;
+ label.setLayoutData(td);
+ label = toolkit.createLabel(form.getBody(), 
+  &quot;This text goes into column 2 and consumes only one cell&quot;, 
+  SWT.WRAP);
+ label.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
+ label = toolkit.createLabel(form.getBody(), 
+  &quot;This text goes into column 3 and consumes only one cell too&quot;, 
+  SWT.WRAP);
+ label.setLayoutData(new TableWrapData(TableWrapData.FILL));
+ label = toolkit.createLabel(form.getBody(), 
+  &quot;This text goes into column 2 and consumes only one cell&quot;, 
+  SWT.WRAP);
+ label.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
+ label = toolkit.createLabel(form.getBody(), 
+  &quot;This text goes into column 3 and consumes only one cell too&quot;, 
+  SWT.WRAP);
+ label.setLayoutData(new TableWrapData(TableWrapData.FILL));
+<img align="baseline" height="13" src="images/tag_1.gif" width="24" /> form.getBody().setBackground(form.getBody().getDisplay().
+    getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));</pre>
+    <p>This code creates a number of wrapping labels with text of 
+    variable length. Some labels span columns, some span rows. To make 
+    the test easier, we will <img align="baseline" height="13"
+     src="images/tag_1.gif" width="24"/> set the form background to 
+    widget background so that cells will be easy to spot. When we run 
+    the example, we will get the following:</p>
+
+    <p class="center"><img border="0" height="275"
+     src="images/wrapped-layout.gif" width="266"/></p>
+
+    <p class="center"><b>Figure 9</b>: Excess space distribution in 
+    <code>TableWrapLayout</code></p>
+
+    <p>The key in space distribution is that the difference between 
+    control minimum and maximum width is compared. The greater the 
+    difference, the greater allocation of excess width will be for the 
+    column. Excess width is any width greater than the width needed to 
+    fit all the controls with their minimum widths taken into account. 
+    Notice how column 3 is slightly wider than column 2 because text in 
+    column 2 is somewhat longer. The overall goal is to avoid excessive 
+    empty space in cells. If you want to read more about the theory 
+    behind this layout algorithm, go to 
+    <a href="http://www.w3.org/TR/html4/appendix/notes.html#h-B.5.2.2">
+    W3C recommendations for HTML table auto-layout</a>.</p>
+
+    <h3>ColumnLayout</h3>
+
+    <p>Another Eclipse Forms custom layout is a variation of SWT  
+    <code>RowLayout</code>. If we configure <code>RowLayout</code> to 
+    place children vertically -- in columns-- and to make all controls 
+    have the same width within a column, we would get several columns, 
+    depending on the width of controls. However, the last column would 
+    typically not be completely filled -- depending on the number of 
+    controls. When placed in a form, we would again get all the 
+    controls in one column because <code>RowLayout</code> cannot do 
+    'vertical' wrapping. If we use <code>GridLayout</code> 
+    instead, we would have to choose the number of columns up front and 
+    live with the choice.</p>
+
+    <p>There are situations in more complex forms where we want the 
+    number of columns to be adaptive. In other words, we would like the 
+    number to change depending on the width of the form -- use more 
+    when possible, drop the number down as the width decreases. We 
+    would also like to fill the form area equally like a newspaper 
+    layout, with all the columns roughly the same height. All this can 
+    be achieved with <code>ColumnLayout</code>.</p>
+
+    <p>Compared to <code>TableWrapLayout</code>, 
+    <code>ColumnLayout</code> is much simpler. Hardly any configuration 
+    is needed. The only choice you need to make is the range of columns 
+    you want to have (default is 1 to 3). The following example shows a 
+    form with a large number of sections (we will talk about sections 
+    later) using <code>ColumnLayout</code>. Initially, there is enough 
+    space to arrange the sections in two columns. 
+    When we make the editor narrower, the layout arranges the sections in only one column:</p>
+
+    <p class="center"><img border="0" height="481"
+     src="images/two-columns.gif" width="583"/>  <img border="0"
+     height="480" src="images/one-column.gif" width="413"/></p>
+
+    <p class="center"><b>Figure 10</b>: Sections arranged in columns 
+    using <code>ColumnLayout.</code> The layout started with two 
+    columns but dropped to one when there was not enough space to fit 
+    all the sections.</p>
+
+    <h2>Complex controls</h2>
+
+    <p>Eclipse Forms provide four complex custom controls that can help 
+    you build rich looking UI: expandable composite, section, image 
+    hyperlink and form text. Let's look closely at each of them.</p>
+
+    <h3>Expandable composite</h3>
+
+    <p>A common theme in sleek web pages is the ability to collapse a 
+    portion of the page content using a toggle control. Eclipse Forms 
+    offer such a control: <code>ExpandableComposite</code>.</p>
+
+    <div>
+
+      <pre> ExpandableComposite ec = toolkit.createExpandableComposite(form.getBody(), 
+     ExpandableComposite.TREE_NODE|
+     ExpandableComposite.CLIENT_INDENT);
+ ec.setText(&quot;Expandable Composite title&quot;);
+ String ctext = &quot;We will now create a somewhat long text so that &quot;+
+ &quot;we can use it as content for the expandable composite. &quot;+
+ &quot;Expandable composite is used to hide or show the text using the &quot; 
+ &quot;toggle control&quot;;
+ Label client = toolkit.createLabel(ec, ctext, SWT.WRAP);
+ ec.setClient(client);
+ td = new TableWrapData();
+ td.colspan = 2;
+ ec.setLayoutData(td);
+ ec.addExpansionListener(new ExpansionAdapter() {
+  public void expansionStateChanged(ExpansionEvent e) {
+   form.reflow(true);
+  }
+ });</pre>
+    </div>
+
+    <p>The composite accepts a number of styles that control its 
+    appearance and behavior. Style TREE_NODE will create the toggle 
+    control used in a tree widget for expanding and collapsing nodes, 
+    while TWISTIE will create a triangle-style toggle. Using EXPANDED 
+    will create the control in the initial expanded state. If style 
+    COMPACT is used, control will report width in the collapsed state 
+    enough to fit in the title line only (i.e. when collapsed, it will 
+    be as compact horizontally as possible). Finally, CLIENT_INDENT 
+    will indent the client to align with the title (otherwise, client 
+    will be aligned with the toggle control).</p>
+
+    <p><code>ExpandableComposite</code> is responsible for rendering 
+    the toggle control and the title. The client control to expand or 
+    collapse must be a direct child of the expandable composite.</p>
+
+    <p>We needed to add expansion listener to the control and 'reflow' 
+    the form on the state change. This is because expansion causes 
+    changes in expandable composite size, but the change will not take 
+    effect until the next time the parent is laid out (hence the need 
+    to force it). In general, every time you do something that causes 
+    the layout of the form to be invalid, you need to 
+    'reflow' the form. 'Reflowing' the form will reposition the 
+    controls according to the new sizes and update the scroll bars.</p>
+
+    <p>Our view now looks like this:</p>
+
+    <p class="center"><img border="0" height="215"
+     src="images/expandable-closed.gif" width="305"/></p>
+
+    <p class="center"><b>Figure 11</b>: An example of the expandable 
+    composite in the collapsed state</p>
+
+    <p>When you click on the '+' sign or on the title itself, 
+    composite expands to reveal the client:</p>
+
+    <p class="center"><img border="0" height="216"
+     src="images/expandable-open.gif" width="304"/></p>
+
+    <p class="center"><b>Figure 12</b>: An example of the expandable 
+    composite in the expanded state</p>
+
+    <p>The expandable composite uses 
+   an internal layout implementing Eclipse Forms <code>ILayoutExtension</code>. Therefore you can add it to a parent that uses 
+    <code>TableWrapLayout</code>, as we did in the example above.</p>
+
+    <h3>Section</h3>
+
+    <p>One of the most versatile custom controls in Eclipse Forms (and 
+    seen in all PDE editors) is <code>Section</code>. It extends the 
+    expandable composite and introduces the following concepts:</p>
+
+    <ul>
+
+      <li>
+Separator - a separator control can be created below the 
+        title
+      </li>
+
+      <li>
+Description - an optional description can be added below the 
+        title (and below the separator, if present)
+      </li>
+
+      <li>
+Title bar - a title bar that encloses the section can be 
+        painted behind the title (note that separator and title bar 
+        should not be used simultaneously)
+      </li>
+
+    </ul>
+
+    <p>The code is similar to the expandable composite code example:</p>
+
+    <pre> Section section = toolkit.createSection(form.getBody(), 
+  Section.DESCRIPTION|Section.TITLE_BAR|
+  Section.TWISTIE|Section.EXPANDED);
+ td = new TableWrapData(TableWrapData.FILL);
+ td.colspan = 2;
+ section.setLayoutData(td);
+ section.addExpansionListener(new ExpansionAdapter() {
+  public void expansionStateChanged(ExpansionEvent e) {
+   form.reflow(true);
+  }
+ });
+ section.setText(&quot;Section title&quot;);
+ section.setDescription(&quot;This is the description that goes &quot;+
+      below the title&quot;);
+ Composite sectionClient = toolkit.createComposite(section);
+ sectionClient.setLayout(new GridLayout());
+ button = toolkit.createButton(sectionClient, &quot;Radio 1&quot;, SWT.RADIO);
+ button = toolkit.createButton(sectionClient, &quot;Radio 2&quot;, SWT.RADIO);
+ section.setClient(sectionClient);</pre>
+    <p>This time, we used the TWISTIE toggle style, added the 
+    description and asked for the title bar to be painted. The view now 
+    looks like this:</p>
+
+    <p class="center"> <img border="0" height="255"
+     src="images/section.gif" width="305"/></p>
+
+    <p class="center"><b>Figure 13</b>: An expandable section with a 
+    painted title bar and a description</p>
+
+    <h3>Image hyperlink</h3>
+
+    <p>Image hyperlink is a subclass of <code>Hyperlink</code> that 
+    adds an image before the link text. This combination is so common 
+    that it just made a lot of sense to make one control out of it and 
+    save on widgets. The control can be used as an image link only 
+    (when no text is set), or as a combination of link and image. 
+    Images for normal, hover and active (selected) state can be set.</p>
+
+    <p>The following is an example of a rich user experience that uses 
+    image hyperlinks:</p>
+
+    <p class="center"><img border="0" height="430"
+     src="images/intro.gif" width="616"/></p>
+
+    <p class="center"><b>Figure 14</b>: A form taken from one of the 
+    Eclipse Welcome pages (this is a fallback presentation used for the 
+    cases when embedded browser creation fails)</p>
+
+    <h3>Form text control</h3>
+
+    <p>Using the combination of labels, hyperlinks, images and 
+    <code>TableWrapLayout</code>, it is possible to create complex and 
+    powerful forms. However, there are some things that are hard to do. 
+    Consider the following example from the PDE manifest editor:</p>
+
+    <p class="center"><img border="0" height="466"
+     src="images/plugin-overview.gif" width="532"/></p>
+
+    <p class="center"><b>Figure 15</b>: An example of a complex Eclipse 
+    form that mixes wrapped text, images and hyperlinks</p>
+
+    <p>Notice how images, hyperlinks and text snippets are mixed 
+    together. This is very hard using separate label and hyperlink 
+    widgets. To remedy the problem, Eclipse Forms plug-in provides a 
+    very rudimentary text control that can do the following:</p>
+
+    <ul>
+
+      <li>
+Render plain wrapped text
+      </li>
+
+      <li>
+Render plain text but convert any segment that starts with 
+        <b>http://</b> into a hyperlink on the fly
+
+      </li>
+
+      <li>
+Render text with HTML-like tags (the form used in Figure 15 
+        is using form text widgets in this mode)
+      </li>
+
+    </ul>
+
+    <p>In all the modes, form text control is capable of rendering 
+    either a string or an input stream.</p>
+
+    <h4>Rendering normal text (label mode)</h4>
+
+    <div>
+
+      <pre> FormText formText = toolkit.createFormText(form.getBody(), true);
+ td = new TableWrapData(TableWrapData.FILL);
+ td.colspan = 2;
+ formText.setLayoutData(td);
+ String text = &quot;Here is some plain text for the text to render.&quot;;
+ formText.setText(text, false, false);</pre>
+    </div>
+
+    <div>
+
+      <p>Second argument set to <code>false</code> means that we will 
+      not bother to parse the tags, and the third that we will not try 
+      to expand URLs if found.</p>
+
+    </div>
+
+    <h4>Automatic conversion of URLs into hyperlinks</h4>
+
+    <p>Now we will add a hyperlink to the text and turn the third 
+    argument into <code>true</code>:</p>
+
+    <pre> FormText formText = toolkit.createFormText(form.getBody(), true);
+ td = new TableWrapData(TableWrapData.FILL);
+ td.colspan = 2;
+ formText .setLayoutData(td);
+ String text = &quot;Here is some plain text for the text to render; &quot;+
+   this text is at http://www.eclipse.org web site.&quot;;
+ formText .setText(text, false, <b>true</b>);</pre>
+    <p>When we look at our view, it now looks like this:</p>
+
+    <p class="center"><img border="0" height="287"
+     src="images/form-text1.gif" width="305"/></p>
+
+    <p class="center"><b>Figure 16</b>: Form text control with a URL 
+    automatically converted into a hyperlink</p>
+
+    <p>The URL has been converted into a link. The link is part of the 
+    wrapped text - we did not have to create a separate 
+    <code>Hyperlink</code> control and try to sandwich it between the 
+    two labels.</p>
+
+    <p>Since form text control can render hyperlinks, it accepts the 
+    same hyperlink listeners we used before. When created by the 
+    toolkit, the form text will use the hyperlink settings from the 
+    hyperlink group that belongs to the toolkit.</p>
+
+    <h4>Parsing formatting markup</h4>
+
+    <p>The most powerful use of the form text control is when 
+    formatting tags are added to the text. The expected root tag is 
+    'form'. It can have one or more children that can either 
+    be &lt;p&gt; or &lt;li&gt;. Either of these can have normal text, 
+    text between &lt;b&gt; or &lt;span&gt; tags, images and links. 
+    Images are declared using &lt;img href=&quot;<i>image 
+    key</i>&quot;/&gt; (no content), while links are expressed using 
+    &lt;a href=&quot;<i>href</i>&quot;&gt;text&lt;/a&gt;.</p>
+
+    <p>Some of the tags mentioned above have additional attributes. Tag 
+    &lt;a&gt; can accept nowrap='true' to block 
+    the link from being wrapped into the new line. Tag &lt;p&gt; can 
+    have attribute vspace='false' (true by 
+    default) that adds additional space between paragraphs when set to 
+    'true'. Tag &lt;li&gt; has more attributes:</p>
+
+    <ul>
+
+      <li>
+
+      <b>style</b> - can be &quot;text&quot;, &quot;bullet&quot; 
+        and &quot;image&quot; (default is &quot;bullet&quot;)
+
+      </li>
+
+      <li>
+<b>value</b> - not used for &quot;bullet&quot;; if style is 
+        &quot;text&quot;, the value will be rendered instead in place 
+        of a bullet; if style is &quot;image&quot;, value represents a 
+        key in the image table of an image to be rendered in place of a 
+        bullet
+
+      </li>
+
+      <li>
+<b>vspace</b> - the same as for the 'p' tag.
+
+      </li>
+
+      <li>
+<b>indent</b> - the number of pixels to indent text
+
+      </li>
+
+      <li>
+<b>bindent</b> - the number of pixels to indent the bullet 
+        (this number is independent from 'indent' - be 
+        careful not to overlap them)
+      </li>
+
+    </ul>
+
+    <p>Tags that affect appearance of the normal text are &lt;b&gt; 
+    (works as expected), and &lt;span&gt;. The latter allows you to 
+    change font and/or color of the text within the tag. Finally, soft 
+    line breaks can be added using &lt;br/&gt; tag.</p>
+
+    <p><img border="0" height="13" src="images/tip.gif" width="62"/> 
+    Since Eclipse 3.1, it is possible to place an SWT control that is a 
+    child of the form text in the markup. The new element 
+    'control' accepts attribute 'href' that is a 
+    key to the Control object set using 
+    <code>FormText.setControl(String key, Control control)</code>. 
+    Optionally, attribute &quot;fill&quot; can be set to 
+    <code>true</code> to make the control fill the entire width of the 
+    text. Form text is not responsible for creating or disposing 
+    controls, it only places them relative to the surrounding text. 
+    Similar to &lt;img&gt;, vertical position of the control relative 
+    to the surrounding text can be set using the 'align' 
+    attribute.</p>
+
+    <p>How does all this work in practice? Let's make data text 
+    that will use all of these tags together:</p>
+
+    <pre> StringBuffer buf = new StringBuffer();
+ buf.append(&quot;&lt;form&gt;&quot;);
+ buf.append(&quot;&lt;p&gt;&quot;);
+ buf.append(&quot;Here is some plain text for the text to render; &quot;);
+ buf.append(&quot;this text is at &lt;a href=\&quot;http://www.eclipse.org\&quot; &quot;+
+   &quot;nowrap=\&quot;true\&quot;&gt;http://www.eclipse.org&lt;/a&gt; web site.&quot;);
+ buf.append(&quot;&lt;/p&gt;&quot;);
+ buf.append(&quot;&lt;p&gt;&quot;);
+ buf.append(&quot;&lt;span color=\&quot;header\&quot; font=\&quot;header\&quot;&gt;&quot;+
+   &quot;This text is in header font and color.&lt;/span&gt;&quot;);
+ buf.append(&quot;&lt;/p&gt;&quot;);
+ buf.append(&quot;&lt;p&gt;This line will contain some &lt;b&gt;bold&lt;/b&gt; and &quot;+
+   &quot;some &lt;span font=\&quot;code\&quot;&gt;source&lt;/span&gt; text. &quot;);
+ buf.append(&quot;We can also add &lt;img href=\&quot;image\&quot;/&gt; an image. &quot;);
+ buf.append(&quot;&lt;/p&gt;&quot;);
+ buf.append(&quot;&lt;li&gt;A default (bulleted) list item.&lt;/li&gt;&quot;);
+ buf.append(&quot;&lt;li&gt;Another bullet list item.&lt;/li&gt;&quot;);
+ buf.append(&quot;&lt;li style=\&quot;text\&quot; value=\&quot;1.\&quot;&gt;A list item with text.&lt;/li&gt;&quot;);
+ buf.append(&quot;&lt;li style=\&quot;text\&quot; value=\&quot;2.\&quot;&gt;Another list &quot;+
+       item with text&lt;/li&gt;&quot;);
+ buf.append(&quot;&lt;li style=\&quot;image\&quot; value=\&quot;image\&quot;&gt;List item with &quot;+
+    &quot;an image bullet&lt;/li&gt;&quot;);
+ buf.append(&quot;&lt;li style=\&quot;text\&quot; bindent=\&quot;20\&quot; indent=\&quot;40\&quot; value=\&quot;3.\&quot;&gt;&quot;+
+   &quot;A list item with text.&lt;/li&gt;&quot;);
+ buf.append(&quot;&lt;li style=\&quot;text\&quot; bindent=\&quot;20\&quot; indent=\&quot;40\&quot; value=\&quot;4.\&quot;&gt;&quot;+
+   &quot;A list item with text.&lt;/li&gt;&quot;);
+ buf.append(&quot;&lt;p&gt;     leading blanks;      more white \n\n new &quot;+
+   &quot;lines   &lt;br/&gt;  \n   more &lt;b&gt;   bb   &lt;/b&gt;  white  . &lt;/p&gt;&quot;);
+ buf.append(&quot;&lt;/form&gt;&quot;);
+ FormText formText = toolkit.createFormText(form.getBody(), true);
+ formText.setWhitespaceNormalized(true);
+ td = new TableWrapData(TableWrapData.FILL);
+ td.colspan = 2;
+ formText.setLayoutData(td);
+ formText.setImage(&quot;image&quot;, FormArticlePlugin.getDefault().
+   getImageRegistry().get(FormArticlePlugin.IMG_SAMPLE));
+ formText.setColor(&quot;header&quot;, toolkit.getColors().
+     getColor(FormColors.TITLE));
+ formText.setFont(&quot;header&quot;, JFaceResources.getHeaderFont());
+ formText.setFont(&quot;code&quot;, JFaceResources.getTextFont());
+ formText.setText(buf.toString(), true, false);
+ formText.addHyperlinkListener(new HyperlinkAdapter() {
+  public void linkActivated(HyperlinkEvent e) {
+   System.out.println(&quot;Link active: &quot;+e.getHref());
+  }
+ });</pre>
+    <p>One common theme that can be observed is that the widget itself 
+    is not responsible for loading images, fonts, resolving links or 
+    colors. This is not a browser and it is much better to separate 
+    concerns and simply assign images and colors managed elsewhere. 
+    Both links and images simply have 'href' attribute to 
+    reference them. For links, the value of this attribute will be 
+    provided in the hyperlink event when listeners are notified. Images 
+    need to be registered with the text control using the matching 
+    'href' key. This way, the control does not need to worry 
+    about loading the images - it has them in the hash table and can 
+    render them immediately.</p>
+
+    <p>A similar approach has been used for colors and fonts. Colors 
+    are already handled by the toolkit, so you can allocate as many as 
+    you want using a unique key and RGB values by calling 
+    <code>toolkit.getColors().createColor(String key, RGB rgb)</code>. 
+    What is left is to set all the colors referenced in the 
+    'span' tag so that the control will be able to use them 
+    during rendering.</p>
+
+    <p>When the code above is executed, the view looks like this:</p>
+
+    <p class="center"><img border="0" height="545"
+     src="images/form-text2.gif" width="308"/></p>
+
+    <p class="center"><b>Figure 17</b>: Form text rendered from the XML 
+    markup</p>
+
+    <p>If we expand the section and the expandable composite, and make 
+    the window narrower, the form still holds and everything wraps 
+    perfectly:</p>
+
+    <p class="center"><img border="0" height="651"
+     src="images/form-text3.gif" width="236"/></p>
+
+    <p class="center"><b>Figure 18</b>: The sample view made taller and 
+    narrower</p>
+
+    <h2>Appropriate usage and limitations</h2>
+
+    <p>Although the image above is very promising, it is very important 
+    to contain excitement. A 'prime directive' of the form 
+    text control is:</p>
+
+    <blockquote>
+
+      <p><b>&quot;Form text control is not, nor will it ever be, a web 
+      browser&quot;</b></p>
+
+    </blockquote>
+
+    <p>It is very easy to spot limitations of the control. Tags within 
+    list items or paragraphs cannot be nested. Bold is supported, but 
+    not italic (although any font can be set and associated via the 
+    'span' tag). Attributes for vertical alignment of text 
+    with respect to images are missing. List support is decidedly low 
+    level. There is no BIDI support.</p>
+
+    <p>Another important limitation to consider is performance. Form 
+    text is neither a performance nor memory hog, but it was written to 
+    be small and lean, not powerful. For that reason, it does not have 
+    sophisticated painting routines, dirty region management etc. These 
+    routines are cost-effective when the control owns the entire window 
+    and must be scalable. In contrast, form text is best suited for 
+    short snippets of tagged text that are mixed with other controls on 
+    a form. This way, the control is one of several children in the 
+    parent, allowing native dirty region management from the OS to 
+    handle repaints. The best results in Eclipse forms are achieved 
+    with a mixture that is similar to our example above.</p>
+
+    <p><img border="0" height="13" src="images/tip.gif" width="62"/> 
+    Performance and painting of the form text widget has been improved 
+    in Eclipse 3.1 and it can now handle more content without 
+    performance degradation. For example, the new Help view is using 
+    form text widget for rendering hundreds of images and search hits. 
+    Nevertheless, the usage guidelines outline above still stand.</p>
+
+    <p>If you have a problem with the form text limitations, you should 
+    consider alternatives:</p>
+
+    <ul>
+
+      <li>If you need editing capability and text styling (with 
+      different fonts and colors), use <code>StyledText</code> (used by 
+      styled text editors like Java editor in Eclipse)</li>
+
+      <li>If you only need read-only support but have complex text 
+      formatting needs, use 
+      <code>org.eclipse.swt.browser.Browser</code>. Embedded web 
+      browser works on most platforms and will give you full HTML 
+      support.</li>
+
+    </ul>
+
+    <p>What this widget is for is to provide for modest text formatting 
+    in combination with <code>TableWrapLayout</code> and other controls 
+    in a form. The power lies in the fact that you have full access to 
+    every control - a kind of direct access that you can only achieve 
+    in a browser if you use proprietary DOM access mechanisms. In 
+    contrast, Eclipse Forms are portable - they run everywhere SWT 
+    runs.</p>
+
+    <p>To conclude, use the form text widget:</p>
+
+    <ul>
+
+      <li>when the UI you want to render is not very long with many 
+      lines of text, hyperlinks and many images in complex layouts (use 
+      embedded browser for that)</li>
+
+      <li>when you want to mix text, hyperlinks and images with SWT 
+      controls like trees, tables and buttons.</li>
+
+      <li>when you want to run everywhere SWT runs</li>
+
+    </ul>
+
+    <p>In contrast, use embedded web browser:</p>
+
+    <ul>
+
+      <li>
+
+when the UI you want to render contains many lines of text, 
+        hyperlinks and images arranged in complex layouts
+
+      </li>
+
+      <li>
+
+     when you do not need to mix SWT controls like trees and 
+        tables with the text
+
+      </li>
+
+      <li>
+
+      when you want to use complex web technologies like 
+        animation, sound or servlets/JSPs and/or render external web 
+        pages in-place
+
+      </li>
+
+      <li>
+
+      when you want to achieve complex rendering effects like 
+        transparency (all SWT widgets are opaque)
+
+      </li>
+
+      <li>
+
+    when you only need to ship on OS and/or window system 
+        combinations where the embedded browser is fully supported
+
+      </li>
+
+    </ul>
+
+    <h2>Advanced Topics</h2>
+
+    <p>As usual in the real-world development, there is a chasm between 
+    simple, happy examples that get you started and real code shipped 
+    in products. This section covers aspects of Eclipse Forms that are 
+    employed in production Eclipse code. You do not need to use 
+    them right away, but chances are you will recognize their 
+    advantages as your plug-in grows in complexity. In the following 
+    text, we will address color and toolkit management, managed forms, 
+    master/details block and multi-page editors.</p>
+
+    <h3>Color And Toolkit Management</h3>
+
+    <p>When using forms in a non-trivial way, it is important to share 
+    as much as possible to conserve resources. For this reason, color 
+    management should be separated from the toolkit when there is more 
+    than one form to handle.</p>
+
+    <p>Of course, it is possible to create one toolkit per form, but 
+    that is too wasteful if there are many forms. Instead:</p>
+
+    <ul>
+
+      <li>
+
+        Create one toolkit for all the forms that have the same life 
+        cycle. For example, if creating a multi-page editor, create one 
+        toolkit per editor and dispose it when editor is disposed. All 
+        the pages in the editor should share this toolkit.
+
+      </li>
+
+      <li>
+
+        Create one color manager (<code>FormColors</code>) per 
+        plug-in. When creating the toolkit, pass the color manager to 
+        the toolkit. The toolkit will know that the colors are shared 
+        and will not dispose them.
+
+      </li>
+
+      <li>
+
+       Use platform support for fonts and if possible, use 
+        <code>JFaceResources</code> predefined fonts. Between default, 
+        'banner' and 'header' fonts, you can 
+        accomplish a lot. Using many fonts is very confusing for the 
+        user, and if you do manage your own, you must ensure 
+        alternatives across platforms. The JFace fonts are guaranteed 
+        to work on all the platforms Eclipse ships on.
+
+      </li>
+
+      <li>
+
+        Dispose the color manager on plug-in shutdown (do not 
+        assume that plug-in shutdown also means platform shutdown - in 
+        Eclipse 3.x OSGi can uninstall your plug-in dynamically with 
+        the platform still running).
+
+      </li>
+
+      <li>
+
+       Use form color manager to allocate all the colors needed by 
+        the forms.
+
+      </li>
+
+    </ul>
+
+    <h3>Managed forms</h3>
+
+    <p>Managed forms are wrappers that add life cycle management and 
+    notification to form members. A managed form is not a form by 
+    itself. It <i>has</i> a form and accepts registration of 
+    <code>IFormPart</code> element. For each <code>IFormPart</code>, it 
+    manages events like dirty state, saving, commit, focus, selection 
+    changes etc. In order to reach to the wrapped form widget, call the 
+    '<code>getfForm()'</code> method.</p>
+
+    <p>Not every control on the form needs to be a form part. It is 
+    better to group a number of controls and implement 
+    <code>IFormPart</code> interface for the group. Section is a 
+    natural group and Eclipse Form provides <code>SectionPart</code> 
+    implementation. It implements the interface and contains a 
+    <code>Section</code> instance (either created outside and passed 
+    into the constructor, or created in the part itself).</p>
+
+    <h3>Master/Details block</h3>
+
+    <p>'Master/Details' is a pattern used throughout the UI world. It 
+    consists of a list or a tree ('master') and a set of 
+    properties ('details') driven by the selection in the 
+    master. Eclipse Forms provide the implementation of the pattern as 
+    a useful building block with the following properties:</p>
+
+    <ul>
+
+      <li>
+
+        While 'details' part is managed by the class 
+        itself, the master part factory method is abstract and must be 
+        implemented by the subclass
+
+      </li>
+
+      <li>
+
+        Master and details parts are children of a sash form and the 
+        ratio of the form space allocated for each can be changed by 
+        moving the sash.
+
+      </li>
+
+      <li>
+
+        As usual with a sash form, master and details parts can be 
+        organized horizontally or vertically in the form.
+
+      </li>
+
+    </ul>
+
+    <p>The idea of master/details block is to create a tree or a table 
+    section that fires the selection notification via the managed form. 
+    If the details part can handle the selected object, it should 
+    switch to the page for it and display properties. When building on 
+    top of the provided master/details block, subclasses should:</p>
+
+    <ul>
+
+      <li>
+
+        Create the master part (the one that drives the details)
+
+      </li>
+
+      <li>
+
+      Contribute actions to the form tool bar (consumes 
+        upper-right portion of the form in the title area)
+
+      </li>
+
+      <li>
+
+        Register details pages, one for each distinct input that can 
+        arrive from the master part
+
+      </li>
+
+    </ul>
+
+    <p>We will show how this looks in practice using the source code 
+    that accompanies this article. It creates a table for the master 
+    part and hooks a few dummy objects of two distinct types. Two 
+    details pages are registered to handle selections of these types. 
+    Pages can contain any number of controls - they are created on 
+    demand in the provided parent. The details area scrolls separately 
+    from the master area.</p>
+
+    <p>This part can now be used anywhere, but in this example it was 
+    placed inside an editor. Two distinct object types were used 
+    (<code>TypeOne</code> and <code>TypeTwo</code>), and their classes 
+    were used directly as keys (other mapping between details pages and 
+    objects are possible). Details pages registered with the Details 
+    part need to implement <code>IDetailsPage</code> interface.</p>
+
+    <p>The page is first initialized with the managed form to get 
+    access to the toolkit and other objects. It is then asked to create 
+    contents in the provided parent. It should also set focus on the 
+    first control when asked, be able to refresh, commit, dispose and 
+    react to the input changes. As long as objects selected in the 
+    master part are of a compatible type, the page will stay visible 
+    and <code>inputChanged</code> will be called.</p>
+
+    <p>Let's see how all this looks in practice:</p>
+
+    <p class="center"><img border="0" height="402"
+     src="images/master-details1.gif" width="604"/></p>
+
+    <p class="center"><b>Figure 19</b>: An example of a master/details 
+    block in horizontal orientation hosted in an editor</p>
+
+    <p>An instance of <code>TypeOne</code> object is selected in the 
+    master part. The appropriate page for the type is loaded in the 
+    details part. The page can contain any number of controls 
+    introduced elsewhere in this article. The ratio of parts on the 
+    page can be changed by scrolling the sash (visible when mouse goes 
+    over the area between the parts). Also note two actions in the 
+    upper-right corner of the form - this is the form tool bar. In this 
+    case, two radio buttons were contributed to control orientation of 
+    the part (horizontal or vertical).</p>
+
+    <p>If we change the orientation and select one of the 
+    <code>TypeTwo</code> instances, we get into this state:</p>
+
+    <p class="center"><img border="0" height="403"
+     src="images/master-details2.gif" width="604"/></p>
+
+    <p class="center"><b>Figure 20:</b> The same block in vertical 
+    orientation and with a different element type selected</p>
+
+    <p>Orientation is now vertical, and a different details page is 
+    shown for the type.</p>
+
+    <p>It is possible to register a detail page provider instead of 
+    registering pages up front. This allows dynamic resolution of the 
+    details page for the selected object. It is particularly important 
+    for cases when different pages are needed for objects of the same 
+    type depending on their states.</p>
+
+    <h3>Multi-page form editors</h3>
+
+    <p>It was a long way to get to this topic, yet PDE multi-page 
+    editors were the first to spark interest in Eclipse Forms. Today, 
+    multi-page editors still represent the most common use case of the 
+    technology, even though it now starts to appear in other places.</p>
+
+    <p>Eclipse Forms are designed to work in a variety of 
+    settings. For this reason, the plug-in cannot make assumptions on 
+    the types of editor inputs your editor can receive. A number of 
+    concepts employed in PDE UI cannot be used here because without 
+    knowing about the editor input in more detail, it is hard to 
+    provide a set of reusable classes. Nevertheless, Eclipse Forms 
+    provide the basic support for multi-page editors, which you can 
+    build on.</p>
+
+    <p>You should start building an Eclipse Forms multi-page editor by 
+    extending <code>FormEditor</code>:</p>
+
+    <blockquote>
+
+      <pre>public class SimpleFormEditor extends FormEditor {
+
+ public SimpleFormEditor() {
+ }
+
+ protected FormToolkit createToolkit(Display display) {
+  // Create a toolkit that shares colors between editors.
+  return new FormToolkit(ExamplesPlugin.getDefault().
+   getFormColors(display));
+ }
+
+ protected void addPages() {
+  try {
+     addPage(new FreeFormPage(this));
+      addPage(new SecondPage(this));
+     addPage(new ThirdPage(this));
+     addPage(new MasterDetailsPage(this));
+     addPage(new PageWithSubPages(this));
+  }
+  catch (PartInitException e) {
+   //
+  }
+ }
+
+ public void doSave(IProgressMonitor monitor) {
+ }
+
+ public void doSaveAs() {
+ }
+
+ public boolean isSaveAsAllowed() {
+  return false;
+ }</pre>
+    </blockquote>
+
+    <p>A very simple way to get started is to create pages and add them 
+    as above. Each page needs to implement <code>FormPage</code> and 
+    override <code>createFormContent(IManagedForm managedForm)</code>. 
+    Since there is already a managed form in each page, 
+    you should create contents in that enclosed form and register 
+    any form part that needs to be part of the managed life cycle.</p>
+
+    <p>In addition to form pages, you can add one or more text editors 
+    as a raw source alternative to the GUI pages. For this, you should 
+    call <code>addPage(IEditorPart, IEditorInput 
+    input)</code> method in the super class.</p>
+
+    <h3>Multi-page editor example</h3>
+
+    <p>The source code that comes with this article contains an example 
+    of a multi-page editor suitable for inclusion in an RCP application 
+    because it does not have any dependencies on IDE plug-ins.</p>
+
+    <p>Once you launch another Eclipse application, customize the 
+    perspective by checking the following checkbox in the test Eclipse 
+    window:</p>
+
+    <p>Window&gt;Customize Perspective...&gt;Commands&gt;Eclipse Forms 
+    Article</p>
+
+    <p>This will add a menu to the menu bar called 'Form Article 
+    Editors'. The menu contains only one action - 'Simple 
+    Form Editor'. The action will open the editor. It has the 
+    following pages:</p>
+
+    <p class="center"><img border="0" height="401"
+     src="images/editor1.gif" width="604"/></p>
+
+    <p class="center"><b>Figure 21</b>: A multi-page editor page with a 
+    free-flowing text</p>
+
+    <p>The first page contains a page with a <code>TableWrapLayout</code> 
+    and some sample content including a <code>FormText</code> widget. The 
+    page content is free-form and will wrap and flow top to 
+    bottom.</p>
+
+    <p>In contrast, the second page contains 'stretchy' controls -- two 
+    table viewers -- that consume all the excess space on the page. Since 
+    the controls can scroll themselves, a 
+    <code>GridLayout</code> is used. Several PDE editor pages follow this pattern.</p>
+
+    <p class="center"><img border="0" height="403"
+     src="images/editor2.gif" width="603"/></p>
+
+    <p class="center"><b>Figure 22</b>: A multi-page editor page with 
+    sections and tables.</p>
+
+    <p>The third page (Flow Page) was shown before in the 
+      <code>ColumnLayout</code> section. It demonstrates how to 
+    use this layout to adjust to the available space. 
+    Master/Details sections are also shown above.</p>
+
+    <p>The last page shows how to embed a<code>CTabFolder</code> in 
+    order to add another dimension to a form. In this particular example, the 
+    actual content is not switched -- there is only one text control --
+    but its content is loaded from different objects depending on the 
+    selected tab.</p>
+
+    <p class="center"><img border="0" height="404"
+     src="images/subpages.gif" width="606"/></p>
+
+    <p class="center"><b>Figure 23:</b> A multi-page editor page with 
+    nested tabs</p>
+
+    <h4>Recommended practices for Eclipse Forms multi-page editors</h4>
+
+    <p>There are many ways to write a form-based 
+    multi-page editor. It depends on the type of content you are 
+    editing and the proficiency of your users. You can approach it in two ways:
+    </p>
+
+    <ol>
+
+      <li>
+        If the typical users are using the editor infrequently, if raw 
+        source is hard to edit by hand or complex, if your users are not 
+        very technical, you should make COMPLETE pages capable of editing every aspect of the content without 
+        the need to turn to the raw source. In this approach, a source editor 
+        page is there only for occasional validation, rather than for 
+        regular work. In that case, you can get away with a basic 
+        text editor. The PDE extension point schema editor falls into 
+        this group.
+      </li>
+
+      <li>
+      If your users are more technical, if they have no problem editing 
+        the file by hand but would appreciate some help from time to 
+        time, then consider providing a mixed experience -- make a good 
+        source editor with all the add-ons like incremental outline, 
+        context assist, syntax highlighting etc. Then, add complex 
+        value-added functionality in form pages for actions that are hard to 
+        achieve when editing raw source. We have learned from experience that it is 
+        very hard to convince seasoned users to switch from source 
+        editing if the value added is marginal or debatable. However, 
+        when a function is only available in GUI pages and provides value and usability, it is adopted readily.
+      </li>
+
+    </ol>
+
+    <p>Creating a quality multi-page editor with mixed GUI and 
+    source pages has its challenges. Accepting that users will switch 
+    pages frequently requires a good model of the underlying content. 
+    The model should be directly tied to the underlying document(s) to stay 
+    in sync  when users edit the raw text directly and 
+    when they change it structurally through the forms pages. Also, do not 
+    forget indirect changes caused by other workbench actions while 
+    the editor is open.</p>
+
+    <p>For ideas on how to do this, see the source code of PDE editors 
+    (org.eclipse.pde.ui plug-in) from the Eclipse <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.pde.ui/">CVS repository</a>.</p>
+
+    <h2>Conclusion</h2>
+
+    <p>The goal of this article was to introduce you to a great way 
+    to create powerful user interfaces in Eclipse 3.x. Eclipse Forms 
+    is neither a competing widget toolkit that you need to choose over 
+    SWT, nor does it make the embedded HTML browser widget obsolete. 
+    Instead, it is a carefully written extension of SWT that allows you 
+    to create surprisingly rich user interfaces in Eclipse while 
+    retaining the portability of SWT. In simple cases, it can also be a 
+    lightweight alternative to the SWT embedded browser widget. When 
+    used within its limitations, Eclipse Forms can spice up your 
+    applications and allow you to introduce a familiar Web-like metaphor.</p>
+
+    <h2>Source Code</h2>
+
+    <p>To run the example or view the source code for this article, go 
+    through the following steps:</p>
+
+    <ol>
+
+      <li>Unzip <a href="formsArticle.zip">formsArticle.zip</a> into 
+      your workspace location in the file system.</li>
+
+      <li>Import the extracted project (org.eclipse.ui.forms.article) 
+      into your workspace using 'File&gt;Import&gt;Existing 
+      Project into Workspace'</li>
+
+      <li>Browse the source code (under 'src' directory).</li>
+
+      <li>When ready, launch another Eclipse using 'Run&gt;Run 
+      As&gt;Eclipse Application'</li>
+
+      <li>To browse the sample view, use 'Window&gt;Show 
+      View&gt;Other...&gt;Eclipse Forms Article Examples&gt;Eclipse 
+      Form'</li>
+
+      <li>To browse the multi-page editor, check the 
+      'Window&gt;Customize Perspective&gt;Commands&gt;Eclipse 
+      Forms Article' checkbox to activate the action set. After 
+      that, activate the editor from the newly added 'Form Article 
+      Editors' menu.</li>
+    </ol>
+  </body>
+</html>
+
