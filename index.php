@@ -57,6 +57,12 @@
 			Eclipse. You can find pointers to these on the 
 			<a href="/community/">Eclipse Community page</a>.
 		</p>
+		<form method="get" action="/search/search.cgi">
+        	<input type="hidden" name="ul" value="articles" />
+			<input type="hidden" name="wf" value="574a74"; />
+			Search Articles: <input type="text" name="q" value="" />
+			<input type="submit" value="Search!" />
+ 		</form>
 		<div class="homeitem3col">
 			$articles
 		</div>
