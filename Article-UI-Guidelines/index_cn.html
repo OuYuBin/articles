@@ -1,0 +1,3743 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0067)http://www.eclipse.org/articles/Article-UI-Guidelines/Contents.html -->
+<HTML><HEAD><TITLE>Eclipse User Interface Guidelines</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=gb2312">
+<META content="Nick Edgar, Kevin Haaland, Jin Li and Kimberley Peter" 
+name=Author>
+<META 
+content="Eclipse UI Guidelines, User Interface, Guidelines, HCI, User Experience, Usability, Human Factors" 
+name=keywords><LINK 
+href="Eclipse User Interface Guidelines.files/default_style.css" rel=stylesheet>
+<STYLE type=text/css>
+.tocstyle {
+	FONT-SIZE: 10px; FONT-FAMILY: Arial, Helvetica, sans-serif
+}
+.style1 {color: #09448d}
+</STYLE>
+
+<META content="MSHTML 6.00.2800.1515" name=GENERATOR></HEAD>
+<BODY>
+<DIV align=right>Copyright?2001-2004 International Business Machines 
+Corp.&nbsp; 
+<TABLE cellSpacing=0 cellPadding=2 width="100%" border=0>
+  <TBODY>
+  <TR>
+    <TD vAlign=top align=left bgColor=#0080c0 colSpan=2><B><FONT 
+      face=Arial,Helvetica><FONT 
+    color=#ffffff>&nbsp;Guidelines</FONT></FONT></B></TD></TR></TBODY></TABLE></DIV>
+<H1><IMG height=86 src="Eclipse User Interface Guidelines.files/Idea.gif" 
+width=120 align=center></H1>
+<CENTER>
+  <H1>Eclipse 用户界面指南<BR>
+  2.1 版</H1>
+<P><A href="http://www.eclipse.org/articles/Article-UI-Guidelines/Index.html" 
+target=_top>查看目录</A></P>
+</CENTER><BR>
+<CENTER>
+<P><BR>
+<B><FONT color=#000000>作者：Nick Edgar, Kevin Haaland, Jin Li , Kimberley 
+Peter</FONT></B> 
+<P><strong>译者：Bobbie Wang，Cliff Liang</strong>
+<P><B><FONT color=#000000><br>
+  最新更新: 2004年2月 </FONT></B> </CENTER>
+<H3><FONT color=#000000>注意</FONT></H3>
+<FONT color=#000000>您可以给我们提供反馈信息来影响这个指南文件。如果您有任何建议，<A 
+href="mailto:platform-ui-dev@eclipse.org?subject=UI Guidelines v2.1 Feedback">请点这里提供您的想法和意见。<BR>
+</A></FONT><BR><BR>
+<H2><A name=Introduction></A>简介</H2>
+本文是一篇介绍Eclipse 用户界面设计指南的文章。
+<P>Eclipse是一个通用的工具平台——一个可以用来做任何事情的开放，可扩展的IDE。它的真正价值来自工具插件，它能够“教”Eclipse怎样和其他东西协同工作－Java文件，Web内容，图片，视频－几乎是你能够想到的任何东西。Eclipse使你能够独立开发出软件工具，能够和其他工具无缝集成，并且你不用知道一个工具在哪里结束而另一个在哪里开始。我们所熟知的工具的最初概念这里则完全消失了。
+<P>这个平台非常灵活而且可扩展性强,，但这个灵活性也有一个严重的缺点。特别是程序无法保证平台内的已注册组件的用户界面一致性。本文试图为组件创建定义标准用户界面指南，从而解决这个问题。如果你在自己的工具中采用了这些指南，就可以很好地保证和平台及其他工具的一致性，并且对于你的用户来说更容易理解。
+<P>这些指南主要供Eclipse用户界面的设计者和实现者使用。<BR>
+&nbsp; 
+<H3><A name="The Workbench"></A>Workbench</H3>
+首先，让我们来看一下Eclipse workbench用户界面，和它里面的各种组件。
+<P>Workbench是多个窗口的集合。每个窗口包含菜单栏，工具栏，快捷方式栏，以及一个或者多个透视图。
+<P><IMG height=713 hspace=40 
+src="Eclipse User Interface Guidelines.files/workbench_decomposed.gif" 
+width=794> 
+<P>透视图是一个包含一系列视图和内容编辑器的可视容器。视图完全存在于某个透视图中而且不能被共享，而任何打开的内容编辑器可以在透视图间共享。如果两个或者多个prespective打开了同样的视图，他们共享这个视图的同一个实例，虽然在不同透视图之间视图的布局可能不同。对于不同的Workbenck窗口中的透视图，编辑器和视图都不能共享。一个透视图就好像是一本书里面的一页。它存在在一个窗口中，并且和其他透视图一起存在，和书中的一页一样，每次你只能看到一个透视图。
+<P>Workbench的主菜单栏通常包括File，Edit，Navigate，Project，Window，Help这些顶层菜单。其他的顶层菜单位于Edit和Project菜单之间，往往是和上下文相关，这个上下文包括当前活动的透视图，最前面的编辑器（不管是否活动）以及活动视图。
+<P>在File菜单中，你可以找到一个New子菜单，它包括Project，Folder，File的创建菜单项。File 菜单也包含Import and Export菜单项，用来导入文件到Wrokbench中，以及导出它们。在Edit菜单中，你可以找到象Cut，Copy，Paste，和Delete这些命令。这些命令称为全局命令，作用于活动部件。也就是说，如果当Navigator活动时使用Delete命令, 实际操作是由Navigator完成的。在Project菜单中，你可以找到和项目相关的命令，比如Open Project，Close Project和Rebuild Porject等。在Run菜单中，你可以看到和运行，调试应用代码相关的命令，以及启动象Ant脚本这样的外部工具。在Window菜单中，你可以找到Open Perspective子菜单，根据你开发任务的需要打开不同的透视图。你也能看到透视图 布局管理菜单栏。Show View子菜单用来在当前的Workbench窗口中增加视图。另外，你可以通过首选项菜单项来修改Workbench 的功能首选项配置。
+<P>作为plug-in开发者，你可以为平台提供新的视图，编辑器，向导，菜单和工具项。
+这些东西都是用XML来定义的，一旦注册后，就可以和平台中已经存在的组件无缝地集成在一起。
+<H3><A name="Projects, Folder and Files"></A>Projects，Folders和Files</H3>
+Eclipse可以用来创建不同类型的内容——Java文件，Web内容，图片，视频——几乎你可以想到的任何内容。这些对象作为普通文件保存在Eclipse Workspace中。Worspace包含多个项目。每个Project包含了很多目录和文件。这些对象通常被叫做<I>资源</I>。<BR>
+&nbsp; 
+<P> 
+<H2><A name="Getting Started"></A>怎样开始</H2>
+<P>对大多数开发者来说，平台的介绍内容实在是太多了。你可能会问：我该从哪里开始呢？这里有一些基本规则可以帮助你。
+<P> 本文适合UI设计者和开发者。我们讨论的任何应用都会有两个主要的层次：模型层和用户界面层。Eclipse的模型层，也叫做Workspace，包含了很多资源（项目，目录和文件）。
+用户界面，也叫做 Workbench，定义了这些资源的表现方式。
+<P>作为UI开发者，你同时会有一个模型和一个表现方式。我们假设你希望让模型通过表现层可见，大多数开发者会首先在Workbench中添加一个新的视图或者编辑器。
+<P><FONT color=#000000>在Eclipse中，编辑器用来显示基本内容， 例如需要用户交互的文件或者数据对象。在任何情况下，这个内容是基本关注点，而且还是基本任务的体现。为了解释这个概念，让我们看一些常见的例子。</FONT> 
+<P><FONT color=#000000>对于Java编程来说，基本任务就是创建，编辑和调试Java代码。基本关注点是Java代码，因此编辑器用来和那些代码交互。
+Navigator视图，Outline视图，和Properties视图用来支持这个基本任务，当你写Java代码时，它们很少能引起你的注意。</FONT> 
+<P><FONT color=#000000>对于阅读email来说，基本任务是创建，发送，阅读和回复邮件。基本关注点是某个特定的邮件，因此编辑器用来显示或者回复一份邮件。
+视图可以用来选择邮件阅读并且打开一个编辑器。 </FONT> 
+<P><FONT color=#000000>对于使用即时消息通信，基本任务是交谈。基本关注点是一次特定的交谈，因此编辑器用来进行交谈。视图可以用来列出所有你可以开始交谈的人。</FONT> 
+<P><FONT color=#000000> 对于浏览网页，基本任务是阅读。基本关注点是某个网页，因此编辑器用来浏览网页。</FONT> 
+<P><FONT color=#000000>在任何情况下，基本任务决定了基本关注点。作为基本关注点，它应该处于在UI的主要位置（作为编辑器），并且能够给Workbench的主菜单栏和工具栏提供命令。</FONT>
+<P><FONT color=#000000>一个视图可以用来保存你最喜爱的链结，并且可以重新打开他们。在任何时候，你可以编辑你正在看的页面。这将打开一个新的编辑器。 视图用来支持基本任务。你可以用它们来浏览信息的层次，打开编辑器，或者查看活动部件的属性。每个视图可以有它自己的工具栏和菜单栏。</FONT> 
+<P>一旦你添加了一个新的视图或者编辑器，一个有趣的问题出现了。这个模型是从哪里来的？在Eclipse中，大部分数据是用创建向导生成的。你可能也想添加一个创建向导。一旦一个对象存在，你可能需要用属性页面，或者属性对话框编辑对象的属性。
+<P>所有的这些内容都将在本文的后续部分详细讨论。
+
+<H2><A name="General UI Guidelines"></A>通用UI指南</H2>
+<BR>
+本文定义了用于Eclipse平台的UI设计指南。它是对其他标准UI指南的一个补充，这些UI指南包括Microsoft User Experience，Macintosh Human Interface Guidelines，以及Java Look and Feel Guidelines等。对于基本的UI设计和实现的建议，你可以去查阅这些文件。
+<P>希望你已经对Eclipse UI结构和API已经有了基本的了解，并且了解UI设计的基本规则：用户可控，直接，一致，容错，反馈，美观和简洁。 
+如果你目前还没有这些基本的知识，请先去阅读相关的文档。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<FONT color=#09448d><B>指南1.1</B></FONT> 
+<BLOCKQUOTE><FONT color=#09448d>  遵循并应用好的界面设计原则：用户可控，直接，
+  一致，容错，反馈，美观和简洁。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<H3><A name="The Spirit of Eclipse"></A>Eclipse的精髓</H3>
+Eclipse的本质是一个工具插件平台。这些插件可以由一个团队或者多个团队一起开发，或者用户从不同的地方集成一系列的插件。无论哪种情况，某个工具的可用性，以及
+Eclipse的整体性，都会受到用户界面一致性的影响。
+<P>如果你还不知道一个工具应该有怎样的外观和感觉，先看一下平台，然后再看一下Jave 开发工具和 Eclipse的插件开发环境（PDE）。在很多情况下，你所想像的工作流可能已经存在在Eclipse中了。如果是这样，直接采用平台的工作流和用户接口惯例。这样可以更好地保证和平台以及其他插件的一致性，并且你的用户也更容易学习使用。
+<P>在有些情况下，可能要忽略Eclipse的工作流而实现“定制”的用户界面。这个界面在整个集成环境中会很突兀，因为其他工具都采用了平台的惯例。这样做会丢失过去经验的很多好处，并且要强迫你的用户来学习新的概念。
+<P>请查询<A 
+href="#BestPractices">最佳实现</A>章节获得更多的例子和信息。</P>
+<P>也请访问<A href="http://www.eclipse.org/newsgroups/index.html" 
+target=_blank>Eclipse platform 新闻组</A> 和社区共享信息。</P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d> 
+  指南 1.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#006699>遵循平台的用户界面惯例。 </FONT></BLOCKQUOTE>
+<HR>
+
+<P>如果你决定使用Eclipse的一些设计惯例，注意不要盗用Eclipse特有的UI惯例。例如，Workbench窗口的活动部分用带阴影的标题表示。编辑器中带阴影标题的使用（见下图）可以是显示那个部分中焦点位置的一种方式，这样就会和窗口的活动部分引起混淆。</P>
+<P><IMG height=423 hspace=40 
+src="Eclipse User Interface Guidelines.files/badHilight.gif" width=702> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d> 
+  指南 1.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>注意不要混用UI 隐喻。
+  这样会引起原始概念和你的应用相混淆。</FONT></BLOCKQUOTE>
+<HR>
+<br> 
+Eclipse是一个开源项目。如果你觉得你的某些想法有用，加入Eclipse社区，写一个提议，和Eclipse社区一起工作，努力把Eclipse变成更好的产品开发平台，增加客户满意度。
+<P>  访问<A href="http://www.eclipse.org/" 
+target=_blank>http://www.eclipse.org/</A> 加入Eclipse UI邮件列表<B>platform-ui-dev</B>。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d> 
+  指南 1.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>  如果你有好的想法，和Eclipse社区一起工作，把Eclipse变成更好的平台。</FONT></BLOCKQUOTE>
+<HR>
+
+<P></P>
+<H3><A name=Capitalization></A>字母大写的使用</H3>
+在一个插件中，采用大写一致的文本会让人感觉良好，认为代码质量也较高。在一个对话框或者窗口中，所有的标题，菜单，工具条，标签（Tab）和按钮都应该采用标题形式的大写。例如，“Run to Line”可以用做菜单项的文本。
+<P>对于所有的check box，radio button，以及group的文本，必须采用句子形式的大写。例如，“Choose an option for the Java file” 可以用作一个group的文本。</P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B> <FONT color=#09448d>  指南1.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在菜单，工具提示（ToolTip）以及所有的窗口，对话框，标签（Tab），表格的列标题（Column Heading）和按钮（Push Button）的标题中，都应该使用标题形式的大写。除了第一个和最后一个单词的首字母大写，所有名词，代名词，形容词，动词和副词也要首字母大写。不要包含结束标点。 </FONT></BLOCKQUOTE>
+<IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d> 
+  指南1.6</FONT></B>
+<BLOCKQUOTE><FONT color=#09448d>对于对话框或窗口中的控件标签，包括check box，radio button，group label，和simple text fields，均采用句子形式的大写。把第一个单词的首字母大写，以及其他象Java这样的词也要首字目大写。</FONT></BLOCKQUOTE>
+<HR>
+
+<P></P>
+<H3><A name=Language></A>语言</H3>
+clipse可以在不同的平台，不同的地区使用。要支持不同的语言和数字格式，本地化策略需要应用到每个plug-in的文本和图像中。这就涉及到把所有的资源从plug-in的源码中分离出来，这样才能把这些资源进行转换以适应新的地区。
+<P>参考<A 
+href="#BestPractices">最佳实现</A> 章节查看例子和更多信息。</P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d> 
+  指南1.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在你的plug-in中创建资源的本地化版本。</FONT></BLOCKQUOTE>
+<HR>
+
+<H3><A name="Error Handling"></A>错误处理</H3>
+如果Eclipse中出现错误，要根据错误的上下文做出合适的响应。 
+
+<P>请参考<A 
+href="#Wizards">向导</A>部分查看如何在向导中处理用户输入错误。
+<P>请参考<A 
+href="#Editors">编辑器</A>部分查看如何在编辑器中处理错误的指南。
+<P>如果出现一个错误需要用户的明确输入或者立刻注意，就需要使用模态对话框把错误报告给用户。这样能够迫使用户注意并且立刻处理问题。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 1.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果出现一个错误需要用户的明确输入或者立刻注意，使用模态对话框。
+  </FONT></BLOCKQUOTE>
+<HR>
+
+<br>
+如果在产品中出现编程错误，就必须使用错误对话框报告给用户。同时你也必须使用workbench的错误记录机制来记录错误。这样就给了用户机会，可以重启平台，卸载相关的功能，以及和系统管理员联系。
+<P>Plug-in必须在错误对话框的详细内容区域中提供以下信息：
+<UL>
+  <LI>提供者名字
+  <LI>plug-in名称（用户友好的名字） 
+  <LI>plug-in ID 
+  <LI>版本 </LI></UL>
+<IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 1.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果产品中出现编程错误，使用模态对话框，并且log出错信息。</FONT></BLOCKQUOTE>
+<H2><A name=Introduction_VDG></A>可视化设计</H2>
+<P>所有为Eclipse创建的可视化用户界面元素都遵循一个公共风格，称做<STRONG><I>Eclipse可视风格</I></STRONG>或者<STRONG><I>Eclipse风格</I></STRONG>。在下面的指南中，你可以找到基本的设计信息，以及在基于Eclipse框架的工具中，实现Eclipse风格图标和向导图片的规范。
+<P>遵循这些指南可以保证可视用户界面元素以及它们在Eclipse工具和plug-in中实现的一致性。这些元素的一致性包括：可视元素的语意，风格以及实现上的考虑。下面的部分将讨论这些话题。
+  <!-- CONSISTENCY SECTION STARTS --><!-- Consistency -->
+<h4><A name=Consistency_VDG>一致性</A></h4>
+<P>在Eclipse风格图标的发展中，形成了一种用来描述用户界面中不同概念的可视化语言。这些概念现在通过一大批小的可视符号表现出来，
+通过使用Eclipse工具你会知道有很多这样的可视符号。</P>
+<P>为了保证用户获得一致的视觉体验，通过工具理解这些概念，并且避免混淆，
+我们建议你尽可能重用Ecplise风格图形元素。</P>
+<H4><A name=ConsistencyConcept_VDG>图标重用</A></H4>
+<P>在Eclipse可视风格中已经创建了很多图标，因此你很可能在里面找到你需要的图标或图形元素。下表就是一个例子。每个元素有自己特定的含义，因此使用时要注意让它们保持原有的含义。</P>
+<P><IMG height=423 alt="metaphor example" hspace=40 
+src="Eclipse User Interface Guidelines.files/metaphor_concepts.gif" width=658 
+border=0></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>重用核心可视化概念来保持它们在Eclipse plug-in中表现方式和含义的一致性。</FONT><!-- ICON SPECIFICATION SECTION STARTS -->
+<!-- Icon Specifications / Icon Palettes -->
+<BR>
+</BLOCKQUOTE>
+<H3><A name=IconSpecsPal_VDG>图标调色板</A></H3>
+<P>创建Eclipse风格图标时可以采用多种调色板。有3种不同的调色板用来创建3种不同的图标状态，如下：</P>
+<UL><li><STRONG>256 色调色板</STRONG> 用于图标的活动或者选中状态，也称为图标的“彩色”状态。
+  </li>
+  <li><STRONG>8 色灰度调色板</STRONG> 用于preseptive，视图，工具条，工具条向导以及局部工具条图标的可用状态。 </li>
+  <li><STRONG>2 色灰度调色板</STRONG> 用于工具条，工具条向导以及局部工具条图标的不可用状态。 
+</li>
+</UL>
+<H4>256 色调色板</H4>
+<P>Eclipse风格图标必须用一个特殊的256色调色板来设计，该调色板包括20个标准色和236个用户自定义颜色，如下。 
+<P><IMG height=193 alt=newwin256.act hspace=40 
+src="Eclipse User Interface Guidelines.files/256palette.gif" width=194 border=0> 
+</P>
+<P><STRONG>注意：</STRONG>虽然显示的调色板是基于来自Adobe Photoshop的标准windows .aco调色板，但是，这两种调色板是不同的，而且只有显示的调色板才能用于Eclipse风格图标的创建。</P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Eclipse 256色调色板来创建所有类型图标的活动或选中状态。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<H4>8 色灰度调色板</H4>
+<P>为了创建你全彩色图标的灰度可用状态的版本，你会需要用到下面的8 色调色板： </P>
+<BR><IMG 
+height=80 alt="enabled colors" hspace=40 
+src="Eclipse User Interface Guidelines.files/enabledcolors.gif" width=401 
+border=0> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Eclipse 8 色调色板来创建透视图，视图，工具栏，工具栏向导和局部工具栏图标的可用状态。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+<H4>2 色灰度调色板</H4>
+<P>To create grayscale, disabled versions of your full color and enabled icons, 
+you will need to use a subset of the 8 color palette, that consists of the 2 
+colors shown below: <br>
+为了创建你的全彩色图标的灰度的不可用状态版本，你可以用8 色调色板的一个子集，其中包括以下两种颜色：</P>
+<IMG height=50 alt="disabled colors" hspace=40 
+src="Eclipse User Interface Guidelines.files/disabledcolors.gif" width=158 
+border=0>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Eclipse 2 色调色板创建工具条，工具条向导和局部工具条图标的不可用状态。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+<!-- Icon Specifications / Icon Types -->
+<H3><A name=IconSpecsTypes_VDG>图标类型</A></H3>
+<P>Eclipse风格图标都被划分成不同的类别，这样可以根据它们在用户界面中的不同位置进行优化。下面就显示了不同的图标分类和它们所处的位置。（译：在下面图标类型的章节中，图标类型只作部分翻译（如：View Icon就翻译成View图标），以保证文字和下图的对应一致。）</P>
+<BR><IMG 
+height=345 alt="icon types" hspace=40 
+src="Eclipse User Interface Guidelines.files/icon_types.gif" width=539 border=0> 
+<BR>
+<P><STRONG><FONT size=4>A&nbsp;&nbsp;&nbsp;</FONT>Product</STRONG> <BR>
+Prodcut图标表示产品的标识，通常处于窗口标题栏的最左边，在透视图，文档和产品名称的前面。</P>
+<P><STRONG><FONT size=4>B&nbsp;&nbsp;&nbsp;</FONT>Perspective 和 
+  Fastview</STRONG> <BR>
+Perspective和Fastview图标在workbench的左下方。这些图标让用户可以快速地在不同的透视图之间切换，或者调用被作为Fastview创建的视图。</P>
+<P>  <STRONG><FONT size=4>C&nbsp;&nbsp;&nbsp;</FONT>Toolbar<br> 
+  </STRONG>
+  
+  Toolbar图标在workbench顶部的主工具条中。
+这些图标都可以调用命令，包括全局命令和编辑器内的命令。</P>
+<P><STRONG><FONT size=4>D&nbsp;&nbsp;&nbsp;</FONT>Toolbar Wizard<br>
+  </STRONG>
+  
+Toolbar Wizard图标可以在workbench顶部的主工具条中找到。
+这些图标带有棍子和火花图形，很容易看到。选中这些图标的一个会启动一个向导。</P>
+<P><STRONG><FONT size=4>E&nbsp;&nbsp;&nbsp;</FONT>View<br>
+  </STRONG>
+  
+  View图标位于workbench中每个视图标题栏的左边。
+这些图标表示了每个视图的功能。</P>
+<P><STRONG><FONT size=4>F&nbsp;&nbsp;&nbsp;</FONT>Local (View) Toolbar<br>
+</STRONG>
+  
+  Local (View) Toolbar图标位于workbench中每个视图标题栏中View图标的右边。
+  这些图标会调用那个视图中的命令。局部工具条图标也可以出现在所有的菜单，包括主菜单，下拉菜单和上下文菜单中。
+</P>
+<P><STRONG><FONT size=4>G&nbsp;&nbsp;&nbsp;</FONT>Model Object<br>
+</STRONG>
+
+Model Object图标可以在workbench中的tree视图，list视图和编辑器标签（Editor Tab）中找到 （例如文件，文件夹，项目等等）。</P>
+<P><STRONG><FONT size=4>H&nbsp;&nbsp;&nbsp;</FONT>Object Overlay<br>
+</STRONG>
+  
+  Object Overlay图标也位于tree视图或者list视图中。它们附在模型对象图标的角上，用来表示某些变化。 </P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在用户界面中适当的位置使用适当的图标。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+<!-- Icon Specifications / Icon Size & Placement -->
+<H3><A name=IconSpecsSize_VDG>图标尺寸和放置</A></H3>
+<P>除了少数例外，Eclipse风格图标一般设计在 16×16 像素组成的区域内。在该区域内，15×15像素的空间是给图像本身用的，剩下一行和一列空像素，可以让你把图像放在界面中合适的位置。注意看一下下图例子中空像素的位置。
+图标按照特定位置进行裁减以保证在用户界面中可以排列整齐。</P>
+<P>下面的图显示了不同类型图标的正确尺寸，以及他们在所分配的屏幕空间中合适的摆放位置。</P>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+  <TBODY>
+  <TR>
+    <TD vAlign=top width=200><IMG height=185 alt="view real estate" hspace=40 
+      src="Eclipse User Interface Guidelines.files/view_realestate.gif" 
+      width=180 border=0> </TD>
+    <TD vAlign=top>
+      <P><B>View 图标<br>
+      </B> <BR>最大16×16像素，总是居中。<br>
+      空像素位于左边和下面。</P></TD></TR>
+  <TR>
+    <TD vAlign=top><IMG height=185 alt="perspective real estate" hspace=40 
+      src="Eclipse User Interface Guidelines.files/perspective_realestate.gif" 
+      width=180 border=0> </TD>
+    <TD vAlign=top>
+      <P><B>        Perspective 图标</B> <BR>
+        <B>        Fastview 图标</B> </P>
+      <P>          最大16×16像素，总是居中。<br>
+        空像素位于右边和下面。</P></TD></TR>
+  <TR>
+    <TD vAlign=top><IMG height=185 alt="toolbar real estate" hspace=40 
+      src="Eclipse User Interface Guidelines.files/toolbar_realestate.gif" 
+      width=180 border=0> </TD>
+    <TD vAlign=top>
+      <P><B>Toolbar 图标<br>
+        </B><B>Toolbar Wizard 图标</B><BR>
+        <B>Local 
+      Toolbar </B><B>图标</B></P>
+      <P>        最大16×16像素，总是居中。<br>
+      空像素位于左边和上面。</P></TD></TR>
+  <TR>
+    <TD vAlign=top><IMG height=185 alt="view real estate" hspace=40 
+      src="Eclipse User Interface Guidelines.files/view_realestate.gif" 
+      width=180 border=0> </TD>
+    <TD vAlign=top>
+      <P><B>Model Object 图标<br>
+      </B><BR>最大16×16像素，总是居中。<br> 模型对象图标不能大于15像素高。
+      <P></P></TD></TR>
+  <TR>
+    <TD vAlign=top><IMG height=105 alt="overlay real estate" hspace=40 
+      src="Eclipse User Interface Guidelines.files/overlay_realestate.gif" 
+      width=180 border=0> </TD>
+    <TD vAlign=top>
+      <P><B>Object Overlay 图标<br>
+      </B><BR>对象掩模是唯一的一个例外，它不是16×16像素大小的。
+      <br>最大7像素宽 × 8像素高，总是居中。<br>该图标必须有一条白色的外边线用来把它和其附着的图标分开。
+      <br>关于如何在不同类型的对象掩模图标上使用外边线，查看下一节图标定位。</P></TD></TR></TD></TR></TBODY></TABLE>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于每个类型的图标遵循其特定的尺寸规范。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>按照图示的特定位置裁减图标以保证其在用户界面中排列整齐。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+<!-- Icon Specifications / Icon Positioning --><BR><BR>
+<H3><A name=IconSpecsPos_VDG>图标定位</A></H3>
+<P>为了遵循不同类型图标在其所分配的屏幕空间中特定的尺寸和摆放位置，下面的定位指南可以让这些元素相对于其他元素排列整齐，并创建出一个组织很好的，美观的用户界面。（所有的度量单位为像素。）</P>
+<H4>概况</H4>
+<IMG height=350 
+alt="overview image of the four different icon position areas detailed below" 
+hspace=40 src="Eclipse User Interface Guidelines.files/iconposition_main.gif" 
+border=0> <BR><BR><BR>
+<H4>1. Toolbar 图标</H4>
+<P class=sub>（包括Toolbar图标和Toolbar Wizard图标）</P>
+<P><IMG height=260 alt="toolbar specifications" hspace=40 
+src="Eclipse User Interface Guidelines.files/toolbar_specs.gif" border=0> </P>
+<TABLE cellSpacing=2 cellPadding=4 border=0><!-- 1st row : table categories -->
+  <TBODY>
+  <TR>
+    <TD width=40 rowSpan=12></TD>
+    <TD>&nbsp;</TD>
+    <TD><div align="center"><STRONG>项目</STRONG></div></TD>
+	《
+	<TD><div align="center"><STRONG>定位和间隔</STRONG></div></TD>
+  </TR><!-- 2nd row : beginning of table contents -->
+  <TD><STRONG>A</STRONG></TD>
+    <TD>工具条</TD>
+    <TD>22 像素高</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>左边缘和柄（handle）之间</TD>
+    <TD>4 像素</TD></TR>
+  <TR>
+    <TD><STRONG>C</STRONG></TD>
+    <TD>柄和第一个图标之间</TD>
+    <TD>7 像素</TD></TR>
+  <TR>
+    <TD><STRONG>C</STRONG></TD>
+    <TD>图标和工具条顶部之间</TD>
+    <TD>3 像素</TD></TR>
+  <TR>
+    <TD><STRONG>C</STRONG></TD>
+    <TD>图标和工具条底部之间</TD>
+    <TD>3 像素</TD></TR>
+  <TR>
+    <TD><STRONG>C</STRONG></TD>
+    <TD>图标和下拉（twisty）之间</TD>
+    <TD>7 像素</TD></TR>
+  <TR>
+    <TD><STRONG>D</STRONG></TD>
+    <TD>下拉和分隔（hard rule）之间 </TD>
+    <TD>7 像素 </TD></TR>
+  <TR>
+    <TD><STRONG>E</STRONG></TD>
+    <TD>分隔和图标之间 </TD>
+    <TD>6 像素 </TD></TR>
+  <TR>
+    <TD><STRONG>F</STRONG></TD>
+    <TD>图标之间</TD>
+    <TD>7 像素</TD></TR>
+  <TR>
+    <TD><STRONG>G</STRONG></TD>
+    <TD>图标和分隔之间</TD>
+    <TD>10 像素</TD></TR>
+  <TR>
+    <TD><STRONG>H</STRONG></TD>
+    <TD>分隔和柄之间</TD>
+    <TD>2 像素</TD></TR></TBODY></TABLE>
+<BR><BR>
+<H4>2. 
+Titlebar图标</H4>
+<P class=sub>（包括View图标和Local Toolbar图标）</P>
+<img height=162 
+alt="titlebar specifications" hspace=40 
+src="Eclipse User Interface Guidelines.files/titlebar_specs.gif" border=0> <BR>
+<TABLE cellSpacing=2 cellPadding=4 border=0>
+  <TBODY>
+   <TR>
+    <TD width=40 rowSpan=9></TD>
+    <TD></TD>
+    <TD><div align="center"><STRONG>项目</STRONG></div></TD>
+    <TD><div align="center"><STRONG>定位和间隔</STRONG></div></TD></TR>
+  <TR>
+    <TD><STRONG>A</STRONG></TD>
+    <TD>Title Bar</TD>
+    <TD>22 像素高</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>左边缘和View图标之间</TD>
+    <TD>4 像素</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>View图标和文字标签之间</TD>
+    <TD>3 像素</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>Title Bar图标和Title Bar顶部之间</TD>
+    <TD>3 像素</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>Title Bar图标和Title Bar底部之间</TD>
+    <TD>3 像素</TD></TR>
+  <TR>
+    <TD><STRONG>C</STRONG></TD>
+    <TD>Local Toolbar 图标之间</TD>
+    <TD>7 像素</TD></TR>
+  <TR vAlign=top>
+    <TD><STRONG>D</STRONG></TD>
+    <TD width=320>最后一个Local Toolbar图标和关闭窗口'x' 之间</TD>
+    <TD>7 像素</TD></TR>
+  <TR>
+    <TD><STRONG>E</STRONG></TD>
+    <TD>关闭窗口 'x' 和右边缘之间</TD>
+    <TD>4 像素</TD></TR></TBODY></TABLE>
+<BR><BR>
+<H4>3. 
+Perspective图标</H4>
+<P class=sub>（包括Perspective和Fastview图标）</P>
+<TABLE cellSpacing=0 cellPadding=0 border=0>
+  <TBODY>
+  <TR vAlign=top><!-- TD 1 begins -->
+    <TD height="500"><IMG height=500 alt="perspective specifications" hspace=40 
+      src="Eclipse User Interface Guidelines.files/perspective_specs.gif" 
+      border=0> </TD>
+    <!-- TD 2 begins -->
+    <TD vAlign=top>
+      <P>
+      <H4>Perspective 图标<!-- TD 2 : Table 1 begins -->
+      </H4>
+      <TABLE cellSpacing=2 cellPadding=2 width=500 border=0>
+        <TBODY>
+          <TR vAlign=top>
+          <TD></TD>
+          <TD width=300><STRONG>项目</STRONG></TD>
+          <TD width=200><STRONG>定位和间隔</STRONG></TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>A</STRONG></TD>
+          <TD>Perspective bar</TD>
+          <TD>27 像素宽</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>B</STRONG></TD>
+          <TD>左边缘和图标之间</TD>
+          <TD>5 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>B</STRONG></TD>
+          <TD>图标和右边缘之间</TD>
+          <TD>6 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>B</STRONG></TD>
+          <TD>透视图 区域顶部和第一个图标之间</TD>
+          <TD>3 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>B</STRONG></TD>
+          <TD>图标和分隔（hard rule）之间</TD>
+          <TD>6 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>C</STRONG></TD>
+          <TD>分隔和图标顶部之间</TD>
+          <TD>6 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>D</STRONG></TD>
+          <TD>图标间的垂直间隔</TD>
+          <TD>6 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>E</STRONG></TD>
+          <TD>图标和分隔之间</TD>
+          <TD>6 像素</TD></TR></TBODY></TABLE>
+      <!-- TD 2 : Table 2 begins -->
+      <H4>        Fastview图标</H4>
+      <TABLE cellSpacing=2 cellPadding=2 width=500 border=0>
+        <TBODY>
+          <TR vAlign=top>
+          <TD></TD>
+          <TD width=300><STRONG>项目</STRONG></TD>
+          <TD width=200><STRONG>定位和间隔</STRONG></TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>D</STRONG></TD>
+          <TD>图标间的垂直间隔(和Perspective图标一样)</TD>
+          <TD>6 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>E</STRONG></TD>
+          <TD>图标和分隔之间</TD>
+          <TD>6 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>F</STRONG></TD>
+          <TD>左边缘和图标之间</TD>
+          <TD>5 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>F</STRONG></TD>
+          <TD>Fastview 区域顶部和第一个图标之间</TD>
+          <TD>3 像素</TD></TR>
+        <TR vAlign=top>
+          <TD><STRONG>F</STRONG></TD>
+          <TD>图标和右边缘之间</TD>
+          <TD>6 像素</TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE>
+<H4>4. Tree View 图标</H4>
+<P class=sub>（Model Object图标）</P>
+<IMG height=190 
+alt="treeview specification" hspace=40 
+src="Eclipse User Interface Guidelines.files/treeview_specs.gif" border=0> 
+<BR><BR>
+<TABLE cellSpacing=2 cellPadding=4 border=0>
+  <TBODY>
+      <TR>
+    <TD width=40 rowSpan=8></TD>
+    <TD></TD>
+    <TD width=350><STRONG>项目</STRONG></TD>
+    <TD width=200><STRONG>定位和间隔</STRONG></TD></TR>
+  <TR>
+    <TD><STRONG>A</STRONG></TD>
+    <TD> “+/-”widget 和窗口左边之间</TD>
+    <TD>4 像素</TD></TR>
+  <TR>
+    <TD><STRONG>A</STRONG></TD>
+    <TD>“+/-”widget 窗口顶部之间</TD>
+    <TD>4 像素</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>窗口顶部和第一个图标之间</TD>
+    <TD>0 像素</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>图标间的垂直间隔</TD>
+    <TD>0 像素</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>水平Treeview分支和图标之间</TD>
+    <TD>0 像素</TD></TR>
+  <TR>
+    <TD><STRONG>B</STRONG></TD>
+    <TD>图标和文本标签之间</TD>
+    <TD>3 像素</TD></TR>
+  <TR vAlign=top>
+    <TD><STRONG>C</STRONG></TD>
+    <TD>文本被嵌在文本标签内</TD>
+    <TD width=200>左边和顶部留3像素，右边2像素，底部4 像素（长度可变）</TD></TR></TBODY></TABLE>
+<BR><!-- Icon Specifications / Icon Overlays --><BR>
+<H3><A name=IconSpecsOvr_VDG>图标掩模</A>（Icon Overlays）</H3>
+<P>正如我们在图标尺寸和摆放位置中所说的，所有的掩模必须是同一个尺寸：7×8 像素。为了把它们从底下的模型对象图标中分开，必须在项目类型掩模和Jave掩模中加上另外的白色边线。边线的位置随着掩模在底下的图标中的放置位置而变化。</P>
+<STRONG>项目类型掩模</STRONG> 
+<P>项目类型掩模在Navigator和Package视图中显示。它们完全堆叠于模型对象16×16图标空间的右上角位置。</P>
+<P>有一些项目类型掩模在创建时需要考虑避免界面中的拥挤。项目类型掩模用来显示那些出现在Navigator及其类似视图中的项目的不同<strong>类型</strong>。</P>
+<P>图像周围的白色外边线可以让图像更容易看清。
+</P>
+<P><IMG height=180 
+alt="size and location of the project nature overlay in the upper right corner of the model object icon" 
+hspace=40 src="Eclipse User Interface Guidelines.files/ovr_projectnature.gif" 
+width=180 border=0> &nbsp;&nbsp;&nbsp; <IMG height=180 
+alt="sample of a project nature overlay in the upper right corner of the model object icon" 
+hspace=40 
+src="Eclipse User Interface Guidelines.files/ovr_projectnature_sample.gif" 
+width=180 border=0> </P><STRONG>辅助掩模</STRONG> 
+<P>辅助掩模用于各种类型的Tree视图。这种类型的掩模完全堆叠于模型对象
+16×16 图标空间的左下角位置。</P>
+<P><IMG height=180 alt="" hspace=40 
+src="Eclipse User Interface Guidelines.files/ovr_auxiliary.gif" width=180 
+border=0></P>
+<P>辅助掩模可以很快地显示对象的<strong>状态</strong>。辅助掩模的例子有<EM>warning</EM>，<EM>error</EM>，<EM>failure</EM>，和<EM>success</EM>。
+</P>
+<p><STRONG>Java 掩模</STRONG></p>
+<p>  Java掩模用于 Outline，Hierarchy和Package视图。Java掩模附在模型对象图标上，因此扩大了16×16图标空间。它们位于模型对象图标的右边，
+  和16×16模型对象空间重叠了3个像素。 一个模型对象上最多可以放3个Java掩模。
+</p>
+<P>掩模显示的顺序取决于它们被分配的顺序。设计Java掩模时，重要的是要确认基础的对象图标能够支持附加的掩模而不会引起误读。注意有两个Java掩模通常会在下图中模型对象的右下角‘C’位置显示：<IMG height=8 alt="" 
+src="Eclipse User Interface Guidelines.files/synch_co.gif" width=7 border=0> 
+<STRONG>synchronized</STRONG> （方法）和 <IMG height=8 alt="" 
+src="Eclipse User Interface Guidelines.files/run_co.gif" width=7 border=0> 
+<STRONG>run</STRONG> （类）。</P>
+<P><IMG height=218 
+alt="size and location of the java overlays to the right of the model object icon" 
+hspace=40 src="Eclipse User Interface Guidelines.files/ovr_java.gif" width=276 
+border=0> &nbsp;&nbsp;&nbsp; <IMG height=218 
+alt="sample of java overlays to the right of the model object icon" hspace=40 
+src="Eclipse User Interface Guidelines.files/ovr_java_sample1.gif" width=276 
+border=0> </P>
+<P>Java 掩模定义了一个对象的<STRONG>attributes</STRONG>。
+例子有<EM>static，</EM><EM>final，</EM><EM>abstract，</EM>和<EM>synchronized</EM>。</P>
+<P><STRONG>注意：</STRONG>在Hierarchy和Outline 视图中，Java掩模附在模型对象的右边，如图所示。但是在Package视图中，
+它们堆叠在模型对象上面。</P>
+<p>  <STRONG>版本控制掩模</STRONG></p>
+<p>  版本控制掩模用于Navigator视图以及CVS中的Merge编辑器的Structure视图中显示。当它们在Navigator视图中显示时，该掩模完全堆叠在模型对象的16×16图标空间的右边。
+</p>
+<P><IMG height=180 
+alt="size and location of the version control overlays in the Navigator view in the lower right corner of the model object icon" 
+hspace=40 src="Eclipse User Interface Guidelines.files/ovr_versioncontrol.gif" 
+width=180 border=0></P>
+<P>当版本控制掩模在CVS中
+的Merge编辑器的Structure视图中显示时，它们附在模型对象上面，因此扩展了16×16的空间。
+它们位于模型对象图标的右边，和16×16的模型对象图标重叠3个像素。在CVS中一个对象的右边最多可以有2个掩模。</P>
+<P><IMG height=209 
+alt="size and location of the version control overlays in the Structure view of the Merge Editor in CVS at the right of the model object icon" 
+hspace=40 
+src="Eclipse User Interface Guidelines.files/ovr_versioncontrol_cvs.gif" 
+width=216 border=0>&nbsp;&nbsp;&nbsp; <IMG height=209 
+alt="sample of the version control overlays in the Structure view of the Merge Editor in CVS at the right of the model object icon" 
+hspace=40 
+src="Eclipse User Interface Guidelines.files/ovr_versioncontrol_cvs_samp.gif" 
+width=216 border=0> </P>
+
+版本控制掩模定义了一个对象的<STRONG>transition-状态</STRONG>。CVS掩模的例子有 <EM>incoming</EM>，<EM>outgoing</EM>，<EM>in conflict</EM>，<EM>added</EM>，<EM>deleted</EM>，和 <EM>changed</EM>。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>遵循不同类型图标的定位指南来优化这些元素相对其他元素的排列位置。</FONT><!-- ICON SPECIFICATION SECTION ENDS --><!-- WIZARD SPECIFICATION SECTION BEGINS --><!-- Wizard Specifications / Wizard Palette -->
+</BLOCKQUOTE>
+<H3><A name=WizSpecsPal_VDG>向导调色板</A></H3>
+<P>向导调色板提供你在创建向导图形时需要的特殊的蓝色 183 色调色板。<br>
+Eclipse风格向导横幅图形必须用特殊的蓝色183色调色板创建，如下所示。</P>
+<P><IMG height=145 alt="" hspace=40 
+src="Eclipse User Interface Guidelines.files/wizban183.gif" width=194 border=0> 
+</P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>用Eclipse的特殊蓝色183色调色板创建向导图形。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+<!-- Wizard Specifications / Wizard Size & Placement -->
+<H3><A name=WizSpecsSize_VDG>向导尺寸和放置</A></H3>
+<P>这部分讨论关于创建向导标题（banner）图形的尺寸指南。<br>
+所有的向导标题图形必须设计成可以放在一个向导的右上角的75像素宽×58像素高的屏幕空间内。
+<BR>
+</P>
+<P><IMG height=175 alt="" hspace=40 
+src="Eclipse User Interface Guidelines.files/wizban.gif" width=395 border=0> 
+</P>
+<br>
+向导标题图形的实际尺寸可以根据其涉及的元素有所不同，但不能超过55像素宽×45 像素高。
+<p>在向导标题的空间分配中，并没有严格的规则规定把向导标题图形放在哪里。 一般来说，图形垂直居中，水平位置偏左。</P>
+<BR>
+<IMG height=140 alt="" 
+hspace=40 src="Eclipse User Interface Guidelines.files/wizbans.gif" width=366 
+border=0> <BR>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>遵循特定的尺寸规范来设计向导图形。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.11</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>根据显示的特定摆放位置裁剪向导图形，以确保其在向导标题区域排列整齐。</FONT></BLOCKQUOTE>
+<P></P><!-- WIZARD SPECIFICATION SECTION ENDS --><!-- IMPLEMENTATION CONVENTIONS SECTION BEGINS --><!-- Implementation Ready -->
+<H3><A name=ConsistencyImp_VDG>实现惯例</A></H3>
+<P>Eclipse提供了一套目录名称和结构用来存储和访问任何plug-in中的用户界面图形。
+本节描述了Eclipse中使用的命名惯例和目录路径。如果遵循这些惯例，你可以不做任何修改直接，在plug-in结构中使用预定义的目录名称和路径来放置图标和向导图形文件。</P>
+<P>从你要求图标设计到它们的最后递交，命名和结构都是一样的。如果改变了用户界面目录名字或者多个目录来保存图片，请告知你的视觉设计者这些变化，以便他们也在同样的结构下工作。
+另外，使用尽可能少的目录来保存你的图片，这样能很大程度地减少不必要的图片复制并简化资源管理。</P>
+<H4>目录名称和结构</H4>
+<P>一旦你的图标被概念化，设计，批准并且剪切，它们可以使用下面描述的命名惯例和结构进行存储。
+</P>
+<OL type=A>
+  <LI>一级目录的名字指Eclipse平台：在一个Eclipse plug-in中使用的图标叫做 
+    <STRONG>org.eclipse.pluginname.ui_0.0.0</STRONG>. 这里 
+    <STRONG>pluginname</STRONG> 用plug-in的名字代替，而
+    <STRONG>_0.0.0</STRONG> 用Eclipse版本号代替。例如
+    <STRONG>org.eclipse.debug.ui_2.1.0</STRONG> 
+    <BR>
+  <LI>每个为一个工具管理用户界面元素的plug-in包含一个二级目录，称为<STRONG>icons</STRONG>.    <BR>
+  <LI>在<STRONG>icons</STRONG>目录中，有很多分开的文件夹，名字分别表示图标的状态，类型和尺寸， 如下：
+    <OL>
+      <LI>文件夹名字的第一个字母表示图标的状态。字母
+        <STRONG>c</STRONG> 表示颜色， <STRONG>d</STRONG> 表示不可用，而 
+      <STRONG>e</STRONG> 表示可用。            
+      <LI>接下来的3到6个字母表示图标类型：工具条（tool），局部工具条（lcl），视图或者透视图（view），模型对象（obj），掩模
+        （ovr），向导banner （wizban)）。
+      <LI>文件夹名字的最后两个数字表示图标的尺寸。一般来说是 <STRONG>16</STRONG> 
+        （表示16×16像素大小），但也可能是其他值（例如， <STRONG>32</STRONG> 
+        表示32×32像素大小），这取决于plug-in的需求。</OL>
+</OL>
+<P>下图显示了一个plug-in完整的目录结构。</P>
+<P><IMG height=230 
+alt="Image showing the complete directory structure for user interface graphics a plug-in, as described in text above" 
+hspace=40 
+src="Eclipse User Interface Guidelines.files/impready_folderstructure.gif" 
+width=483 border=0> </P>
+<P><STRONG>注意：</STRONG>&nbsp; 
+<OL>
+  <LI>对于很多plug-in来说，在<STRONG>icons</STRONG>目录下面，有一个文件夹叫做
+    “<STRONG>full</STRONG>”，它包含图标类型文件夹。在新的plug-in目录结构中，已这个 <STRONG>full</STRONG>
+    文件夹废弃不用了。上面所示的结构是推荐的图标目录结构。 
+  <LI>你的plug-in可能不需要上面例子中所示的所有类型的图标。该例子显示了你可能在你的plug-in中用到的完整的图标类型。另外，有时候也可能有例外，某个特殊类型的图标没有包含在这个标准图标类型集中。
+    不过，这种情况很少见，我们希望你了解不同的图标类型和它们各自的状态，并使用上图所示的结构。
+  <LI>当一个图标有多种状态时，在活动 (color)， 可用和不可用文件夹中文件名称都是相同的。
+    由于这种组织方式，使用提供的状态很重要，这样就可以避免如果在同一个文件夹保存所有这些文件时必须重命名你的图标的状态。
+</OL>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用预定义的目录结构和命名惯例。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>保留原始的目录名字。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.14</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在plug-in中把所有的图形保存在一个或尽量少的一级用户界面目录中以减少图形的复制。
+  </FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.15</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用提供的活动，可用和不可用状态。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+<BR>
+<H4>文件名</H4>
+<P>在设计图标前先确定文件名可以帮助保证名字正确表达它们所代表的概念，并避免错误地使用图标和文件名重复。
+如果你提前考虑好文件名，就能够很快地区分不同的图标类型，更容易地理解这些图标的意思，
+尤其当你的图形资源大量增加时。</P>
+<H4>关于文件名后缀的建议</H4>
+<P>文件名后缀能让你区分不同类型的用户界面元素间的差别。
+它们可以用来表示图标或者向导图形的位置或者功能。下表列出了在Eclipse中图形文件名使用的不同后缀： </P>
+<TABLE cellSpacing=2 cellPadding=2 width="100%" border=0>
+  <TBODY>
+   <TR bgColor=#c0c0c0>
+    <TD><STRONG>文件名后缀</STRONG></TD>
+    <TD><STRONG>在有下列功能或者位于以下位置的图标中使用：</STRONG></TD>
+    <TD><STRONG>图标类型和位置</STRONG></TD></TR>
+     <TR vAlign=top bgColor=#e4e4e4>
+    <TD>*_wiz.gif</TD>
+    <TD>调用一个向导，或者是向导中的图形</TD>
+    <TD>向导标题图形：在向导对话框窗口中使用。<BR>
+      Wizard图标：在向导工具条中使用。
+      </TD>
+    </TR>
+     <TR vAlign=top>
+    <TD>*_exec</TD>
+    <TD>调用可执行文件</TD>
+    <TD>Toolbar图标：在级联菜单和全局工具条中使用。</TD>
+     </TR>
+   <TR vAlign=top bgColor=#e4e4e4>
+    <TD>*_edit</TD>
+    <TD>在编辑器视图中</TD>
+    <TD>Toolbar图标：在级联菜单和全局工具条中使用。</TD></TR>
+    <TR vAlign=top>
+    <TD>*_nav</TD>
+    <TD>在Navigator视图中</TD>
+    <TD>Toolbar图标：在级联菜单和全局工具条中使用。<BR>
+      Local Toolbar图标：在视图标题区域的最右边。 
+      <BR>
+      View图标和Perspective图标：在视图的左上角。 
+    </TD>
+    </TR>
+     <TR vAlign=top bgColor=#e4e4e4>
+    <TD>*_misc</TD>
+    <TD>不适合归入任何其他类别的</TD>
+    <TD>Toolbar图标：在级联菜单和全局工具条中使用。<BR>
+    View图标和Perspective图标：在视图的左上角。</TD>
+     </TR>
+   <TR vAlign=top>
+    <TD>*_tsk</TD>
+    <TD>表示用户可以做的任务</TD>
+    <TD>Local Toolbar图标：在视图标题区域的最右边<BR>
+      Overlay图标： 在模型对象图标的上面，用来表示条件的改变。 
+      <BR>
+      Model Object图标：在Tree视图，List视图和Properties视图中使用。
+      <BR>
+      View图标和Perspective图标：位于视图的左上角。</TD></TR>
+      <TR vAlign=top bgColor=#e4e4e4>
+    <TD>*_mode</TD>
+    <TD>切换视图的工作模式</TD>
+    <TD>Local Toolbar图标：在视图标题区域的最右边。</TD></TR>
+      <TR vAlign=top>
+    <TD>*_menu</TD>
+    <TD>菜单中</TD>
+    <TD>Local Toolbar图标：在视图标题区域的最右边。 </TD></TR>
+     <TR vAlign=top bgColor=#e4e4e4>
+    <TD>*_ps</TD>
+    <TD>属性页中</TD>
+    <TD>Local Toolbar图标：在视图标题区域的最右边。
+    <BR>
+    View图标和Perspective图标，在视图的左上角。 </TD></TR>
+     <TR vAlign=top>
+    <TD>*_obj</TD>
+    <TD>表示模型对象</TD>
+    <TD>Model Object图标：在Tree视图，List视图和Properties视图中使用。</TD>
+     </TR>
+   <TR vAlign=top bgColor=#e4e4e4>
+    <TD>*_pal</TD>
+    <TD>对象调色板的模型对象图标</TD>
+    <TD>Model Object图标：在对象调色板中使用</TD></TR>
+  <TR vAlign=top>
+    <TD>*_co</TD>
+    <TD>系统命令，例如，build命令</TD>
+    <TD>Toolbar图标：在级联菜单和全局工具条中使用。
+    <BR>
+    Local Toolbar图标：在视图标题区域的最右边。 </TD></TR><!-- Use the following table row if the last row of data has a white background. It provides
+a line to define the table information from the rest of the text. If the last row of data has
+the dark gray background, you don't need it, so comment it out. -->
+  <TR vAlign=top bgColor=#e4e4e4 height=1>
+    <TD></TD>
+    <TD></TD>
+    <TD></TD></TR></TBODY></TABLE>
+<BR></TD></TR></TABLE>
+<br>
+为了帮助你选择合适的文件名，我们提供以下指南：
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.16</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>采用缩写文件名，不要使用图标名称的全名。
+  例如，New Interface 变成 “newint” 。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.17</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在文件名中使用小写字母。 例如，DTD 写成 “dtd”。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.18</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在文件名中尽可能使用少于10个字母。
+  （下划线也作为一个字母计算）</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.19</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用文件名后缀来描述它在工具中的位置和功能。例如newint_wiz。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.20</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于所有的用户界面图标和向导图形，使用透明背景的 *.gif 格式，除非应用环境要求不同的文件格式。</FONT></BLOCKQUOTE>
+<P></P>
+<HR>
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" width=16> 
+<B><FONT color=#09448d>指南 2.21</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>保留提供的原始文件名。</FONT></BLOCKQUOTE>
+<P></P><!-- IMPLEMENTATION CONVENTIONS SECTION ENDS --><!-- END OF VISUAL DESIGN CONTENT -->
+<H2><A name="Component Development"></A>组件开发</H2>
+<H3><A name=Commands></A>命令</H3>
+命令是被用户调用来执行某些特定的功能，它可以作为菜单项出现，也可以是工具条中的一项。 因此，它有菜单项或者工具项标签，工具提示（Tooltip）以及图像等属性。
+<P>作为plug-in开发者，你可以在窗口菜单条和工具条中，或者单独的视图和编辑器中添加自定义的命令。
+在窗口中可以添加一个action set，action set是一系列用户可以显示或者隐藏的针对任务的命令。在视图或编辑器中只能添加单个的命令。
+<P>下面演示了添加自定义命令的主要区域。
+<P><IMG height=664 hspace=40 
+src="Eclipse User Interface Guidelines.files/actionExamples.gif" width=789> 
+<P>在本节中，我们来看一下通用的命令指南。对于针对窗口，视图，编辑器的相关指南，请参见<A 
+href="#Windows">窗口</A>，<A 
+href="#Views">视图</A>，和<A 
+href="#Editors">编辑器</A>. 
+
+<H4>外观</H4>
+<P>每个命令必须有标签，工具提示和图像。如果命令在工具条中出现，命令图像会显示在所有平台中。如果命令出现在菜单中，图像只能在某些平台下显示，例如Windows 2000 。 标签和工具提示必须使用标题大写风格，就如我们在通用用户界面指南中定义的那样。
+<P>  每个命令必须提供一个全彩色图像。该图像会在鼠标移到命令上时显示。它也可以在普通命令使用中作为可用，不可用和按下 状态图像。在代码中添加的命令也有选项可以定义可用，不可用和反转（roll over）的图像。 该选项可以更好地控制图像外观。
+<P>下面显示了工具条（译：工具提示）中标题大写形式的使用。
+<P><IMG height=141 src="Eclipse User Interface Guidelines.files/tooltipCaps.gif" 
+width=244> <BR>&nbsp; <P><IMG height=16 src="Eclipse User Interface 
+Guidelines.files/guidelineIndicator.gif" width=16><B><FONT color=#09448d>指南 
+3.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>每个命令必须有标签，工具提示和全彩色图像。标签和工具提示
+必须使用标题大写风格。</FONT></BLOCKQUOTE> 
+<HR>
+
+<P>命令的tooltip必须描述命令被调用时的<I>行为</I>，并且当前状态无关。对于按钮，<em>标签</em>必须描述用户按下该按钮时的结果。对于图钉按钮（Toogle Bbutton），要描述当其被钉住时的效果，而且，标签不应该随着按钮的状态变化。 在Eclipse 2.1 版本中，建议命令的工具提示使用和命令标签一样的文字。
+例如，在下面的截图中，可以看到 Show Type Hierarchy按钮的行为使用工具提示来显示。
+<P><IMG height=169 hspace=40 
+src="Eclipse User Interface Guidelines.files/goodTooltips.gif" width=213> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 3.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>命令的工具提示必须描述命令的结果，而不是其当前状态。
+  使用和命令标签同样的文字。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>为了保持一致，在workbench中行为相似的命令都必须采用同样的术语。
+<P>在创建资源时，在命令或向导中必须使用 “New” 这个词。例如"New File"，"New Project" 和 "New Java Class"。
+在删除存在的资源时必须使用 "Delete"这个词。
+<P><br>
+在资源中创建对象时，（例如，在XML文件中的tag； Java类中的方法或者field），必须使用”Add“这个词。
+用户在现有的资源中添加东西。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 3.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>  对于New，Delete和Add 命令，采用workbench的标签术语。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>可用性</H4>
+一个命令只有在能够成功执行的时候才能够被设置为可用，否则，就必须设置为不可用。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 3.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>命令只有在能够成功执行的时候才能够被设置为可用。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>命令是否能被设置为可用应该能很快决定；如果决定起来太费事的话，就先乐观地把该命令设置为可用。
+在commmand被调用时，必须计算是否能真正可用，如果不能，要给用户显示一个对话框。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 3.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>命令是否可用必须能快速决定。若不能，就先乐观地把命令设置为可用。万一命令被调用而不能成功执行，就给用户显示合适的消息。</FONT></BLOCKQUOTE>
+<P>
+<H3><A name=Dialogs></A>对话框</H3>
+对话框用来和用户进行模式交互。它可以用来要求信息输入或者提供反馈信息。
+<BR>
+&nbsp; 
+<H4>初始化<初始化></H4>
+当对话框第一次打开时，初始的焦点应该位于获得用户信息的控件上。这个控件可以根据控件的tab顺序直到找到需要信息输入的控件决定。如果对话框提供简单的反馈信息，或者需要用户简单的确认，初始焦点应该设在缺省按钮上。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d> 指南 4.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对话框打开时，把初始焦点设在容器的第一个输入控件上。如果没有输入控件，就把初始焦点设在缺省按钮上。
+  </FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>多项目选择</H4>
+Slush Bucket widgets （也叫做Twin Box设计）必须是从左边选到右边，供选择的源对象在左边，被选择的文件在右边。
+<P>Slush Buckets必须有下列控制按钮，按照下面的顺序，用来把对象从源对象框移动到被选择框内。
+<TABLE class=indent cellSpacing=0 cellPadding=3 border=1>
+  <TBODY>
+    <TR>
+    <TD width="42"><B>按钮</B></TD>
+    <TD width="248"><B>功能</B></TD></TR>
+  <TR>
+    <TD>&gt;</TD>
+    <TD>把左边所有选择的添加到右边</TD></TR>
+  <TR>
+    <TD>&lt;</TD>
+    <TD>从右边删除选择的项目</TD></TR>
+  <TR>
+    <TD>&gt;&gt;</TD>
+    <TD>添加所有的项目（无论是否被选择）</TD>
+  </TR>
+  <TR>
+    <TD>&lt;&lt;</TD>
+    <TD>删除所有项目</TD></TR></TBODY></TABLE>
+<P><IMG height=278 hspace=40 
+src="Eclipse User Interface Guidelines.files/slushBucket.gif" width=533> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d> 指南 4.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>Slush Bucket widget（或者叫做Twin Box）必须是从左边选择到右边，供选择的源对象位于左边。它必须按照顺序有&gt;， &lt;， &gt;&gt;， &lt;&lt;  控制按钮。</FONT></BLOCKQUOTE>
+<P>
+<H3><A name=Wizards></A>向导</H3>
+在Eclipse中，向导经常用于创建资源，资源导入或者资源导出。它也可以用来执行一系列按顺序执行的命令。
+当一个任务中有很多步骤，并且必须按特定的顺序执行时，我们可以使用向导。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于包含很多步骤并且需要按照特定顺序完成的任务，使用向导。</FONT></BLOCKQUOTE>
+<HR>
+
+<h4>外观</h4>
+<br>
+标题位于向导的顶部，包括一个标题图形和一个文本区域。
+标题图形包含了一个表示向导任务的图像，并且该图像必须是和其他Eclipse中的标题一样是用一个从白色到蓝色的灰度调色板创建的。这样的颜色可以让用户把注意力集中在向导的重要区域。文本区域用来给用户提示缺少的信息，并在信息无效时显示错误消息。 带有标题图像和文本区域的标题栏让向导看起来更美观，更高级。
+<P>在每个向导的底部，必须有 Back，Next，Finish 和Cancel按钮。
+<P><IMG height=390 hspace=40 
+src="Eclipse User Interface Guidelines.files/wizardAppearance.gif" width=500> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>  每个向导顶部必须有一个标题图形和
+  一个用于用户反馈的文本区域，底部必须包含Back， Next， Finish和 Cancel按钮。
+  </FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>初始化</H4>
+当第一次打开一个向导时，焦点必须位于需要信息的第一个区域（见指南3.1 ）。标题提示用户第一步需要的信息。
+<P><IMG height=122 
+src="Eclipse User Interface Guidelines.files/goodWizardInit.gif" width=570> 
+<P>这样显示错误信息是不合适的。在此时，用户还没有做任何操作。
+<P><IMG height=124 
+src="Eclipse User Interface Guidelines.files/badWizardInit.gif" width=576> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>向导开始时使用提示，而不是错误信息。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>向导的初始状态必须从它打开时的上下文得到。 例如，在New File向导中，会检查当前选择的Workbench。
+如果指向一个有效的项目或者文件夹，向导会自动输入父项目或者文件夹名字，并且把光标焦点移到下一个需要用户输入的位置。如果用户选择没有指向有效的父项目或者文件夹，向导就不会自动输入文件夹名字。它会保留该
+区域空白并且把光标焦点放到该区域。当用户选择了一个文件时，向导会用文件的父文件夹或者项目来进行上述操作。
+<P><IMG height=300 
+src="Eclipse User Interface Guidelines.files/wizardFieldPopulation.gif" 
+width=533> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在向导中用当前workbench的状态填充相关区域。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>数据验证</H4>
+<br>
+在向导中，信息的验证必须按照Tab顺序进行。如果第一个必需的域为空，就必须在文本区域中给出提示，指导用户输入该域的值。 如果第一个必需的域错误，就在文本区域显示错误信息。如果第一个必需的域是有效的，检查下一个域，以此类推。文本区域每次只能显示一个提示或者错误信息。<br> 
+如果对话框信息缺少或者无效，必须把将Next或者Finish按钮置于不可用状态直至问题解决。当问题解决，所有的信息都已经提供时，可以把Next或Finish按钮置于可用状态。
+<P><IMG height=527 
+src="Eclipse User Interface Guidelines.files/wizardErrorMsgs.gif" width=540> 
+<P>只有在用户输入无效时才显示错误信息。
+<P><IMG height=199 
+src="Eclipse User Interface Guidelines.files/wizardErrorMsgs2.gif" width=454> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>按照Tab顺序对向导数据进行验证。在信息缺少时给出提示，信息无效时显示错误信息。 </FONT></BLOCKQUOTE>
+<IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>只有在对话框中所有需要的信息都完备并有效时，才设置Next 或Finish按钮的状态为可用。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>向导中的错误信息应该是针对最终用户而不是开发者的。记住这一点，在向导的标题区域中永远不要显示message ID。
+<P><IMG height=98 src="Eclipse User Interface Guidelines.files/wizardMsgs.gif" 
+width=543> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在向导文本中删除所有的编程用的message ID。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>Browse按钮</H4>
+在向导中，需要引用已经存在的对象时，就必须使用一个文本编辑框加上一个“Browse...”按钮。文本编辑框是用来直接输入已存在对象的， Browse按钮是用来从可能的选择列表中浏览并选择相关的对象。
+<P>例如，在New Java Class向导中，在“Super Class” 文本编辑框边有一个“Browse...”按钮。如果按下Browse按钮，会出现一个Browse对话框，用户可以选择一个超类。在任何新对象和旧对象建立链结时，都应该使用这种模式。 “Browse...”按钮应该放在文本编辑框的右边。<BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在向导中需要引用已经存在的对象时，使用Browse按钮。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在Browse对话框中，不应该出现无效的选项。对话框关闭时，焦点回到父控件上，并且刷新对话框内控件的状态（可用或不可用）。特别是要新Next，Finish和OK按钮的状态。
+<P>下面的截图给出了一个有效和无效过滤的例子。
+<P><IMG height=1220 
+src="Eclipse User Interface Guidelines.files/folderSelection.gif" width=611> 
+<BR>&nbsp; 
+<H4>向导结束</H4>
+New Resource and Import 向导通常在Workbench中创建新的文件，文件夹以及项目。如果创建单个的文件，向导应该在活动页面的编辑器中打开文件。如果创建不止一个文件，就打开最重要，最核心的文件。这样可以更方便地修改和保存文件。
+<P>每个例子项目都会有一个readme.html文件，并且在项目创建时自动打开该文件。这样用户可以立刻看到这个例子的概况：它能干些什么，先决条件，限制，步骤等等。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>创建新的文件时，在编辑器中打开该文件。 如果创建一组文件，
+  在编辑器中打开最重要或者最核心的文件。创建例子项目时，打开readme.html文件。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>如果创建了一个新的项目，向导必须把workbench中活动的透视图改变成适合新的项目类型的透视图。在Eclipse 2.1 中，创建新项目时，会提示用户确认切换到所希望的透视图。为了避免丢失上下文，plug-in应该使用这种方式，而不是不提示就自动切换。如果将来用户希望自动切换，可以在确认对话框中选择 “Do not show this message again“ 。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果创建一个新项目，提示用户改变活动的透视图以适应该项目类型。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>不管是创建一个文件，文件夹或者项目，向导都应该在适当的视图中选择并显示新对象。这样用户就可以有直观的印象：新对象已经创建并存在了。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.11</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>创建新对象时，在适当的视图中选择并显示新对象。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在很多情况下，资源的创建会涉及到包含该资源的项目或者文件夹的创建。如果这个项目或文件夹可以在该向导内创建（使用一些很合理的缺省值），向导应该允许其创建。如果这样的资源的创建需要详细的用户交互来保证父项目或者文件夹得以正确创建，向导就不应该尝试这么做了。向导应该显示错误信息提示用户”指定的项目不存在“。
+<P>IBM的WebSphere Studio中的EAR Import 向导就是一个例子，它可以允许用户指定父项目的名字，这样有助于用户交互。这种情况下，基于用户提供的名字，向导可以在创建EAR项目本身的同时也创建可能需要的Web 项目。
+<P><IMG height=299 
+src="Eclipse User Interface Guidelines.files/goodParentCreation.gif" width=506> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果可以定义合理的缺省值的话，就允许在向导中创建文件夹对象。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>术语</H4>
+在创建向导中，如果创建的项目必须是一个项目（而不是项目下面的一个文件夹），就必须使用”Project“这个词。如果是项目下的目录，就应该使用“Folder”。另外，对于文本编辑框的标签，使用”name“后缀（小写的），不要使用其他任何前缀。 例如，使用”Project name“或者 ”Folder name“
+而不要用”Project Name“ 或者“Server Project name”。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 5.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在项目必须是一个项目时，对于文本编辑框标签使用“Project name”。否则，就使用
+  “Folder name”。不要对这个词作任何修饰。 </FONT></BLOCKQUOTE>
+<P>
+<H3><A name=Editors></A>编辑器</H3>
+<FONT color=#000000>编辑器是workbench页面中的一个可视组件。它用来和文档或者数据对象这样的基本内容进行交互。在任何情况下，这些内容都是主要关注点并且反映基本任务。</FONT> <BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用编辑器来编辑或者浏览文件，文档或其他的基本内容。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在编辑器中做的改动必须遵循，打开－保存－关闭，这样的周期模式。当编辑器第一次打开时，编辑器的内容必须是未被修改过的（干净的）。如果内容改变了，编辑器就应该把变化通知平台。作为响应，编辑器Tab标签上就会出现一个星号 “*”。 所做的改动会暂存在编辑器中，直到用户显式保存。此时，改动必须被保存在存储模型的地方。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器中所做的改动必须遵循，打开－保存－关闭，这样的周期模式。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>编辑器必须是以文档或输入为中心。每个编辑器有一个输入，而且在一个页面内对于每个输入只能有一个编辑器。这样的设计可以简化部件管理。
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在一个透视图内，对于每个输入，只能存在编辑器的一个实例。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>另外，应该允许对于每个不同的输入打开不同的编辑器的实例。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>应该允许对于每个不同的输入打开不同的编辑器的实例。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>外观</H4>
+编辑器的标签上应该是正在编辑的资源的名字，
+而不是编辑器的名字。
+<P><IMG height=84 src="Eclipse User Interface Guidelines.files/editorTitles.gif" 
+width=562> <BR>&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>编辑器的标签上应该是正在编辑的文件，文档或者输入的名字。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+如果编辑器包含不止一页，就应该用Tab控件来处理页面激活。 该控件使用的例子可以看plug-in文件编辑器和Html编辑器。
+<P>Tab的标签应该尽量用一个词，最多两个词。<BR>
+  &nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在多页编辑器中，使用Tab控件处理页面激活。Tab标签应该尽量用一个词，最多两个词。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>菜单</H4>
+编辑器可以在窗口菜单条中添加自定义菜单项。编辑器中所有可用的命令都应该在窗口菜单条中显示，这样更清晰而容易使用。唯一例外的是一些显而易见的命令，例如，象后一字符/前一字符，行，单词这样的基本浏览命令。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>编辑器中所有可用的命令，除了一些显而易见的命令以外，都应该添加到窗口菜单条中。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>推荐使用以下的格式，以可以保证在Eclipse中的一致性，并且更容易使用。 <BR>
+&nbsp; 
+<TABLE class=indent cellSpacing=0 cols=4 cellPadding=3 width="80%" border=1>
+  <TBODY>
+  <TR>
+    <TD width="30%">Edit</TD>
+    <TD width="34%">（一个或多个编辑器专用的菜单）</TD>
+    <TD width="36%">Window</TD></TR>
+  <TR>
+    <TD>在这里添加任何对象相关的命令</TD>
+    <TD>（属于专用菜单的命令）</TD>
+    <TD>控制你在编辑器中看到的东西的动作。</TD>
+  </TR></TBODY></TABLE>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>窗口菜单条中编辑器添加的自定义菜单项应该使用标准格式。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+窗口菜单条包含了很多全局命令，比如 Edit菜单中的Cut，Copy和Paste。这些命令作用于活动部分，就是标题区域变深的部分。如果在编辑器中支持了这些命令，编辑器应该钩住这些窗口命令，这样在窗口菜单条
+或者工具条中选择命令和在编辑器中选择同样的命令可以得到同样的结果。编辑器不应该忽略这些命令，也不应该在窗口菜单条和工具条中添加重复的命令。
+<P>全局命令的完整列表在IWorkbenchActionConstants.java 中申明。（如下）
+<P><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /**</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * From 
+IWorkbenchActionConstants.</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Standard global 
+commands in a workbench window.</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String [] 
+GLOBAL_ACTIONS = {</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+UNDO,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+REDO,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+CUT,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+COPY,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+PASTE,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+PRINT,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DELETE,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+FIND,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SELECT_ALL,</TT> 
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+BOOKMARK</TT> <BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; };</TT> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果编辑器支持Cut，Copy，Paste或任何其他全局命令，这些命令应该也能够通过窗口菜单条和工具条中的命令来执行。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>工具条</H4>
+编辑器可以在窗口工具条中添加自定义命令。工具条用来放置编辑器中<I>最常用的</I>命令。任何在工具条中出现的命令也必须出现在菜单中，但没有必要在工具条中重复所有菜单中的命令。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器的工具条中添加视图菜单中最常用的命令。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>编辑器中局部工具条的使用正好和workbench的设计相反。在workbench中，某个编辑器的工具条可以和同类型的编辑器共享。这样减少了你在编辑器间切换时的闪动，减少了产品中图像和命令的数量，也就体现了更好的集成度。
+<H4>上下文菜单</H4>
+上下文菜单用来和编辑器中的对象进行上下文相关的交互。如果在编辑器中选择了一个对象，并打开上下文菜单，该菜单必须仅仅包括和该选择内容有关的命令。会影响到视图表现的命令不应该出现在上下文菜单中。
+<P>在文本编辑器中，你可以假设只存在一种选择内容：文本。在这种情况下，在编辑器中任何的选择内容都应该使用同样的上下文菜单。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.11</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>上下文菜单中使用和选择内容相关的命令。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>为了保持和Eclipse中其他编辑器的一致性，每个编辑器都应该在上下文菜单中采用通用的命令顺序。下面的表格显示了这种格式。在表中，每项表示一类命令。上下文菜单中的不同类别可以通过分隔线分隔。 <BR>
+&nbsp; 
+<TABLE class=indent cellSpacing=0 cols=1 cellPadding=3 width=200 border=1>
+  <TBODY>
+  <TR>
+    <TD>Undo / Redo</TD></TR>
+  <TR>
+    <TD>Add</TD></TR>
+  <TR>
+    <TD>Show In</TD></TR>
+  <TR>
+    <TD>Cut Copy Paste</TD></TR>
+  <TR>
+    <TD>Delete</TD></TR>
+  <TR>
+    <TD>Other Plugin Additions</TD></TR>
+  <TR>
+    <TD>Save</TD></TR></TBODY></TABLE>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器上下文菜单中使用标准的格式。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>为了方便浏览，在上下文菜单中对于每个选择类型使用固定的一套命令。一旦定义了内容，就可以根据被选择的对象状态来决定每个命令是否可用。这样做可以增强一致性，使菜单更加合理易用。<BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在上下文菜单中对于每个选择类型使用固定的一套命令。并且根据被选择对象的状态来决定菜单项是否可用。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>平台UI的基本目标之一就是可扩展性。事实上，正是可扩展性使得你可以在平台中自由地增加新的视图，编辑器，透视图和动作。当然，可扩展性也有其两面性。你希望能够扩展平台，而其他人可能希望扩展你的视图或者编辑器。在一个plug-in中增加动作到另一个plug-in的编辑器的菜单，工具条或者上下文菜单是很常见的。
+<P>在平台中，编辑器的菜单和工具条会被平台自动扩展。相反，上下文菜单的扩展要通过编辑器和平台的合作才能完成。为了实现这种合作，编辑器要把它所包含的每个上下文菜单在平台中进行注册。它还必须为编辑器中的每个对象类型
+定义一个命令过滤器。有了命令过滤器，就可以很容易地在一个plug-in中添加命令到另一个plug-in中定义的编辑器中的对象相关的上下文菜单上。这是通过对象的类型和属性来描述的。要获得更多关于如何实现该概念的信息，请参考<A 
+href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" 
+target=_top>Creating an Eclipse View </A>。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.14</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在平台中注册编辑器中所有的上下文菜单。</FONT></BLOCKQUOTE>
+<IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.15</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>为编辑器中的每个对象类型实现一个命令过滤器。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>资源删除</H4>
+如果一个资源在某个导航视图（例如，IBM的Websphere Studio中Navigator视图，J2EE视图，data视图或DBA Explorer视图）中删除时，当前打开该资源的编辑器的处理取决于该编辑器是否有未保存过的改动。
+<P>如果从上次资源被保存以来，编辑器没有包含任何改动，编辑器就应该立刻关闭。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.16</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个编辑器的输入内容被删除了，并且编辑器没有包含任何改动，编辑器应该立刻关闭。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>I如果从上次资源被保存以来，编辑器中有改动（也就是说，是“dirty”），编辑器必须提示用户把改动保存到其他位置，然后再关闭。下面的例子显示了应该提供的对话框：
+<P><IMG height=124 hspace=40 
+src="Eclipse User Interface Guidelines.files/fileDeletedDialog.gif" width=436> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.17</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果编辑器的输入内容被删除，并且编辑器有改动，编辑器应该提示用户把改动保存到其他位置，然后再关闭。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>未保存的改动</H4>
+如果从上次资源被保存以来，编辑器中有改动（也就是说，是“dirty”），在编辑器Tab中的资源名称前必须出现一个星号。
+<P><IMG height=331 hspace=40 
+src="Eclipse User Interface Guidelines.files/dirtyEditor.gif" width=334> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.18</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果资源有改动，要在编辑器Tab中资源名称前面加一个星号。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>只读文件</H4>
+对于“编辑器”这样的名字来说，只读文件可能会引起困惑。如果文件是只读呢，又怎么能够编辑它呢？这种情况下，我们回头看一下最初的定义。
+<BLOCKQUOTE>视图主要是用来浏览信息的层次，打开编辑器，或者显示活动编辑器的属性的。编辑器主要是用来编辑或者浏览一个文件，文档或者其他输入对象的。
+</BLOCKQUOTE>
+这样的陈述不管文件是否是只读文件都是正确的。在任一种情况下，用户都可以选择文件，打开它，并且在编辑器中浏览其内容。如果文件是只读的，就应该禁用“File 
+&gt; Save”命令而使 “File &gt; Save As” 命令可用。在状态条区域，应该显示 “Read-only"
+而不是缺省的 ”Writeable“。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.19</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于只读的编辑器输入和其他输入同样处理。如果可能的话，使 ”Save As“处于可用状态。在状态条区域显示”Read-only“。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>和其他视图的集成</H4>
+Eclipse中，每个编辑器和Outline视图间有种特殊的关系。当编辑器打开时，Outline 视图会连接到编辑器，并且向它要一个Outline 模型。如果编辑器回复了一个Outline 模型，该模型就会在Outline视图中显示，无论编辑器是否处于活动状态。这个Outline用来浏览内容，或者在更高的抽象层上和编辑数据进行交互。
+<P>例如，如果你在编辑器中打开了一个 .java文件，Outline视图中就会显示类的结构。当你在Outline中选中一个方法或者成员变量时，它的文本声明会在编辑器中被选中并且显示。如果你选中一个方法或者成员变量，
+并且打开上下文菜单时，你就能够把它作为一个概念单元来交互，而不是单纯的文本。
+<P>总之，如果编辑器中数据太多无法在一屏上显示时，编辑器就必须给Outline视图提供一个Outline 模型，
+并且生成一个结构化的Outline。该结构化的Outline可以让你很容易地浏览Java文件或者html文件这样的对象。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.20</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果编辑器中数据太多无法在一屏上显示时，并且将生成一个结构化的Outline，
+ 编辑器就必须给Outline视图提供一个Outline 模型。
+  </FONT></BLOCKQUOTE>
+<HR>
+
+<P>当编辑器和Outline视图交互时，关于位置的通知必须是双向的。也就是说，用户在Outline中选择东西时，编辑器中的选择位置也会更新；用户在编辑器中选择东西时，Ouline视图也必须更新选择。
+<P>在需要支持创建操作的Outline视图中必须要有合适的上下文菜单。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.21</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>编辑器和Outline视图间关于位置的通知应该是双向的。如果可以的话，在Outline视图中应该有上下文菜单。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<P>如果编辑模型中包含错误或者警告，必须在Outline视图中显示。对于错误和警告应该分别在项目上添加错误和警告图像。如果容器本身出现错误，就应该在容器上加一个红色的X ，如果不是容器本身而是其派生的内容出现错误，就加一个灰色的X， 如果两者都没有错误就不加 X。 例如，在下图中，addFastView方法出现错误，
+所以在该项目和其父项目上都加了一个错误图像。 <BR>
+&nbsp; 
+<P><IMG height=284 hspace=40 
+src="Eclipse User Interface Guidelines.files/errorsInOutline.gif" width=223> 
+<BR>&nbsp; 
+<P>为了实现这样的设计，必须在设计图标仔细考虑掩模，这样在原始图标上可以添加文字图案。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.22</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于错误和警告，应该分别在项目上添加错误和警告图像。如果容器本身出现错误，
+  就应该在容器上加一个红色的X ， 如果不是容器本身而是其派生的内容出现错误，就加一个灰色的X，如果两者都没有错误就不加 X。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在编辑器中，任务对象通常用来标记文档中的位置。一旦创建了一个任务，就会在Task视图中显示。
+如果任务被选中，你再次打开编辑器的时候就可以位于定义任务的那个位置。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.23</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果可以的话，在你的编辑器中实现”Add Task“功能。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>书签对象也可以用来标记文档中的位置。一旦创建了一个书签，它就会在Bookmarks视图中显示。如果选中了这个书签，你再次打开编辑器时就可以位于定义书签的位置。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.24</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果可以的话，在你的编辑器中实现“Add Bookmark”功能。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>行号</H4>
+带有源文本的编辑器应该有行号，也可以有列号。编辑器也必须支持 Navigate -Goto Line ...菜单，这样用户可以迅速跳到指定的那一行。当前的行号和列号应该在状态栏中显示（列号可选）。
+也可以在编辑器中每一行显示行号。&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.25</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>带有源文本的编辑器应该在状态栏中显示当前行号，也可以显示列号。也可以在编辑器中每一行显示行号。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>表格单元格编辑器</H4>
+<P>如果编辑器包含带有可编辑单元格的表格，在单元格上单击应该选中当前的项目，并使该单元格进入编辑模式。在编辑模式，该单元格中任何下拉按钮，按钮或者其他的控件都应该能单击显示。
+</P>
+<P><IMG height=383 hspace=40 
+src="Eclipse User Interface Guidelines.files/cellTableEditor.gif" width=284> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.26</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>  表格单元格编辑器必须支持单击激活的模式，并且在编辑模式下，他们应能够通过单击显示复杂的控件。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>另外，当用户从单元格点击离开或者按ENTER键时，改变应该生效。
+<P>下面的例子显示了表格单元格编辑器的良好行为方式：
+<P> － 进入编辑模式时，下拉项的当前选项激活并且高亮<BR><IMG height=17 hspace=40 
+src="Eclipse User Interface Guidelines.files/cell1.gif" width=114> 
+<P>－ 当用户在下拉选项中用上下箭头移动时，要求可以移动到任何数量的选项，
+并且，所有下拉选项保持可见直到用户做出明确的选择。<BR>
+<IMG height=97 hspace=40 
+src="Eclipse User Interface Guidelines.files/cell2.gif" width=56> 
+<P>－ 当下拉项可见时，首字母导航也应该作为一种Cursoring技术来支持。
+<BR>
+－ 当下拉项可见时，允许按“Enter”键作为用户确认选择的一种方式。
+<br>
+－  当下拉项可见时，允许按“Esc”键作用用户取消选择的一种方式。
+<BR>
+－ 进入编辑模式时，下拉控制 （向下箭头图像）会出现，而且当前选项激活并高亮显示。
+<BR>
+<IMG height=17 hspace=40 
+src="Eclipse User Interface Guidelines.files/cell3.gif" width=114> 
+<P>－ 进入编辑模式时，可以允许使用上下键头在选项中进行选择，而无需调用下拉项。<BR>&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.27</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>当用户从表格单元格点击离开，或者按ENTER键时，对于单元格的改动应该生效。用户可以通过按“Esc”键取消选择。首字母导航应该作为一种单元格内的Cursoring机制来支持。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>
+Error通知</H4>
+If you are doing keystroke by keystroke validation in 
+an editor, use red squiggles to underline the invalid content. When users move 
+the mouse over the red squiggles, display the error text in a fly-over pop up 
+box. <br>
+如果你在编辑器中使用按键输入验证，在出现无效内容时使用红色花体进行强调。当用户把鼠标移动到红色花体上面时，在一个浮动的弹出框中显示错误信息。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.28</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器中进行细小的错误验证时，使用红色花体来强调无效的内容。
+  当用户把鼠标移动到红色花体上面时，在一个浮动的弹出框中显示错误信息。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+在编辑器中调用Save命令时，用Task 视图显示遗留的错误。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.29</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>调用Save命令时，使用Task 视图显示找到的错误。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>
+  和外部编辑器的交互
+</H4>
+在Workbench中打开一个资源，如果在该Workbench的外面该资源被修改过了，我们推荐
+下述方式处理这种情况。在编辑器中调用Save 命令时，用户会得到提示，询问是否忽略在Workbench
+外面做的修改，还是放弃Save操作。如果需要的话，这样的用户提示会在编辑器重新获得焦点时立刻出现。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 6.30</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果资源在Workbench外部被修改，在编辑器中调用Save 命令时，用户必须得到提示，询问是否忽略在Workbench
+外面做的修改，还是放弃Save操作。</FONT></BLOCKQUOTE>
+<H3><A name=Views></A>视图</H3>
+<FONT color=#000000>视图是Workbech页面的一个可视组件。它用来支持基本任务。
+你可以用它来浏览信息的层次，打开编辑器，或者查看活动编辑器的属性。</FONT> <BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用视图来浏览信息的层次，打开编辑器，或者查看活动对象的属性。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>视图中所做的改动必须立刻被保存。例如，如果在Navigator视图中修改了一个文件，改动就会立刻在Workspace
+中生效。 在Outline视图中所做的改动会立刻在活动编辑器的编辑模型中生效。 对于Properties视图中的改变，
+如果该属性是一个打开的编辑模型的属性，就必须针对该编辑模型生效；如果是文件属性，就作用于文件。
+<P>以前，有些视图会尝试采用一种编辑器类型的生命周期，使用Save命令。这样会导致混淆。Wworkbench窗口中的File菜单包含了一个Save 命令，但该命令仅仅作用于活动的编辑器。
+它不应该作用于活动视图。 这样，File  &gt; Save 命令就和视图中的Save 命令相矛盾了。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>视图中的改动应该立刻被保存。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在一个透视图中，只能打开一个特殊的视图的实例。这是为了让用户简化部件管理设计的。用户可以调用Perspective &gt; Show View 来打开一个视图。如果由于任何原因，他们找不到该视图了或者忘记了
+这个视图的存在， 可以直接调用Perspective &gt; Show View 来重新显示该视图。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>一个透视图中只能有一个视图的一个实例。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在多任务环境中，人们经常在同一时间执行多个任务。在Eclipse中，任务的分离可以通过为每个任务创建单独的透视图实现。 因此，一个视图必须能够在多个透视图中打开。
+如果只能存在一个视图的一个实例，那么就无法实现多任务。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>一个视图必须能够在多个透视图中打开。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+一个视图可以用两种方法打开：调用Window &gt; Show View &gt; X 菜单，其中X是视图的名字，或者在Workbench中调用另外一个命令。例如，如果你在Package视图中选择了一个类，并且调用
+Open Type Hierarchy， 就会打开一个Hierarchy 视图显示类的层次。
+<P>应该允许用户从Window &gt; Show View打开任何视图，无论是作为菜单中明确的一项，还是
+作为Window &gt; Show View &gt; Other...对话框中的一项。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>视图应该可以通过 Window &gt; Show View菜单打开。 </FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>外观</H4>
+视图必须包括标题区域，工具条，下拉菜单和一个嵌入控件。
+<P>标题条中视图的标签必须用Perspective &gt; Show View菜单中视图的名字作为前缀。由于你不可能改变
+Perspective &gt; Show View菜单中的选项名字，这意味着你也不能改变视图的名字。不过，你可以在视图标签中加其他的文字来表明视图的状态。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>标题条中视图的标签必须用Perspective &gt; Show View菜单中视图的名字作为前缀。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在大多数情况下，一个视图包含一个控件或者Viewer。但是，也可能在视图中包含多个Viewer或者控件。
+如果这些控件连接在一起，也就是在一个控件中的选择会改变另一个中的输入的话，最好把视图分成两个。这样用户可以更自由地根据需要打开其中一个视图。为了支持用户任务，也可以在这些视图间建立特殊的连续。另外，这样用户可以更容易地创建一个带有不同视图组合的透视图。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个视图包含多个控件，最好将其分成2个或多个视图。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>
+初始化</H4>
+视图打开时，视图的输入应该从透视图的状态得到。视图会查询窗口的输入或者选择，或者另外一个视图的状态。
+例如，当Outline视图打开时，它会先确定活动编辑器，问编辑器要求一个Outline 模型，然后显示该Outline 模型。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>视图第一次打开时，从透视图的状态获得视图输入。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>如果视图用来浏览资源的层次（例如，Navigator或者Packages 视图），视图输入可以从窗口输入得到。窗口输入定义了透视图中可见的资源的范围，并且由用户在Navigator中选择资源或者调用 Open in New Window
+时定义。例如，如果打开了Navigator视图，它会从透视图获得窗口输入。该结果用作视图的初始输入。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果视图显示了一颗资源树，考虑使用窗口输入作为该视图中可见信息的根。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>菜单</H4>
+<P>将视图下拉菜单用于外观表现型命令，而不要用于和选择内容相关的命令。 有些命令会影响视图的外观，但不影响视图中的对象。不要把外观表现型命令放在上下文菜单中。例如，Navigator视图中的Sort and Filter命令会影响资源的外观表现，但不影响资源本身。 </P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>将视图下拉菜单用于外观表现型命令，而不要用于和选择内容相关的命令。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+为了和Eclipse中的其他视图保持一致，每个视图的下拉菜单都应该采用通用的命令顺序。
+命令顺序在下表中列出。<BR>
+&nbsp; 
+<TABLE class=indent cellSpacing=0 cols=1 cellPadding=3 width=654 border=1>
+  <TBODY>
+  <TR>
+    <TD width=415>视图模式（例如，Hierarchy视图中的3种模式）</TD></TR>
+  <TR>
+    <TD width=415 height=38>[需要分隔线]</TD></TR>
+  <TR>
+    <TD width=415 height=35>Working sets （例如  Navigator 和 Package Explorer中
+    使用的Select/Deselect/Edit ）</TD></TR>
+  <TR>
+    <TD width=415 height=33>[需要分隔线]</TD></TR>
+  <TR>
+    <TD width=415>排序</TD>
+  </TR>
+  <TR>
+    <TD width=415>[可以有分隔线]</TD></TR>
+  <TR>
+    <TD width=415>过滤</TD>
+  </TR>
+  <TR>
+    <TD width=415>[可以有分隔线]</TD></TR>
+  <TR>
+    <TD width=415>视图布局 （Hierarchy视图中的水平或者垂直）</TD>
+  </TR>
+  <TR>
+    <TD width=415>[可以有分隔线]</TD></TR>
+  <TR>
+    <TD width=415>和编辑器的连接</TD></TR>
+  <TR>
+    <TD width=415>[需要分隔线]</TD></TR>
+  <TR>
+    <TD width=415>视图本身的其他外观表现型命令</TD></TR>
+  <TR>
+    <TD width=415>[需要分隔线]</TD></TR>
+  <TR>
+    <TD width=415>其他plug-in的外观表现型命令</TD></TR></TBODY></TABLE>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.11</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在视图下拉菜单中使用标准的命令顺序。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>工具条</H4>
+工具条用来显示视图中最常用的命令。任何在工具条中出现的命令也必须出现在菜单中
+（上下文菜单或者视图菜单），但不需要在工具条中重复所有菜单中的命令。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>把最常用的命令放在工具条中。任何在工具条中出现的命令
+  也必须在上下文菜单或者视图菜单中出现。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>上下文菜单</H4>
+<br>
+上下文菜单用来和视图中的对象进行上下文相关的交互。如果在视图中选中了一个对象，并打开上下文菜单，上下文菜单中应该只包括适用于选择内容的动作。 影响视图的外观表现的动作不能在
+上下文菜单中出现。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>上下文菜单中尽包含选择内容相关的动作，而不包含外观表现相关的动作。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>为了和Eclipse中的其他视图保持一致，每个视图必须在上下文菜单中采用通用的命令顺序。下表列出了命令的顺序。在该表中，每一项代表一类命令。上下文菜单中不同类别的命令必须
+用分隔线和其他命令分开。<BR>
+&nbsp; 
+<TABLE class=indent cellSpacing=0 cols=1 cellPadding=3 width=477 border=1>
+  <TBODY>
+  <TR>
+    <TD>New</TD></TR>
+  <TR>
+    <TD>Open</TD></TR>
+  <TR>
+    <TD>Navigate + Show In</TD></TR>
+  <TR>
+    <TD>Cut, Copy, Paste, Delete, Move, Rename and other refactoring 
+    commands</TD></TR>
+  <TR>
+    <TD>Other Plugin Additions</TD></TR>
+  <TR>
+    <TD>Properties</TD></TR></TBODY></TABLE>
+<P>New 类别包含了创建新对象的动作。Open 类别包含了打开编辑器中所选内容的动作。
+Navigate类别包含了设置焦点到视图输入，或者显示另一个视图中所选内容的动作。其他的类别你可以很容易地从名字看出其含义来。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.14</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在视图上下文菜单中使用标准的命令顺序。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+为了方便菜单浏览，在上下文菜单中对于每个选择类型使用固定的一套命令。一旦定义了内容，
+就可以根据选中的对象状态来决定每个命令的可用状态。这样做可以增强一致性，让菜单更加合理易用。<BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.15</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在上下文菜单中对于每个选择类型使用固定的一套命令。并根据选中的对象状态来设置每个命令的可用状态。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+一个视图中的对象可能在其他视图或者编辑器中也可以看到。例如，在Navigator，Hierarchy视图和Packages 视图中都可以看到某个.java文件。 对用户来说，这些对象是一样的，不管对象的位置在哪里。
+因此对于这个.java文件的上下文菜单也应该都是一样的。
+<P>  实现技巧：
+<BR>
+为了得到一个一致的上下文菜单，plug-in开发者引入了一个新的对象类型，使用一个动作组（ActionGroup类，这个Java类用来装配上下文菜单）在上下文菜单中添加自定义命令。 果使用这种方法，这个动作组就可以在同样的对象出现的其他视图中重复使用。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.16</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个对象在不止一个视图中出现，就必须都使用相同的上下文菜单。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>平台UI的基本目标之一是可扩展性。 事实上，正是可扩展性让你可以在平台中自由地增加新的视图，编辑器，透视图和动作。当然，可扩展性也有其两面性。你希望能够扩展平台，而其他人可能希望扩展你的视图或者编辑器。在一个plug-in中增加来自另一个plug-in的编辑器菜单，工具条或者上下文菜单的动作的做法是很常见的。
+<P>在平台中，视图的菜单和工具条会被平台自动扩展。相反，上下文菜单的扩展要通过视图和平台的合作完成。为了实现这种合作，视图要把它所包含的每个上下文菜单在平台中进行注册。它还必须为视图中的每个对象类型
+定义一个命令过滤器。有了命令过滤器，在一个plug-in中添加另一个plug-in定义的视图中的对象的命令就更容易了。该目标通过对象的类型和属性来描述。要获得更多关于如何实现该概念的信息，请参考<A 
+href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" 
+target=_top>Creating an Eclipse View.</A>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.17</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在平台中注册视图中所有的上下文菜单。</FONT></BLOCKQUOTE>
+<IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.18</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>为视图中的每个对象类型实现一个命令过滤器。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>和窗口菜单条以及工具条的集成</H4>
+窗口菜单条包含了很多全局命令，比如 Edit菜单中的Cut，Copy和Paste。这些命令作用于活动部件，就是标题区域变深的部分。如果在视图中支持了这些命令，视图应该钩住这些窗口命令，这样在窗口菜单条或者工具条中选择命令和在视图中选择同样的命令可以得到同样的结果。
+<P>全局命令和内置菜单的完整列表在IWorkbenchActionConstants.java中定义。（如下）
+<P><TT></TT>File 菜单: Revert, Move, Rename, Refresh, Print, Properties<BR>
+  Edit 
+菜单: Undo, Redo, Cut, Copy, Paste, Delete, Select All, Find/Replace, Add 
+Bookmark, Add Task<BR>
+Navigate 菜单: Go Into, Back, Forward, Up One Level, Next, 
+Previous, Back, Forward<BR>Project 菜单: Open Project, Close Project, Build 
+Project, Rebuild Project 
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.19</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个视图支持Cut，Copy，Paste或任何其他全局命令，
+  这些命令应该也能够通过窗口菜单条和工具条中的同样命令来执行。</FONT></BLOCKQUOTE>
+<HR>
+
+<P><FONT color=#000000>在Eclipse v2.1 中，虽然视图不能直接在主菜单条或工具条中添加自定义命令，它仍然能够
+通过使用 “action set / part associations”（  actionSetPartAssociations extension 
+point）让你可以把动作集和特定的部件（视图或者编辑器）关联起来，这样就能让命令显示出来。
+例如，Eclipse中的Java tooling 把这个用在Package Explorer上。
+<BR><BR>
+视图（或者编辑器）的所有命令必须都能在主菜单条上找到。仅仅那些经常使用的命令才放在
+上下文菜单中。
+<BR><BR>
+另外，这些视图的主透视图（例如Java和JavaBrowsing 透视图s）也应该把这些动作集和
+透视图关联起来，来提高UI稳定性。
+<BR><BR></FONT></P>
+<H4>持久性</H4>
+平台UI的主要目的之一是提供和Workspace的有效的交互。在平台中，这是通过一个会话结束（Workbench被关闭）时所保存的Workspace状态来保证的。当一个新的会话开始（Workspace
+打开时）时，状态就会恢复，这样用户可以立刻回到原来的工作。
+<P>如果视图中有一个静态输入对象，也就是说它的输入不是从其他部分的选择内容得到的，视图的状态就应该在会话间保持不变。如果视图有一个动态的或者瞬态的输入对象，就没必要在会话间保持其状态。在Workbench中，Navigator视图的状态，包括输入状态和展开状态，是在会话间保存的。关于如果实现持续性的更多内容，请参考"<A 
+href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" 
+target=_top>Creating an Eclipse View</A>". <BR>
+&nbsp;
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.20</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在会话间保持每个视图的状态。</FONT></BLOCKQUOTE>
+<HR>
+
+<P><FONT color=#000000>Navigation视图必须在视图菜单中支持 ”Link with Editor“。在Eclipse 2.1 中，该功能作用于每个视图的设置。如果用户要频繁地打开关闭该功能，也可以放在工具条上，但不是必须这么做。（Hierarchy视图和 Java Browsing 透视图中的视图可以支持该功能，但没有放在工具条上，因此
+他们希望该功能一直打开。）
+
+<BR>
+<BR>
+”Link with Editor“的行为如下： </FONT></P>
+<UL>
+  <LI>当<FONT color=#000000>”Link with Editor“</FONT>不被选择时，不发生连接（不管是视图-&gt;编辑器还是编辑器-&gt;视图）  
+  <LI>当<FONT color=#000000>”Link with Editor“</FONT>被选择时，进行双向连接：
+    <UL>
+      <LI>视图-&gt;编辑器：当视图中选择改变时，把当前已打开的相应编辑器显示到最前端，但不激活它。（视图必须保留焦点）
+      <li>编辑器-&gt;视图：当用户在编辑器中切换时，视图会根据活动编辑器更新相应的选择。 </li>
+    </UL>
+  <LI> 该功能打开时，必须立刻把视图中的选择内容和最前端的编辑器同步。  
+  <LI>这和单击模式不同 - 它不会打开新的编辑器。  
+  <LI>改变设置仅仅作用于当前的视图实例，而不会改变同样类型的其他实例。  
+  <LI>视图为每个实例单独保存设置状态，也保存全局设置状态（但对于每种视图类型要分开，例如
+  Navigator和Package视图分别保持他们的最后设置。）  
+  <LI>打开一个视图的新实例时，应该使用其最后的全局设置。
+  <LI>缺省设置取决于视图（如果没有先前保持的全局设置的话），但是象Navigator和Package
+    Explorer这样的主导航视图应该没有缺省设置。
+</UL>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 7.21</FONT></B></P>
+<BLOCKQUOTE><FONT color=#09448d><FONT color=#000000></FONT>导航视图必须在视图菜单中支持 ”Link with Editor“。</FONT></BLOCKQUOTE>
+<P>&nbsp;</P>
+<H3><A name=Perspectives></A>透视图</H3>
+透视图是一个包含一系列视图和编辑器（部件）的可视容器。不同的透视图可以打开不同的视图，但如果他们都打开了同一个视图，视图会在他们之间共享（只有当这些透视图
+在同一个Workbench窗口内时）。编辑器总是在透视图之间在同一个窗口内共享的。
+<P>调用Window -&gt; Open Perspective -&gt; X就能打开一个新透视图，其中X在Eclipse中表示某个特定的透视图。其结果会在workbench窗口中新开一个<I>类型</I>为 X 的透视图。例如，如果你调用Window -&gt; Open Perspective -&gt; Resource，就会打开一个<I>资源</I>
+类型的透视图。Eclipse预先定义了一些透视图类型，例如Resource，Java和Debug。透视图的类型决定了视图的初始布局以及在透视图中可见的命令集。
+<P>作为一个plug-in开发者，你可以在Eclipse中添加自定义的新透视图类型。为此，你必须定义一个
+perspective extension。每个extension 有一个<I>perspective factory</I>，这是一个定义视图初始布局以及透视图中可见的命令集的Java类。你也可以在现有的透视图类型中加入自定义的动作或者视图。关于如何实现这些概念的更多信息请参考 <A 
+href="http://www.eclipse.org/articles/using-perspectives/PerspectiveArticle.html" 
+target=_top>Using Perspectives in the Eclipse UI</A>. 
+<P>如果有一组相关的非模态任务都可以使用一个预定义的命令和视图配置，并且这些任务都长期存在的话，就应该创建一个新的透视图类型。必须使用面向任务的处理方式。作为开发环境，Eclipse
+  设计成可以符合大规模产品开发团队的需求，从产品经理到内容开发者，以及产品测试者。它有充分的可扩展性，而且可以配置数百个命令，向导，视图和编辑器的extension。换句话说，很多功能你
+  可能永远也用不到。如果所有东西在UI都可见的话，会引起视觉超负荷或者混淆，为了避免这种情况，透视图可以用来限制面向任务的视图和命令集的显示。
+<P>例如，Java代码生成是一个长期而且复杂的任务，所以应该创建一个Java 透视图。在Eclipse中，Java 透视图包括一个编辑区域，Packages Explorer 视图，Hierarchy视图，Tasks 视图和Outline 视图。也可以看到Java和Debug命令集。 这些组件对于很多长期的Java
+编码任务都是很有用的。
+<P>对于短暂的任务创建一个新透视图类型是不合适的。 例如，资源check-in是一个短期任务，因此最好使用当前透视图中的一个视图来完成。<BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果长期任务包含很多较小的，非模态的任务，应该为其创建一个新的透视图类型。
+</FONT></BLOCKQUOTE>
+<HR>
+
+<P>如果你的plug-in只增加了少量的视图，并且只扩展了现有的任务，最好在现有的透视图中增加这些视图。例如，如果你创建了一个视图用来扩展Java代码创建任务，就不要创建新的透视图，而把它增加在现有的Java 透视图中。这样的策略可以更好地和现有的平台整合。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>  如果你只想增加1个或两个视图的话，考虑扩展现有的透视图类型。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>视图布局</H4>
+用户打开一个新的透视图时，视图的初始布局由透视图类型来定义。（比如，Resoruce， Java）。该布局由<I>perspective factory</I>实现，这是一个和透视图相关联的Java类。当透视图初始化时，它只有一个编辑器区域，没有其他的视图。 Perspective factory可以使用编辑器区域为初始参考点，添加新的视图。
+<P>每个视图的尺寸和位置由perspective factory控制。这些属性应该以合理的方式定义，这样用户可以在需要的时候修改视图大小或者移动视图。 一个重要的需要考虑的问题是透视图中视图或者编辑器之间的总体顺序。例如，导航视图的初始位置可以放在编辑区域的左边，Outline视图可以放在编辑区域的右边或者导航视图的下面，其他的视图可以放在编辑区域的右下方。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>透视图中每个视图的尺寸和位置要合理地定义，这样可以用户在需要的时候修改视图大小或者移动视图。定义初始布局时，要考虑透视图中视图或者编辑器之间的总体顺序。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>一个透视图必须至少有两个部分，包括可见的视图和编辑区域。如果没有，那么必须重新检查透视图
+来确定是否改用视图和编辑器更合适。 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.4&nbsp;</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个透视图只有一个部分，那么可能用视图或者编辑器更合适。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+在某些情况下，可能不希望在透视图中有一个编辑器区域。在这种情况下，perspective factory就应该使用现有的java方法来隐藏编辑器区域。 
+不要把编辑器的大小变成点使它不可见。不管用户出于什么理由在透视图中打开了一个编辑器，他们都不会看到或者改变该编辑器的大小。
+<P>如果编辑器区域是通过程序隐藏的，如果用户在透视图中打开了一个编辑器，编辑器区域就是可见的。
+此前占据该编辑器区域的视图就会缩小。因此，定义一个非空的编辑器区域很重要，哪怕编辑器是用程序隐藏的。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果不希望在透视图中有一个编辑器区域，隐藏它。 不要把编辑器区域的大小变成点使它不可见。
+  </FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>添加自定义命令</H4>
+Perspective factory可以在File 
+-&gt; New， Window -&gt; Open Perspective，以及 Window -&gt; Show View 菜单中添加动作。也可以在窗口中添加一个或者多个命令集。在任一种情况下，你都应该选择和透视图的任务相关的命令。
+<P>File -&gt; New菜单必须提供任务中创建常用对象的向导。例如，在Java 透视图中，File -&gt; New 菜单包含菜单项创建包，类和接口的。
+<P>Window -&gt; Show View 菜单应该提供透视图中的初始视图，并且提供对于当前任务很重要的额外视图。Navigate -&gt; Show In 菜单应该允许用户浏览他们的内容。
+<P><IMG height=325 hspace=40 
+src="Eclipse User Interface Guidelines.files/showViewMenu.gif" width=486> 
+<BR>&nbsp; 
+<P>在扩展Window -&gt; Open Perspective菜单时，必须考虑应用开发的生命周期。大多数应用的开发遵循
+一个明确定义的生命周期，从设计/建模，到编辑/创建，到调试/测试，到组装/部署。每个透视图都会是这些步骤中的一个。必须用Open Perspective菜单来连接当前透视图和支持其下游及上游任务的
+透视图，以允许交互式的开发。
+<P>例如，Java 透视图用在较大的生命周期里面，涉及Java和Debug任务。Window -&gt; Open Perspective 
+菜单就应该提供所有相应的透视图。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在窗口菜单条中提供和透视图的任务相关，以及和更大工作流相关的命令和命令集。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>在代码中打开透视图</H4>
+只有当用户明确要求时，命令才能打开一个新的透视图。如果用户没有要求就这么做，可能会导致上下文丢失。
+<P>例如，考虑一下这种情况，用户选择了一个对象并且调用了一个命令。在命令被调用的透视图中，用户可能打开了一系列的视图和编辑器。这些代表了用户当前的工作状态，或者上下文。如果创建一个新的
+透视图，就会丢掉当前的上下文，强迫用户重新创建上下文。这样很浪费时间。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.7 </FONT></B>
+<BLOCKQUOTE><FONT color=#09448d>只有当用户明确要求时，才打开新的透视图。这种情况下，用户同意离开旧的上下文，创建新的上下文。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在某些情况下，打开新的透视图是另一个命令产生的副作用。例如，如果用户开始调试他们的应用代码，就可能被切换到Debug 透视图。如果要实现这种行为，用户应该能够把该行为关闭。
+在命令对话框或者首选项页面中提供对该行为的设置。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果打开新的透视图是另一个命令产生的副作用，用户应该能够把该行为关闭。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>新的透视图可以在当前窗口或者新窗口中打开。用户可以通过workbench 首选项控制这种行为。如果plug-in中的代码打开了一个新的透视图，应该遵循用户的首选项设置。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>新的透视图应该根据用户首选项设置来决定在当前窗口打开，还是在新窗口中打开。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>关于在New，Open perspective 和Show View菜单中添加的自定义命令，在这些菜单中作为快捷方式添加的向导，透视图和视图的列表不能超过 7 +/- 2 个。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 8.10</FONT></B>
+<BLOCKQUOTE><FONT color=#09448d>在New，Open Perspective和Show View菜单中添加的快捷方式列表不应该超过 7 +/- 2 个。 </FONT>
+</BLOCKQUOTE>
+<H3><A name=Windows></A>窗口</H3>
+在本节中，我们来看一下窗口菜单条，工具条和布局。作为plug-in开发者，你可以使用动作集（<I>action set）</I>在菜单条和工具条中添加自定义动作，动作集是一系列和任务相关的动作，用户可以显示或者隐藏它们。你也可以定义一个<I>透视图</I>
+来控制窗口中视图的布局。在本节中，我们要看一下action extension. 要获得关于透视图的更多信息，
+请参考<A href="#Perspectives">透视图</A>. 
+<H4>动作</H4>
+每个workbench窗口包含一个菜单条和工具条。这些是平台预先就提供的，不过plug-in开发者可以再增加另外的菜单和工具按钮。开发者可以定义一个动作集（<I>action set</I>），这是一系列用户可以显示或者隐藏的任务相关的动作。
+一个动作集里面的动作可以被添加到窗口菜单条和工具条中。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用动作集（action set）在窗口菜单条和工具条中添加自定义动作。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+窗口菜单条包含很多下拉菜单： File，Edit，Navigate，Project ，Window 和Help。每个菜单都有不同的目的，这在后面的章节中会详细解释。 为了和其他plug-in所添加的动作集保持一致，动作集中的命令必须遵从窗口中已经存在的动作分布。没有必要把动作归组放到菜单条的一个单独的下拉菜单中。
+<P>File菜单包含了文件相关的动作，例如 Save， Close，Print，Import，Export和Exit。File -&gt; New 菜单的内容取决于透视图的类型。然而，用户可以使用Window -&gt; Customize Perspective...
+菜单项添加或者删除菜单项。Import和Export对话框的内容分别由相应的导入和导出向导决定。
+<P>Edit菜单包含了面向编辑器的动作，例如Undo，Redo，Cut，Copy和Paste。这些动作作用于活动部分（标题栏加深的部分）。编辑器在该菜单中增加项目是很常见的。但一般不使用动作集在Edit菜单中添加动作，动作集常用于全局命令，而Edit菜单作用于特定部分，并且和该部分的数据交互。
+<P>Navigate菜单包含了浏览的动作例如 Go to，Open Type，Show In，使用户既可以浏览，也可以仔细查看代码。
+<P>Project菜单包含了可以应用到workspace内容的动作。例如Rebuild All和Open Type。 
+一个动作集可以添加动作来搜索整个workspace，或者生成项目信息等。
+<P>Window菜单包含了用来管理窗口和系统首选项的动作。它还包含Open Perspective和Show View
+子菜单，这些子菜单包含了能影响窗口内容状态的动作。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>当你在动作集中添加自定义动作时，要遵循平台的规则。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>工具条包含了菜单条中最常用的动作。因此，你必须先在菜单条中添加自定义动作，然后把其中常用的
+添加到工具条中。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>首先在菜单条中添加自定义动作，然后把其中常用的添加到工具条中。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>每个动作集的内容必须用面向任务的方式定义。例如，Java动作集包含了创建新包，类和接口的动作。它也包含了命令Goto Type，该命令可以在一个类上打开一个编辑器。这些组成了一系列相关的动作，用户可以根据活动的任务，打开或者关闭这些动作。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>针对某个特定的任务来定义每个动作集。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>动作集的大小也很重要。如果动作集太大，会充满菜单或者工具条，就减少了用户定制菜单和工具条的机会。同时，如果动作集太小，用户会发现定制菜单和工具条太费劲了。如果动作集多于7项，就把它拆开。
+<P>对于一个动作集，并没有一个最合适的大小。但是，它必须设计成包含动作的最小语义集。
+避免在整个plug-in中只提供一个动作集。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>一个动作集应该包含动作的最小语义集。避免在整个plug-in中只提供一个动作集。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>一个动作集可以在两个或者多个视图和编辑器之间共享。例如，Java Refactoraction动作集可以用于Java编辑器，Outline视图和Hierarchy视图中的选择内容。这种情况下，可以为workbench
+定义一个action set extension来共享这些动作。一旦定义了动作集，它就可以自动被透视图开发者包含在
+透视图中，或者被用户添加到一个透视图中。
+<P>动作集不能用来把命令从某个视图移动到窗口菜单条和工具条中。这样只会让用户界面混乱。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用动作集来共享那些对于两个或多个视图或编辑器都有用的动作。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>窗口中可见的命令可以通过调用Window -&gt; Customize Perspective 改变。在随后出现的对话框里面，你可以在File -&gt; New菜单， Window -&gt; Open Perspective菜单或者 Window 
+-&gt; Show View 菜单中添加或者删除项目。你也可以添加或删除动作集。通常，可见的动作集应该由用户控制，
+而绝不能用程序改变。这有两个理由。首先，用户希望能够控制环境，而不是被环境控制。其次，用户是最能理解当前的任务，以及完成该任务的合适的动作集。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>让用户控制可见的动作集，不要试图帮他们控制它。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+一个常见的可以添加到动作集的命令的例子是Navigate -&gt; Open Type。该命令用来打开当前窗口中不可见的某种类型编辑器，这是一种横向导航的方式。
+通常，所有的采用该方式的Open动作应该添加到Navigate 菜单中以保持一致性。 <BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>“Open Object” 动作必须在窗口的Navigate下拉菜单中出现。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>状态条</H4>
+<br>
+如果一个plug-in需要在状态条区域中显示非模态的上下文信息，通常使用全局状态条。例如，编辑器使用全局状态条来显示当前的行号和列号。<BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 9.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用全局状态条来显示状态相关的信息。</FONT></BLOCKQUOTE>
+<H3><A name=Properties></A>Properties</H3>
+Properties对话框或者视图用来查看/修改一个对象在常规表现方式下不可见的属性。例如，可以在Properties对话框中修改一个文件的只读属性。一个Java项目的build路径也在Properties对话框中修改。
+<P>在Eclipse中，有两种方法修改一个对象的属性：在Properties 对话框中，和在Properties视图中。这两种方法在不同的情况下使用。
+<P>Properties视图通常用来编辑一个编辑器中一系列对象的属性，在这种情况下，快速地获得属性很重要，而且你要快速地从一个对象切换到另外一个。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 10.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果需要快速地获得对象的属性，并在对象间切换时，使用Properties视图编辑对象的属性。
+  </FONT></BLOCKQUOTE>
+<HR>
+
+<P>一个对象的属性应该能很快地计算得到。如果推测一个对象的属性很麻烦的话，Properties视图提供的快速获得对象的属性就变得没有意义了。这种情况下，无法快速得到对象属性，就应该使用
+Properties对话框。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 10.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在计算一个对象的属性很麻烦时，使用
+  Properties对话框来编辑对象的属性。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在某些情况下，一个对象的属性依赖于另外一个属性，这样，一个属性的改变就会影响另一个属性，或者仅仅 enable/disable
+选项也会改变另一个的属性。这种情况下，用Properties对话框来表示这些属性语义间的连接比较合适。<BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 10.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>用Properties对话框编辑和同一对象的属性有复杂关联的属性。</FONT></BLOCKQUOTE>
+<HR>
+<br>
+如果Properties视图和Properties对话框都用来表示和编辑某个对象的属性，Properties对话框必须包含Properties视图中所有的属性。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 10.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>Properties对话框必须包含Properties视图中所有的属性。</FONT></BLOCKQUOTE>
+<H3><A name=Widgets></A>Widgets</H3>
+本节我们将描述一些Standard Windows Toolkit (SWT) widgets的推荐设计。
+<P>
+<H4>Tree和Table</H4>
+Tree和Table都可以有一个checkbox和一个cell 项相关联，用户可以选择项目或者改变checkbox的状态。改变选择不应该自动改变被选择项的checkbox状态。不过，当某项的checkbox状态变化时，就应该设置该项被选择。（例如，用户点击了和某个项目相关联的checkbox）
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 11.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>Tree和Table都可以有一个checkbox和一个cell 项相关联，用户可以选择项目或者改变checkbox的状态。改变选择不应该自动改变被选择项的checkbox状态。不过，当某项的checkbox状态变化时，就应该设置该项被选择。</FONT></BLOCKQUOTE>
+<P><BR>
+<H2><A name="Standard Components"></A>标准组件</H2>
+<br>
+在本节中，我们来看一下Eclipse提供的标准组件。Eclipse SDK包含了很多视图，包括Navigator，Outline，Properties，Tasks和Bookmarks视图。Eclipse也包含了一个缺省的文本编辑器和一个Resource 透视图。
+<P>作为plug-in开发者，你应该尝试在现有的部分添加自定义的新动作。这样可以更好地和平台集成，
+并更好地利用用户已有的知识。<BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 12.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果合适的话，使用plug-in注册表在Eclipse的标准组件中添加动作。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>当你扩展Navigator，Outline，Properties，Tasks和Bookmark 视图等标准组件时，你必须确保你的专用组件涵盖了基本组件的特性（拖放支持，键盘导航，选择行为等）。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 12.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果你的组件子类化或复制标准组件，必须包含标准组件的特性。
+</FONT></BLOCKQUOTE>
+<P><H3><A name=Navigator></A>Navigator视图</H3>
+Navigator视图用来浏览workspace，创建新资源，修改资源，以及为资源打开一个编辑器。plug-in开发者可以在菜单，工具条，和上下文菜单中添加自定义的新动作。<BR>
+&nbsp; 
+<H4>添加动作</H4>
+添加动作通过在plug-in 注册表中添加一个extension完成。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 13.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用plug-in 注册表在Navigator视图菜单，工具条和上下文菜单中添加动作。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>如果在上下文菜单中添加了自定义的对象相关的命令，尽量确认目标对象，避免在Navigator
+  视图给错误的对象添加命令。例如，一个Java 命令可能作用于扩展名为.java的IFile，或者是有Java
+  支持的IProject。 如果Java 命令出现在非java对象上就会引起混淆。
+<P>有些动作反映的是工具使用，而不是对象类型。例如，一个源代码库plug-in可能会提供文件的check in，check out。这些动作只有当用户选择使用源代码库plug-in时才能出现在Navigator中的资源。为了控制这些动作的可见性，plug-in必须为这些受管理的资源应用一个project nature，并且在所有的上下文菜单中添加该project nature。
+
+<P>关于更多命令过滤的信息，请参考<A 
+href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" 
+target=_top>Creating an Eclipse View</A>。 资源的标准属性都在IResourceActionFilter.java中定义（如下）。
+<PRE>public interface IResourceActionFilter extends IActionFilter {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String NAME = "name";&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String EXTENSION = "extension";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String PATH = "path";&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String READ_ONLY = "readOnly";&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String PROJECT_NATURE = "projectNature";&nbsp;&nbsp;
+}</PRE>
+项目过滤的基本属性在IProjectActionFilter.java中定义。
+<PRE>public interface IProjectActionFilter extends IResourceActionFilter {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String NATURE = "nature";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String OPEN = "open";
+}</PRE><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 13.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用IResourceActionFilter.java 和 IProjectActionFilter.java 中定义的属性来控制Navigator视图中上下文菜单动作的可见性。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>和其他视图及编辑器的集成</H4>
+在Eclipse中，通常使用“Navigate -&gt; Show In”命令把一个视图中选中内容和另一个视图相连接。例如，在Java源文件编辑器中，一个选中的类的上下文菜单中可以看到“Show in Package Explorer”命令。
+调用该命令时，Java源文件编辑器中的类就被选中并且在Package Expolorer视图中显示。 
+这种方法应该用作视图或者编辑器连接的常规的，非强迫的模式。它和上下文相关，反映了用户的意图。
+<P>在任何资源可能出现的视图中，都应该包含“Navigate -&gt; Show In Navigator”命令。一旦被调用，该命令应该选中并且在Navigator视图中显示资源。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 13.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在每个视图中，使用“Navigate -&gt; Show In Navigator” 命令在Navigator视图中显示资源。 </FONT></BLOCKQUOTE>
+<p>&nbsp;</p>
+<H3><A name=Tasks></A>Task视图</H3>
+<br>
+Tasks视图用来显示workspace中当前的任务，错误和警告。plug-in开发者可以在workspace中添加自定义的任务，错误和警告，并使用Tasks视图显示这些对象。你也可以在菜单，工具条和上下文菜单中添加自定义的新动作。这可以通过在plug-in 注册表中添加一个extension完成。
+<H4>添加任务</H4>
+可以使用Core Resources Management plug-in中的Marker Manager来创建新的任务，错误和警告。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 14.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Core Resources Management plug-in中的 Marker Manager来创建新的marker（任务，错误和警告）。
+  </FONT></BLOCKQUOTE>
+<HR>
+<br>
+Tasks视图是一张表格，用列来表示任务图像，完成状态，优先级，描述，资源和行号。每个marker的描述文本必须简洁，这样才能在Eclipse的状态条中放的下。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 14.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>每个marker的描述文本必须简洁，这样才能在Eclipse的状态条中放的下。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>添加动作</H4>
+你可以在菜单，工具条和上下文菜单中添加自定义的新动作。这可以通过在plug-in 注册表中添加一个extension完成。
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 14.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用plug-in 注册表在Tasks视图菜单，工具条和上下文菜单中添加自定义的新动作。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>如果在上下文菜单中添加了对象命令，应尽可能地确认目标对象，以避免在Tasks视图中给错误的对象添加了命令。在实现层，每个Tasks视图中的对象是一个<I>marker</I>，这是把注释和资源联系到一起的常用机制。使用IMarkerActionFilter.java中的属性来控制Task对象动作的可见性（如下）。关于命令过滤的更多信息，请参考<A href="http://www.eclipse.org/articles/viewArticle/ViewArticle2.html" 
+target=_top>Creating an Eclipse View</A>。
+<PRE>public interface IMarkerActionFilter extends IActionFilter {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String TYPE = "type";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String SUPER_TYPE = "superType";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String PRIORITY = "priority";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String SEVERITY = "severity";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String DONE = "done";
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public static final String MESSAGE = "message";
+}</PRE>
+<P><BR><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 14.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用 IMarkerActionFilter.java中定义的属性来控制Tasks视图中上下文菜单动作的可见性。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>  和其他视图和编辑器的集成
+</H4>
+在编辑器中，任务对象通常用来标记文档中的位置。一旦创建了一个任务，该任务就会在Task视图中出现。如果该任务被选中（通过双击），你再次打开编辑器时就可以到任务中定位的位置处。焦点就应该从Task视图转移到编辑器上。
+<P>在合适的情况下，应该由编辑器来负责在编辑器中创建新的任务对象。要获得这方面的更多信息，请参考<A href="#Editors">编辑器</A>. 
+<BR>
+&nbsp; 
+<H4>在Task视图中添加F1帮助</H4>
+plug-in必须能够支持F1键盘命令，按F1键后，弹出信息框，给出在Task视图中所选项的详细描述信息。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 14.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>支持F1键盘命令，按F1键后，弹出信息框，给出在Task视图中所选项的详细描述信息。</FONT></BLOCKQUOTE>
+<P>
+<H3><A name="The Preference Dialog"></A>首选项对话框</H3>
+Preference对话框用来编辑workbench中某个功能的全局首选项设置。
+<P>当你需要让用户设置全局选项时，就应该创建一个新的首选项页面。
+例如，Prefenrence对话框中就包含了一组首选项页面来设置Java 编译的全局首选项。如果这些首选项设置改变，会影响整个Java plug-in。
+
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 15.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>全局选项应该在首选项对话框中显示。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>Preference页面不能用来给视图，编辑器或者窗口的特定实例显示本地选项。在这种情况下，用户应该查看控件本身的菜单和工具条，对其进行定制。如果这些选项出现在Preference对话框中，会模糊选项定制的位置，并让用户感到困惑。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 15.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于特定的视图，编辑器或者窗口，应该在其本身通过菜单或工具条显示其首选项设置。
+</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H4>首选项页面设计</H4>
+在最简单的情况下，任何需要给用户显示选项的plug-in必须定义一个单独的Preference页面。
+该Preference页面必须包含plug-in的所有选项，直至页面上放不下更多数量的选项为止。此时就应该对首选项页面采用嵌套设计。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 15.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>从单个的首选项页面开始。然后根据你的需要设计更多页面。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>在嵌套设计中，在Preference对话框中添加一个根首选项页面，然后在这个根页面下添加子页面。
+根首选项页面永远不能为空。相反，它应该包含最常用的首选项设置，或者对于plug-in行为影响很广泛的首选项设置。在根页面下，对于plug-in中的每个主要功能块都应该定义一个子页面。
+<P>没有必要把焦点设在首选项页面上，因为在首选项页面可见后，Eclipse平台会把焦点设置在左面的树上。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 15.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果创建了一个首选项组，用根页面来显示最常用的首选项设置，或者影响很广泛的首选项设置。特定的功能相关的设置放在在子页面中。根首选项页面不能为空。
+  </FONT></BLOCKQUOTE>
+<HR>
+
+<P>每个新的plug-in必须把它的plug-in 首选项，向导和视图集成在现有的首选项，向导和视图类别中，而不是盲目地创建新的类别。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 15.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于一个新的plug-in，首先考虑把其首选项，向导和视图和现有的类别集成，而不要先考虑创建新的类别。</FONT></BLOCKQUOTE>
+<H3><A name=Outline></A>Outline视图</H3>
+在Eclipse中，编辑器和Outline视图间有个特殊的关系。当编辑器打开时，Outline 视图会连接到编辑器，并且问它要一个Outline模型。如果编辑器返回了一个Outline模型，该模型就会在Outline视图中显示，无论编辑器是否处于活动状态。这个Outline用来浏览编辑的数据，或者在更高的抽象层和编辑数据进行交互。
+<P>如果你是一个编辑器开发者，编辑器和Outline视图间的关系就很重要。关于编辑器和Outline视图的合作方面的更多信息，
+请参考<A href="#Editors">编辑器</A>. 
+<P>
+<H3><A name="The Properties View"></A>Properties视图</H3>
+Properties视图用来显示workbench中活动的部件或者该部件中选中内容的属性。这些属性由活动部件本身提供。Properties视图仅仅是它们表现方式的一个容器。
+<P>在Eclipse中，一个对象的属性可以用Properties对话框或Properties视图显示。Properties视图通常用来编辑一个编辑器中一系列对象的属性，这种情况下快速地获得属性很重要，而且你要快速地从一个对象切换到另外一个。
+<P>关于如何使用Properties视图或者Properties对话框的更多信息，请参考<A 
+href="#Properties">Properties</A>. 
+<P>
+<H3><A name=Bookmarks></A>Bookmarks视图</H3>
+Bookmarks视图用来标记文件并且快速打开它们。plug-in开发者可以在workspace中添加自定义的书签，并通过Bookmarks视图来显示这些书签。 你也可以在菜单，工具条和上下文菜单中添加自定义的新动作。
+这可以通过在plug-in 注册表中添加一个extension来完成。
+
+<P>在编辑器中，书签对象通常用来标记一个文档中的位置。 一旦创建了一个书签，它就会显示在
+Bookmarks视图中。如果该书签被选中，在你重新打开编辑器时，就会位于该书签定义的位置。
+<P>在合适的情况下，新的书签对象的创建应该由编辑器实现。 更多信息请参考<A 
+href="#Editors">编辑器</A>。
+<P>
+<H3><A name="Text Editor"></A>文本编辑器</H3>
+<br> 
+文本编辑器通常用来编辑文本文件。 plug-in开发者可以在菜单，工具条和上下文菜单中添加自定义的新动作。这可以通过在plug-in 注册表中添加一个extension来完成。关于这方面的更多信息请参考<A 
+href="#Editors">编辑器</A>. 
+
+<P>
+<H3><A name="Resource Perspective"></A>Resource 透视图</H3>
+Resource 透视图包含一个Navigator，Outline， Task视图和一个编辑器区域。
+plug-in开发者可以在Resource 透视图中添加自定义的新命令，动作集或者视图。
+更多信息请参考<A 
+href="#Perspectives">透视图</A>.. 
+<P><BR>
+<H2><A name="Flat Look Design"></A>Flat Look设计</H2>
+Eclipse平台提供了一个另一种的Web用户界面来实现内容编辑器，叫做Flat Look设计。例如，Eclipse plug-in开发环境（PDE）透视图中的编辑器就使用Flat Look设计。
+<P><IMG height=597 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook1.gif" width=789> 
+<P>Flat Look设计可能对于某些特定的用户任务很合适，也可能更能吸引某些用户。但是，不应该因为它看起来和普通的平台很不一样就使用它。要使用Flat Look设计，必须充分考虑用户的使用场景。该设计通常适用于大量的属性编辑和配置编辑，例如，编辑Eclipse的plugin.xml文件
+和J2EE Web 应用的部署描述文件。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 16.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在用户涉及广泛的属性编辑和配置编辑时，使用Flat Look设计。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>需要时，使用“More...”按钮进行浏览（功能和超链接相似）
+<P><IMG height=102 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook2.gif" width=307> 
+<P>在Overview页面，先提供基础或者核心部分，压缩高级部分。 在其他页面，提供一个“Home”图标使用户可以回到Overview页面。
+<P><IMG height=314 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook3.gif" width=616> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 16.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在Overview页面展示核心部分，并且在其他页面提供一个“Home”图标使用户可以回到Overview页面。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<P>在Flat Look编辑器的一个Tab页面中不要再使用Tab。 使用其他的设计或者方式来处理Tab。
+<P><IMG height=316 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook4.gif" width=324> 
+<P>合适的话，总是提供一个“Source” Tab。给区域，控件等分配用于键盘导航的记忆符号。
+<P><IMG height=344 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook5.gif" width=406> 
+<H4><A name="Editor and Outline View Interaction"></A>编辑器和Outline视图的交互</H4>
+使用Flat Look设计内容编辑器的plug-in应该支持编辑器和Outline视图之间的两种交互方式。
+
+<P>在Outline视图中，使用在内容编辑器中和Tab对应的分组元素来组织树视图。
+<P><IMG height=474 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook6.gif" width=772> 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 16.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在内容编辑器中使用和Tab对应的分组元素来组织Outline视图中的树视图 </FONT></BLOCKQUOTE>
+<P><BR>
+<H2><A name="The Tao of IResource"></A>资源之道</H2>
+Eclipse中，工具的概念消失了。取代它的，是一种统一的工具平台的概念——一个开放的，可扩展的IDE——在这个平台下，你可以添加工具plug-in来扩展它。 这些plug-in“教” Eclipse怎样和各种事物一起工作——Java文件，Web内容，图形，视频——几乎任何你能想到的东西。在实现层，这些plug-in和资源（项目，文件夹和文件）交互。资源是plug-in和外部工具集成的媒介。
+<P>资源概念的产生源于以下原因：<BR>
+&nbsp; 
+<OL>
+  <LI>只有存在一个通用的，公开的数据抽象，才可能把一个提供者的plug-in和另一个相集成。  
+  <LI>只有当所有东西在某个层面是一个文件时，才可能和外部工具集成。
+  </LI>
+</OL>
+  
+<P><BR>
+  在UI层，资源也很重要。如果在IResource中添加了一个自定义对象命令，装饰（decorator）或者属性页面，
+平台要保证这些内容在该资源出现的任何视图和编辑器中都可见。例如，在Navigator，Hierarchy视图
+和Package视图中你都能够看到某个 .java文件。对于用户来说，这些.java文件不管出现哪个视图，都是同一个对象，因此，对于所有的视图，该对象的外观，上下文菜单以及属性都应该是一致的。
+<P>在某些情况下，为了外观表现的考虑，一个特定的视图或者编辑器的实现可能将资源包装另一个对象中。如果这个包装对象和资源等同的话，必须将这种等同性通知平台。在资源显示时，平台可以把资源上添加的命令应用到和资源等同的包装对象上。这样就可以保证在平台内对象的表现一致性。
+<P>对象所包装的资源可以通过在模型对象上实现IAdaptable并返回IContributorResourceAdapter来显示。关于IContributorResourceAdapter实现的更多信息，参考Eclipse Corner。
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 17.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用IContributorResourceAdapter
+  来显示包装对象中的资源。</FONT></BLOCKQUOTE>
+<BR>
+<H2><A name=Accessibility></A>可操作性</H2>
+在视图，编辑器或其他控件中，所有的功能应该都可以通过鼠标或者键盘实现。
+<P><FONT color=#000000>在对话框或者向导中，应该为每个按钮或者控件定义快捷键。在合适的快捷字符下面加下划线显示快捷键。
+</FONT> <BR>
+&nbsp; 
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineIndicator.gif" 
+width=16><B><FONT color=#09448d>指南 18.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>工具提供的所有功能都应该可以通过鼠标或者键盘完成。</FONT></BLOCKQUOTE>
+<HR>
+
+<P>
+<H3><A name="Standard Accelerators"></A>标准快捷键</H3>
+Eclipse平台提供了很多快捷键。plug-in开发者要确保plug-in中定义的快捷键不和现有的快捷键冲突。
+<BR>
+&nbsp; <BR>&nbsp; 
+<TABLE cellSpacing=0 cellPadding=3 border=1>
+  <TBODY>
+  <TR vAlign=bottom>
+    <TD align=left><B>Key</B></TD>
+    <TD align=left><B>{Key} by itself</B></TD>
+    <TD align=left><B>SHIFT+{Key}</B></TD>
+    <TD align=left><B>CTRL+{Key}</B></TD>
+    <TD align=left><B>CTRL+SHIFT+{Key}</B></TD>
+    <TD align=left><B>ALT+{Key}</B></TD>
+    <TD align=left><B>CTRL+ALT+{Key}</B></TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>A</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Select All</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>B</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Project / Build</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(View) Bookmarks</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>C</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Copy</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>D</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>(JDT editor) Display</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>E</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>(JDT editor) Next Problem</TD>
+    <TD align=left>(JDT editor) Previous Problem</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Find / Replace</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>G</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>H</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Search</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>I</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>J</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>K</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(View) Tasks</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>L</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Go to Line</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>M</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(JDT editor) Add Import</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(JDT) Refactor / Move</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>N</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>File / New / Other</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(View) Navigator</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>O</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(JDT editor) Organize Imports</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(View) Outline</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>P</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>File / Print</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(View) Properties</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Q</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>(JDT editor) Inspect</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>R</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>S</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>File / Save</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>File / Save All</TD>
+    <TD align=left>Window / Switch to Editor</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>T</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(JDT) Open Type</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>U</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>V</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Paste</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>W</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>X</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Cut</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(JDT) Refactor / Extract method</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Y</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Redo</TD>
+    <TD align=left>(JDT) Refactor / Redo</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Z</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>Edit / Undo</TD>
+    <TD align=left>(JDT) Refactor / Undo</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Space</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=right bgColor=#e3e3e3>&nbsp;</TD>
+    <TD align=left>(JDT editor) Content Assist</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Backspace</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>Windows: Undo</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Tab</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(JDT editor) Shift Right</TD>
+    <TD align=left>(JDT editor) Shift Left</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Insert</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>Windows: Paste</TD>
+    <TD align=left>Windows: Copy</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Delete</TD>
+    <TD align=left>Edit / Delete</TD>
+    <TD align=left>Windows: Cut</TD>
+    <TD align=left>Edit / Delete</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Home</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>End</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Page Up</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Page Down</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Insert</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Delete</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Hyphen (-)</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>Show System Menu</TD>
+    <TD align=left>Show View Menu</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Left Arrow</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Right Arrow</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Up Arrow</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>Down Arrow</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F1</TD>
+    <TD align=left>Help</TD>
+    <TD align=left>Help</TD>
+    <TD align=left>Help</TD>
+    <TD align=left>Help</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F2</TD>
+    <TD align=left>(Navigator view) Rename, (JDT editor) Open JavaDoc</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F3</TD>
+    <TD align=left>(JDT editor) Open on Selection</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F4</TD>
+    <TD align=left>(JDT editor) Open Type Hierarchy</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>File / Close All</TD>
+    <TD align=left>File / Close</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F5</TD>
+    <TD align=left>(Navigator view) Refresh, (Properties view) Refresh, 
+      (Debug) Step Into</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F6</TD>
+    <TD align=left>(Debug) Step Over</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>Next Editor</TD>
+    <TD align=left>Previous Editor</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F7</TD>
+    <TD align=left>(Debug) Run to Return</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>Next View</TD>
+    <TD align=left>Previous View</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F8</TD>
+    <TD align=left>(Debug) Resume</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F9</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F10</TD>
+    <TD align=left>(Debug) Relaunch last</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F11</TD>
+    <TD align=left>(Debug) Debug</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>(Debug) Run</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR>
+  <TR vAlign=bottom>
+    <TD align=left>F12</TD>
+    <TD align=left>Activate Editor</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=left>Activate Editor</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD>
+    <TD align=right>&nbsp;</TD></TR></TBODY></TABLE>
+<P><BR>
+<H2><A name="BestPractices" id="BestPractices"></A>最佳实现</H2>
+<P>在这一节，我们提供一些例子来看看在Eclipse平台下设计，实现常见的用户界面的最好的方法。
+<P>
+<H4><A name="BP:Syntax and Compilation Error Handling"></A>格式错误和编译错误的处理</H4>
+<p>当设计提供格式或编译检查的编辑器时，遵循Eclipse平台的Java工具设计原则。</p>
+<p>如果可能，提供即时格式检查。如果源代码中有错误，使用红色“波浪线”来支持错误可能发生的地方。在编辑器右侧使用一个红色方格来显式错误在文件大致的位置。在编辑器的右上角使用突出标记来表示文件包含错误或者警告。红色代表错误，黄色代表警告。</p>
+<P><IMG height=597 hspace=40 
+src="Eclipse User Interface Guidelines.files/bp1.gif" width=789> 
+<P>在用户存盘后，在编辑器左侧使用突出标记表示错误或警告。当用户将鼠标停留在标记上时，显示描述文本。此外，在内容编辑器的Tab上显示装饰图标。在Eclipse Workspace的资源树视图中，在资源的图标上加适当的装饰来显示错误或警告，并且在所有父节点上都放置图标装饰。最后，在Task视图中，添加一条表示错误或警告的记录。
+<P><IMG height=597 hspace=40 
+src="Eclipse User Interface Guidelines.files/bp2.gif" width=789> 
+
+<H4><A name="BP:Coding Assistance"></A>编码辅助</H4>
+<p>除了支持编辑器标准的内容辅助外，编辑器还应该使用Qiuck Fixes和Quick Assist。在编辑器左侧使用一个小的泡泡标记来建议如何修复源代码的问题。用户在标记上点击，或者使用Edit -&gt; Quick Fix菜单都可以看到建议的信息。</p>
+<p><IMG height=597 hspace=40 
+src="Eclipse User Interface Guidelines.files/bp3.gif" width=789></p>
+<P>甚至在没有格式错误的文件中，用户也应该能使用Quick Fix机制来获得快速帮助。例如，将一个表达式赋予一个本地变量。
+<P><IMG height=597 hspace=40 
+src="Eclipse User Interface Guidelines.files/bp4.gif" width=789> 
+<P>
+<HR>
+
+<P>如果编辑器是用来编写某种语言的程序，应该提供代码超链接支持。当鼠标停留在源代码上，同时按Ctrl键，将使得象类，方法，成员变量等编程语言标识变成可以点击的链接，通过链接可以直接显示相关的定义。
+<P><IMG height=597 hspace=40 
+src="Eclipse User Interface Guidelines.files/bp5.gif" width=789> 
+
+<P>
+<HR>
+
+<P>如果可能，plug-in应该提供编程语言级或应用开发级的重构支持。例如，如果用户将一个Java类的方法重新命名，重构可以使得用户自动找到并修复所有方法引用的地方。如果用户在一个Web应用中修改URL，重构可以使得用户自动更新所有对该URL的引用。
+<P><IMG height=597 hspace=40 
+src="Eclipse User Interface Guidelines.files/bp6.gif" width=789> 
+
+<H4><A name="BP:Context Menu"></A>上下文菜单</H4>
+<p>我们来看看为什么菜单项在上下文菜单中应该被添加或删除。我们的目标是保证上下文菜单的菜单项不超过20个。</p>
+<p>首先，删除对所选对象不感兴趣的菜单项。第二，删除不常用的菜单项。第三，检查对所选对象不感兴趣但经常使用的菜单项。最多加五个这样的菜单。第四，删除所有状态不可用的菜单项，除了象复制，粘贴的剪贴板操作，以及团队，比较，替换菜单的子菜单。第五，删除经常使用，对所选对象感兴趣，但是有内置键盘快捷方式支持的菜单项，不过剪贴板和存盘操作除外。</p>
+<H4><A name="BP:Labels, Fonts and Layout for Flat Look Design"></A>Flat Look设计的标签，字体和布局</H4>
+对于Flat Look design，当使用按钮（除了“More...”按钮），应该弹出第二个窗口，这个窗口可以是对话框，也可以是向导。
+<P>区域标题应该使用标题大写格式。区域类直接的距离应该是32像素。
+<P>如果页面左侧有一个列表框，列表框和右侧内容（比如是显示所选列表框某一项的属性）的距离应该是10像素。
+<P><IMG height=285 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook7.gif" width=321> 
+<P>
+<HR>
+
+<P>
+<P>对于标签和输入域，使用RGB值（160，160，164）标识可用状态，（0，0，0）表示只读状态，（128，128，128）表示不可用状态。
+<P><IMG height=138 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook8.gif" width=600> 
+
+<P>对于列表框控件，边框使用RGB值（0，0，0）表示可用状态，（128，128，128）表示不可用状态。
+<P><IMG height=368 hspace=40 
+src="Eclipse User Interface Guidelines.files/flatlook9.gif" width=384>
+<P>
+<H4><A name=BP:Decorators></A>装饰</H4>
+<p>当两个或更多的装饰发生冲突时，选用合适的装饰就非常重要。例如，CVS plug-in会在基本图像上放置一个装饰图像，而“Decorate Example”plug-in可能在同一位置放置另一个图像，这样两个装饰就彼此冲突了。如果两个不同装饰器在同一资源上所做的装饰发生冲突，用户应该可以选择使用或关闭某个装饰来获得所期望的结果。</p>
+<p>实现提示：</p>
+<p>设计和Eclipse视图提供的基本装饰不冲突的自定义装饰是非常重要的。例如，Package Explorer视图在有编译错误的Java文件上装饰问题标记（被放置在基本图像的左下角）。那么在资源的问题标记的位置提供自定义装饰就不太好，开发者应该避免这么做。如果自定义装饰出现在左下角，自定义装饰和问题标记装饰就有可能冲突，因此用户就不能看到其中的一个。解决方法是在右下角提供自定义装饰，这样就不会和Eclipse提供的基本图像装饰发生冲突。左上角是第二个选择，虽然它会和二进制项目装饰发生冲突。左下和右上角都应该避免。</p>
+<P><H2><A name="Checklist For Developers"></A>Checklist</H2>
+下面是提供给开发UI plug-in的开发者的Checklist。它可以被用来作为检查的依据。<BR>
+&nbsp; 
+<H3>通用UI指南</H3>
+<H4> Eclipse之精髓</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16 ?> 
+<FONT color=#09448d><B>指南 1.1</B></FONT> 
+<BLOCKQUOTE><FONT color=#09448d>遵循并应用好的界面设计原则：用户可控，直接， 一致，容错，反馈，美观和简洁。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d> 指南 1.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#006699>遵循平台的用户界面惯例。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d> 指南 1.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>注意不要混用UI 隐喻。 这样会引起原始概念和你的应用相混淆。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d> 指南 1.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果你有好的想法，和Eclipse社区一起工作，把Eclipse变成更好的平台。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>字母大写的使用</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 1.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在菜单，工具提示（ToolTip）以及所有的窗口，对话框，标签（Tab），表格的列标题（Column Heading）和按钮（Push Button）的标题中，都应该使用标题形式的大写。除了第一个和最后一个单词的首字母大写，所有名词，代名词，形容词，动词和副词也要首字母大写。不要包含结束标点。</FONT></BLOCKQUOTE>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d> 指南 1.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于对话框或窗口中的控件标签，包括check box，radio button，group label，和simple text fields，均采用句子形式的大写。把第一个单词的首字母大写，以及其他象Java这样的词也要首字目大写。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>语言</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d> 指南 1.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在你的plug-in中创建资源的本地化版本。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>错误处理</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 1.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果出现一个错误需要用户的明确输入或者立刻注意，使用模态对话框。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 1.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果产品中出现编程错误，使用模态对话框，并且log出错信息。</FONT></BLOCKQUOTE>
+<P></P><BR>
+<H3>可视化设计</H3>
+<H4>一致性</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>重用核心可视化概念来保持它们在Eclipse plug-in中表现方式和含义的一致性。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>图标调色板</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Eclipse 256色调色板来创建所有类型图标的活动或选中状态。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Eclipse 8 色调色板来创建透视图，视图，工具栏，工具栏向导和局部工具栏图标的可用状态。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Eclipse 2 色调色板创建工具条，工具条向导和局部工具条图标的不可用状态。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>图标类型</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在用户界面中适当的位置使用适当的图标。</FONT></BLOCKQUOTE>
+<P></P>
+<H4><A name=IconSpecsSize_VDG>图标尺寸和放置</A></H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于每个类型的图标遵循其特定的尺寸规范。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>按照图示的特定位置裁减图标以保证其在用户界面中排列整齐。</FONT></BLOCKQUOTE>
+<P></P>
+<H4><A name=IconSpecsPos_VDG>图标定位</A></H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>遵循不同类型图标的定位指南来优化这些元素相对其他元素的排列位置。</FONT>
+  <!-- ICON SPECIFICATION SECTION ENDS -->
+  <!-- WIZARD SPECIFICATION SECTION BEGINS -->
+  <!-- Wizard Specifications / Wizard Palette -->
+</BLOCKQUOTE>
+<P></P>
+<H4><A name=WizSpecsPal_VDG>向导调色板</A></H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>用Eclipse的特殊蓝色183色调色板创建向导图形。</FONT></BLOCKQUOTE>
+<P></P>
+<H4><A name=WizSpecsSize_VDG>向导尺寸和放置</A></H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>遵循特定的尺寸规范来设计向导图形</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.11</FONT></B> 
+<BLOCKQUOTE>
+  <FONT 
+color=#09448d>根据显示的特定摆放位置裁剪向导图形，以确保其在向导标题区域排列整齐。</FONT>
+</BLOCKQUOTE>
+<P></P>
+<H4><A name=ConsistencyImp_VDG>实现惯例</A></H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用预定义的目录结构和命名惯例。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>保留原始的目录名字。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.14</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在plug-in中把所有的图形保存在一个或尽量少的一级用户界面目录中以减少图形的复制。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.15</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用提供的活动，可用和不可用状态。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.16</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>采用缩写文件名，不要使用图标名称的全名。 例如，New Interface 变成 “newint” 。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.17</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在文件名中使用小写字母。 例如，DTD 写成 “dtd”。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.18</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在文件名中尽可能使用少于10个字母。 （下划线也作为一个字母计算）</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.19</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用文件名后缀来描述它在工具中的位置和功能。例如newint_wiz。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.20</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于所有的用户界面图标和向导图形，使用透明背景的 *.gif 格式，除非应用环境要求不同的文件格式。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" width=16> 
+<B><FONT color=#09448d>&nbsp;指南 2.21</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>保留提供的原始文件名。</FONT></BLOCKQUOTE>
+<P></P><BR>
+<H3>组件开发</H3>
+<H4>命令</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 3.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>每个命令必须有标签，工具提示和全彩色图像。标签和工具提示必须使用标题大写风格。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 3.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>命令的工具提示必须描述命令的结果，而不是其当前状态。 使用和命令标签同样的文字。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 3.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于New，Delete和Add 命令，采用workbench的标签术语。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 3.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>命令只有在能够成功执行的时候才能够被设置为可用。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 3.5</FONT></B> 
+<BLOCKQUOTE><FONT 
+color=#09448d>命令是否可用必须能快速决定。若不能，就先乐观地把命令设置为可用。万一命令被调用而不能成功执行，就给用户显示合适的消息。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>对话框</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d> 指南 4.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对话框打开时，把初始焦点设在容器的第一个输入控件上。如果没有输入控件，就把初始焦点设在缺省按钮上。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d> 指南 4.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>Slush Bucket widget（或者叫做Twin Box）必须是从左边选择到右边，供选择的源对象位于左边。它必须按照顺序有&gt;， &lt;， &gt;&gt;， &lt;&lt; 控制按钮。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>向导</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于包含很多步骤并且需要按照特定顺序完成的任务，使用向导。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>每个向导顶部必须有一个标题图形和 一个用于用户反馈的文本区域，底部必须包含Back， Next， Finish和 Cancel按钮。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>向导开始时使用提示，而不是错误信息。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在向导中用当前workbench的状态填充相关区域。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>按照Tab顺序对向导数据进行验证。在信息缺少时给出提示，信息无效时显示错误信息。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>只有在对话框中所有需要的信息都完备并有效时，才设置Next 或Finish按钮的状态为可用。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在向导文本中删除所有的编程用的message ID。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在向导中需要引用已经存在的对象时，使用Browse按钮。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>创建新的文件时，在编辑器中打开该文件。 如果创建一组文件， 在编辑器中打开最重要或者最核心的文件。创建例子项目时，打开readme.html文件。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果创建一个新项目，提示用户改变活动的透视图以适应该项目类型。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.11</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>创建新对象时，在适当的视图中选择并显示新对象。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果可以定义合理的缺省值的话，就允许在向导中创建文件夹对象。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 5.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在项目必须是一个项目时，对于文本编辑框标签使用“Project name”。否则，就使用 “Folder name”。不要对这个词作任何修饰。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>编辑器</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用编辑器来编辑或者浏览文件，文档或其他的基本内容。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器中所做的改动必须遵循，打开－保存－关闭，这样的周期模式。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在一个透视图内，对于每个输入，只能存在编辑器的一个实例。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>应该允许对于每个不同的输入打开不同的编辑器的实例。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>编辑器的标签上应该是正在编辑的文件，文档或者输入的名字。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在多页编辑器中，使用Tab控件处理页面激活。Tab标签应该尽量用一个词，最多两个词。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>编辑器中所有可用的命令，除了一些显而易见的命令以外，都应该添加到窗口菜单条中。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>窗口菜单条中编辑器添加的自定义菜单项应该使用标准格式。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.9</FONT></B> 
+<BLOCKQUOTE><FONT 
+color=#09448d>如果编辑器支持Cut，Copy，Paste或任何其他全局命令，这些命令应该也能够通过窗口菜单条和工具条中的命令来执行。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器的工具条中添加视图菜单中最常用的命令。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.11</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>上下文菜单中使用和选择内容相关的命令。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器上下文菜单中使用标准的格式。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在上下文菜单中对于每个选择类型使用固定的一套命令。并且根据被选择对象的状态来决定菜单项是否可用。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.14</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在平台中注册编辑器中所有的上下文菜单。</FONT></BLOCKQUOTE>
+<P></P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.15</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>为编辑器中的每个对象类型实现一个命令过滤器。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.16</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个编辑器的输入内容被删除了，并且编辑器没有包含任何改动，编辑器应该立刻关闭。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.17</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果编辑器的输入内容被删除，并且编辑器有改动，编辑器应该提示用户把改动保存到其他位置，然后再关闭。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.18</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果资源有改动，要在编辑器Tab中资源名称前面加一个星号。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.19</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于只读的编辑器输入和其他输入同样处理。如果可能的话，使 ”Save As“处于可用状态。在状态条区域显示”Read-only“。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.20</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果编辑器中数据太多无法在一屏上显示时，并且将生成一个结构化的Outline， 编辑器就必须给Outline视图提供一个Outline 模型。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.21</FONT></B> 
+<BLOCKQUOTE><FONT 
+color=#09448d>编辑器和Outline视图间关于位置的通知应该是双向的。如果可以的话，在Outline视图中应该有上下文菜单。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.22</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于错误和警告，应该分别在项目上添加错误和警告图像。如果容器本身出现错误， 就应该在容器上加一个红色的X ， 如果不是容器本身而是其派生的内容出现错误，就加一个灰色的X，如果两者都没有错误就不加 X。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.23</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果可以的话，在你的编辑器中实现”Add Task“功能。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.24</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果可以的话，在你的编辑器中实现“Add Bookmark”功能。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.25</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>带有源文本的编辑器应该在状态栏中显示当前行号，也可以显示列号。也可以在编辑器中每一行显示行号。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.26</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>表格单元格编辑器必须支持单击激活的模式，并且在编辑模式下，他们应能够通过单击显示复杂的控件。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.27</FONT></B> 
+<BLOCKQUOTE><FONT 
+color=#09448d>当用户从表格单元格点击离开，或者按ENTER键时，对于单元格的改动应该生效。用户可以通过按“Esc”键取消选择。首字母导航应该作为一种单元格内的Cursoring机制来支持。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.28</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在编辑器中进行细小的错误验证时，使用红色花体来强调无效的内容。 当用户把鼠标移动到红色花体上面时，在一个浮动的弹出框中显示错误信息。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.29</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>调用Save命令时，使用Task 视图显示找到的错误。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 6.30</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果资源在Workbench外部被修改，在编辑器中调用Save 命令时，用户必须得到提示，询问是否忽略在Workbench 外面做的修改，还是放弃Save操作。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>视图</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用视图来浏览信息的层次，打开编辑器，或者查看活动对象的属性。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>视图中的改动应该立刻被保存。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>一个透视图中只能有一个视图的一个实例。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>一个视图必须能够在多个透视图中打开。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>视图应该可以通过 Window &gt; Show View菜单打开。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>标题条中视图的标签必须用Perspective &gt; Show View菜单中视图的名字作为前缀。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个视图包含多个控件，最好将其分成2个或多个视图。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>视图第一次打开时，从透视图的状态获得视图输入。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果视图显示了一颗资源树，考虑使用窗口输入作为该视图中可见信息的根。</FONT></BLOCKQUOTE>
+<P></P>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.10</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>将视图下拉菜单用于外观表现型命令，而不要用于和选择内容相关的命令。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.11</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在视图下拉菜单中使用标准的命令顺序。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.12</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>把最常用的命令放在工具条中。任何在工具条中出现的命令 也必须在上下文菜单或者视图菜单中出现。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.13</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>上下文菜单中尽包含选择内容相关的动作，而不包含外观表现相关的动作。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.14</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在视图上下文菜单中使用标准的命令顺序。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.15</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在上下文菜单中对于每个选择类型使用固定的一套命令。并根据选中的对象状态来设置每个命令的可用状态。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.16</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个对象在不止一个视图中出现，就必须都使用相同的上下文菜单。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.17</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在平台中注册视图中所有的上下文菜单。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.18</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>为视图中的每个对象类型实现一个命令过滤器。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.19</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个视图支持Cut，Copy，Paste或任何其他全局命令， 这些命令应该也能够通过窗口菜单条和工具条中的同样命令来执行。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.20</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在会话间保持每个视图的状态。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 7.21</FONT></B></P>
+<BLOCKQUOTE><FONT color=#09448d><FONT color=#000000></FONT><FONT color=#000000></FONT>导航视图必须在视图菜单中支持 ”Link with Editor“。</FONT></BLOCKQUOTE>
+<P></P>
+<H3><A name=Perspectives></A>透视图</H3>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果长期任务包含很多较小的，非模态的任务，应该为其创建一个新的透视图类型。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果你只想增加1个或两个视图的话，考虑扩展现有的透视图类型。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.3</FONT></B> 
+<BLOCKQUOTE><FONT 
+color=#09448d>透视图中每个视图的尺寸和位置要合理地定义，这样可以用户在需要的时候修改视图大小或者移动视图。定义初始布局时，要考虑透视图中视图或者编辑器之间的总体顺序。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.4&nbsp;</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果一个透视图只有一个部分，那么可能用视图或者编辑器更合适。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果不希望在透视图中有一个编辑器区域，隐藏它。 不要把编辑器区域的大小变成点使它不可见。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在窗口菜单条中提供和透视图的任务相关，以及和更大工作流相关的命令和命令集。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.7 </FONT></B>
+<BLOCKQUOTE><FONT color=#09448d>只有当用户明确要求时，才打开新的透视图。这种情况下，用户同意离开旧的上下文，创建新的上下文。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果打开新的透视图是另一个命令产生的副作用，用户应该能够把该行为关闭。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>新的透视图应该根据用户首选项设置来决定在当前窗口打开，还是在新窗口中打开。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 8.10</FONT></B>
+<BLOCKQUOTE><FONT color=#09448d>在New，Open Perspective和Show View菜单中添加的快捷方式列表不应该超过 7 +/- 2 个。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>窗口</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用动作集（action set）在窗口菜单条和工具条中添加自定义动作。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>当你在动作集中添加自定义动作时，要遵循平台的规则。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>首先在菜单条中添加自定义动作，然后把其中常用的添加到工具条中。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>针对某个特定的任务来定义每个动作集。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>一个动作集应该包含动作的最小语义集。避免在整个plug-in中只提供一个动作集。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.6</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用动作集来共享那些对于两个或多个视图或编辑器都有用的动作。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.7</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>让用户控制可见的动作集，不要试图帮他们控制它。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.8</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>“Open Object” 动作必须在窗口的Navigate下拉菜单中出现。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 9.9</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用全局状态条来显示状态相关的信息。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>Properties</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 10.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果需要快速地获得对象的属性，并在对象间切换时，使用Properties视图编辑对象的属性。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 10.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在计算一个对象的属性很麻烦时，使用 Properties对话框来编辑对象的属性。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 10.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>&nbsp;用Properties对话框编辑和同一对象的属性有复杂关联的属性。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 10.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>Properties对话框必须包含Properties视图中所有的属性。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>Widgets</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 11.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>Tree和Table都可以有一个checkbox和一个cell 项相关联，用户可以选择项目或者改变checkbox的状态。改变选择不应该自动改变被选择项的checkbox状态。不过，当某项的checkbox状态变化时，就应该设置该项被选择。</FONT></BLOCKQUOTE>
+<P></P><BR>
+<H3>标准组件</H3>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 12.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果合适的话，使用plug-in注册表在Eclipse的标准组件中添加动作。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 12.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>如果你的组件子类化或复制标准组件，必须包含标准组件的特性。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>Navigator视图</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 13.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用plug-in 注册表在Navigator视图菜单，工具条和上下文菜单中添加动作。</FONT></BLOCKQUOTE>
+<P></P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 13.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用IResourceActionFilter.java 和 IProjectActionFilter.java 中定义的属性来控制Navigator视图中上下文菜单动作的可见性。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 13.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在每个视图中，使用“Navigate -&gt; Show In Navigator” 命令在Navigator视图中显示资源。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>Task视图</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 14.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用Core Resources Management plug-in中的 Marker Manager来创建新的marker（任务，错误和警告）。 </FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 14.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>每个marker的描述文本必须简洁，这样才能在Eclipse的状态条中放的下。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 14.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用plug-in 注册表在Tasks视图菜单，工具条和上下文菜单中添加自定义的新动作。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 14.4</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用 IMarkerActionFilter.java中定义的属性来控制Tasks视图中上下文菜单动作的可见性。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 14.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>支持F1键盘命令，按F1键后，弹出信息框，给出在Task视图中所选项的详细描述信息。</FONT></BLOCKQUOTE>
+<P></P>
+<H4>首选项对话框</H4>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 15.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>全局选项应该在首选项对话框中显示。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 15.2</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于特定的视图，编辑器或者窗口，应该在其本身通过菜单或工具条显示其首选项设置。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 15.3</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>从单个的首选项页面开始。然后根据你的需要设计更多页面。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 15.4</FONT></B> 
+<BLOCKQUOTE><FONT 
+color=#09448d>如果创建了一个首选项组，用根页面来显示最常用的首选项设置，或者影响很广泛的首选项设置。特定的功能相关的设置放在在子页面中。根首选项页面不能为空。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 15.5</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>对于一个新的plug-in，首先考虑把其首选项，向导和视图和现有的类别集成，而不要先考虑创建新的类别。</FONT></BLOCKQUOTE>
+<P></P><BR>
+<H3>Flat Look Design</H3>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 16.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>在用户涉及广泛的属性编辑和配置编辑时，使用Flat Look设计。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 16.2</FONT></B> 
+<BLOCKQUOTE><FONT 
+color=#09448d>在Overview页面展示核心部分，并且在其他页面提供一个“Home”图标使用户可以回到Overview页面。</FONT></BLOCKQUOTE>
+<P></P>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#0044d0>&nbsp;</FONT><span class="style1">指南 16.3</span></B> 
+<BLOCKQUOTE><FONT color=#09448d>在内容编辑器中使用和Tab对应的分组元素来组织Outline视图中的树视图。</FONT></BLOCKQUOTE>
+<P></P><BR>
+<H3>资源之道</H3>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 17.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>使用IContributorResourceAdapter 来显示包装对象中的资源。</FONT></BLOCKQUOTE>
+<P></P><BR>
+<H3>可操作性</H3>
+<P><IMG height=16 
+src="Eclipse User Interface Guidelines.files/guidelineCheckbox.gif" 
+width=16><B><FONT color=#09448d>&nbsp;指南 18.1</FONT></B> 
+<BLOCKQUOTE><FONT color=#09448d>工具提供的所有功能都应该可以通过鼠标或者键盘完成。</FONT></BLOCKQUOTE>
+<P></P><BR>
+<H2><A name=Glossary></A>词汇表</H2>
+<P>
+<DL>
+  <DT><B>Command</B> 
+  <DD>A <I>command</I>, which is invoked by a user to carry out some specific 
+  functions, may appear as an item in a menu, or an item in a toolbar. In 
+  reflection of this, it has attributes for the menu or tool item label, 
+  tooltip, and image. As a plug-in developer, you can contribute commands to the 
+  window menu bar and toolbar, or to individual views and editors. Contribution 
+  to the window is performed using an <I>action set</I>, a set of task oriented 
+  commands which the user can show or hide. Contribution to a view or editor is 
+  performed using individual command. <BR>&nbsp; 
+  <DT><B>Bookmarks View</B> 
+  <DD>A view used to browse the bookmarks in the workbench. <BR>&nbsp; 
+  <DT><B>Editor</B> 
+  <DD>An editor is a visual component within a workbench page. It is typically 
+  used to edit or browse a document or input object. The input is identified 
+  using an &lt;code&gt;IEditorInput&lt;/code&gt;.&nbsp; Modifications made in an 
+  editor part follow an open-save-close lifecycle model (in contrast to a view 
+  part, where modifications are saved to the workbench immediately). <BR>&nbsp; 
+  <DT><B>File</B> 
+  <DD>An object in the workspace, analogous to files in the file system. 
+  <BR>&nbsp; 
+  <DT><B>Folder</B> 
+  <DD>A container for files in the workspace. <BR>&nbsp; 
+  <DT><B>Navigator View</B> 
+  <DD>A view used to browse the files in the workspace <BR>&nbsp; 
+  <DT><B>Outline View</B> 
+  <DD>A view, commonly used to view the outline of the active editor. <BR>&nbsp; 
+
+  <DT><B>Perspective</B> 
+  <DD>A perspective is a visual container for a set of views and editors 
+  (parts).&nbsp; These parts exist wholly within the perspective and are not 
+  shared.&nbsp; A perspective is also like a page within a book.&nbsp; It exists 
+  within a window along with any number of other perspectives and, like a page 
+  within a book, only one perspective is visible at any time. <BR>&nbsp; 
+  <DT><B>Platform</B> 
+  <DD>A generic framework for the integration of tools. <BR>&nbsp; 
+  <DT><B>Preferences</B> 
+  <DD>A Preference Page is used to edit the preferences for a feature in the 
+  platform. <BR>&nbsp; 
+  <DT><B>Project</B> 
+  <DD>A group of files and folders within the workspace.&nbsp; Each project maps 
+  to a corresponding user specified directory in the file system. <BR>&nbsp; 
+  <DT><B>Properties View</B> 
+  <DD>A view, typically used to browse the properties for an object in the 
+  active editor or view. <BR>&nbsp; 
+  <DT><B>Properties Dialog</B> 
+  <DD>A dialog for editing the properties of an object. <BR>&nbsp; 
+  <DT><B>Property Page</B> 
+  <DD>A page within a Properties Dialog. <BR>&nbsp; 
+  <DT><B>Resource</B> 
+  <DD>The generic name for projects, folders and files. <BR>&nbsp; 
+  <DT><B>Tasks View</B> 
+  <DD>A view used to browse the tasks, errors, and warnings within the 
+  workspace. <BR>&nbsp; 
+  <DT><B>View</B> 
+  <DD>A view is a visual component within a workbench page.&nbsp; It is 
+  typically used to navigate a hierarchy of information (like the workspace), 
+  open an editor, or display properties for the active editor.&nbsp; 
+  Modifications made in a view are saved immediately (in contrast to an editor 
+  part, which conforms to a more elaborate open-save-close lifecycle). 
+  <BR>&nbsp; 
+  <DT><B>Wizard</B> 
+  <DD>A Wizard is typically used to create new resources, import resources, or 
+  export resources. <BR>&nbsp; 
+  <DT><B>Workbench</B> 
+  <DD>The Workbench provides the user interface structure for Eclipse. The 
+  purpose of the Workbench is to facilitate the seamless integration of tools. 
+  These tools contribute to extension points defined by the Workbench.&nbsp; The 
+  Workbench is responsible for the presentation and coordination of the user 
+  interface. <BR>&nbsp; 
+  <DT><B>Workspace</B> 
+  <DD>The various tools plugged in to the Eclipse Platform operate on regular 
+  files in the user's workspace.&nbsp; The workspace consists of one or more top 
+  level projects, where each project maps to a corresponding user specified 
+  directory in the file system.&nbsp; Each project contains a collection of 
+  folders and files. </DD></DL><BR>
+<H2><A name=Acknowledgement></A>致谢</H2>
+<p>本文中使用并提供给Eclipse.org的截屏来自下列团队所发布或开发的plug-in：</p>
+<P>
+<UL>
+  <LI>Java Development Tooling, Eclipse Subproject 
+  <LI>WebSphere?Studio Application Developer, IBM Corporation 
+  <LI>Rational XDE Professional, IBM Corporation. </LI></UL>
+<P>真是由于他们同意在他们的用户界面设计（好的和不好的）中选择部分出来共享，使得这份UI指南变得如此出色。
+<H2><A name=Revision></A>修订历史</H2>
+<P>这包含了本文1.0版本以来一些最重要的改变。</P>
+<TABLE class=indent cellSpacing=0 cellPadding=5 width="90%" border=1 ?>
+  <TBODY>
+  <TR>
+    <TD vAlign=top rowSpan=5>
+      <H4>Added</H4></TD>
+    <TD>General UI Principles : "Decorators" subsection</TD></TR>
+  <TR>
+    <TD>"Visual Design" section covers consistency, design and implementation 
+      issues for UI graphics</TD></TR>
+  <TR>
+    <TD>Component Development : "Widgets" subsection describes some of the 
+      recommended designs for Standard Windows Toolkit (SWT) widgets</TD></TR>
+  <TR>
+    <TD>"Flat Look Design" section for user scenarios that involve extensive 
+      property and configuration editing</TD></TR>
+  <TR>
+    <TD>"Best Practices" section provides examples of best practices for 
+      designing and implementing some common user interactions</TD></TR>
+  <TR>
+    <TD vAlign=top rowSpan=2>
+      <H4>Removed</H4></TD>
+    <TD>Component Development : Perspectives : Opening a perspective in code - 
+      Guideline "Consider replacing the perspective type before you open a new 
+      perspective" has been removed</TD></TR>
+  <TR>
+    <TD>Component Development : Windows : Actions - "Open Application" has 
+      been removed</TD></TR>
+  <TR>
+    <TD vAlign=top rowSpan=2>
+      <H4>Modified</H4></TD>
+    <TD>Anything referred to as an "action" in Version 1.0 of the guidelines 
+      has been changed to "command" in Version 2.1 of the guidelines</TD></TR>
+  <TR>
+    <TD>The full guideline document has been reformatted and the graphical 
+      presentation has been updated</TD></TR></TBODY></TABLE>
+<P>
+<HR width="100%">
+
+<DIV align=center><BR>Version 2.1 February 2004 <BR><BR>Copyright?2001 - 2004 
+International Business Machine Corporation. <BR>Java and all Java-based 
+trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both. 
+<BR>Microsoft, Windows, Windows NT, and the Windows logo are trademarks of 
+Microsoft Corporation in the United States, other countries, or both.</DIV>
+<P></P><BR></BODY>
+</HTML>
