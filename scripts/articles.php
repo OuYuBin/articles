@@ -267,9 +267,8 @@ class Article {
 		$update_count = count($this->updates);
 		if ($update_count > 0) {
 			$update = $this->updates[$update_count - 1];
-			$html .= ' (';
+			$html .= '<br>';
 			$update->to_html($html);
-			$html .= ')';
 		}
 //		foreach ($this->updates as $update) {
 //			$html .= "<br>";
@@ -338,9 +337,19 @@ class Author {
 			$html .= "</a>";
 		}
 
+		// If a link is provided, display it.
+		if ($this->link) {
+			$html .= "<a href=\"$this->link\" target=\"_blank\">";
+		}
+		
 		// If company information is provided, display it.
 		if ($this->company) {
 			$html .= " ($this->company)";
+		}
+		
+		// If a link is provided, close off the link.
+		if ($this->link) {
+			$html .= "</a>";
 		}
 	}
 }
