@@ -1,0 +1,434 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=windows-1252">
+  <title>TPTP Profiling tool</title>
+  <link rel="stylesheet" href="default_style.css">
+</head>
+<body link="#0000ff" vlink="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif"
+ size="2">Copyright © 2001 International Business Machines Corp.</font>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+  <tbody>
+    <tr>
+      <td colspan="2" align="left" bgcolor="#0080c0" valign="top"><b><font
+ face="Arial,Helvetica"><font color="#ffffff">&nbsp;Eclipse Corner
+Article</font></font></b></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div align="left">
+<h1><img src="images/Idea.jpg" align="middle" height="86" width="120"></h1>
+</div>
+<p>&nbsp;</p>
+<h1 style="text-align: left;">TPTP Profiling tool<br>
+</h1>
+<blockquote> <b>Summary</b> <br>
+  <br>
+If you are looking for a tool that can profile Eclipse plug-ins, local
+java applications or complex applications running on multiple host and
+different platforms, the TPTP Profiling tool is something you can try.
+The tool is tightly integrated with Eclipse, allowing profiling of
+applications running from within Eclipse. This article demonstrates how
+to use the TPTP Profiling tool to profile
+an
+Eclipse plug-in for identifying execution related hot spots. It shows
+how to start the profiling session, use the various TPTP
+views to analyze the data, identify methods with high execution time
+then jump to the source code to review their implementation.<br>
+  <p><b> By Valentina Popescu, IBM<br>
+  <br>
+  </b> <font size="-1">October 28, 2005<br>
+  <br>
+  </font> </p>
+</blockquote>
+<hr width="100%"><br>
+<h2>Profiling an application using TPTP Profiling Tool</h2>
+The Eclipse Test &amp; Performance Tools Platform <a
+ href="http://eclipse.org/tptp/">(TPTP)</a> Project
+offers a profiling tool for identifying and isolating performance
+problems such
+as performance bottlenecks, object leaks and system resource limits.
+The tool
+targets applications of all levels of complexity, from simple
+standalone java applications to Eclipse plug-ins or complex enterprise
+applications running
+on multiple
+machines and on different platforms.
+<br>
+<br>
+Being tightly integrated with the Eclipse project, the tool
+is also easy to use and extend. That means that users can plug in their
+preferred views to analyze the data, or can extend the data collection
+metaphor
+by implementing their own flavor of data collection agent.
+This article provides an introduction to the TPTP
+Profiling
+tool. It shows how to profile an Eclipse plug-in using the Eclipse
+workbench and
+how to analyze this data using various statistical and graphical views.<br>
+<br>
+<h2>Why Profile an Application?</h2>
+In the current environment of short development cycles for
+delivering a product, developers tend to focus more on the functional
+aspects
+of application execution, mostly via tests, debugging and code fixing.
+However,
+many problems do not easily surface until the application is running in
+production
+mode, 24 hours a day, 7 days a week, 365 days a year and gets pushed to
+limits
+during some unexpected peak periods.
+<br>
+<br>
+When developing complex applications it is not enough to ensure
+that the application output is correct. There are also performance
+problems
+which need to be identified and solved. Is the application leaking any
+resources? Is the application using too much memory or is too slow? <br>
+<br>
+In practice, these problems cannot be discovered during a debugging
+session. Before deployed and run in production mode, it is important to
+use a Profiling tool to analyze application execution and identify
+performance problems, such as execution
+bottlenecks, object leaks, and system resource limitations.<br>
+<br>
+<h2>When is the right time to profile an application</h2>
+There is no definitive answer to when to perform profiling
+and code optimization. Some developers attack optimization as early as
+possible, to lower the chances of creating slow code that cannot be
+improved
+later without great effort. Others leave it until the very end,
+focusing on
+first getting the functionality in.
+<br>
+We’d recommend using the profiling tool relatively early in
+your development cycle. This way, you can reduce costs and avoid
+problems
+during the final performance tests. <br>
+<br>
+A best practice is to use an iterative development process
+and profile your application during each development cycle, looking for
+memory
+leaks and other performance problems.<br>
+<br>
+In the end, use common sense to decide when it is appropriate to follow
+our recommendation: it doesn’t make sense to run a lot of performance
+tests when you implement your simple standalone HelloWorld
+java application but it is highly recommended to find time for
+performance
+analysis when the application is a complex multi-tier enterprise
+application
+running on multiple machines, possibly on different platforms.<br>
+<br>
+<h2>Overview of the TPTP Profiling tool</h2>
+The TPTP Profiling tool provides a powerful and easy to use user
+interface for profiling an application and for analyzing the profiled
+data. <br>
+<br>
+A set of statistical views helps you identify performance hot
+spots at the package, class or method invocation level. The tool also
+provides
+a set of graphical views which gives a better understanding of the
+application
+execution, at the nodes, processes, threads or method invocation level.
+The
+tool can collect information at the instance or method invocation
+level.
+<br>
+<br>
+Being tightly integrated with Eclipse, profiling an
+application from the Eclipse workbench is as easy as running or
+debugging the same application.<br>
+<br>
+<h3>Profiling remote or local applications with TPTP</h3>
+The TPTP Profiling tool allows you to profile applications running
+on the local host or residing on remote machines. The metaphor used to
+profile remote
+applications is identical with the case when the application is running
+on the
+local host or within the Eclipse workbench. The only difference is that
+for
+profiling remote application or external to the Eclipse workbench, the
+Remote
+Agent Controller (RAC) service needs to be installed first on the
+machine where
+the profiled application is executed.<br>
+<br>
+<h4><b>Remote Agent Controller (RAC) architecture</b></h4>
+Profiling applications on remote hosts is managed by the
+Remote Agent Controller (RAC) service. <br>
+<br>
+The Agent Controller's deployment model is made up of
+multiple development hosts which use the Eclipse workbench to interact
+with applications
+residing on different hosts on the network. <br>
+<br>
+The Eclipse workbench sends all its profiling requests to
+the Remote Agent Controller on the deployment host where the profiled
+application
+is running. It is on the deployment hosts that these requests are
+authenticated
+and routed to the target agent or service. Commands and data that are
+generated
+by the agents and services must also be routed to the Remote Agent
+Controller,
+from where they are then transmitted back to the Eclipse workbench that
+initiated
+the profiling session.
+<br>
+<br>
+RAC controls the collecting of profiled data using different
+types of agents, such as the Java Profiling Agent that comes with TPTP.
+A Java
+Profiling Agent runs in a JVM process and receives notifications of JVM
+events, based on the JVMPI (Java Virtual Machine Profiler Interface). <br>
+<br>
+Note that the data collection framework is extensible so
+that third parties can implement their own flavor of data collection
+agent for any
+other non java applications. <br>
+<br>
+<h2>Installation</h2>
+To be able to profile an application running on the local
+host, you just need to copy the set of plug-ins packaged by TPTP. <br>
+<br>
+For profiling applications running on remote hosts, you will
+need to install the Remote Agent Controller service on the machine
+where the
+application resides. Note that the Remote Agent Controller service is
+installed
+separately from the TPTP plug-ins.
+<br>
+<br>
+For installation details, go to <a
+ href="http://eclipse.org/tptp/home/downloads/downloads.html">TPTP
+Latest
+Downloads</a> page. You will be presented with the latest TPTP version
+as
+well as
+the prerequisites to run the TPTP plug-ins. From this link you can also
+optionally install the Remote Agent Controller for profiling
+applications on
+remote hosts. <br>
+<br>
+<br>
+<h2>Profiling an Eclipse plug-in</h2>
+<div style="text-align: left;">
+This article exemplifies how to use the TPTP Profiling tool to profile
+an
+Eclipse plug-in. The plug-in used in this example is ‘Plug-in with a
+property
+page’ template plug-in provided by the Eclipse platform. <br>
+To generate this sample plug-in, go to File &gt; New… &gt; Project &gt;
+Plug-in Project then select the ‘Plug-in with a property page’ option
+on the
+Template page. This template creates a standard plug-in directory that
+adds a
+Property Page option to any file type.
+<br>
+<br>
+In this article we will focus on the set of profiling views that can be
+used
+to identify the method with the highest execution time. There are some
+other
+equally important views, used to find memory leaks or memory related
+problems
+which are not going to be discussed in this article. <br>
+<br>
+First step is to run the Eclipse workbench in profiling mode by
+selecting
+the Profile… action from the Java perspective toolbar menu:<br>
+<br>
+</div>
+<div style="text-align: center;"><img
+ alt="Profiling an Eclipse Application"
+ title="Profiling an Eclipse Application"
+ src="images/finalProfileAction.jpg"
+ style="width: 744px; height: 386px;"><br>
+<br>
+</div>
+<p style="text-align: center;"><b style="">Figure
+1</b> Profiling an Eclipse Application<br>
+<br>
+</p>
+This scenario proposes to analyze the
+application execution so next step is
+to set the profiling options to collect method execution information.
+The profiled
+data will also be filtered to collect only classes defined by this
+sample
+plug-in.The profiling filters and options will
+be set on the Profiling tab:<br>
+<br>
+<div style="text-align: center;"><img
+ alt="Profiling filters and options"
+ title="Profiling filters and options"
+ src="images/profFiltersOptions.jpg"
+ style="width: 612px; height: 541px;"><br>
+</div>
+<p style="text-align: center;"><b style="">Figure
+2</b> Profiling filters and options<br>
+<br>
+</p>
+Run this Eclipse workbench configuration
+and on the runtime-workbench,
+select any file then right click and open the <i style="">Properties</i>
+wizard:<br>
+<br>
+<div style="text-align: center;"><img alt="Sample Property Page"
+ title="Sample Property Page" src="images/propertiesPage.jpg"
+ style="width: 697px; height: 535px;"><br>
+<b style=""><br>
+Figure
+3</b> Sample Property page<br>
+<br>
+<br>
+</div>
+In the image above, notice the Sample Page generated by this sample
+plug-in.
+Select the page then go back to the Eclipse application that initiated
+this
+workbench instance and analyze the data using the TPTP profiling views.<br>
+<br>
+The <strong>Execution Statistics</strong> view is a good starting
+point as it identifies the packages, classes or methods
+responsible for slow execution time. Open this view by selecting the
+process from the <b style="">Profiling Monitor</b> view and
+then <i style="">Open with &gt; Execution Statistics</i>
+popup action:<br>
+<br>
+<br>
+<div style="text-align: center;"><span
+ style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"><img
+ alt="Execution Statistics View" title="Execution Statistics View"
+ src="images/methodStatView.jpg" style="width: 630px; height: 218px;"></span><br>
+<span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"></span>
+</div>
+<p style="text-align: center;" class="MsoNormal"><b>Figure
+4</b> Execution
+Statistics View<br>
+<br>
+</p>
+As presented in Figure 4, the <b style="">Execution
+Statistics</b> view shows statistics of different methods, sorted by
+execution <b style="">Base Time</b>. The view can be customized
+to display any type of statistical data, such as memory allocation, or
+time
+based statistics.
+In this particular sample, the view is
+sorted based on execution <b style="">Base Time</b> and identifies <i
+ style="">SamplePropertyPage.addFirstSection()</i>as having the highest
+execution time.<br>
+<br>
+Next, drill
+down to the method’s execution
+details and analyze the invocation call stack.To view method execution
+details,select <strong>Show Method Invocation </strong>action
+available on the
+method’s popup menu:<br>
+<br>
+<div style="text-align: center;"><img alt="Method Invocation view"
+ title="Method Invocation view" src="images/invocDetails.jpg"
+ style="width: 627px; height: 544px;"><br>
+<br>
+</div>
+<p style="text-align: center;"><b style="">Figure
+5</b> Method Invocation view<br>
+<br>
+</p>
+The <b style="">Method Invocation</b> view can be
+used to identify performance issues as it displays method execution
+patterns
+and differences between invocations of the same method. By
+using this view, you can graphically
+visualize the method invocations, see who called this invocation in the
+execution stack, or jump to the method source code. <br>
+<br>
+The red spots in the <b style="">Method
+Invocation</b> view represent object instantiations. In this scenario,
+notice that
+one instance of the following classes has been initialized: Composite,
+Label,
+Text and Scrollable. Also, looking at the execution pattern represented
+by the
+vertical rectangles, notice that the Control.createWidget() method has
+the
+highest execution time.<br>
+<br>
+Once this is identified, the <b style="">Method
+Invocation Details</b> view be used to generated statistical
+information for
+the SamplePropertyPage.addFirstSection() method’s execution. Open the <b
+ style="">Method Invocation Details</b> view by
+selecting the addFirstSection() method in any of the profiling views,
+and then running
+<i style="">Show Method Invocation Details</i> popup
+action:<br>
+<br>
+<div style="text-align: center;"><img
+ alt="Method Invocation Details view"
+ title="Method Invocation Details view"
+ src="images/methodInvDetails.jpg" style="width: 543px; height: 581px;"><br>
+<b><br>
+Figure
+6</b> Method
+Invocation Details view<br>
+<br>
+</div>
+<p style="text-align: left;">In Figure 6, <b style="">Method
+Invocation
+Details</b> view shows execution statistics for methods invoked by, or
+invoking
+SamplePropertyPage.addFirstSection(). Notice that
+SamplePropertyPage.addFirstSection() invokes
+org.eclipse.swt.widgets.Text() 2
+times which is the method with the highest execution time in the call
+stack.The next method with a high
+execution time is ClassLoader.loadClassInternal(), which was called 6
+times. </p>
+Based on this information, you can now open the source code for
+SamplePropertyPage.addFirstSection()
+and analyze the method implementation. To open the source code for a
+method or class, right-click on the view,
+then select <i style="">Open Source</i> action:
+<br>
+<br>
+<div style="text-align: center;"><img alt="Source Code"
+ title="Source Code" src="images/source.jpg"
+ style="width: 724px; height: 790px;"><br>
+<br>
+</div>
+<div style="text-align: center;"><b style="">Figure
+7</b> Source Code<br>
+</div>
+<p style="text-align: left;"><br>
+</p>
+<br>
+<h2 style="text-align: left;">Conclusion</h2>
+The TPTP Profiling tool is a powerful, yet very easy to use tool. It
+can help you find a wide range of performance problems, from
+performance bottlenecks, object leaks to system resource limits. For
+this specific
+scenario, the Profiling tool was used to analyze the application
+execution and
+identify possible performance hot spots.
+<br>
+<br>
+The tool targets applications at any
+level of complexity, from simple standalone java applications to
+complex enterprise applications running on multiple machines and on
+different
+platforms. <br>
+<br>
+Being tightly integrated with Eclipse, the profiling
+tool allows developers to test application performance early in the
+development cycle. Using the Profiling tool reduces risk early in the
+development
+cycle and avoids problems in the final performance tests.
+<br>
+<br>
+</body>
+</html>
