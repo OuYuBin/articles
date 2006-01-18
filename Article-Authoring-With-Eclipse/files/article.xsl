@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-        $Id: article.xsl,v 1.3 2006/01/12 15:31:53 wbeaton Exp $
+        $Id: article.xsl,v 1.4 2006/01/18 17:23:40 wbeaton Exp $
         author: Chris Aniszczyk <zx@us.ibm.com>
         author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -16,7 +16,7 @@
 	<xsl:param name="suppress.navigation" select="1" />
 	<xsl:param name="bibliography.numbered" select="1" />
 	<xsl:param name="generate.toc">article nop</xsl:param>
-	<xsl:param name="ulink.target" value="'_new'"/>
+	<xsl:param name="ulink.target" select="'_new'"/>
 	<xsl:param name="admon.style">
   		<xsl:text>margin-left: 0.38in; margin-right: 0.38in;</xsl:text>
 	</xsl:param>
@@ -32,32 +32,7 @@
 			<span class="copy">
 				Copyright &#x00A9;<xsl:value-of select="//copyright/year[1]" />&#160;<xsl:value-of select="//copyright/holder[1]" />
 			</span>
-
-			<table border="0" cellpadding="2" cellspacing="0"
-				width="100%">
-				<tbody>
-
-					<tr>
-						<td colspan="2" align="left" bgcolor="#0080C0"
-							valign="top">
-							<span class="corner">
-								&#160; Eclipse Corner Article
-							</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
 		</div>
-
-		<div align="left">
-
-			<h1>
-				<img src="images/Idea.jpg" height="86" width="120"
-					align="
-      middle" />
-			</h1>
-		</div>
-
 	</xsl:template>
 	
 	<xsl:template name="article.titlepage.recto">

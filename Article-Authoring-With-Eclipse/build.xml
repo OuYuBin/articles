@@ -1,0 +1,145 @@
+<!--
+        Build script for Eclipse.org Articles
+        $Id: build.xml,v 1.1 2006/01/18 17:23:34 wbeaton Exp $
+        author: Chris Aniszczyk <zx@us.ibm.com>
+        author: Lawrence Mandel <lmandel@ca.ibm.com>
+-->
+
+<project name="eclipse.org article (docbook)" default="build-doc" basedir=".">
+	
+	<!-- ========== Properties: User Defined Options ========================= -->	
+	
+	<property name="article.name" value="AuthoringWithEclipse"/>
+	<property name="article.stylesheet" value="files/article.xsl"/>
+	
+	<property name="dest.dir" value="."/>
+	<property name="download.dir" value="${user.home}${file.separator}downloads"/>
+	
+	<property name="docbook.dir" value="${download.dir}${file.separator}docbook-xsl-1.69.1"/>
+	<property name="docbookxsl.url" value="http://internap.dl.sourceforge.net/sourceforge/docbook/docbook-xsl-1.69.1.zip"/>
+	<property name="fop.dir" value="${download.dir}${file.separator}fop-0.20.5"/>
+	<property name="fop.url" value="http://apache.mirrors.tds.net/xml/fop/fop-0.20.5-bin.zip"/>
+	<property name="jai.dir" value="ENTER_JAI_DIRECTORY"/>
+	
+	<property name="build.home" value="build"/>
+		
+	<!-- ========== Macro Definition =================================================== -->	
+	
+    <macrodef name="docbook2pdf">
+        <attribute name="source"/>
+    	<attribute name="target"/>
+        <sequential>
+        	<taskdef name="fop" classname="org.apache.fop.tools.anttasks.Fop">
+        		<classpath>
+        			<pathelement location="${fop.dir}${file.separator}build${file.separator}fop.jar" />
+        			<pathelement location="${fop.dir}${file.separator}lib${file.separator}avalon-framework-cvs-20020806.jar" />
+        			<pathelement location="${fop.dir}${file.separator}lib${file.separator}batik.jar" />
+        			<pathelement location="${jai.dir}${file.separator}lib${file.separator}jai_core.jar" />
+        			<pathelement location="${jai.dir}${file.separator}lib${file.separator}jai_codec.jar" />
+        		</classpath>
+        	</taskdef>
+        	<fop 
+        		format="application/pdf" 
+        		fofile="@{source}" 
+        		outfile="@{target}"
+        		messagelevel="info"/>
+        </sequential>
+    </macrodef>
+	
+	<!-- ========== Targets =================================================== -->	
+		
+	<target name="init">
+		<mkdir dir="${download.dir}"/>
+		
+		<available file="${jai.dir}" property="jai.exists"/>
+		<antcall target="notifyJAI"/>
+	</target>
+	
+	<target name="notifyJAI" unless="jai.exists">
+		<echo message="The Java Advanced Imaging (JAI) library is not available."/>
+		<echo message="JAI is required if you want to use PNG images in your article."/>
+		<echo message="You can download JAI from http://java.sun.com/products/java-media/jai/downloads/download-1_1_2_01.html."/>
+		<echo message="Specify the JAI installation directory to the article build by providing the parameter jai.dir to this build script."/>
+	</target>
+	
+	<target name="build-doc" depends="init, get-docbook-xsl, get-fop">
+		<echo>Building Article...</echo>
+		<antcall target="docbook2html"/>
+		<antcall target="docbook2pdf"/>
+		<antcall target="dist"/>
+	</target>
+		
+	<target name="check-docbook">
+		<available file="${download.dir}${file.separator}docbook.zip" property="hasDocbook"/>
+	</target>
+	
+	<target name="check-fop">
+		<available file="${download.dir}${file.separator}fop.zip" property="hasFOP"/>
+	</target>
+		
+	<target name="get-docbook-xsl" description="Downloads docbook xsl" depends="check-docbook" unless="hasDocbook">
+		<echo>Downloading DocBook XSL...</echo>
+		<get dest="${download.dir}${file.separator}docbook.zip" src="${docbookxsl.url}"/>
+		<unzip src="${download.dir}${file.separator}docbook.zip" dest="${download.dir}"/>
+	</target>
+	
+	<target name="get-fop" description="Downloads FOP" depends="check-fop" unless="hasFOP">
+		<echo>Downloading FOP...</echo>
+		<get dest="${download.dir}${file.separator}fop.zip" src="${fop.url}"/>
+		<unzip src="${download.dir}${file.separator}fop.zip" dest="${download.dir}"/>
+	</target>
+	
+	<target name="docbook2html">
+		<echo>Converting article to HTML...</echo>
+		<delete file="${dest.dir}${file.separator}${article.name}.html"/>
+		<xslt in="${article.name}.xml" extension="xml" out="${dest.dir}${file.separator}${article.name}.html" style="${article.stylesheet}">
+			<xmlcatalog>
+				<entity 
+					publicId="docbook.xsl"
+				    location="${docbook.dir}${file.separator}html${file.separator}docbook.xsl"/>
+			</xmlcatalog>
+			<param name="header.rule" expression="1" />
+			<param name="admon.graphics.extension" expression=".gif"/>
+			<param name="admon.textlabel" expression="0"/>
+			<param name="ulink.target" expression="_new"/>
+		</xslt>
+	</target>
+	
+	<target name="docbook2pdf">
+		<echo>Converting article to PDF...</echo>
+
+		<delete file="${dest.dir}${file.separator}${article.name}.pdf"/>
+		<delete file="${dest.dir}${file.separator}${article.name}.fo"/>
+		<xslt in="${article.name}.xml" extension="xml" out="${dest.dir}${file.separator}${article.name}.fo" style="${docbook.dir}${file.separator}fo${file.separator}docbook.xsl">
+			<xmlcatalog>
+				<entity 
+					publicId="docbook.xsl"
+				    location="${docbook.dir}${file.separator}fo${file.separator}docbook.xsl"/>
+			</xmlcatalog>
+			<param name="generate.toc" expression="book toc" />
+			<param name="show.comments" expression="0" />
+			<param name="header.rule" expression="1" />
+			<param name="admon.graphics.extension" expression=".gif"/>
+			<param name="admon.textlabel" expression="0"/>
+			<param name="admon.graphics" expression="1"/>
+		</xslt>
+		
+		<docbook2pdf 
+			source="${dest.dir}${file.separator}${article.name}.fo"
+			target="${dest.dir}${file.separator}${article.name}.pdf"/>
+		
+		<!-- Remove the resulting formatting object. This object isn't necessary in the
+		     result of this build. -->
+		<delete file="${dest.dir}${file.separator}${article.name}.fo"/>
+	</target>
+	
+	<target name="dist">
+		<echo>Building article zip file...</echo>
+		<delete file="${dest.dir}${file.separator}${article.name}.zip"/>
+		<zip basedir="${dest.dir}" destfile="${dest.dir}${file.separator}${article.name}.zip"
+			 excludes="${article.name}.fo, ${article.name}.zip, .project">
+		</zip>
+		<echo>If you're done with your article, please post the zip file on the related bugzilla entry.</echo>
+	</target>
+
+</project>
