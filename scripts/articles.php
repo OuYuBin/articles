@@ -226,6 +226,7 @@ class Article {
 	var $title;
 	var $root;
 	var $link;
+	var $translations = array();
 	var $description;
 	var $authors = array();
 	var $categories = array();
@@ -233,7 +234,11 @@ class Article {
 	var $updates = array();
 	var $show = true;
 
-
+	function add_translation(&$translation) {
+		$translation->root = $this->root;
+		array_push($this->translations, $translation);
+	}
+	
 	function add_author(&$author) {
 		array_push($this->authors, $author);
 	}
@@ -270,12 +275,15 @@ class Article {
 			$html .= '<br>';
 			$update->to_html($html);
 		}
-//		foreach ($this->updates as $update) {
-//			$html .= "<br>";
-//			$update->to_html($html);
-//		}
-		$description = $this->description;
-		$html .= "<blockquote>$description</blockquote>";
+		
+		foreach ($this->translations as $translation) {
+			$html .= "<br>";
+			$translation->to_html($html);
+		}
+		
+		$html .= "<blockquote>";
+		$html .= $this->description;	
+		$html .="</blockquote>";
 	}
 
 	// Render the article's authors to html.
@@ -330,7 +338,7 @@ class Author {
 		}
 
 		// The author name must be provided.
-		$html .= $this->name;
+		$html .= str_replace(' ', '&nbsp;', $this->name);
 
 		// If an email address is provided, then close off the link.
 		if ($this->email) {
@@ -371,6 +379,59 @@ class Update {
 		if (strlen($this->reason)) {
 			$html .= " $this->reason";
 		}
+	}
+
+	// Render the article's authors to html.
+	function authors_to_html($authors, & $html) {
+		$count = count($authors);
+
+		// If there is at least one author, print their information
+		if ($count > 0) {
+			$html .= ' by ';
+			$html .= $authors[0]->to_html($html);
+		}
+
+		// Print each of the authors, excluding the first and the last
+		for ($index = 1; $index < $count -1; $index ++) {
+			$html .= ", ";
+			$html .= $authors[$index]->to_html($html);
+		}
+
+		// If there are more than two authors, then we need to separate
+		// the last one from the second last one with a comma.
+		if ($count > 2) {
+			$html .= ",";
+		}
+
+		// If there was more than one author, then print the last author's
+		// information
+		if ($count > 1) {
+			$html .= " and ";
+			$html .= $authors[$count -1]->to_html($html);
+		}
+	}
+}
+
+class Translation {
+	var $language;
+	var $date;
+	var $authors = array();
+	var $root;
+	var $link;
+
+	function add_author(&$author) {
+		array_push($this->authors, $author);
+	}
+	
+	// Render the article as html.
+	function to_html(& $html) {
+		$image_file = "/flags/$this->language.gif";
+		$html .= "<table border=\"0\"><tr><td><a href=\"$this->root/$this->link\"><img src=\"$image_file\" align=\"left\" alt=\"[$this->language]\"></a></td>";
+		$html .= "<td>This article has been translated ";
+//		$html .= date("F Y", $this->date);
+		// Get the collection of authors and render them.
+		$this->authors_to_html($this->authors, $html);
+		$html .= "</td></tr></table>";
 	}
 
 	// Render the article's authors to html.

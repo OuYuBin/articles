@@ -241,7 +241,12 @@ class ArticleHandler extends XmlElementHandler {
 	}
 	
 	function & get_category_handler($attributes) {
-		return new ArticleCategoryHandler($this->article);
+		return new SimpleTextHandler();
+//		return new ArticleCategoryHandler($this->article);
+	}
+	
+	function end_category_handler(& $handler) {
+		array_push($this->article->categories, $handler->text);
 	}
 	
 	function &get_author_handler($attributes) {
@@ -260,21 +265,17 @@ class ArticleHandler extends XmlElementHandler {
 		$this->article->add_update($handler->update);
 	}
 
+	function & get_translation_handler(& $attributes) {
+		return new TranslationHandler($attributes);
+	}
+	
+	function end_translation_handler(& $handler) {
+		$this->article->add_translation($handler->translation);
+	}
+
 	function end($name) {
 		if ($this->article->date)
 			$this->article->date = strtotime($this->article->date);
-	}
-}
-
-class ArticleCategoryHandler extends SimpleTextHandler {
-	var $article;
-
-	function ArticleCategoryHandler(& $article) {
-		$this->article = & $article;
-	}
-
-	function end($name) {
-		array_push($this->article->categories, $this->text);
 	}
 }
 
@@ -306,6 +307,35 @@ class AuthorHandler extends XmlElementHandler {
 //	function end($name) {
 //		array_push($this->owner->authors, $this->author);
 //	}
+}
+
+class TranslationHandler extends XmlElementHandler{
+	var $translation;
+
+	function TranslationHandler(& $attributes) {
+		$this->translation = new Translation();
+		$this->translation->language = $attributes['LANGUAGE'];
+	}
+
+	function & get_author_handler($attributes) {
+		return new AuthorHandler($this->update);
+	}
+	
+	function end_author_handler($handler) {
+		$this->translation->add_author($handler->author);
+	}
+	
+	function & get_date_handler($attributes) {
+		return new SimpleTextHandler();
+	}
+	
+	function end_date_handler($handler) {
+		$this->translation->date = strtotime($handler->text);
+	}
+	
+	function & get_link_handler($attributes) {
+		return new SimplePropertyHandler($this->translation, "link");
+	}
 }
 
 class UpdateHandler extends XmlElementHandler{
