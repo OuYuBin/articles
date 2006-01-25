@@ -23,7 +23,7 @@ Article</font></font></b></td>
 <h1><img src="images/Idea.jpg" align="middle" height="86" width="120"></h1>
 </div>
 <p>&nbsp;</p>
-<h1 style="text-align: left;">TPTP Profiling tool<br>
+<h1 style="text-align: left;">TPTP Profiling Tool<br>
 </h1>
 <blockquote> <b>Summary</b> <br>
   <br>
@@ -41,7 +41,7 @@ views to analyze the data, identify methods with high execution time
 then jump to the source code to review their implementation.<br>
   <p><b> By Valentina Popescu, IBM<br>
   <br>
-  </b> <font size="-1">October 28, 2005<br>
+  </b> <font size="-1">January 18, 2006<br>
   <br>
   </font> </p>
 </blockquote>
@@ -158,15 +158,15 @@ applications is identical to the one used when the application is
 running
 on the
 local host or within the Eclipse workbench. The only difference is that
-for
-profiling remote applications or applications external to the Eclipse
+when
+profiling remote applications or an application running external to the Eclipse
 workbench, the
 Remote
 Agent Controller (RAC) service needs to be installed first on the
 machine where
 the profiled application is executed.<br>
 <br>
-<h4><b>Remote Agent Controller (RAC) architecture</b></h4>
+<h4>Remote Agent Controller (RAC) Architecture</h4>
 Profiling applications on remote hosts is managed by the
 Remote Agent Controller (RAC) service. <br>
 <br>
@@ -211,7 +211,7 @@ installed
 separately from the TPTP plug-ins.
 <br>
 <br>
-For installation details, go to <a href="http://eclipse.org/tptp/">http://eclipse.org/tptp/</a>
+For installation details, go to <a href="http://eclipse.org/tptp/" target="_blank">http://eclipse.org/tptp/</a>
 and then select the TPTP Latest Downloads page. You will be presented
 with the latest TPTP version
 as well as the prerequisites to run the TPTP plug-ins. From this link
@@ -223,9 +223,7 @@ remote hosts. <br>
 <br>
 <h2>Profiling an Eclipse plug-in</h2>
 <div style="text-align: left;">
-This article exemplifies how to use the TPTP Profiling tool to profile
-an
-Eclipse plug-in. The plug-in used in this example is the ‘Plug-in with
+The plug-in used in this example is the ‘Plug-in with
 a
 property
 page’ template plug-in provided by the Eclipse platform. <br>
@@ -265,13 +263,12 @@ Java perspective toolbar menu:<br>
 1</b> Profiling an Eclipse Application<br>
 <br>
 </p>
-This scenario proposes to analyze the
-application execution so the next step is
+The next step is
 to set the profiling options to collect method execution information.
 The profiled
 data will also be filtered to collect only classes defined by this
 sample
-plug-in.The profiling filters and options will
+plug-in. The profiling filters and options will
 be set on the <span style="font-weight: bold;">Profiling</span> tab:<br>
 <br>
 <div style="text-align: center;"><img
@@ -286,8 +283,8 @@ be set on the <span style="font-weight: bold;">Profiling</span> tab:<br>
 </p>
 Run this Eclipse workbench configuration
 and on the runtime-workbench,
-select any file, right-click, and then open the Properties
-wizard:<br>
+select any file and then open the Properties
+wizard using the pop-up menu:<br>
 <br>
 <div style="text-align: center;"><img alt="Sample Property Page"
  title="Sample Property Page" src="images/propertiesPage.jpg"
@@ -337,7 +334,7 @@ execution time.<br>
 <br>
 Next, drill
 down to the method’s execution
-details and analyze the invocation call stack.To view method execution
+details and analyze the invocation call stack. To view method execution
 details,select <strong>Show Method Invocation </strong>from the
 mehod's popup-up menu:<br>
 <br>
@@ -371,7 +368,7 @@ been executed. <br>
 The text marked in red in the <b style="">Method
 Invocation</b> view represents object instantiations. In this scenario,
 notice that
-one instance of the following classes has been initialized: Composite,
+one instance each of the following classes has been initialized: Composite,
 Label,
 Text and Scrollable. Also, looking at the execution pattern represented
 by the
@@ -446,7 +443,7 @@ show the resource path. Also, notice that the code defines an extra
 label, <span style="font-style: italic;">pathLabel</span>, for the
 field description.<br>
 Knowing that it is more expensive to
-instantiate a Text object than a Label one,
+instantiate a Text than a Label,
 the following improvements can be applied to the code :<br>
 <br>
 1. Make the pathValueText a Label instead of a read-only Text.<br>
