@@ -1,39 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-<!-- ======================================================== -->
-<!-- = Java Sourcecode to HTML automatically converted code = -->
-<!-- =   Java2Html Converter V4.1 2004 by Markus Gebhard  markus@jave.de   = -->
-<!-- =     Further information: http://www.java2html.de     = -->
-<!-- xhtml format used, bugs in 4.1 fixed by hand/ebb -->
+
 <head>
 <title>Rich Client Platform</title>
 <link href="../default_style.css" rel="stylesheet">
-
-<style type="text/css">
-td.java, td.java-ln {vertical-align:top;}
-tt.java, tt.java-ln, pre.java, pre.java-ln {line-height:1em; margin-bottom:0em;}
-td.java-ln { text-align:right; }
-tt.java-ln, pre.java-ln { color:#888888 }
-/* UNDEFINED       */ font.java90  { font-size: 10pt; color:#ff6100; }
-/* CODE            */ font.java10  { font-size: 10pt; color:#000000; }
-/* CODE_KEYWORD    */ font.java4  { font-size: 10pt; color:#7f0055; font-weight:bold; }
-/* CODE_TYPE       */ font.java9  { font-size: 10pt; color:#7f0055;}
-/* QUOTE           */ font.java5  { font-size: 10pt; color:#2a00ff; }
-/* COMMENT_LINE    */ font.java3  { font-size: 10pt; color:#3f7f5f; font-style:italic; }
-/* COMMENT_BLOCK   */ font.java2  { font-size: 10pt; color:#3f7f5f; font-style:italic; }
-/* COMMENT_JAVADOC */ font.java14  { font-size: 10pt; color:#3f5fbf; font-style:italic; }
-/* COMMENT_KEYWORD */ font.java11  { font-size: 10pt; color:#7f9fbf; font-style:italic; font-weight:bold; }
-/* EMPTY           */ font.java99  {}
-/* NUM_CONSTANT    */ font.java910 { font-size: 10pt; color:#990000; }
-/* CHAR_CONSTANT   */ font.java911 { font-size: 10pt; color:#990000; }
-/* PARENTHESIS     */ font.java8 { font-size: 10pt; color:#000000; font-style:bold; }
-</style>
+<link href="java2html.css" rel="stylesheet">
 </head>
 
 <body>
 
 <div align="right"><font face="Times New Roman, Times, serif" size="2">Copyright
-© 2004-2005 Ed Burnette.</font>
+© 2004-2006 Ed Burnette.</font>
 <table border="0" cellspacing="0" cellpadding="2" width="100%">
 	<tbody>
 		<tr>
@@ -55,11 +32,10 @@ steps used to build the smallest possible RCP program. In part 2 we'll
 look at what we did in more detail and introduce some of the
 configuration classes that let you take control of much of the layout
 and functionality of an RCP application. This part has been updated for
-Eclipse 3.1.</p>
+Eclipse 3.1.2</p>
 <p><b>By Ed Burnette, SAS</b><br>
-<font size="-1">August 9, 2004 (Updated November 21, 2005 for Eclipse
-3.1)<br>
-</font></p>
+<font size="-1">August 9, 2004<br>
+<font size="-1"><b>Updated for 3.1.2:</b> February 6, 2006</font> </font></p>
 <hr width="100%">
 
 <h2>Introduction</h2>
@@ -119,7 +95,7 @@ and plugin.xml. PDE provides a fancy editor to modify the options stored
 in these files (see Figure 1) but also allows you to edit the source
 directly.</p>
 
-<img src="images/manifest-editor-overview.png" alt="">
+<img src="images/manifest-editor-overview_s.png" alt="">
 <p><b> Figure 1. The plug-in manifest editor provides a single interface
 for editing the manifest and related files. The tabs along the bottom of
 the editor access all the different sections in the GUI or the raw text
@@ -218,6 +194,7 @@ By convention only, package names and ids are lower case and class names
 
 
 
+</p>
 <h2>The main program</h2>
 <p>The <code>org.eclipse.core.runtime.applications</code> extension
 tells the Eclipse runtime the name of your main program. This is a class
