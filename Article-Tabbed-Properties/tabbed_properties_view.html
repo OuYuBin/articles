@@ -1,0 +1,464 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>The Eclipse Tabbed Properties View</title>
+<STYLE type="text/css">
+   H1 { font-family : Arial, Helvetica, sans-serif; font-size : 14pt; font-weight : bold; font-style : normal; }
+   H2 { font-family : Arial, Helvetica, sans-serif; font-size : 12pt; font-weight : bold; font-style : normal; }
+   H3 { font-family : Arial, Helvetica, sans-serif; font-size : 10pt; font-weight : bold; font-style : normal; }
+   P { font-family : Arial, Helvetica, sans-serif; font-size : 10pt;}
+   P.footer { font-family : Arial, Helvetica, sans-serif; font-size : 8pt; }
+   PRE  { font-family : Courier, sans-serif; font-size : 10pt; color : #4444cc;}
+</STYLE>
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right"><p>&nbsp; Copyright 
+  &copy; 2006 International Business Machines Corp.</p>
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120></h1>
+</div>
+<h1 ALIGN="CENTER">The Eclipse Tabbed Properties View</h1>
+
+<blockquote>
+<p><b>Summary</b></p>
+<p>The Eclipse workbench provides a properties view which is used to view (and/or edit) properties of a
+ selected item. In this article, you will learn how to use the tabbed properties view to create an 
+ enhanced user interface for the properties view.<br><br>
+<b>By Anthony Hunter, IBM</b> <br>
+<font size="-1">January 30th, 2006</font></p>
+</blockquote>
+
+<hr width="100%">
+<h2>Introduction</h2>
+<p>The Eclipse workbench provides a properties view, which is described in detail in the article 
+<a href="http://www.eclipse.org/articles/Article-Properties-View/properties-view.html">
+Take control of your properties</a>. The default user interface is table with property and value pairs, and the value being modified using a standard dialog cell editor.</p>
+<p>The workbench provides extensions to define a custom user interface for the properties view. By making use of thise extensions, the tabbed properties view has been created.</p>
+
+<p>The tabbed properties view allows you to create any user interface for your properties. In addition, you can create user interfaces for elements that do not implement an IPropertySource. Indeed the properties view can be extended to view any data for the selection in your workbench part.</p>
+
+<p>As an example, here was the properties view for the example in the <a href="http://www.eclipse.org/articles/Article-Properties-View/properties-view.html">
+Take control of your properties</a>. </p>
+
+<p><img src="images/properties_before.jpg" width=626 height=150 alt="" border="0"></p>
+
+<p>The tabbed properties view can be used to create a different user interface. </p>
+
+<p><img src="images/properties_after.jpg" width=625 height=150 alt="" border="0"></p>
+
+<h2>History</h2>
+<p>The tabbed properties view was authored by IBM and was used internally in the IBM Rational Software Architect, IBM WebSphere Integration Developer, and other IBM products based on the Eclipse platform.</p>
+
+<p>The tabbed properties view was contributed to Eclipse open source and became part of the <a href="http://www.eclipse.org/webtools/">Eclipse Web Tools Platform project</a>. </p>
+
+<p>With Eclipse 3.2 M5, the tabbed properties view has moved to the Eclipse core platform.</p>
+
+<p>The Tabbed Properties View is implemented using the <code>org.eclipse.ui.views.properties.tabbed</code> plug-in. </p>
+
+<h2>Examples</h2>
+<p>Here are some other examples of the tabbed properties view in action.</p>
+
+<p>This example comes from the XML Schema Editor available in <a href="http://www.eclipse.org/webtools/">Eclipse WTP</a> version 0.7</p>
+
+<p><img src="images/xsdeditor-figure3.jpg" width=653 height=218 alt="" border="0"></p>
+
+<p>This example comes from the Logic Shapes example available in <a href="http://www.eclipse.org/gmf/">Eclipse GMF</a> version 1.0 M4.</p>
+
+<p><img src="images/gmf_properties.jpg" width=643 height=309 alt="" border="0"></p>
+
+<p>This example comes from the UML Modeler available in <a href="http://www-306.ibm.com/software/awdtools/architect/swarchitect/">IBM Rational Software Architect</a> version 6.0</p>
+
+<p class="footer"><img src="images/UML_Model_Editor.jpg" width=671 height=196 alt="" border="0">
+<br>Reprinted with the permission of IBM Corporation. &copy; International Business Machines Corp. 2005
+</p>
+
+<p>This example comes from the BPEL Editor available in <a href="http://www-306.ibm.com/software/integration/wid/">IBM WebSphere Integration Developer</a> version 6.0</p>
+<p class="footer"><img src="images/bpel_editor.jpg" width=723 height=289 alt="" border="0">
+<br>Reprinted with the permission of IBM Corporation. &copy; International Business Machines Corp. 2005</p>
+
+<p>This example comes from the HTML Editor available in <a href="http://www-306.ibm.com/software/awdtools/developer/web/">IBM Rational Web Software Developer for WebSphere Software</a> version 6.0</p>
+
+<p class="footer"><img src="images/HTML_Editor.jpg" width=671 height=196 alt="" border="0">
+<br>Reprinted with the permission of IBM Corporation. &copy; International Business Machines Corp. 2005</p>
+
+<h2>The Tabbed Properties View Extension Points</h2>
+
+<p>The tabbed properties view is configured by implementing three extension. Each tabbed properties view is composed of a property contributor who contributes one or more property tabs. Each property tab is filled with one or more sections. The highlighted example below illustrates how they are organized. For the current selection, the property contributor has enabled two tabs in the tabbed properties view, Button and Advanced. The Button tab is highlighted and is the active tab. The Button tab has enabled three active sections highlighted on the right.</p>
+<p><img src="images/properties_highlighted.jpg" width=626 height=150 alt="" border="0"></p>
+
+<h3>Property Contributor</h3>
+
+<p>The <code>org.eclipse.ui.views.properties.tabbed.PropertyContributor</code> extension point is the key for your tabbed properties view. It most importantly identifies the unique contributor identifier for your tabs and sections. Most frequently, this identifier matches the unique workbench part id that is contributing the tabbed properties view. </p>
+
+<p>Note that a property contributor can be shared among several workbench parts. For example, an application may have an explorer view, editor and outline whose selections share a common set of properties. In this case, all three workbench parts can share the same tabbed properties view as identified by the unique contributor identifier.</p>
+
+<p>A workbench part cannot make use of two or more property contributors. It can identify a single property contributor by implementing the <code>ITabbedPropertySheetPageContributor</code> interface.</p>
+
+<p>The <code>PropertyContributor</code> extension point also defines the following attributes:</p>
+<table width="100%" border="1" cellpadding="5">
+<tr><td><code>typeMapper</code></td><td>The class that implements the type mapper.</td></tr>
+<tr><td><code>labelProvider</code></td><td>The class that implements the label provider for the title bar.</td></tr>
+<tr><td><code>propertyCategory</code></td><td>One or more category attributes used to group the tabs.</td></tr>
+</table>
+
+<h3>Property Tabs </h3>
+
+<p>The <code>org.eclipse.ui.views.properties.tabbed.PropertyTabs</code> extension point describes the tabs for a contributor. Each tab belongs to one contributor as identified by its unique contributor identifier. The <code>PropertyTabs</code> extension point can define one or more tabs through the <code>PropertyTab</code> attribute.</p> 
+<p>A <code>ProperyTab</code> defines the following attributes:</p>
+<table width="100%" border="1" cellpadding="5">
+<tr><td><code>id</code></td><td>The unique id for the tab.</td></tr>
+<tr><td><code>label</code></td><td>The label to be displayed on the tab. </td></tr>
+<tr><td><code>category</code></td><td>The category from the PropertyContributor extension point used to group tabs. </td></tr>
+<tr><td><code>afterTab</code></td><td>When there is more than one tab in a category, tabs are sorted by the afterTab attribute. </td></tr>
+<tr><td><code>image</code></td><td>The optional image to display on the tab.</td></tr>
+<tr><td><code>indented</code></td><td><code>true</code> if the tab is indented.</td></tr>
+</table>
+
+<h3>Property Sections</h3>
+
+<p>The <code>org.eclipse.ui.views.properties.tabbed.PropertySections</code> extension point describes the sections for a contributor. Each section belongs to one configuration as identified by its unique contributor identifier. </p>
+
+<p>The <code>PropertySections</code> extension point can define one or more sections through the <code>PropertySection</code> attribute. Each section belongs to one tab as identified by its unique tab identifier.</p>
+
+<p>The <code>PropertySection</code> defines the following attributes:</p>
+
+<table width="100%" border="1" cellpadding="5">
+<tr><td><code>id</code></td><td>The unique id for the section. </td></tr>
+<tr><td><code>tab</code></td><td>The unique tab id in which this section appears. </td></tr>
+<tr><td><code>class</code></td><td>The class that implements the section</td></tr>
+<tr><td><code>afterSection</code></td><td>When there is more than one section in a tab, sections are sorted by the afterSection attribute. </td></tr>
+<tr><td><code>filter</code></td><td>The class that implements a section filter.</td></tr>
+<tr><td><code>enablesFor</code></td><td>a value indicating the selection count which must be met to enable the section. If specified and the condition is not met, the section is filtered. If omitted, the section enablement is not affected.<br> The following attribute formats are currently supported:<br>
+<code> n </code>- a precise number of items selected.  For example: enablesFor=&quot; 1&quot; enables the section only when 1 item is selected</td></tr>
+</table>
+
+<p>The <code>PropertySection</code> also defines one or more <code>input type</code> attributes. Each <code>type</code> is a class or interface that the selection must match for the section to be displayed on the tab.</p>
+
+<h2>Implementing the Tabbed Properties View</h2>
+
+<p>Let us now take the example from <a href="http://www.eclipse.org/articles/Article-Properties-View/properties-view.html">
+Take control of your properties</a> and make it use the tabbed property view. The source code for this example can be found the <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.ui.examples.views.properties.tabbed/org.eclipse.ui.examples.views.properties.tabbed.article/">CVS repository</a>.</p>
+
+<p>Before proceeding, we add the dependency to the <code>org.eclipse.ui.views.properties.tabbed</code> plug-in in the required plug-ins list.</p>
+
+<h3>Updating the Sample View</h3>
+
+<p>A workbench part that provides a tabbed property view needs to implement the <code>ITabbedPropertySheetPageContributor</code> interface. This interface has the single method <code>getContributor()</code> that must be implemented, which returns the contributor identifier for your configuration. We will simply use the view identifier and implement the method as below:</p>
+<pre>    public String getContributorId() {
+        return getSite().getId();
+    }</pre>
+<p>We also need to tell the workbench to use the tabbed property view. Each workbench part can define its own custom property sheet page by providing an adaptable for <code>IPropertySheetPage</code>. The workbench will call your view's <code>getAdapter()</code> method and ask for an <code>IPropertySheetPage</code>. It is at this point that we tell Eclipse to use our tabbed property sheet page.</p>
+<pre>    public Object getAdapter(Class adapter) {
+        if (adapter == IPropertySheetPage.class)
+            return new TabbedPropertySheetPage(this);
+        return super.getAdapter(adapter);
+    }</pre>
+
+<h3>Add a PropertyContributor extension</h3>
+
+<p>Next we add the <code>PropertyContributor</code> extension to our plug-in:</p>
+
+<pre>   &lt;extension point=&quot;org.eclipse.ui.views.properties.tabbed.propertyContributor&quot;&gt;
+<img src="images/tag_1.gif" width=24 height=13 alt="" border="0">      &lt;propertyContributor contributorId=&quot;mview.views.SampleView&quot;/&gt;
+   &lt;/extension&gt;</pre>
+<p><img src="images/tag_1.gif" width=24 height=13 alt="" border="0">We need to define the contributor identifier, which is the view identifier in our case.</p>
+
+<p>At this point we can now run our plug-in and when you look at the properties view, you will see &quot;Properties are not available&quot;.</p>
+
+<p>The tabbed property sheet page has successfully been implemented. The page took the unique identifier and looked up the tabs and sections that match the current selection (&quot;button&quot;) and did not find any to display. So you see the message &quot;Properties are not available&quot;.</p>
+<p><img src="images/properties_are_not_availabl.jpg" width=625 height=151 alt="" border="0"></p>
+<p>The next stage is to define tabs and sections.</p>
+
+<h3>Add a PropertyTabs extension</h3>
+
+<p>The first thing we need to do before adding tabs is to define a property category in our <code>PropertyContributor</code> extension.</p>
+
+<pre>   &lt;extension point=&quot;org.eclipse.ui.views.properties.tabbed.propertyContributor&quot;&gt;
+      &lt;propertyContributor contributorId=&quot;mview.views.SampleView&quot;&gt;
+<img src="images/tag_1.gif" width=24 height=13 alt="" border="0">         &lt;propertyCategory category=&quot;sample&quot;/&gt;
+      &lt;/propertyContributor&gt;
+   &lt;/extension&gt;</pre>
+<p><img src="images/tag_1.gif" width=24 height=13 alt="" border="0">We have added one category called sample.</p>
+<p>Next we can add the <code>PropertyTabs</code> extension to our plug-in.</p>
+
+<pre>   &lt;extension point=&quot;org.eclipse.ui.views.properties.tabbed.propertyTabs&quot;&gt;
+      &lt;propertyTabs contributorId=&quot;mview.views.SampleView&quot;&gt;
+         &lt;propertyTab
+<img src="images/tag_4.gif" width=24 height=13 alt="" border="0">            category=&quot;sample&quot;
+               id=&quot;mview.ButtonTab&quot;
+<img src="images/tag_1.gif" width=24 height=13 alt="" border="0">            label=&quot;Button&quot;/&gt;
+         &lt;propertyTab
+<img src="images/tag_3.gif" width=24 height=13 alt="" border="0">            afterTab=&quot;mview.ButtonTab&quot;
+<img src="images/tag_4.gif" width=24 height=13 alt="" border="0">            category=&quot;sample&quot;
+               id=&quot;mview.AdvancedTab&quot;
+<img src="images/tag_2.gif" width=24 height=13 alt="" border="0">            label=&quot;Advanced&quot;/&gt;
+      &lt;/propertyTabs&gt;
+   &lt;/extension&gt;</pre>
+
+<p>We have defined two tabs in our example by providing two <code>propertyTab</code> attributes. </p>
+<p>We must provide the tab id, category and label for each tab. </p>
+<p>Our tabs are named button (<img src="images/tag_1.gif" width=24 height=13 alt="" border="0">) and advanced (<img src="images/tag_2.gif" width=24 height=13 alt="" border="0">).</p>
+<p><img src="images/tag_3.gif" width=24 height=13 alt="" border="0">We also define the Advanced tab will be displayed after the Button tab.</p>
+<p><img src="images/tag_4.gif" width=24 height=13 alt="" border="0">Both our tabs are in our sample category.</p>
+
+<h3>Add a PropertySections extension</h3>
+
+<p>Finally we can add the PropertySections extension point to our plug-in.</p>
+
+<pre>   &lt;extension point=&quot;org.eclipse.ui.views.properties.tabbed.propertySections&quot;&gt;
+      &lt;propertySections contributorId=&quot;mview.views.SampleView&quot;&gt;
+         &lt;propertySection
+               class=&quot;mview.views.LabelSection&quot;
+               id=&quot;mview.LabelSection&quot;
+               tab=&quot;mview.ButtonTab&quot;&gt;
+            &lt;input type=&quot;mview.views.ButtonElement&quot;/&gt;
+         &lt;/propertySection&gt;
+         &lt;propertySection
+               afterSection=&quot;mview.LabelSection&quot;
+               class=&quot;mview.views.SizeSection&quot;
+               id=&quot;mview.SizeSection&quot;
+               tab=&quot;mview.ButtonTab&quot;&gt;
+            &lt;input type=&quot;mview.views.ButtonElement&quot;/&gt;
+         &lt;/propertySection&gt;
+         &lt;propertySection
+               afterSection=&quot;mview.SizeSection&quot;
+               class=&quot;mview.views.FontSection&quot;
+               id=&quot;mview.FontSection&quot;
+               tab=&quot;mview.ButtonTab&quot;&gt;
+            &lt;input type=&quot;mview.views.ButtonElement&quot;/&gt;
+         &lt;/propertySection&gt;
+         &lt;propertySection
+               class=&quot;org.eclipse.ui.views.properties.tabbed.AdvancedPropertySection&quot;
+               id=&quot;mview.AdvancedSection&quot;
+               tab=&quot;mview.AdvancedTab&quot;&gt;
+            &lt;input type=&quot;mview.views.ButtonElement&quot;/&gt;
+         &lt;/propertySection&gt;
+      &lt;/propertySections&gt;
+   &lt;/extension&gt;</pre>
+   
+<p>All our sections apply to the input type ButtonElement.</p>
+<p>The button tab is given three sections, the advanced tab one section.</p>
+<p>Each section has the tab identifier, unique identifier for the section and the class that implements the section.   </p>
+
+<h2>Property Section</h2>
+<p>Here is the code for our label section.</p>
+<pre>    /*******************************************************************************
+     * Copyright (c) 2006 IBM Corporation and others.
+     * All rights reserved. This program and the accompanying materials
+     * are made available under the terms of the Eclipse Public License v1.0
+     * which accompanies this distribution, and is available at
+     * http://www.eclipse.org/legal/epl-v10.html
+     * 
+     * Contributors:
+     *     IBM Corporation - initial API and implementation
+     *******************************************************************************/
+    package mview.views;
+    
+    import org.eclipse.jface.util.Assert;
+    import org.eclipse.jface.viewers.ISelection;
+    import org.eclipse.jface.viewers.IStructuredSelection;
+    import org.eclipse.swt.SWT;
+    import org.eclipse.swt.custom.CLabel;
+    import org.eclipse.swt.events.ModifyEvent;
+    import org.eclipse.swt.events.ModifyListener;
+    import org.eclipse.swt.layout.FormAttachment;
+    import org.eclipse.swt.layout.FormData;
+    import org.eclipse.swt.widgets.Composite;
+    import org.eclipse.swt.widgets.Text;
+    import org.eclipse.ui.IWorkbenchPart;
+    import org.eclipse.ui.views.properties.IPropertySource;
+    import org.eclipse.ui.views.properties.tabbed.AbstractPropertySection;
+    import org.eclipse.ui.views.properties.tabbed.ITabbedPropertyConstants;
+    import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
+    
+    /**
+     * The Label section on the Button tab.
+     * 
+     * @author Anthony Hunter
+     */
+    public class LabelSection
+        extends AbstractPropertySection {
+    
+        private Text labelText;
+    
+        private ButtonElement buttonElement;
+    
+        private ModifyListener listener = new ModifyListener() {
+    
+            public void modifyText(ModifyEvent arg0) {
+                ButtonElementProperties properties = (ButtonElementProperties) buttonElement
+                    .getAdapter(IPropertySource.class);
+                properties.setPropertyValue(ButtonElementProperties.PROPERTY_TEXT,
+                    labelText.getText());
+            }
+        };
+    
+ <img src="images/tag_1.gif" width=24 height=13 alt="" border="0">    public void createControls(Composite parent,
+                TabbedPropertySheetPage aTabbedPropertySheetPage) {
+            super.createControls(parent, aTabbedPropertySheetPage);
+ <img src="images/tag_4.gif" width=24 height=13 alt="" border="0">        Composite composite = getWidgetFactory()
+                .createFlatFormComposite(parent);
+            FormData data;
+    
+            labelText = getWidgetFactory().createText(composite, &quot;&quot;); //$NON-NLS-1$
+            data = new FormData();
+ <img src="images/tag_5.gif" width=24 height=13 alt="" border="0">        data.left = new FormAttachment(0, STANDARD_LABEL_WIDTH);
+            data.right = new FormAttachment(100, 0);
+ <img src="images/tag_6.gif" width=24 height=13 alt="" border="0">        data.top = new FormAttachment(0, ITabbedPropertyConstants.VSPACE);
+            labelText.setLayoutData(data);
+            labelText.addModifyListener(listener);
+    
+            CLabel labelLabel = getWidgetFactory()
+                .createCLabel(composite, &quot;Label:&quot;); //$NON-NLS-1$
+            data = new FormData();
+            data.left = new FormAttachment(0, 0);
+            data.right = new FormAttachment(labelText,
+                -ITabbedPropertyConstants.HSPACE);
+            data.top = new FormAttachment(labelText, 0, SWT.CENTER);
+            labelLabel.setLayoutData(data);
+        }
+    
+ <img src="images/tag_2.gif" width=24 height=13 alt="" border="0">    public void setInput(IWorkbenchPart part, ISelection selection) {
+            super.setInput(part, selection);
+            Assert.isTrue(selection instanceof IStructuredSelection);
+            Object input = ((IStructuredSelection) selection).getFirstElement();
+            Assert.isTrue(input instanceof ButtonElement);
+            this.buttonElement = (ButtonElement) input;
+        }
+    
+<img src="images/tag_3.gif" width=24 height=13 alt="" border="0">     public void refresh() {
+            labelText.removeModifyListener(listener);
+            ButtonElementProperties properties = (ButtonElementProperties) buttonElement
+                .getAdapter(IPropertySource.class);
+            labelText.setText(properties.strText);
+            labelText.addModifyListener(listener);
+        }
+    }</pre>
+
+<p>A section in a tab is represented by the <code>ISection</code> interface. Clients should extend <code>AbstractPropertySection</code> rather than implementing <code>ISection</code> directly.</p>
+<p>When implementing a section, there are three methods a section must implement:</p>
+<p><img src="images/tag_1.gif" width=24 height=13 alt="" border="0"><code>ISection.createControls()</code> creates the controls for the section. </p>
+<p><img src="images/tag_2.gif" width=24 height=13 alt="" border="0"><code>ISection.setInput()</code> is where the section is given the selection from the contributing workbench part.</p>
+<p><img src="images/tag_3.gif" width=24 height=13 alt="" border="0"><code>ISection.refresh()</code> is where the section refreshes the contents of the controls based on the input.</p>
+
+<h3>Section Layout</h3>
+
+<p>Standard Eclipse SWT widgets are used in <code>ISection.createControls()</code>. Any widget that can be hosted in an SWT Composite can be displayed in a section. </p>
+<p>Clients should take advantage of the widget factory provided by the framework to achieve a common look between property sections. The widget factory is available from <code>AbstractPropertySection.getWidgetFactory()</code> (<img src="images/tag_4.gif" width=24 height=13 alt="" border="0">). </p>
+<p><code>AbstractPropertySection</code> defines several additional items for an ISection that implementers need to be aware of.</p>
+<p>In our example, we had three sections, button, size and font. Since sections are not aware of each other, it is difficult to know how to line up the labels for sections on the left hand side of the composite. For this reason, we make use of <code>AbstractPropertySection.STANDARD_LABEL_WIDTH</code> (<img src="images/tag_5.gif" width=24 height=13 alt="" border="0">).</p>
+<p>We make use of <code>ITabbedPropertyConstants</code> (<img src="images/tag_6.gif" width=24 height=13 alt="" border="0">) to align the controls in the sections.</p>
+<p><code>ISection.getMinimumHeight()</code> returns the minimum height needed by this section. <code>AbstractPropertySection</code> returns a default value of <code>SWT.DEFAULT</code> to indicate that no minimum height is defined.</p>
+<p><code>ISection.shouldUseExtraSpace()</code> determines whether a section would like extra height space in case
+there is some left. Normally this is only true when the section is the last to be displayed on a tab or is the only section on a tab. <code>AbstractPropertySection</code> returns <code>false</code> by default.</p>
+
+<h3>Lifecycle of a Section</h3>
+
+<p>The lifecycle of a section is as follows:</p>
+<ul>
+<li><code>ISection.createControls()</code></li>
+<li><code>ISection.setInput()</code></li>
+<li><code>ISection.aboutToBeShown()</code></li>
+<li><code>ISection.refresh()</code></li>
+<li><code>ISection.aboutToBeHidden()</code></li>
+<li><code>ISection.dispose()</code></li>
+</ul>
+<p>Implementors of this class should be aware that a section instance might be reused for different input objects (as long as they are valid section inputs). It means that <code>ISection.setInput</code> can be called at any time between <code>ISection.createControls</code> and
+<code>ISection.dispose</code>.</p>
+<p>When an input change event occurs, such as a tab selection or a workbench selection change, a section is sent:</p>
+<ul>
+<li><code>ISection.setInput()</code></li>
+<li><code>ISection.refresh()</code></li>
+</ul>
+<p>When a part activation event occurs, such as the workbench part activation event, a section is sent:</p>
+<ul>
+<li><code>ISection.setInput()</code></li>
+<li><code>ISection.aboutToBeShown()</code></li>
+<li><code>ISection.refresh()</code></li>
+<li><code>ISection.setInput()</code></li>
+<li><code>ISection.refresh()</code></li>
+</ul>
+<p>This is because both a tab selection event and an input selection event have occurred.</p>
+
+<h3>Model Listeners</h3>
+<p>When a property sheet page is visible, the model could be changed outside of the property view. In this case we want to add a listener so that we can update the visible controls based on new model values. This is done using <code>ISection.aboutToBeShown()</code>.</p>
+<p><code>ISection.aboutToBeShown()</code> notifies the section that its controls are about to be shown. It is expected that sections enable domain related functions such as adding listeners.</p>
+<code>ISection.aboutToBeHidden()</code> notifies the section that its controls are about to be hidden and should disable domain related functions such as removing listeners.
+<p>Since the controls are not yet visible in <code>ISection.aboutToBeShown()</code>, the section should wait for <code>ISection.refresh()</code> to be called to updating the section controls.</p>
+<p>The listener when receiving a change event should make use of <code>ISection.refresh()</code> to update the controls for the section.</p>
+
+
+<h3>Advanced Section</h3>
+<p>When we have complex applications with multiple <code>IPropertySource</code>, we may not want to provide custom tabs and sections for all the properties available for a selection. Clients can reuse the <code>AdvancedPropertySection</code> class to display the &quot;original&quot; table format properties view.</p>
+<p>As an example, here is the advanced tab for our exampling showing the &quot;original&quot; properties view from the <a href="http://www.eclipse.org/articles/Article-Properties-View/properties-view.html">
+Take control of your properties</a>.</p>
+<p><img src="images/properties_after_advanced.jpg" width=625 height=173 alt="" border=0></p>
+
+<h2>Additional Options</h2>
+<h3>Type Mapper</h3>
+<p>The <code>PropertyContributor</code> extension point defines an optional <code>typeMapper</code> attribute. This attribute defines a type mapper class that implements <code>ITypeMapper</code> or preferably extends the <code>AbstractTypeMapper</code> class.</p>
+<p>When a set of objects are selected in the workbench part, the tabbed properties view matches the type of these objects with the <code>input type</code> attributes defined in the <code>PropertySections</code> extensions. In some cases, the selection will be user interface objects, such as tree nodes. A type mapper is used to map between these user interface objects and a domain model object.</p>
+<p>An example for a type mapper for <code>org.eclipse.jface.viewers.TreeNode</code> where we are interested in the value of the tree node:</p>
+
+<pre>    public class TypeMapper
+        extends AbstractTypeMapper {
+
+        public Class mapType(Object object) {
+            if (object instanceof TreeNode) {
+                return ((TreeNode) object).getValue().getClass();
+            }
+            return super.mapType(object);
+        }
+    }</pre>
+
+<p>A second example of a type mapper can be found in the tabbed properties logic example based on <a href="http://www.eclipse.org/gef/">Eclipse GEF</a>. Elements on a diagram are all <code>EditPart</code>. We are interested in the type of the underlying model:</p>
+
+<pre>    public class LogicElementTypeMapper
+        extends AbstractTypeMapper {
+
+        public Class mapType(Object object) {
+            if (object instanceof EditPart) {
+                return ((EditPart) object).getModel().getClass();
+            }
+            return super.mapType(object);
+        }
+    }</pre>
+
+<h3>Section Filtering</h3>
+<p>The <code>PropertySection</code> extension point defines an optional <code>filter</code> attribute. This attribute defines a filter for a section. A filter is a class that implements the <code>org.eclipse.jface.viewers.IFilter</code> interface. It is used to filter a section from display for a selection even though it meets the input type criteria. </p>
+
+<h3>Title Bar</h3>
+<p>The <code>PropertyContributor</code> extension point defines an optional <code>labelProvider</code> attribute. This attribute defines a label provider for a title bar for the tabbed properties view. The title bar is used as a usability enhancement to display information about the current selection in the contributing workbench part. You can display the icon and name of the selected object. Frequently, groups put the type of the selected objects in brackets and indicate the number of objects selected.</p>
+
+<h3>Tab Ordering</h3>
+<p>Tabs are ordered by the categories defined by the <code>PropertyContributor</code> extension. When there is more than one tab in a category, tabs are sorted using the <code>afterTab</code> attribute in the <code>PropertyTab</code> extension.</p>
+
+<h3>Section Ordering</h3>
+<p>When there is more than one section on a tab, sections are sorted using the <code>afterSection</code> attribute in the PropertySection extension.</p>
+
+<h3>Section Selection Count Enablement</h3>
+<p>The <code>PropertySection</code> extension point defines an optional <code>enablesFor</code> attribute. This attribute will cause the section to be enabled for a specific selection count. Most frequently this attribute is set to &quot;1&quot; to filter a section when multiple objects are selected.</p>
+<h3>Alternate Property Configuration for a Selection</h3>
+<p>Clients can extend the property configuration for a workbench part by implementing tab and section extensions in their plug-in. There are times when it is desirable for clients provide a top level property contributor configuration as well. For example, a project explorer may have multiple clients contributing elements to a tree. The core project explorer will define a properties configuration with a unique contributor identifier. Clients can add tabs and sections by using the same contributor identifier in their plug-in. If a client already has tabs and sections with a different contributor identifier that matches their editor, it would not be desirable to have to copy all the extensions to display when its custom tree nodes are selected</p>
+<p>It is possible to have the elements in a selection implement or adapt to the <code>ITabbedPropertySheetPageContributor</code> interface. If all the elements in a selection return the same identifier to <code>getContributorId()</code> for a selection, then that alternate property configuration will be displayed in the properties view for that selection.</p>
+
+<h2>Additional Examples</h2>
+<p>There are additional examples available that demonstrate the use of the tabbed properties view:</p>
+<p><a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.ui.tests.views.properties.tabbed/">Tabbed Properties Tests View</a> - a JUnit tests plug-in with a sample view that demonstrates examples of every option available through the tabbed properties view extension points.</p>
+<p><a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.ui.examples.views.properties.tabbed/org.eclipse.ui.examples.views.properties.tabbed.logic/">Tabbed Properties Logic Example</a> - tabbed properties view based on the <a href="http://www.eclipse.org/gef/">Eclipse GEF</a> Logic Example</p>
+<p><a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.ui.examples.views.properties.tabbed/org.eclipse.ui.examples.views.properties.tabbed.hockeyleague/">Tabbed Properties Hockey League Example</a> - tabbed properties view with an <a href="http://www.eclipse.org/emf/">Eclipse EMF</a> Hockey League model</p>
+
+<h2>Conclusion</h2>
+<p>In this article, you have seen how to use the tabbed properties view to create an 
+ enhanced user interface for the properties view.</p>
+</body>
+</html>
