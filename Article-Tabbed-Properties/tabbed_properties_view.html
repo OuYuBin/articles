@@ -34,7 +34,7 @@
  selected item. In this article, you will learn how to use the tabbed properties view to create an 
  enhanced user interface for the properties view.<br><br>
 <b>By Anthony Hunter, IBM</b> <br>
-<font size="-1">January 30th, 2006</font></p>
+<font size="-1">February 17th, 2006</font></p>
 </blockquote>
 
 <hr width="100%">
@@ -94,7 +94,7 @@ Take control of your properties</a>. </p>
 
 <p>The tabbed properties view is configured by implementing three extension. Each tabbed properties view is composed of a property contributor who contributes one or more property tabs. Each property tab is filled with one or more sections. The highlighted example below illustrates how they are organized. For the current selection, the property contributor has enabled two tabs in the tabbed properties view, Button and Advanced. The Button tab is highlighted and is the active tab. The Button tab has enabled three active sections highlighted on the right.</p>
 <p><img src="images/properties_highlighted.jpg" width=626 height=150 alt="" border="0"></p>
-
+<p>It is important to note that a section is simply a composite surronding a group of widgets. A section can map to one property, multiple properties or some concept independent of the properties of a selection.</p>
 <h3>Property Contributor</h3>
 
 <p>The <code>org.eclipse.ui.views.properties.tabbed.PropertyContributor</code> extension point is the key for your tabbed properties view. It most importantly identifies the unique contributor identifier for your tabs and sections. Most frequently, this identifier matches the unique workbench part id that is contributing the tabbed properties view. </p>
@@ -146,7 +146,7 @@ Take control of your properties</a>. </p>
 <h2>Implementing the Tabbed Properties View</h2>
 
 <p>Let us now take the example from <a href="http://www.eclipse.org/articles/Article-Properties-View/properties-view.html">
-Take control of your properties</a> and make it use the tabbed property view. The source code for this example can be found the <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.ui.examples.views.properties.tabbed/org.eclipse.ui.examples.views.properties.tabbed.article/">CVS repository</a>.</p>
+Take control of your properties</a> and make it use the tabbed property view, as we first showed at the start of this article. The source code for this example can be found the <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.ui.examples.views.properties.tabbed/org.eclipse.ui.examples.views.properties.tabbed.article/">CVS repository</a>.</p>
 
 <p>Before proceeding, we add the dependency to the <code>org.eclipse.ui.views.properties.tabbed</code> plug-in in the required plug-ins list.</p>
 
@@ -372,7 +372,7 @@ there is some left. Normally this is only true when the section is the last to b
 <li><code>ISection.aboutToBeHidden()</code></li>
 <li><code>ISection.dispose()</code></li>
 </ul>
-<p>Implementors of this class should be aware that a section instance might be reused for different input objects (as long as they are valid section inputs). It means that <code>ISection.setInput</code> can be called at any time between <code>ISection.createControls</code> and
+<p>Implementers of this class should be aware that a section instance might be reused for different input objects (as long as they are valid section inputs). It means that <code>ISection.setInput</code> can be called at any time between <code>ISection.createControls</code> and
 <code>ISection.dispose</code>.</p>
 <p>When an input change event occurs, such as a tab selection or a workbench selection change, a section is sent:</p>
 <ul>
@@ -392,7 +392,7 @@ there is some left. Normally this is only true when the section is the last to b
 <h3>Model Listeners</h3>
 <p>When a property sheet page is visible, the model could be changed outside of the property view. In this case we want to add a listener so that we can update the visible controls based on new model values. This is done using <code>ISection.aboutToBeShown()</code>.</p>
 <p><code>ISection.aboutToBeShown()</code> notifies the section that its controls are about to be shown. It is expected that sections enable domain related functions such as adding listeners.</p>
-<code>ISection.aboutToBeHidden()</code> notifies the section that its controls are about to be hidden and should disable domain related functions such as removing listeners.
+<p><code>ISection.aboutToBeHidden()</code> notifies the section that its controls are about to be hidden and should disable domain related functions such as removing listeners.</p>
 <p>Since the controls are not yet visible in <code>ISection.aboutToBeShown()</code>, the section should wait for <code>ISection.refresh()</code> to be called to updating the section controls.</p>
 <p>The listener when receiving a change event should make use of <code>ISection.refresh()</code> to update the controls for the section.</p>
 
@@ -435,6 +435,7 @@ Take control of your properties</a>.</p>
 
 <h3>Section Filtering</h3>
 <p>The <code>PropertySection</code> extension point defines an optional <code>filter</code> attribute. This attribute defines a filter for a section. A filter is a class that implements the <code>org.eclipse.jface.viewers.IFilter</code> interface. It is used to filter a section from display for a selection even though it meets the input type criteria. </p>
+<p>Note that a filter is used to override the type mapper and input for the selection. When a filter is specified, type mapper and input are ignored for that section. In the case where <code>filter</code> is specified, <code>input type</code> need not be provided.</p>
 
 <h3>Title Bar</h3>
 <p>The <code>PropertyContributor</code> extension point defines an optional <code>labelProvider</code> attribute. This attribute defines a label provider for a title bar for the tabbed properties view. The title bar is used as a usability enhancement to display information about the current selection in the contributing workbench part. You can display the icon and name of the selected object. Frequently, groups put the type of the selected objects in brackets and indicate the number of objects selected.</p>
