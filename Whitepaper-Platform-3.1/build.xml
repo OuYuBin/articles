@@ -1,6 +1,6 @@
 <!--
         Build script for Eclipse.org Articles
-        $Id: build.xml,v 1.1 2006/01/26 21:02:58 wbeaton Exp $
+        $Id: build.xml,v 1.2 2006/02/14 19:20:37 wbeaton Exp $
         author: Chris Aniszczyk <zx@us.ibm.com>
         author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -11,6 +11,7 @@
 	
 	<property name="article.name" value="eclipse-platform-whitepaper"/>
 	<property name="article.stylesheet" value="article.xsl"/>
+	<property name="article.pdf.stylesheet" value="article-pdf.xsl"/>
 	 
 	<property name="dest.dir" value="."/>
 	<property name="download.dir" value="${user.home}${file.separator}downloads"/>
@@ -110,7 +111,7 @@
 
 		<delete file="${dest.dir}${file.separator}${article.name}.pdf"/>
 		<delete file="${dest.dir}${file.separator}${article.name}.fo"/>
-		<xslt in="${article.name}.xml" extension="xml" out="${dest.dir}${file.separator}${article.name}.fo" style="${docbook.dir}${file.separator}fo${file.separator}docbook.xsl">
+		<xslt in="${article.name}.xml" extension="xml" out="${dest.dir}${file.separator}${article.name}.fo" style="${article.pdf.stylesheet}">
 			<xmlcatalog>
 				<entity 
 					publicId="docbook.xsl"
