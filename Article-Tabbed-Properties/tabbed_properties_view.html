@@ -94,7 +94,7 @@ Take control of your properties</a>. </p>
 
 <p>The tabbed properties view is configured by implementing three extension. Each tabbed properties view is composed of a property contributor who contributes one or more property tabs. Each property tab is filled with one or more sections. The highlighted example below illustrates how they are organized. For the current selection, the property contributor has enabled two tabs in the tabbed properties view, Button and Advanced. The Button tab is highlighted and is the active tab. The Button tab has enabled three active sections highlighted on the right.</p>
 <p><img src="images/properties_highlighted.jpg" width=626 height=150 alt="" border="0"></p>
-<p>It is important to note that a section is simply a composite surronding a group of widgets. A section can map to one property, multiple properties or some concept independent of the properties of a selection.</p>
+<p>A section is simply a widget or a composite containing a group of widgets that maps to one property, multiple properties or some concept independent of the properties of a selection.</p>
 <h3>Property Contributor</h3>
 
 <p>The <code>org.eclipse.ui.views.properties.tabbed.PropertyContributor</code> extension point is the key for your tabbed properties view. It most importantly identifies the unique contributor identifier for your tabs and sections. Most frequently, this identifier matches the unique workbench part id that is contributing the tabbed properties view. </p>
@@ -435,7 +435,7 @@ Take control of your properties</a>.</p>
 
 <h3>Section Filtering</h3>
 <p>The <code>PropertySection</code> extension point defines an optional <code>filter</code> attribute. This attribute defines a filter for a section. A filter is a class that implements the <code>org.eclipse.jface.viewers.IFilter</code> interface. It is used to filter a section from display for a selection even though it meets the input type criteria. </p>
-<p>Note that a filter is used to override the type mapper and input for the selection. When a filter is specified, type mapper and input are ignored for that section. In the case where <code>filter</code> is specified, <code>input type</code> need not be provided.</p>
+<p>Note that a filter is used to override the type mapper and input for the selection. When a filter is specified, the type mapper and input are ignored for that section. In the case where <code>filter</code> is specified, <code>input type</code> need not be provided.</p>
 
 <h3>Title Bar</h3>
 <p>The <code>PropertyContributor</code> extension point defines an optional <code>labelProvider</code> attribute. This attribute defines a label provider for a title bar for the tabbed properties view. The title bar is used as a usability enhancement to display information about the current selection in the contributing workbench part. You can display the icon and name of the selected object. Frequently, groups put the type of the selected objects in brackets and indicate the number of objects selected.</p>
