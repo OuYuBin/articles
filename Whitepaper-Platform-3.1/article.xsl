@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-        $Id: article.xsl,v 1.1 2006/01/26 20:57:03 wbeaton Exp $
+        $Id: article.xsl,v 1.2 2006/02/14 19:20:20 wbeaton Exp $
         author: Chris Aniszczyk <zx@us.ibm.com>
         author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -15,7 +15,8 @@
 	<xsl:param name="admon.graphics.extension">.png</xsl:param>
 	<xsl:param name="suppress.navigation" select="1" />
 	<xsl:param name="bibliography.numbered" select="1" />
-	<xsl:param name="generate.toc">article nop</xsl:param>
+	<xsl:param name="generate.toc">article toc</xsl:param>
+	<xsl:param name="toc.section.depth">5</xsl:param>
 	<xsl:param name="ulink.target" select="'_new'"/>
 	<xsl:param name="admon.style">
   		<xsl:text>margin-left: 0.38in; margin-right: 0.38in;</xsl:text>
@@ -56,7 +57,7 @@
 		<xsl:if test="count(author) > 0">
 			By 
 			<xsl:for-each select="author">
-				<xsl:if test="position() = last()">and </xsl:if>
+				<xsl:if test="count(.) > 1 and position() = last()">and </xsl:if>
   				<xsl:apply-templates select="." mode="article.titlepage.recto.auto.mode" />
 				<xsl:if test="position() != last()">, </xsl:if>
     		</xsl:for-each>
