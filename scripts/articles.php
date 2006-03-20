@@ -41,7 +41,7 @@ function get_recent_articles_summary($count) {
 		$short_description = full_word_substr($article->description);
 		
 		$html .= "<li>";
-		$html .= "<a href=\"$article->root/$article->link\">$article->title</a> $authors";
+		$html .= "<a target=\"_blank\" href=\"$article->root/$article->link\">$article->title</a> $authors";
 		$html .= "<br />$short_description";
 		$html .= "</li>";
 		$count--;
@@ -257,7 +257,7 @@ class Article {
 	
 	// Render the article as html.
 	function to_html(& $html) {
-		$html .= "<li><a href=\"$this->root/$this->link\">$this->title</a>";
+		$html .= "<li><a target=\"_blank\" href=\"$this->root/$this->link\">$this->title</a>";
 
 		// Get the collection of authors and render them.
 		$authors = $this->authors_to_html();
@@ -426,7 +426,7 @@ class Translation {
 	// Render the article as html.
 	function to_html(& $html) {
 		$image_file = "/flags/$this->language.gif";
-		$html .= "<table border=\"0\"><tr><td><a href=\"$this->root/$this->link\"><img src=\"$image_file\" align=\"left\" alt=\"[$this->language]\"></a></td>";
+		$html .= "<table border=\"0\"><tr><td><a target=\"_blank\" href=\"$this->root/$this->link\"><img src=\"$image_file\" align=\"left\" alt=\"[$this->language]\"></a></td>";
 		$html .= "<td>This article has been translated ";
 //		$html .= date("F Y", $this->date);
 		// Get the collection of authors and render them.
