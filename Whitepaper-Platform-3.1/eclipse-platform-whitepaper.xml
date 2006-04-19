@@ -9,56 +9,49 @@
 		<title>Eclipse Platform Technical Overview</title>
 		<date>July 17, 2001</date>
 		<revhistory>
-			<revision> 
+			<revision>
 				<revnumber>1.0</revnumber>
 				<date>July 17, 2001</date>
 				<author>
 					<firstname>Jim</firstname>
-					<surname>des Rivieres</surname> 
+					<surname>des Rivieres</surname>
 					<affiliation>
 						<orgname>IBM</orgname>
 					</affiliation>
 				</author>
 				<revdescription>
 					<para>Original.</para>
-				</revdescription> 
+				</revdescription>
 			</revision>
-			<revision> 
+			<revision>
 				<revnumber>2.1</revnumber>
 				<date>February 1, 2003</date>
 				<author>
 					<firstname>Jim</firstname>
-					<surname>des Rivieres</surname> 
+					<surname>des Rivieres</surname>
 					<affiliation>
 						<orgname>IBM</orgname>
 					</affiliation>
 				</author>
 				<revdescription>
 					<para>Updated for Eclipse 2.1.</para>
-				</revdescription> 
+				</revdescription>
 			</revision>
-			<revision> 
+			<revision>
 				<revnumber>3.1</revnumber>
-				<date>February 1, 2006</date>
+				<date>April 19, 2006</date>
 				<author>
 					<firstname>Wayne</firstname>
-					<surname>Beaton</surname> 
+					<surname>Beaton</surname>
 					<affiliation>
 						<orgname>The Eclipse Foundation</orgname>
 					</affiliation>
 				</author>
 				<revdescription>
 					<para>Updated for Eclipse 3.1.</para>
-				</revdescription> 
+				</revdescription>
 			</revision>
 		</revhistory>
-		<authorgroup>
-			<author>
-				<firstname>Wayne</firstname>
-				<surname>Beaton</surname>
-				<affiliation><orgname>Eclipse Foundation</orgname></affiliation>
-			</author>
-		</authorgroup>
 		<edition>3.1</edition>
 		<copyright>
 			<year>2006</year>
@@ -84,7 +77,7 @@
 				Windows and ActiveX are either registered trademarks or trademarks of Microsoft
 				Corporation in the United States and/or other countries.
 			</para>
-		</legalnotice> 
+		</legalnotice>
 		<legalnotice>
 			<para>
 				Motif is a registered trademark of The Open Group in the United States and other
@@ -122,33 +115,20 @@
 	<section>
 		<title>Introduction</title>
 		<para>
-			Eclipse is an open source community whose projects are focused on providing an
-			extensible development platform and application frameworks for building software.
-			Eclipse provides extensible tools and frameworks that span the software development
-			lifecycle, including support for modeling, language development environments for Java,
-			C/C++ and others, testing and performance, business intelligence, rich client
-			applications and embedded development. A large, vibrant ecosystem of major technology
-			vendors, innovative start-ups, universities and research institutions and individuals
-			extend, complement and support the Eclipse Platform.
-		</para>
-		<para>
 			When people speak of Eclipse, they very often mean the Eclipse Software Development Kit
-			(SDK) which is both the leading Java™ integrated development environment (IDE) and the
-			single best tool available for building products based on the Eclipse Platform. The
+			(SDK) which is both the leading Java&trade; integrated development environment (IDE) and
+			the single best tool available for building products based on the Eclipse Platform. The
 			Eclipse SDK, a critical piece of the Eclipse tapestry, is a combination of the efforts
-			of several Eclipse projects: Platform, Java Development Tools (JDT), and the Plug-in
-			Development Environment (PDE). These pieces combine to form the Eclipse SDK, but these
-			pieces can also be unbundled. That is, Eclipse is a Java IDE only because the JDT
-			components are included. If the JDT components are, for example, replaced by C/C++
-			development tools, then Eclipse becomes a C/C++ development environment. In fact, it is
-			possible to make Eclipse into both a Java and C/C++ IDE by including the appropriate
-			components.
+			of several Eclipse projects, including
+			<ulink url="http://eclipse.org/platform">Platform</ulink>, Java Development Tools 
+			(<ulink url="http://eclipse.org/jdt">JDT</ulink>), and the Plug-in Development Environment 
+			(<ulink url="http://eclipse.org/pde">PDE</ulink>).
 		</para>
 		<para>
-			The Eclipse Platform is itself a composition of components. In its entirety, the Eclipse
-			Platform contains the functionality required to build an IDE. However, by using a subset
-			of these components, it is possible to build arbitrary applications. The Eclipse Rich
-			Client Platform (RCP) is one such subset of components.
+			In its entirety, the Eclipse Platform contains the functionality required to build an
+			IDE. However, the Eclipse Platform is itself a composition of components; by using a
+			subset of these components, it is possible to build arbitrary applications. The Eclipse
+			Rich Client Platform (RCP) is one such subset of components.
 			<xref linkend="figure1" />
 			shows a representation of some of the components in the Eclipse Platform and highlights
 			the subset that makes up the RCP (in reality there are a great many more components).
@@ -178,11 +158,11 @@
 			point. Building a tool or application on top of Eclipse Platform enables the tool or
 			application to integrate with other tools and applications also written using the
 			Eclipse Platform. The Eclipse Platform is turned in a Java IDE by adding Java
-			development components (e.g. the JDT) and it is turned into a C/C++ IDE by adding C/C++
-			development components (e.g. the CDT). It becomes both a Java and C/C++ development
-			environment by adding both sets of components. Eclipse Platform integrates the
-			individual tools into a single product providing a rich and consistent experience for
-			its users.
+			development components (e.g. the JDT) and it is turned into a C/C++ IDE by adding C/C++ 
+			development components (e.g. the <ulink url="http://eclipse.org/cdt">CDT</ulink>). 
+			It becomes both a Java and C/C++ development environment by adding both sets of
+			components. Eclipse Platform integrates the individual tools into a single product
+			providing a rich and consistent experience for its users.
 		</para>
 		<para>
 			Integration extends into the rich client space as well. An organization can split up the
@@ -238,9 +218,6 @@
 	</section>
 	<section>
 		<title>Part I: Eclipse Platform Technical Overview</title>
-		<blockquote>
-			<para>If you build it, they will come. - W.P. Kinsella, Field of Dreams (1989)</para>
-		</blockquote>
 		<para>
 			The Eclipse Platform (or simply "the Platform" when there is no risk of confusion) is
 			designed and built to meet the following requirements:
@@ -342,27 +319,27 @@
 			</para>
 			<para>
 				On start-up, the Platform Runtime discovers the set of available plug-ins, reads
-				their manifest files, and builds an in-memory plug-in registry. The Platform matches
+				their manifests, and builds an in-memory plug-in registry. The Platform matches
 				extension declarations by name with their corresponding extension point
 				declarations. Any problems, such as extensions to missing extension points, are
 				detected and logged. The resulting plug-in registry is available via the Platform
 				API. Plug-ins can also be added, replaced, or deleted after startup.
 			</para>
 			<para>
-				Plug-in manifest is represented by a pair of files. The manifest.mf file is an OSGi
-				bundle manifest describing the plug-ins runtime dependencies; the plugin.xml file is
-				an XML-based description of the plug-in’s extensions and extension points. An
-				extension point may declare additional specialized XML element types for use in the
-				extensions. This allows the plug-in supplying the extension to communicate arbitrary
-				information to the plug-in declaring the corresponding extension point. Moreover,
-				extension and extension point information is available from the plug-in registry
-				without activating the contributing plug-in or loading of any of its code. This
-				property is key to supporting a large base of installed plug-ins only some of which
-				are needed in any given user session. Until a plug-in's code is loaded, it has a
-				negligible memory footprint and impact on start-up time. Using an XML-based plug-in
-				manifest also makes it easier to write tools that support plug-in creation. The
-				Plug-In Development Environment (PDE), which is included in the Eclipse SDK, is such
-				a tool.
+				A plug-in's manifest is represented by a pair of files. The manifest.mf file is an
+				OSGi bundle manifest describing the plug-ins runtime dependencies; the plugin.xml
+				file is an XML-based description of the plug-in’s extensions and extension points.
+				An extension point may declare additional specialized XML element types for use in
+				the extensions. This allows the plug-in supplying the extension to communicate
+				arbitrary information to the plug-in declaring the corresponding extension point.
+				Moreover, extension and extension point information is available from the plug-in
+				registry without activating the contributing plug-in or loading of any of its code.
+				This property is key to supporting a large base of installed plug-ins only some of
+				which are needed in any given user session. Until a plug-in's code is loaded, it has
+				a negligible memory footprint and impact on start-up time. Using an XML-based
+				plug-in manifest also makes it easier to write tools that support plug-in creation.
+				The Plug-In Development Environment (PDE), which is included in the Eclipse SDK, is
+				such a tool.
 			</para>
 			<para>
 				A plug-in is activated when its code actually needs to be run. Once activated, a
@@ -899,9 +876,6 @@
 	</section>
 	<section>
 		<title>Part II: Case Study of Using the Eclipse Platform - Java Development Tooling</title>
-		<blockquote>
-			<para>The proof of the pudding is in the eating. -folk saying</para>
-		</blockquote>
 		<para>
 			As mentioned in Part I, the Eclipse Platform by itself is a foundation for building
 			tools and applications. The tools plugged in to the Platform supply the specific
@@ -918,7 +892,7 @@
 				shows what the workbench normally looks like when the user is writing a Java
 				program.
 			</para>
-			<mediaobject id="figure4" xreflabel="Figure 4"> 
+			<mediaobject id="figure4" xreflabel="Figure 4">
 				<imageobject>
 					<imagedata fileref="images/jdt-main-3_2M3-xp.gif" />
 				</imageobject>
@@ -930,7 +904,7 @@
 				features:
 			</para>
 			<itemizedlist>
-				<listitem> 
+				<listitem>
 					<para>Java projects</para>
 					<itemizedlist>
 						<listitem>

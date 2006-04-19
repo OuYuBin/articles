@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-        $Id: article.xsl,v 1.2 2006/02/14 19:20:20 wbeaton Exp $
+        $Id: article.xsl,v 1.3 2006/04/19 17:39:20 wbeaton Exp $
         author: Chris Aniszczyk <zx@us.ibm.com>
         author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -37,9 +37,9 @@
 	</xsl:template>
 	
 	<xsl:template name="article.titlepage.recto">
-		<h1 align="center"><xsl:value-of select="articleinfo/title"/></h1>
-		<p align="center">This document is made available under the Eclipse Public License 1.0 
-		(<a href="http://eclipse.org/org/documents/epl-v10.php">EPL</a>).</p>
+		<h1><img src="/articles/images/eclipse.png" align="right"/><xsl:value-of select="articleinfo/title"/></h1>
+		<p>This document is made available under the Eclipse Public License 1.0 
+			(<a href="http://eclipse.org/org/documents/epl-v10.php">EPL</a>).</p>
 		
 		<blockquote> 
 			<xsl:apply-templates mode="article.titlepage.recto.auto.mode" select="articleinfo/abstract" /> 
