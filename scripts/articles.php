@@ -427,7 +427,15 @@ class Translation {
 	function to_html(& $html) {
 		$image_file = "/flags/$this->language.gif";
 		$html .= "<table border=\"0\"><tr><td><a target=\"_blank\" href=\"$this->root/$this->link\"><img src=\"$image_file\" align=\"left\" alt=\"[$this->language]\"></a></td>";
-		$html .= "<td>This article has been translated ";
+		$html .= "<td>This article is available in ";
+		switch ($this->language) {
+			case "cn" : $html .= "Chinese"; break;
+			case "de" : $html .= "German"; break;
+			case "fr" : $html .= "French"; break;
+			case "en" : $html .= "English"; break;
+			case "pdf" : $html .= "Adobe Acrobat (PDF)"; break;
+			default : $html .= "[$this->language]"; break;
+		}
 //		$html .= date("F Y", $this->date);
 		// Get the collection of authors and render them.
 		$this->authors_to_html($this->authors, $html);
@@ -440,7 +448,7 @@ class Translation {
 
 		// If there is at least one author, print their information
 		if ($count > 0) {
-			$html .= ' by ';
+			$html .= ' thanks to ';
 			$html .= $authors[0]->to_html($html);
 		}
 
