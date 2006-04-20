@@ -1,0 +1,50 @@
+<?php
+	#*****************************************************************************
+	#
+	# template.php
+	#
+	# Author: 		Denis Roy
+	# Date:			2005-06-16
+	#
+	# Description: Type your page comments here - these are not sent to the browser
+	#
+	#
+	#****************************************************************************
+
+	echo "<?xml version=\"1.0\"?>";
+	
+	include("scripts/articles.php");
+	$listing =& get_listing();
+	$category =& $listing->categories['all'];
+	$category->sort_articles();
+	$articles =& $category->articles;
+	
+	echo <<<EORSS
+<rss version="2.0">
+  <channel>
+    <title>Eclipse Corner Articles</title>
+    <link>http://eclipse.org/articles</link>
+    <description>Eclipse Corner Articles</description>
+    <image>
+      <url>http://www.eclipse.org/articles/images/eclipse.png</url>
+      <title>eclipse.org</title>
+      <link>http://www.eclipse.org/articles</link>
+    </image>
+EORSS;
+
+	foreach ($articles as $article) {
+		if (!$article->is_more_recent_than(strtotime('-6 months'))) break;
+		echo "<item>";
+		echo "<title>$article->title</title>";
+		echo "<link>http://www.eclipse.org/$article->root/$article->link</link>";
+		echo "<description><![CDATA[$article->description]]></description>";
+		$date = date("D, j M Y", $article->most_recent_date());
+		echo "<pubDate>$date</pubDate>";
+		echo "</item>";
+	}
+	
+	echo <<<EORSS1
+	</channel>
+</rss>
+EORSS1;
+?>
