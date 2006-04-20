@@ -34,13 +34,13 @@ EORSS;
 
 	foreach ($articles as $article) {
 		if (!$article->is_more_recent_than(strtotime('-6 months'))) break;
-		echo "<item>";
-		echo "<title>$article->title</title>";
-		echo "<link>http://www.eclipse.org/$article->root/$article->link</link>";
-		echo "<description><![CDATA[$article->description]]></description>";
+		echo "\n\t<item>";
+		echo "\n\t\t<title>$article->title</title>";
+		echo "\n\t\t<link>http://www.eclipse.org/$article->root/$article->link</link>";
+		echo "\n\t\t<description><![CDATA[$article->description]]></description>";
 		$date = date("D, j M Y", $article->most_recent_date());
-		echo "<pubDate>$date</pubDate>";
-		echo "</item>";
+		echo "\n\t\t<pubDate>$date</pubDate>";
+		echo "\n\t</item>";
 	}
 	
 	echo <<<EORSS1
