@@ -4,10 +4,10 @@
 	#
 	# template.php
 	#
-	# Author: 		Denis Roy
-	# Date:			2005-06-16
+	# Author: 		Wayne Beaton
+	# Date:			2005-11-16
 	#
-	# Description: Type your page comments here - these are not sent to the browser
+	# Description: Landing page for articles.
 	#
 	#
 	#****************************************************************************
@@ -16,14 +16,8 @@
 	# Begin: page-specific settings.  Change these. 
 	$pageTitle 		= "Eclipse Corner Articles";
 	$pageKeywords	= "article, articles, tutorial, tutorials, how-to, howto, whitepaper, whitepapers, white, paper";
-	$pageAuthor		= "Type your name here";
+	$pageAuthor		= "Wayne Beaton";
 	
-	# Add page-specific Nav bars here
-	# Format is Link text, link URL (can be http://www.someothersite.com/), target (_self, _blank), level (1, 2 or 3)
-	# $Nav->addNavSeparator("My Page Links", 	"downloads.php");
-	# $Nav->addCustomNav("My Link", "mypage.php", "_self", 3);
-	# $Nav->addCustomNav("Google", "http://www.google.com/", "_blank", 3);
-
 	# End: page-specific settings
 	#
 	include("scripts/articles.php");
@@ -82,6 +76,14 @@
 			<li><a href="http://eclipse.org/articles/Article-RCP-1/tutorial1.html">Part 1</a></li>
 			<li><a href="http://eclipse.org/articles/Article-RCP-2/tutorial2.html">Part 2</a></li>
 			<li><a href="http://eclipse.org/articles/Article-RCP-3/tutorial3.html">Part 3</a></li>
+			</ul>
+		</div>
+	</div>
+	<div id="rightcolumn">
+		<div class="sideitem">
+			<h6>Other Tutorials</h6>
+			<ul>
+			<li><a href="/webtools/jst/components/ws/1.5M6/tutorials/index.html">Web Service Tutorials for WTP 1.5</a></li>
 			</ul>
 		</div>
 	</div>
