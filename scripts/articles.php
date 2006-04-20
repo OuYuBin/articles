@@ -255,6 +255,15 @@ class Article {
 		return false;
 	}
 	
+	function most_recent_date() {
+		$date = $this->date;
+		foreach ($this->updates as $update) {
+			if ($update->date > $date)
+				$date = $update->date;
+		}
+		return $date;
+	}
+	
 	// Render the article as html.
 	function to_html(& $html) {
 		$html .= "<li><a target=\"_blank\" href=\"$this->root/$this->link\">$this->title</a>";
