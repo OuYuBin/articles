@@ -1,12 +1,13 @@
 <?php
 	#*****************************************************************************
 	#
-	# template.php
+	# articles.rss
 	#
-	# Author: 		Denis Roy
-	# Date:			2005-06-16
+	# Author: 		Wayne Beaton
+	# Date:			2006-04-20
 	#
-	# Description: Type your page comments here - these are not sent to the browser
+	# Description: This page generates an RSS feed containing articles that have
+	# been changed in the last six months.
 	#
 	#
 	#****************************************************************************
@@ -31,9 +32,9 @@
       <link>http://www.eclipse.org/articles</link>
     </image>
 EORSS;
-
+	$base_date = strtotime('-6 months');
 	foreach ($articles as $article) {
-		if (!$article->is_more_recent_than(strtotime('-6 months'))) break;
+		if (!$article->is_more_recent_than($base_date)) break;
 		echo "\n\t<item>";
 		echo "\n\t\t<title>$article->title</title>";
 		echo "\n\t\t<link>http://www.eclipse.org/$article->root/$article->link</link>";
