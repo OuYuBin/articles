@@ -51,6 +51,12 @@
 			Eclipse. You can find pointers to these on the 
 			<a href="/community/">Eclipse Community page</a>.
 		</p>
+		
+		<p>
+			<strong>New!</strong> RSS feed for recent articles <a href="/articles/articles.rss?filter=recent"><img src="/images/rss.gif" title="RSS feed for Most Recent Articles" alt="[RSS]"></a>
+			(added or updated in the past year).
+		</p>
+		
 		<form method="get" action="/search/search.cgi">
         	<input type="hidden" name="ul" value="articles" />
 			<input type="hidden" name="wf" value="574a74"; />
