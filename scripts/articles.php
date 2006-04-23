@@ -173,7 +173,7 @@ class Category {
 	// Render this category in html format.
 	function to_html(& $html) {
 		$this->sort_articles();
-		$html .= "<h3><a name=\"$this->id\">$this->title</a></h3>";
+		$html .= "<h3><a href=\"/articles/articles.rss?filter=$this->id\"><img src=\"/images/rss.gif\" title=\"RSS feed for $this->title\" alt=\"[RSS]\" align=\"right\"/></a><a name=\"$this->id\">$this->title</a></h3>";
 
 		if ($this->has_articles()) {
 			if ($this->description) {
