@@ -64,7 +64,7 @@ EORSS;
 		echo "\n\t\t<title><![CDATA[$article->title]]></title>";
 		echo "\n\t\t<link>http://www.eclipse.org$article->root/$article->link</link>";
 		echo "\n\t\t<description><![CDATA[$article->description]]></description>";
-		$date = date("D, j M Y", $article->most_recent_date());
+		$date = date("D, j M Y  12:00:00 GMT", $article->most_recent_date());
 		echo "\n\t\t<pubDate>$date</pubDate>";
 		echo "\n\t</item>";
 	}
