@@ -23,7 +23,7 @@ style="FONT-SIZE: small; FONT-FAMILY: Times New Roman, Times, serif">Copyright �
       style="FONT-WEIGHT: bold; COLOR: #ffffff; FONT-FAMILY: Arial,Helvetica">&nbsp;Eclipse 
       Corner Article</SPAN> </TD></TR></TBODY></TABLE></DIV>
 <DIV align=left>
-<H1><IMG height=86 alt=tag src="A Shape Diagram Editor.files/Idea.jpg" width=120 
+<H1><IMG height=86 alt=tag src="images/Idea.jpg" width=120 
 align=middle></H1></DIV>
 <P>&nbsp;</P>
 <H1 align=center>几何图形编辑器</H1>
@@ -47,10 +47,10 @@ href="http://www.eclipse.org/articles/Article-GEF-diagram-editor/shape.html#zoio
 <DIV class=figure>
 <CENTER style="MARGIN-BOTTOM: 1em"><IMG height=464 
 alt="Screen shot of the diagram editor" 
-src="A Shape Diagram Editor.files/shape_screenshot2.jpg" width=673> </CENTER>
+src="images/shape_screenshot2.jpg" width=673> </CENTER>
 <DIV class=figure-caption><SPAN class=figure-number>图 1</SPAN>. 运行在Linux下的几何图形编辑器</DIV>
 </DIV>
-<P><IMG alt="Try it!" src="A Shape Diagram Editor.files/tryit.gif" align=middle>将最新的Eclipse 3.1 GEF例子从<a href="http://www.eclipse.org/articles/Article-GEF-diagram-editor/shape.html#gamma">GEF项目下载页面</a>下载下来，并解压缩至你的Eclipse目录中。按<EM>Ctrl-N</EM>，会弹出创建向导，将<EM>Examples</EM>目录展开，选择<EM>Shapes Diagram</EM>。下面给出几何图内部工作的详细的全面介绍。在我们接触代码前，我们先来看看GEF主要思想。</P>
+<P><IMG alt="Try it!" src="images/tryit.gif" align=middle>将最新的Eclipse 3.1 GEF例子从<a href="http://www.eclipse.org/articles/Article-GEF-diagram-editor/shape.html#gamma">GEF项目下载页面</a>下载下来，并解压缩至你的Eclipse目录中。按<EM>Ctrl-N</EM>，会弹出创建向导，将<EM>Examples</EM>目录展开，选择<EM>Shapes Diagram</EM>。下面给出几何图内部工作的详细的全面介绍。在我们接触代码前，我们先来看看GEF主要思想。</P>
 <H2> GEF核心概念</H2>
 <P>GEF帮助你为数据构造一个可视化的编辑器。数据可以是带有简单温度旋钮的温度调节器，也可以是一个包含几百个路由器，连接和服务质量策略的虚拟局域网。幸亏GEF设计者，他们设法建立一种框架，使得它能够和任何数据一起工作，用GEF的术语来说，就是任何<strong>模型（model）</strong>。这是通过严格遵循了模型－视图－控制器模式（MVC）来做到的。模型就是你的数据。对于GEF，模式可以是任何普通的Java对象（POJO）。模型不应该知道任何有关于控制器或视图的信息。<strong>视图（view</strong>）是模型或其某一部分在屏幕上的可视化表示。它可以是矩形，线或椭圆这样的简单图形，也可以是彼此嵌套的逻辑电路。同时，视图也应该对模型和控制器一无所知。虽然任何实现<CODE>IFigure</CODE>接口的类都可以作为视图，但是GEF使用Draw2D<strong>可视图形（figure）</strong>。<strong>控制器</strong>，可称为<strong>编辑部件（edit 
   part）</strong>，是模型和视图之间的桥梁。当你开始编辑你的模型时，一个顶层的控制器被创建出来。如果模型由若干个片段组成，顶层控制器就会将这个信息通知GEF。接下来，每个片段的子控制器被创建出来。如果它们又包含子片段，这个过程就会一直继续下去，直到所有组成模型的对象都有它们的控制器。控制器的另一个任务是创建可视图形来表示模型。一旦模型被设置到某个控制器，GEF就向控制器要合适的<CODE>IFigure</CODE>对象。既然模型和视图彼此都不知道对方，控制器负责监听模型的修改，并更新模型的可视化表示。结果，在许多GEF编辑器中，一个常见的模式就是模型发<CODE>PropertyChangeEvent</CODE>通知。当一个编辑部件收到事件通知时，它通过调整模型的外观或结构上的表示来作相应的改变。</P>
@@ -70,17 +70,17 @@ src="A Shape Diagram Editor.files/shape_screenshot2.jpg" width=673> </CENTER>
 <LI><strong>提供方法允许别人监听模型的变化。</strong>这使得控制器可以及时响应修改，并对视图作适当调整。既然你不能保持对控制器的引用，唯一的方法就是为控制器提供一种途径，使得它能够作为一个事件接受者注册（和撤销注册）在模型上。一个好的办法就是使用<CODE>java.beans</CODE>包中的属性修改事件通知。</LI>
 </UL>
 <P>上面所列的规则对于所有模型都是相同的，为基本类建立类层次来强化这些规则是很有好处的。<CODE>ModelElement</CODE>类继承了Java的<CODE>Object</CODE>类，并提供了三个功能：持久化，属性改变和属性源支持。简单的模型持久化可以通过实现<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle><CODE>java.io.Serializable</CODE>接口以及<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle><CODE>readObject方法来完成。这使得你可以将编辑器的模型以二进制格式存储。当需要和某种应用一起工作时，这并不能提供的格式的可移植性。在复杂的情况下，你需要实现将模型以XML或类似的格式存储。模型的改变通过属性改变事件来通知。这个基本类允许编辑部件<IMG height=13 
-alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle>注册和<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_5.gif" 
+src="images/tag_2.gif" width=24 align=middle><CODE>java.io.Serializable</CODE>接口以及<IMG height=13 alt=tag 
+src="images/tag_3.gif" width=24 align=middle><CODE>readObject方法来完成。这使得你可以将编辑器的模型以二进制格式存储。当需要和某种应用一起工作时，这并不能提供的格式的可移植性。在复杂的情况下，你需要实现将模型以XML或类似的格式存储。模型的改变通过属性改变事件来通知。这个基本类允许编辑部件<IMG height=13 
+alt=tag src="images/tag_4.gif" width=24 align=middle>注册和<IMG height=13 alt=tag src="images/tag_5.gif" 
 width=24 align=middle>撤销注册为属性改变通知的接受者。属性改变通知是通过调用<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_6.gif" width=24 align=middle>firePropertyChange方法触发的。最后，为了帮助和workbench的<EM>Properties</EM>视图集成，需要实现IPropertySource接口（细节在图2中忽略）。</CODE></P>
-<DIV class=figure><PRE class=program>public abstract class ModelElement implements <IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> IPropertySource, <IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> Serializable {
+src="images/tag_6.gif" width=24 align=middle>firePropertyChange方法触发的。最后，为了帮助和workbench的<EM>Properties</EM>视图集成，需要实现IPropertySource接口（细节在图2中忽略）。</CODE></P>
+<DIV class=figure><PRE class=program>public abstract class ModelElement implements <IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> IPropertySource, <IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> Serializable {
 
     private transient PropertyChangeSupport pcsDelegate = 
         new PropertyChangeSupport(this);
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle> public synchronized void addPropertyChangeListener(PropertyChangeListener l) {
+<IMG height=13 alt=tag src="images/tag_4.gif" width=24 align=middle> public synchronized void addPropertyChangeListener(PropertyChangeListener l) {
         if (l == null) {
             throw new IllegalArgumentException();
         }
@@ -88,7 +88,7 @@ src="A Shape Diagram Editor.files/tag_6.gif" width=24 align=middle>firePropertyC
         pcsDelegate.addPropertyChangeListener(l);
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_6.gif" width=24 align=middle> protected void firePropertyChange(String property, 
+<IMG height=13 alt=tag src="images/tag_6.gif" width=24 align=middle> protected void firePropertyChange(String property, 
                                       Object oldValue, 
                                       Object newValue) {
         if (pcsDelegate.hasListeners(property)) {
@@ -96,13 +96,13 @@ src="A Shape Diagram Editor.files/tag_6.gif" width=24 align=middle>firePropertyC
         }
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle> private void readObject(ObjectInputStream in) throws IOException, 
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle> private void readObject(ObjectInputStream in) throws IOException, 
                                                          ClassNotFoundException {
         in.defaultReadObject();
         pcsDelegate = new PropertyChangeSupport(this);
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle> public synchronized void removePropertyChangeListener(PropertyChangeListener l) {
+<IMG height=13 alt=tag src="images/tag_5.gif" width=24 align=middle> public synchronized void removePropertyChangeListener(PropertyChangeListener l) {
         if (l != null) {
             pcsDelegate.removePropertyChangeListener(l);
         }
@@ -114,20 +114,20 @@ src="A Shape Diagram Editor.files/tag_6.gif" width=24 align=middle>firePropertyC
 </DIV>
 <P>椭圆和矩形这两类对象，在许多方面是相同的，它们的公共功能可以被提取出来放在公共类中。尤其是两者都代表着占据某个位置，具有一定大小的对象。它们可以彼此连接。这些属性的任何修改都需要通知监听者。更进一步地说，它们的位置和大小属性都可以通过<CODE>IPropertySource</CODE>接口暴露，这允许用户通过<EM>Properties</EM>视图来查看，和修改它们。</P>
 <P>对象间连接的管理很值得仔细看一下。这里并没有一个全局的用于存储所有连接的地方。GEF要求模型部件报告它们之间的连接的情况，是源还是目标。这些信息都以<CODE>List对象的形式</CODE>提供。<CODE>Shape</CODE>类维护了两个数组列表，分别存储<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle>源连接和<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 
+src="images/tag_1.gif" width=24 align=middle>源连接和<IMG height=13 alt=tag src="images/tag_2.gif" width=24 
 align=middle>目标连接。源连接是指那些以当前图形作为源的连接，目标连接是指以当前图形作为目标的连接。两个包可见方法（<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>和<IMG 
-height=13 alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 
+src="images/tag_3.gif" width=24 align=middle>和<IMG 
+height=13 alt=tag src="images/tag_4.gif" width=24 
 align=middle>）使得图形和连接可以彼此知道相互之间的关系。此外，两个公有方法（<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle>和<IMG 
-height=13 alt=tag src="A Shape Diagram Editor.files/tag_6.gif" width=24 
+src="images/tag_5.gif" width=24 align=middle>和<IMG 
+height=13 alt=tag src="images/tag_6.gif" width=24 
 align=middle>）使得<CODE>model</CODE>包外面的类知道图形的连接情况。这些方法都会被相关的图形（形状）控制器所使用，具体内容将在接下来的部分中加以介绍。</P>
 <DIV class=figure><PRE class=program>public abstract class Shape extends ModelElement {
 
     private Point location = new Point(0, 0);
     private Dimension size = new Dimension(50, 50);
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> private List sourceConnections = new ArrayList();
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> private List targetConnections = new ArrayList();
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> private List sourceConnections = new ArrayList();
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> private List targetConnections = new ArrayList();
 
     public Point getLocation() {
         return location.getCopy();
@@ -141,7 +141,7 @@ align=middle>）使得<CODE>model</CODE>包外面的类知道图形的连接情�
         firePropertyChange(LOCATION_PROP, null, location);
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle> void addConnection(Connection conn) {
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle> void addConnection(Connection conn) {
         if (conn == null || conn.getSource() == conn.getTarget()) {
             throw new IllegalArgumentException();
         }
@@ -154,7 +154,7 @@ align=middle>）使得<CODE>model</CODE>包外面的类知道图形的连接情�
         }
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle> void removeConnection(Connection conn) {
+<IMG height=13 alt=tag src="images/tag_4.gif" width=24 align=middle> void removeConnection(Connection conn) {
         if (conn == null) {
             throw new IllegalArgumentException();
         }
@@ -167,11 +167,11 @@ align=middle>）使得<CODE>model</CODE>包外面的类知道图形的连接情�
         }
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle> public List getSourceConnections() {
+<IMG height=13 alt=tag src="images/tag_5.gif" width=24 align=middle> public List getSourceConnections() {
         return new ArrayList(sourceConnections);
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_6.gif" width=24 align=middle> public List getTargetConnections() {
+<IMG height=13 alt=tag src="images/tag_6.gif" width=24 align=middle> public List getTargetConnections() {
         return new ArrayList(targetConnections);
     }
     
@@ -182,16 +182,16 @@ align=middle>）使得<CODE>model</CODE>包外面的类知道图形的连接情�
 <H3>顶层模型类</H3>
 <P>通过上面的准备，我们可以开始编写顶层模型类。<CODE>Connection</CODE>类表示两个图形间的连接。它存储连接的源和目标。通过调用<CODE>disconnect</CODE>或<CODE>reconnect</CODE>方法可以修改连接。连接含有一个boolean值来表示连接是否存在。命令会使用这个值来验证某种操作的合法性。源连接和目标连接都保持一个到源图形的引用，这样使得被断开的连接可以很容易地被重新连接。连接包含一个属性，就是线的类型。<CODE>EllipticalShape</CODE>和<CODE>RectangularShape</CODE>类都扩展了<CODE>Shape</CODE>类，添加了很少的功能。</P>
 <P><CODE>ShapeDiagram</CODE>类是<CODE>ModelElement</CODE>类的子类，它可以作为一种容器。它维护一组图形，并通知监听器这组图形的变化。命令可以调用<IMG 
-height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 
+height=13 alt=tag src="images/tag_1.gif" width=24 
 align=middle><CODE>addChild</CODE>和<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle><CODE>removeChild</CODE>方法，并检查返回的boolean值来验证它们的操作。这个类也提供了<IMG height=13 
-alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>公共方法给控制器类。</P>
+src="images/tag_2.gif" width=24 align=middle><CODE>removeChild</CODE>方法，并检查返回的boolean值来验证它们的操作。这个类也提供了<IMG height=13 
+alt=tag src="images/tag_3.gif" width=24 align=middle>公共方法给控制器类。</P>
 <DIV class=figure><PRE class=program>public class ShapesDiagram extends ModelElement {
 
     ...    
     private Collection shapes = new Vector();
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> public boolean addChild(Shape s) {
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> public boolean addChild(Shape s) {
         if (s != null &amp;&amp; shapes.add(s)) {
             firePropertyChange(CHILD_ADDED_PROP, null, s);
             return true;
@@ -199,11 +199,11 @@ alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>公�
         return false;
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle> public List getChildren() {
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle> public List getChildren() {
         return new Vector(shapes);
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> public boolean removeChild(Shape s) {
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> public boolean removeChild(Shape s) {
         if (s != null &amp;&amp; shapes.remove(s)) {
             firePropertyChange(CHILD_REMOVED_PROP, null, s);
             return true;
@@ -224,29 +224,29 @@ href="http://www.eclipse.org/articles/Article-GEF-diagram-editor/shape.html#lee"
 <H2>部件（part）</H2>
 <P>对于模型的每个独立部分，我们都必须定义控制器。所谓“独立”，指的是这个实体都可以作为用户操作的对象。一个比较好的原则就是任何可以被选择，或删除的对象都应该有它自己的编辑部件。</P>
 <P>编辑部件知道模型，监听模型改变所产生的事件，然后更新视图。由于在模型层所做的设计选择，所有的编辑部件都必需遵循图5所示的模式。每个部件<IMG 
-height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 
-align=middle>都实现<CODE>PropertyChangeListener</CODE>接口。当它被激活时<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 
+height=13 alt=tag src="images/tag_1.gif" width=24 
+align=middle>都实现<CODE>PropertyChangeListener</CODE>接口。当它被激活时<IMG height=13 alt=tag src="images/tag_2.gif" width=24 
 align=middle>，它将自己注册为模型的属性修改事件的接收者。当失活时<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>，它将自己从监听器的列表中移除。最后，当它收到属性修改事件时<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 
+src="images/tag_3.gif" width=24 align=middle>，它将自己从监听器的列表中移除。最后，当它收到属性修改事件时<IMG height=13 alt=tag src="images/tag_4.gif" width=24 
 align=middle>，它会根据属性名和新旧值来刷新表示模型的可视图形。事实上，这个模式使用非常普遍，在大的应用中，它会建立一个基类来提供这样的行为。</P>
 <DIV class=figure><PRE class=program>public abstract class SpecificPart extends AbstractGraphicalEditPart
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle>    implements PropertyChangeListener {
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle>    implements PropertyChangeListener {
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> public void activate() {
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> public void activate() {
         if (!isActive()) {
             super.activate();
             ((PropertyAwareModel) this.getModel()).addPropertyChangeListener(this);
         }
     }
 
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle> public void deactivate() {
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle> public void deactivate() {
         if (isActive()) {
             ((PropertyAwareModel) this.getModel()).removePropertyChangeListener(this);
             super.deactivate();
         }
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle> public void propertyChage(PropertyChangeEvent evt) {
+<IMG height=13 alt=tag src="images/tag_4.gif" width=24 align=middle> public void propertyChage(PropertyChangeEvent evt) {
         String prop = evt.getPropertyName();
 		...    
     }
@@ -256,39 +256,39 @@ align=middle>，它会根据属性名和新旧值来刷新表示模型的可视�
 <H3><TT>DiagramEditPart</TT> 类 </H3>
 <P>当编辑器成功载入一个几何图，并将它设置在一个图形viewer上，<CODE>就要求ShapesEditPartFactory创建一个编辑部件来控制图。它创建一个新的DiagramEditPart实例，并将图设置为它的模型。当新创建的编辑部件被激活时，它将自己注册为模型的监听器，并创建一个使用free form布局管理器的可视图形，这种布局管理器允许通过它们的边界来定位图的可视图形。DiagramEditPart通过getModelChildren方法来获取图中包含的所有图形。就象前面提到的，GEF为返回的所有子模型对象都会创建编辑部件和可视图形。</CODE></P>
 <P><CODE>DiagramEditPart</CODE>类安装了三个策略。所有的策略都在<CODE>AbstractEditPart</CODE>类的<CODE>createEditPolicies</CODE>方法中定义，同时所有继承自<CODE>AbstractGraphicalEditPart的实类都必需实现这个方法。编辑部件使用这些策略来处理工具发出的请求。在最简单的情况下，策略负责生成许多命令。策略使用String类型的索引字注册在编辑部件上，这个索引字被称为策略角色。这些索引字对编辑部件本身来说没有什么意义。然而，对软件开放人员，就有意义了，它使得其他人，尤其是扩展你的控制器的人，可以通过这些索引字来关闭或移除策略。就GEF而言，你的索引字可以是“foobar”。然而，你最好告诉你程序员同伴，当布局管理器改变的时候，为了设置新的布局策略，需要安装新的“foobar”策略。由于这可能很有趣，且不是那么显而易见，所以推荐你使用EditPolicy接口定义索引字，这些名字需要很好的表达该策略在编辑部件中的角色。</CODE></P>
-<P>安装的第一个策略<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" 
-width=24 align=middle>的索引字是<CODE>EditPolicy.COMPONENT_ROLE</CODE>，它负责阻止模型的根被删除。它重写了<CODE>createDeleteCommand</CODE>方法，并返回一个不能被执行的命令。第二个策略<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 
+<P>安装的第一个策略<IMG height=13 alt=tag src="images/tag_1.gif" 
+width=24 align=middle>的索引字是<CODE>EditPolicy.COMPONENT_ROLE</CODE>，它负责阻止模型的根被删除。它重写了<CODE>createDeleteCommand</CODE>方法，并返回一个不能被执行的命令。第二个策略<IMG height=13 alt=tag src="images/tag_2.gif" width=24 
 align=middle>的索引字是<CODE>LAYOUT_ROLE</CODE>，它处理创建请求和边界修改请求。当新的图形被放置到图中，第一个请求被发送出来。布局策略返回一个命令，这个命令添加新的图形到图编辑器中，并把它放置在适当的位置。用户修改图中已存在的图形大小或移动它时，都会发出边界修改请求。第三个<CODE>installEditPolicy</CODE>调用<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>删除一个策略。它在用户点击模型根所在区域时，阻止根部件提供选择反馈。这里也可以看出一个有意义的策略索引字的重要性。</P>
+src="images/tag_3.gif" width=24 align=middle>删除一个策略。它在用户点击模型根所在区域时，阻止根部件提供选择反馈。这里也可以看出一个有意义的策略索引字的重要性。</P>
 <DIV class=figure><PRE class=program>protected void createEditPolicies() {
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> installEditPolicy(EditPolicy.COMPONENT_ROLE, new RootComponentEditPolicy());
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> installEditPolicy(EditPolicy.COMPONENT_ROLE, new RootComponentEditPolicy());
     XYLayout layout = (XYLayout) getContentPane().getLayoutManager();
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> installEditPolicy(EditPolicy.LAYOUT_ROLE, new ShapesXYLayoutEditPolicy(layout));
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle> installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE, null);
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> installEditPolicy(EditPolicy.LAYOUT_ROLE, new ShapesXYLayoutEditPolicy(layout));
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle> installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE, null);
 }</PRE>
 <DIV class=figure-caption><SPAN class=figure-number>图 6</SPAN>. 图编辑部件中安装的策略 （译：这里和Eclipse 3.1 GEF提供的例子代码略有出入） </DIV>
 </DIV>
 <P>图编辑部件监视子编辑部件的添加，移除事件。当任何新的图形添加或移除时，<CODE>ShapesDiagam</CODE>类将发送这些事件。当图编辑部件检测到这两种属性修改事件时，图编辑部件都会调用<CODE>AbstractEditPart</CODE>类中定义的<CODE>refreshChildren</CODE>方法。这个方法会遍历所有子模型对象，并相应地添加，移除，或重新排序子编辑部件。</P>
 <H3><TT>ShapeEditPart</TT> 类 </H3>
 <P><CODE>ShapeEditPart</CODE>类管理所有的图形。当<CODE>DiagramEditPart</CODE>会返回子模型列表时，<CODE>ShapeEditPart</CODE>由<CODE>ShapesEditPartFactory</CODE>类根据每个模型对象的类型创建。工厂类创建的每个部件都拥有一个它们所控制的子模型。一旦模型对象被设置，编辑部件被要求创建可视图形来表示模型对象。根据模型对象的类型，返回椭圆或矩形的编辑部件。</P>
-<P>这个编辑部件关注四类属性修改事件：大小，位置，源连接，和目标连接。如果图形改变了大小或位置，<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_6.gif" width=24 
+<P>这个编辑部件关注四类属性修改事件：大小，位置，源连接，和目标连接。如果图形改变了大小或位置，<IMG height=13 alt=tag src="images/tag_6.gif" width=24 
 align=middle><CODE>refreshVisual</CODE>方法会被调用。这个方法在可视图形被创建的时候就会由GEF自动调用。在这个方法中，可视图形的可视属性应该根据模型的状态做相应调整。重用模型更新方法是GEF编辑器中经常碰到的又一种模式。在我们这个编辑部件类中，新的位置和大小被获取并储存在表示图形的可视图形中。此外，新的边界会传给父控制器的布局管理器。当源连接或目标连接改变时，源连接或目标连接改编辑部件会调用<CODE>AbstractGraphicalEditPart</CODE>类中的方法刷新。和<CODE>refreshChildren</CODE>方法相似，这些方法会遍历所有的连接，并相应添加，删除，或重新定位它们的编辑部件。</P>
 <DIV class=figure><PRE class=program>class ShapeEditPart extends AbstractGraphicalEditPart 
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle>     implements PropertyChangeListener, NodeEditPart {
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle>     implements PropertyChangeListener, NodeEditPart {
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> protected List getModelSourceConnections() {
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> protected List getModelSourceConnections() {
         return getCastedModel().getSourceConnections();
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle> protected List getModelTargetConnections() {
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle> protected List getModelTargetConnections() {
         return getCastedModel().getTargetConnections();
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle> public ConnectionAnchor getSourceConnectionAnchor(ConnectionEditPart connection) {
+<IMG height=13 alt=tag src="images/tag_4.gif" width=24 align=middle> public ConnectionAnchor getSourceConnectionAnchor(ConnectionEditPart connection) {
         return new ChopboxAnchor(getFigure());
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle> public ConnectionAnchor getSourceConnectionAnchor(Request request) {
+<IMG height=13 alt=tag src="images/tag_5.gif" width=24 align=middle> public ConnectionAnchor getSourceConnectionAnchor(Request request) {
         return new ChopboxAnchor(getFigure());
     }
     
@@ -306,7 +306,7 @@ align=middle><CODE>refreshVisual</CODE>方法会被调用。这个方法在可�
         }
     }
     
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_6.gif" width=24 align=middle> protected void refreshVisuals() {
+<IMG height=13 alt=tag src="images/tag_6.gif" width=24 align=middle> protected void refreshVisuals() {
         Rectangle bounds = new Rectangle(getCastedModel().getLocation(),
                                          getCastedModel().getSize());
         figure.setBounds(bounds);
@@ -315,17 +315,17 @@ align=middle><CODE>refreshVisual</CODE>方法会被调用。这个方法在可�
 }</PRE>
 <DIV class=figure-caption><SPAN class=figure-number>图 7</SPAN>. 图形控制器</DIV>
 </DIV>
-<P>由于图形可以连接到其他图形，图形编辑部件重写了<CODE><IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 
+<P>由于图形可以连接到其他图形，图形编辑部件重写了<CODE><IMG height=13 alt=tag src="images/tag_2.gif" width=24 
 align=middle>getModelSourceConnections</CODE>方法和<CODE><IMG height=13 
-alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>getModelTargetConnections</CODE>方法。这两个方法的任务就是要通知GEF有关该图形的源连接和目标连接。此外，<CODE>ShapeEditPart</CODE>实现了<CODE><IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle>NodeEditPart接口。通过实现这个接口，编辑部件可以定义源锚点和目标锚点，锚点就是图形和连接接触的连接点。逻辑电路编辑器的例子使用这个功能来指定线如何连接到一个逻辑门元件。既然图形并没有特定的连接点，我们就使用包围矩形锚点，它将连接设置在可视图形的包围矩形上。如果你愿意，你可以为椭圆返回EllipseAnchor，它将返回一个椭圆边界上的点。对于更加复杂的图形,你应该继承AbstractConnectionAnchor类，并实现getLocation方法。注意，有两种方法需要实现：一个使用ConnectionEditPart对象作为参数，另一个使用Request对象。当一个新的连接被创建时，第二个方法<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle>会被调用以便用户得到反馈，而第一个方法<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle>用于已建立的连接。</CODE></P>
+alt=tag src="images/tag_3.gif" width=24 align=middle>getModelTargetConnections</CODE>方法。这两个方法的任务就是要通知GEF有关该图形的源连接和目标连接。此外，<CODE>ShapeEditPart</CODE>实现了<CODE><IMG height=13 alt=tag 
+src="images/tag_1.gif" width=24 align=middle>NodeEditPart接口。通过实现这个接口，编辑部件可以定义源锚点和目标锚点，锚点就是图形和连接接触的连接点。逻辑电路编辑器的例子使用这个功能来指定线如何连接到一个逻辑门元件。既然图形并没有特定的连接点，我们就使用包围矩形锚点，它将连接设置在可视图形的包围矩形上。如果你愿意，你可以为椭圆返回EllipseAnchor，它将返回一个椭圆边界上的点。对于更加复杂的图形,你应该继承AbstractConnectionAnchor类，并实现getLocation方法。注意，有两种方法需要实现：一个使用ConnectionEditPart对象作为参数，另一个使用Request对象。当一个新的连接被创建时，第二个方法<IMG height=13 alt=tag 
+src="images/tag_5.gif" width=24 align=middle>会被调用以便用户得到反馈，而第一个方法<IMG height=13 alt=tag 
+src="images/tag_4.gif" width=24 align=middle>用于已建立的连接。</CODE></P>
 <P>图形编辑部件安装了两个策略。<CODE>ShapeComponentEditPolicy</CODE>提供命令将一个图形从图删除。第二个策略处理图形间连接的创建和转移，它的索引字是<CODE>GRAPHICAL_NODE_ROLE</CODE>。连接创建工具创建新的连接需要两个步骤。当用户点击模型元素的可视图形时，该策略被要求<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle>创建一个连接命令。如果这个方法返回<CODE>null</CODE>，表示这个连接不能从所给的模型元素开始。如果允许连接的话，将创建新的命令，并作为起始命令存储在请求中。当用户点击另一个可视图形时，会要求策略提供一个<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>连接完成命令。这是一个根据起始命令创建的新命令，而起始命令中包含了连接结束点的信息。</P>
+src="images/tag_1.gif" width=24 align=middle>创建一个连接命令。如果这个方法返回<CODE>null</CODE>，表示这个连接不能从所给的模型元素开始。如果允许连接的话，将创建新的命令，并作为起始命令存储在请求中。当用户点击另一个可视图形时，会要求策略提供一个<IMG height=13 alt=tag 
+src="images/tag_2.gif" width=24 align=middle>连接完成命令。这是一个根据起始命令创建的新命令，而起始命令中包含了连接结束点的信息。</P>
 <DIV class=figure><PRE class=program>new GraphicalNodeEditPolicy() {
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> protected Command getConnectionCreateCommand(CreateConnectionRequest request) {
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> protected Command getConnectionCreateCommand(CreateConnectionRequest request) {
        Shape source = (Shape) getHost().getModel();
        int style = ((Integer) request.getNewObjectType()).intValue();
        ConnectionCreateCommand cmd = new ConnectionCreateCommand(source, style);
@@ -333,7 +333,7 @@ src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>连接完成�
        return cmd;
     }
 
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> protected Command getConnectionCompleteCommand(CreateConnectionRequest request) {
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> protected Command getConnectionCompleteCommand(CreateConnectionRequest request) {
         ConnectionCreateCommand cmd = 
             (ConnectionCreateCommand) request.getStartCommand();
         cmd.setTarget((Shape) getHost().getModel());
@@ -347,34 +347,34 @@ src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>连接完成�
 <P>图形节点编辑策略的另一个任务是提供连接的转移命令。连接可以修改连接的源或目标实现转移。连接转移命令和连接创建命令有同样的规则。尤其是当一个连接不能转移时，策略返回null。策略也可能通过<CODE>canExecute</CODE>方法返回false来得到一个拒绝执行的命令。由于篇幅限制，这些命令的细节就不多说了，读者可以参考代码。</P>
 <H3><TT>ConnectionEditPart</TT> 类 </H3>
 <P>由于连接也是用户可编辑的模型对象，它们必须有自己的控制器。连接的控制器是由<CODE>ConnectionEditPart</CODE>类实现，它继承自<CODE>AbstractConnectionEditPart</CODE>类。和其他控制器类似，它也实现了<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle><CODE>PropertyChangeListener</CODE>接口，并注册自己为模型的监听器。连接部件<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>返回一个带有箭头的线作为可视图形。它安装了两个编辑策略。第一个是<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle><CODE>ConnectionComponentPolicy，它提供删除命令给<EM>Delete</EM>菜单项所需要的action。第二个<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle>比较有意思。它含有一个被选择的连接，这个连接包括起始端和结束端的标识。没有这个策略，就不可能转移连接，因为当一个连接被拖动时，GEF没有办法获取连接两端的标识。GEF的设计者建议所有的ConnectionEditParts都应该有这个策略，即使连接的两端都不能拖动。至少这个策略提供了一种视觉上的选择反馈。propertyChange方法可以收到<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle>线风格属性的变化，并对线figure作相应的调整。</CODE></P>
+src="images/tag_1.gif" width=24 align=middle><CODE>PropertyChangeListener</CODE>接口，并注册自己为模型的监听器。连接部件<IMG height=13 alt=tag 
+src="images/tag_2.gif" width=24 align=middle>返回一个带有箭头的线作为可视图形。它安装了两个编辑策略。第一个是<IMG height=13 alt=tag 
+src="images/tag_3.gif" width=24 align=middle><CODE>ConnectionComponentPolicy，它提供删除命令给<EM>Delete</EM>菜单项所需要的action。第二个<IMG height=13 alt=tag 
+src="images/tag_4.gif" width=24 align=middle>比较有意思。它含有一个被选择的连接，这个连接包括起始端和结束端的标识。没有这个策略，就不可能转移连接，因为当一个连接被拖动时，GEF没有办法获取连接两端的标识。GEF的设计者建议所有的ConnectionEditParts都应该有这个策略，即使连接的两端都不能拖动。至少这个策略提供了一种视觉上的选择反馈。propertyChange方法可以收到<IMG height=13 alt=tag 
+src="images/tag_5.gif" width=24 align=middle>线风格属性的变化，并对线figure作相应的调整。</CODE></P>
 <DIV class=figure><PRE class=program>class ConnectionEditPart extends AbstractConnectionEditPart 
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle>     implements PropertyChangeListener {
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle>     implements PropertyChangeListener {
     
     protected IFigure createFigure() {
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>     PolylineConnection connection = (PolylineConnection) super.createFigure();
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle>     PolylineConnection connection = (PolylineConnection) super.createFigure();
         connection.setTargetDecoration(new PolygonDecoration());
         connection.setLineStyle(getCastedModel().getLineStyle());
         return connection;
     }
     
     protected void createEditPolicies() {
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>     installEditPolicy(EditPolicy.CONNECTION_ROLE, new ConnectionEditPolicy() {
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle>     installEditPolicy(EditPolicy.CONNECTION_ROLE, new ConnectionEditPolicy() {
             protected Command getDeleteCommand(GroupRequest request) {
                 return new ConnectionDeleteCommand(getCastedModel());
             }
         });
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_4.gif" width=24 align=middle>     installEditPolicy(EditPolicy.CONNECTION_ENDPOINTS_ROLE,
+<IMG height=13 alt=tag src="images/tag_4.gif" width=24 align=middle>     installEditPolicy(EditPolicy.CONNECTION_ENDPOINTS_ROLE,
                           new ConnectionEndpointEditPolicy());
     }
     
     public void propertyChange(PropertyChangeEvent event) {
         String property = event.getPropertyName();
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle>     if (Connection.LINESTYLE_PROP.equals(property)) {
+<IMG height=13 alt=tag src="images/tag_5.gif" width=24 align=middle>     if (Connection.LINESTYLE_PROP.equals(property)) {
             ((PolylineConnection) getFigure()).
                 setLineStyle(getCastedModel().getLineStyle());
         }
@@ -387,14 +387,14 @@ src="A Shape Diagram Editor.files/tag_5.gif" width=24 align=middle>线风格属�
 <P>几何图形编辑器继承了<CODE>GraphicalEditorWithFlyoutPalette</CODE>类。这个类是图形编辑器的一种特殊形式，它本身也是一种编辑部件，并可以拥有一个提供工具的面板。使用这个类必须实现两个方法，<CODE>getPaletteRoot</CODE>和<CODE>getPalettePreferences</CODE>。第一个方法必须返回包含所有工具选项的面板的根节点。工具选项是一种特殊的面板选项，它将工具安装在编辑器的编辑域上。它们必须位于面板抽屉中，面板抽屉将工具选项很方便地组合起来。一般推荐有一个工具选项作为整个工具面板的缺省选项。一个典型的解决方法就是直接使用<CODE>SelectionToolEntry</CODE>类的实例。第二个方法返回的面板首选项中包含的内容有，报告面板是可见还是被折叠起来了，面板停靠的位置，以及面板的宽度。通常的解决方法是将它们存在plug-in的首选项存储区中。</P>
 <P>我们上面提到的编辑域起了一个中心控制器的作用。它负责保存工具，载入缺省工具，维护当前激活的工具，并将鼠标和键盘事件转发给当前激活的工具，以及处理命令栈。GEF提供了缺省实现，<CODE>DefaultEditDomain</CODE>，你应该在编辑器的构造函数中设置它的实例。</P>
 <P>图形编辑器的另一部分工作是创建并初始化图形viewer。图形viewer是一种特殊的<CODE>EditPartViewer</CODE>，它能够做点击测试。我们可以使用<CODE>GraphicalEditor</CODE>类提供的缺省viewer。然而，还是需要做一些事。在<CODE>configureGraphicalViewer</CODE>方法<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle>中设置编辑部件的工厂类。这个工厂类必须实现一个接口<CODE>EditPartFactory，这个接口只有一个方法，createEditPart(EditPart, 
+src="images/tag_1.gif" width=24 align=middle>中设置编辑部件的工厂类。这个工厂类必须实现一个接口<CODE>EditPartFactory，这个接口只有一个方法，createEditPart(EditPart, 
 Object)。它的第一个参数是编辑部件，它一般是所创建的编辑部件的父部件，第二个参数是新创建的编辑部件所对应的模型部件。其他要做的包括设置键处理器，上下文菜单等。</CODE></P>
 <DIV class=figure><PRE class=program>protected void configureGraphicalViewer() {
     super.configureGraphicalViewer();
     
     GraphicalViewer viewer = getGraphicalViewer();
     viewer.setRootEditPart(new ScalableRootEditPart());
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> viewer.setEditPartFactory(new ShapesEditPartFactory());
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> viewer.setEditPartFactory(new ShapesEditPartFactory());
     viewer.setKeyHandler(
         new GraphicalViewerKeyHandler(viewer).setParent(getCommonKeyHandler()));
     ContextMenuProvider cmProvider = 
@@ -406,24 +406,24 @@ Object)。它的第一个参数是编辑部件，它一般是所创建的编辑�
 protected void initializeGraphicalViewer() {
     super.initializeGraphicalViewer();
     GraphicalViewer graphicalViewer = getGraphicalViewer();
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle> graphicalViewer.setContents(getModel());
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle> graphicalViewer.addDropTargetListener(createTransferDropTargetListener());
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle> graphicalViewer.setContents(getModel());
+<IMG height=13 alt=tag src="images/tag_3.gif" width=24 align=middle> graphicalViewer.addDropTargetListener(createTransferDropTargetListener());
 }</PRE>
 <DIV class=figure-caption><SPAN class=figure-number>图 10</SPAN>. 配置并初始化一个图形viewer</DIV>
 </DIV>
 <P>一旦工厂类被设置，你应该在图形viewer中<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>设置内容。内容自然就是从<CODE>IEditorInput</CODE>实例恢复得到的对象，<CODE>IEditorInput</CODE>实例通过<CODE>setInput</CODE>方法传递给编辑器。这个例子在图形viewer上添加<IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_3.gif" width=24 align=middle>一个目标放置监听器。它允许用户使用拖放的方式添加新图形，而不是选择加点击的方式。这个目标放置监听器使用<CODE>TemplateTransferDropTargetListener</CODE>的子类，它使用<CODE>CreateRequest</CODE>来获得添加对象到模型的命令，这个模型当然就是拖放动作结束时所在的编辑部件所表示的模型。</P>
+src="images/tag_2.gif" width=24 align=middle>设置内容。内容自然就是从<CODE>IEditorInput</CODE>实例恢复得到的对象，<CODE>IEditorInput</CODE>实例通过<CODE>setInput</CODE>方法传递给编辑器。这个例子在图形viewer上添加<IMG height=13 alt=tag 
+src="images/tag_3.gif" width=24 align=middle>一个目标放置监听器。它允许用户使用拖放的方式添加新图形，而不是选择加点击的方式。这个目标放置监听器使用<CODE>TemplateTransferDropTargetListener</CODE>的子类，它使用<CODE>CreateRequest</CODE>来获得添加对象到模型的命令，这个模型当然就是拖放动作结束时所在的编辑部件所表示的模型。</P>
 <P>除了上面谈到的任务，编辑器还负责监视命令栈来报告当前编辑的内容是否被修改。这是一个比较好的解决方法，因为它可以使这个标记和用户所做的undo和redo同步起来。注意，命令栈含有上次存储的位置信息，这个信息在<CODE>doSave</CODE>和<CODE>doSaveAs</CODE>这两个方法中被标记。编辑器的其他细节，比如模型的实际存储和恢复，这里就不讨论了，因为它们和具体的应用相关。接下来，我们讨论编辑器的如何将编辑器内容暴露给其视图，如何将菜单选项和编辑器的action联系起来，以及其他workbench协作的技术。</P>
 <H2>和workbench集成在一起</H2>
 <P>到目前为止，我们谈的都是这个几何图形编辑器如何工作。然而，它没有和workbench很好地集成。例如，<EM>Edit</EM>菜单动作，比如<EM>Delete</EM>，<EM>Undo</EM>和<EM>Redo</EM>，就不能工作。其他视图不能用其他方式显示编辑器内容。换句话说，目前所完成的编辑器没有很好地利用Eclipse workbench的优势。在下面的三小节，将解释如何将这个孤立的编辑器变成workbench的一部分。</P>
 <H3>编辑器Action</H3>
-<P><CODE>ShapesEditor</CODE>类创建了大量缺省<span class="figure-caption">动作</span>，它们在编辑器初始化过程中被<CODE>createActions</CODE>方法中创建。这些<span class="figure-caption">动作</span>是undo，redo，select all，delete，save和print。为了将标准菜单选项连接到这些<span class="figure-caption">动作</span>，你应该在<CODE>plugin.xml</CODE>文件中定义一个action bar contributor。在这个action bar contributor中，你需要实现两个方法。第一个是<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 
+<P><CODE>ShapesEditor</CODE>类创建了大量缺省<span class="figure-caption">动作</span>，它们在编辑器初始化过程中被<CODE>createActions</CODE>方法中创建。这些<span class="figure-caption">动作</span>是undo，redo，select all，delete，save和print。为了将标准菜单选项连接到这些<span class="figure-caption">动作</span>，你应该在<CODE>plugin.xml</CODE>文件中定义一个action bar contributor。在这个action bar contributor中，你需要实现两个方法。第一个是<IMG height=13 alt=tag src="images/tag_1.gif" width=24 
 align=middle><CODE>buildActions</CODE>，它可以为undo，redo和delete创建可重定位的<span class="figure-caption">动作</span>。如果你需要使用键盘选择所有的widget，你需要在第二个方法<CODE>declareGlobalActionKeys</CODE>中为所选择的<span class="figure-caption">动作</span><IMG height=13 alt=tag 
-src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>添加一个全局<span class="figure-caption">动作</span>关键字。</P>
+src="images/tag_2.gif" width=24 align=middle>添加一个全局<span class="figure-caption">动作</span>关键字。</P>
 <P>
 <DIV class=figure><PRE class=program>public class ShapesEditorActionBarContributor extends ActionBarContributor {
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> protected void buildActions() {
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> protected void buildActions() {
         this.addRetargetAction(new UndoRetargetAction());
         this.addRetargetAction(new RedoRetargetAction());
         this.addRetargetAction(new DeleteRetargetAction());
@@ -436,7 +436,7 @@ src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>添加一个�
     }
 
     protected void declareGlobalActionKeys() {
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>     this.addGlobalActionKey(ActionFactory.SELECT_ALL.getId());
+<IMG height=13 alt=tag src="images/tag_2.gif" width=24 align=middle>     this.addGlobalActionKey(ActionFactory.SELECT_ALL.getId());
     }
 }</PRE>
 <DIV class=figure-caption><SPAN class=figure-number>图 11</SPAN>. 连接菜单动作</DIV>
@@ -444,7 +444,7 @@ src="A Shape Diagram Editor.files/tag_2.gif" width=24 align=middle>添加一个�
 <P>我们来仔细看一下当用户在<EM>Edit</EM>菜单中选择<EM>Delete</EM>时发生了些什么（看图12）。<CODE>ShapesEditor</CODE>类的父类将删除动作添加到动作注册表中。当删除动作被执行时，它检查当前的所选择的对象是否是<CODE>EditPart</CODE>类的实例。对每个对象，它都从编辑部件中请求一个命令。接下来，每个编辑部件检查是否有编辑策略可以处理删除请求。对几何图形，<CODE>ShapeComponentEditPolicy</CODE>可以处理删除请求，并且返回<CODE>ShapeDeleteCommand</CODE>实例。动作执行该命令，从而将图形从图中删除。图发送一个属性修改事件，<CODE>DiagramEditPart</CODE>收到该事件，最终使得代表被删除图形的矩形或椭圆从显示中被删除。</P>
 <DIV class=figure>
 <CENTER><IMG height=340 alt="Delete action call sequence" 
-src="A Shape Diagram Editor.files/delete_action3.gif" width=575> </CENTER>
+src="images/delete_action3.gif" width=575> </CENTER>
 <DIV class=figure-caption><SPAN class=figure-number>图 12</SPAN>. 删除动作执行序列</DIV>
 </DIV>
 <H3>提供属性</H3>
@@ -456,7 +456,7 @@ href="http://www.eclipse.org/articles/Article-GEF-diagram-editor/shape.html#zoio
 <P>为了将所编辑的内容提供给<EM>Outline</EM>视图，你需要重写<CODE>getAdapter</CODE>方法，并当adapter类为<CODE>IContentOutlinePage</CODE>接口时，返回一个outline实现。实现outline的最简单的方法是扩展<CODE>ContentOutlinePage</CODE>类，并提供适当的<CODE>EditPartViewer</CODE>。</P>
 <DIV class=figure><PRE class=program>public Object getAdapter(Class type) {
     // returns the content outline page for this editor
-<IMG height=13 alt=tag src="A Shape Diagram Editor.files/tag_1.gif" width=24 align=middle> if (type == IContentOutlinePage.class) {
+<IMG height=13 alt=tag src="images/tag_1.gif" width=24 align=middle> if (type == IContentOutlinePage.class) {
         if (outlinePage == null) {
             outlinePage = new ShapesEditorOutlinePage(this, new TreeViewer()); 
         }
