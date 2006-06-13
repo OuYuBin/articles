@@ -53,6 +53,7 @@ public class SelectionProviderIntermediate implements IPostSelectionProvider {
 				((IPostSelectionProvider)delegate).removePostSelectionChangedListener(postSelectionListener);
 			}
 		}
+		delegate = newDelegate;
 		if (newDelegate != null) {
 			newDelegate.addSelectionChangedListener(selectionListener);
 			if (newDelegate instanceof IPostSelectionProvider) {
