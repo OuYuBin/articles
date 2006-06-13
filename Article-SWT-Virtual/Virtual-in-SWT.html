@@ -1,0 +1,692 @@
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Beatriz Iaderoza and Grant Gayed">
+<link rel="stylesheet" href="../default_style.css">
+<title>Virtual Tree and Table in SWT</title>
+</head>
+
+<body bgcolor="white" lang="EN-US" link="blue" vlink="purple" style="tab-interval:.5in">
+
+<div align="right"><font size="-2">Copyright &copy; 2006 International Business Machines 
+  Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica" color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></b></td>
+    </tr>
+  </table>
+</div>
+<h1> <img src="images/idea.jpg" align=CENTER></h1>
+  <h1 align="center">Virtual Tables and Trees</h1>
+  <h3 align="center">Improving your SWT application performance by using a virtual Table or Tree</h3>
+  <p align="justify"><b>Summary</b><br>
+  Virtual Tables and Trees allow developers to quickly create Tables and Trees with large amounts of data and populate them efficiently. 
+  This article is an overview of how to use virtual Tables and Trees within SWT applications.
+</p>
+  <p><b>By Beatriz Iaderoza and Grant Gayed, IBM Ottawa Lab</b><br>
+  <span style="font-size:10.0pt">June 5th, 2006</span></p>
+  <div align="center" style="text-align:center">
+    <hr size="2" width="100%" align="center">
+  </div>
+  
+  <h2>Table and Tree Overview</h2>
+  <p align="justify">When creating a Table or Tree in an SWT application, each item (row) is represented by a TableItem or TreeItem.
+The creation of these items can be time consuming if there is a very large number of them, or if computing the data they require is expensive.
+This can pose a problem in traditional Tables and Trees because their items all get created up-front, which can make initial population
+prohibitively slow.  Additionally, if the user does not view all of the created items, as is very often the case with large Tables and Trees, then much of
+this initial cost is wasted.
+  </p>
+  <p align="justify">Virtual Tables and Trees are ideal for handling situations like this.  In virtual Tables and Trees, items are created on an on-demand basis.
+This ensures that no extra effort or memory footprint is spent creating items that are never viewed, and it spreads out the
+Table or Tree population effort over the lifetime of the control instead of being completely up-front.
+  </p>
+  <p align="justify">One example scenario where a virtual Table would be useful is for displaying the results of a search query on a library book database.  This 
+could exhibit a slow initial population time with a non-virtual Table because of the potential for huge result sets and expensive database queries required
+to retrieve item summary information.  However, a virtual table should perform well here since the initial population time would just be the time
+required to create the first page of items.  In a system with good result ranking heuristics these could prove to be the only items ultimately viewed by the user.
+  </p>
+  <p align="justify">The following sections describe how to use virtual Tables and Trees, and provide example code snippets with explanations.  It should be
+noted that the Virtual Table section contains concepts that are applicable to virtual Trees as well.</p>
+  <h2><a name="_Virtual_Table"></a>Virtual Table</h2>
+  <p align="justify">
+In order to populate a virtual Table, you must specify the number of items it will contain and an <em>SWT.SetData</em> listener that will set data on provided
+items. The item count is used by the Table to set its vertical scrollbar's maximum and thumb values to reflect a table of this size, and can be changed throughout
+its lifetime.
+  </p>
+  <p align="justify">When the data for an uninitialized item is required, often because the item became visible to the user for the first time, the item is
+automatically created and passed to the <em>SWT.SetData</em> listener to have its data set.  The item data consists of <em>all</em> of the item's
+attributes (texts, images, colors and checked state).  The operating system is free to request the data for any item in any order.
+Once an item has been initialized, either by a <em>SWT.SetData</em> listener or by TableItem API
+such as <em>setText()</em>, then its value becomes permanent and the <em>SWT.SetData</em> listener is
+not called to set its data again.  The only exception to this occurs if an item is cleared with Table <em>clear()</em> API, in which case the
+listener will be called to set its data again as necessary.
+  </p>
+  <p align="justify">Let us walk through a simple example that shows the basic concepts involved in creating and using a virtual Table. 
+The example in Listing 1 demonstrates the creation of a Table with 10000 items, and the modification of an item that has already had its data set:
+  </p>
+  <table border="1" cellspacing="0" cellpadding="0" style="width:750">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt;
+  border-left:solid windowtext .5pt;border-bottom:none;border-right:none;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb1C" href="#_tb1D">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext;
+  border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+int COUNT = 10000;</code>
+	</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb2C" href="#_tb2D">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+final String [] itemStrings = new String [COUNT];</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb3C" href="#_tb3D">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+for (int i = 0; i < COUNT; i++) {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb4C" href="#_tb4D">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+itemStrings [i] = "item " + i;</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb5C" href="#_tb5D">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+}</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb6C" href="#_tb6D">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+final Table table = new Table(parent, SWT.BORDER | SWT.VIRTUAL);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb7C" href="#_tb7D">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+table.addListener(SWT.SetData, new Listener() {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb8C" href="#_tb8D">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+public void handleEvent(Event event) {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb9C" href="#_tb9D">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TableItem item = (TableItem)event.item;</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb10C" href="#_tb10D">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int index = event.index;</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb11C" href="#_tb11D">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+item.setText(itemStrings [index]);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb12C" href="#_tb12D">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+}</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb13C" href="#_tb13D">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+});</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb14C" href="#_tb14D">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+table.setItemCount(COUNT);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb15C" href="#_tb15D">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+Button button = new Button(parent, SWT.PUSH);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb16C" href="#_tb16D">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+button.setText("Change item at index 5");</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb17C" href="#_tb17D">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+button.addListener(SWT.Selection, new Listener() {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb18C" href="#_tb18D">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+public void handleEvent(Event event) {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb19C" href="#_tb19D">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+itemStrings [5] = "item " + System.currentTimeMillis();</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb20C" href="#_tb20D">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+table.clear(5);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb21C" href="#_tb21D">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+}</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb22C" href="#_tb22D">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+});</code>
+      </td>
+    </tr>
+    <tr>
+  </table>
+  <p align="left">Listing 1: Adding 10000 items to a virtual Table, and arbitrarily clearing the fifth item.
+  <p align="justify"><a name="_tb2D" href="#_tb2C"><b>Lines 2-5:</b></a><br>
+Creates the strings that will be used to set the item data in the example's Table.
+  </p>
+  <p align="justify"><a name="_tb6D" href="#_tb6C"><b>Line 6:</b></a><br>
+Creates the Table. In order to create a virtual Table, <em>SWT.VIRTUAL</em> is specified in its constructor's style argument.
+Note that if you have other styles for the Table, such as <em>BORDER</em>, then the styles are OR'd together as shown.
+  </p>
+  <p align="justify"><a name="_tb7D" href="#_tb7C"><b>Lines 7 and 8:</b></a><br>
+Adds a <em>SWT.SetData</em> listener to the Table.  This is the listener that is responsible for setting the data on the item in the event's <em>item</em>
+field whenever invoked.
+  </p>
+  <p align="justify"><a name="_tb9D" href="#_tb9C"><b>Line 9:</b></a><br>
+Gets the TableItem that is to have its data set.
+ </p>
+  <p align="justify"><a name="_tb10D" href="#_tb10C"><b>Lines 10 and 11:</b></a><br>
+Gets the index of the item and sets its text accordingly. The index of this item can be found in the event's <em>index</em> field (<em>@since 3.2</em>).
+Alternatively, this index can be computed  with <em>Table.indexOf(TableItem)</em>.
+  </p>
+  <p align="justify"><a name="_tb14D" href="#_tb14C"><b>Line 14:</b></a><br>
+Sets the item count of the Table to 10000, indicating that it should be able to hold 10000 items.
+  </p>
+  <p align="justify"><a name="_tb15D" href="#_tb15C"><b>Lines 15 and 16:</b></a><br>
+Creates a Button that will trigger a value change in the Table's fifth item.
+  </p>
+  <p align="justify"><a name="_tb19D" href="#_tb19C"><b>Lines 19 and 20:</b></a><br>
+Handles a press of the button by putting a new value into index 5 of the <em>itemStrings</em> array, and clearing index 5 in the Table.  If this item subsequently becomes
+visible to the user then the <em>SWT.SetData</em> listener will be invoked with it as the item, and the <em>itemStrings</em> array's new value will be set into it.
+  </p>
+<h3><a name="_Virtual_Table_Hybrid"></a>Using a Hybrid Approach</h3>
+  <p align="justify">
+In addition to the described <em>SWT.SetData</em> listener, data can still be set on uninitialized items in a virtual Table with typical TableItem APIs such as <em>setText(...)</em>,
+<em>setImage(...)</em>, etc.  <em>Table.getItem(int)</em> can be used to get a TableItem that has not yet been initialized but is within the Table's specified item count.
+An application that is retrieving records from an external source, such as the presented library database scenario, may benefit from
+selectively setting data on some items before they are requested by the <em>SWT.SetData</em> listener.  For example, if there is a high cost associated with
+establishing each database connection, then retrieving a chunk of records whenever a query is required can yield better results than
+initiating separate connections for each item that is requested.  Listing 2 demonstrates this approach using a retrieval block size of 64 records.
+  </p>
+
+
+<table border="1" cellspacing="0" cellpadding="0" style="width:750">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt;
+  border-left:solid windowtext .5pt;border-bottom:none;border-right:none;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_ds1C" href="#_ds1D">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext;
+  border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+final int COUNT = 100000;</code>
+	</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb2A" href="#_tb2B">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+final int PAGE_SIZE = 64;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb3A" href="#_tb3B">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+final Table table = new Table (shell, SWT.VIRTUAL | SWT.BORDER);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb4A" href="#_tb4B">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+table.addListener (SWT.SetData, new Listener () {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb5A" href="#_tb5B">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+public void handleEvent (Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb6A" href="#_tb6B">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TableItem item = (TableItem) event.item;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb7A" href="#_tb7B">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int index = event.index;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb8A" href="#_tb8B">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int page = index / PAGE_SIZE;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb9A" href="#_tb9B">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int start = page * PAGE_SIZE;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb10A" href="#_tb10B">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int end = start + PAGE_SIZE;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb11A" href="#_tb11B">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+end = Math.min (end, table.getItemCount ());</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb12A" href="#_tb12B">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for (int i = start; i < end; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb13A" href="#_tb13B">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+item = table.getItem (i);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb14A" href="#_tb14B">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+item.setText ("Item " + i);</code></td>
+    </tr>
+
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb15A" href="#_tb15B">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb16A" href="#_tb16B">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb17A" href="#_tb17B">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tb18A" href="#_tb18B">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+table.setItemCount (COUNT);</code></td>
+    </tr>
+  </table>
+  <p align="left">Listing 2: Loading table items from a database in blocks of 64 records.
+  <p align="justify"><a name="_tb3B" href="#_tb3A"><b>Line 3:</b></a><br>
+Creates the virtual Table by specifying style <em>SWT.VIRTUAL</em>.
+  </p>
+  <p align="justify"><a name="_tb4B" href="#_tb4A"><b> Lines 4 and 5: </b></a><br>
+Adds a <em>SWT.SetData</em> listener to the Table, which is responsible for setting the data on the item in the event's <em>item</em> field whenever invoked. 
+  </p>
+  <p align="justify"><a name="_tb7B" href="#_tb7A"><b>Lines 7 to 11:</b></a><br>
+Gets the index of the item, and computes the start and end item indices of its logical 64-item page.
+  <p align="justify"><a name="_tb12B" href="#_tb12A"><b>Lines 12 to 15:</b></a><br>
+Sets the data on all of the items on this logical page. The <em>SWT.SetData</em> listener will not be subsequently invoked for any of these items.
+  </p>
+  <p align="justify"><a name="_tb18B" href="#_tb18A"><b>Line 18:</b></a><br>
+Sets the item count of the Table to 10000, indicating that it should be able to hold 10000 items.
+  </p>
+<h2><a name="_Virtual_Tree"></a>Virtual Tree</h2>
+  <p>
+<em>(@since 3.2)</em>
+  </p>
+  <p align="justify">Virtual Trees are used in a very similar manner to virtual Tables, but with the added facet of child items.  In addition to being
+able to specify the number of items in a Tree, which represents its count of root-level items, an item count can also be set on any item.
+This provides an opportunity to easily defer computing and setting data on an item's children until it is first expanded by the user.  Similarly,
+API for clearing items is defined on both Tree and TreeItem so that root and non-root items can be cleared on an indexed basis.
+  </p>
+  <p align="justify">
+The example in Listing 3 demonstrates a simple file system explorer application (shown in Figure 1).  It uses a virtual Tree in order to defer TreeItem creation
+and accessing of the local file system until necessitated by the user.
+
+  </p>
+ <table border="1" cellspacing="0" cellpadding="0" style="width:750">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt;
+  border-left:solid windowtext .5pt;border-bottom:none;border-right:none;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr1C" href="#_tr1D">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext;
+  border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+       final Tree tree = new Tree(parent, SWT.VIRTUAL | SWT.BORDER);</code>
+	</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr2C" href="#_tr2D">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+       File [] roots = File.listRoots();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr3C" href="#_tr3D">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+       tree.setData(roots);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr4C" href="#_tr4D">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+       tree.addListener(SWT.SetData, new Listener() {</code></td>
+    </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr5C" href="#_tr5D">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+        public void handleEvent(Event event) {</code></td>
+   </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr6C" href="#_tr6D">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       TreeItem item = (TreeItem)event.item;</code></td>
+    </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr7C" href="#_tr7D">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       TreeItem parentItem = item.getParentItem();</code></td>
+    </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr8C" href="#_tr8D">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       File file = null;</code></td>
+    </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr9C" href="#_tr9D">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       if (parentItem == null) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr10C" href="#_tr10D">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code><font color="#0080C0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        /* root-level item */</font></code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr11C" href="#_tr11D">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       File [] files = (File [])tree.getData();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr12C" href="#_tr12D">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       file = files [event.index];</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr13C" href="#_tr13D">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       item.setText(file.toString());</code></td>
+    </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr14C" href="#_tr14D">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       } else {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr15C" href="#_tr15D">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       File [] files = (File [])parentItem.getData();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr16C" href="#_tr16D">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       file = files [event.index];</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr17C" href="#_tr17D">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       item.setText(file.getName());</code></td>
+    </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr18C" href="#_tr18D">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       }</code></td>
+    </tr>
+    <tr>
+	<td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr19C" href="#_tr19D">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       if (file.isDirectory()) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr20C" href="#_tr20D">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       File [] files = file.listFiles();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr21C" href="#_tr21D">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       if (files != null) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr22C" href="#_tr22D">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       item.setData(files);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr23C" href="#_tr23D">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       item.setItemCount(files.length);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr24C" href="#_tr24D">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       }</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr25C" href="#_tr25D">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       }</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr26C" href="#_tr26D">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>&nbsp;&nbsp;&nbsp;
+       }</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr27C" href="#_tr27D">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+       });</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt"><a name="_tr28C" href="#_tr28D">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext;
+  padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in"><code>
+       tree.setItemCount(roots.length);</code></td>
+    </tr>
+  </table>
+
+  <p align="left">Listing 3: A file system explorer application that uses a virtual Tree.<br></br>
+ <p align="center"><img border="0" src="images/figure1.png"><br></br>
+  Figure 1: The file system explorer application.</p>
+
+  <p align="justify"><a name="_tr1D" href="#_tr1C"><b>Line 1:</b></a><br>
+Creates the virtual Tree by specifying style <em>SWT.VIRTUAL</em>.
+  </p>
+  <p align="justify"><a name="_tr2D" href="#_tr2C"><b>Lines 2 and 3:</b></a><br>
+Gets the root-level file system entries and stores them as model data in the Tree.
+  </p>
+  <p align="justify"><a name="_tr4D" href="#_tr4C"><b>Lines 4 and 5:</b></a><br>
+Adds a <em>SWT.SetData</em> listener to the Tree, which is responsible for setting the data on the item in the event's <em>item</em> field whenever invoked.
+  </p>
+  <p align="justify"><a name="_tr6D" href="#_tr6C"><b>Line 6:</b></a><br>
+Gets the item that is to have its data set.
+  </p>
+  <p align="justify"><a name="_tr7D" href="#_tr7C"><b>Line 7:</b></a><br>
+Gets the item's parent item, which contains its File entry.
+  </p>
+  <p align="justify"><a name="_tr10D" href="#_tr10C"><b>Lines 10 to 13:</b></a><br>
+In this case the TreeItem to have its data set is a root-level item, so its File entry is retrieved from the Tree according to its index, and its text is set.
+The parent-relative index of the item can always be found in the event's <em>index</em> field.
+  </p>
+  <p align="justify"><a name="_tr15D" href="#_tr15C"><b>Lines 15 to 17:</b></a><br>
+In this case the TreeItem to to have its data set is <em>not</em> a root-level item, so its File entry is retrieved from its parent item according to its index,
+and its text is set.
+  </p>
+  <p align="justify"><a name="_tr19D" href="#_tr19C"><b>Lines 19 to 22:</b></a><br>
+If the item represents a directory then its child file system entries are retrieved and stored as model data on the item, in case the item is subsequently expanded by the user.
+  </p>
+  <p align="justify"><a name="_tr23D" href="#_tr23C"><b>Line 23:</b></a><br>
+Sets the item's itemCount to the child count.  This will ensure that an expander icon is shown beside the item, and if it is expanded by the user, that
+the correct number of child items will be created.
+  </p>
+  <h2>Summary</h2>
+  <p align="justify">
+Virtual Tables and Trees provide an easy way to populate these controls on an on-demand basis.  This can greatly
+reduce computational effort and memory footprint, and can preserve UI responsiveness for large data sets.
+  </p>
+<p><small>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun 
+Microsystems, Inc. in the United States, other countries, or both.</small></p>
+</body>
