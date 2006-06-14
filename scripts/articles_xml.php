@@ -44,6 +44,17 @@ function load_categories(& $listing) {
  */
 function load_articles(& $listing) {
 	$root = $GLOBALS['articles_root'];
+	$articles_file = $root.'/articles.xml';
+	if (file_exists($articles_file)) load_articles_from_file($articles_file, $listing);
+	else load_articles_from_directory($root, $listing);
+}
+
+function load_articles_from_file($articles_file, & $listing) {
+	$handler = new ArticlesFileHandler($listing);
+	parse_xml_file($articles_file, $handler);
+}
+
+function load_articles_from_directory($root, & $listing) {
 	$dh = opendir($root);
 	while (($dir = readdir($dh)) !== false) {
 		$file_path = $root.$dir;
@@ -188,6 +199,47 @@ class CategoryHandler extends XmlElementHandler {
 	}
 }
 
+class ArticlesFileHandler extends XmlFileHandler {
+	var $listing;
+
+	function ArticlesFileHandler(& $listing) {
+		parent :: XmlFileHandler();
+		$this->listing = & $listing;
+	}	
+
+	function get_root_element_handler() {
+		return new ArticlesRootHandler($this->listing);
+	}	
+}
+
+class ArticlesRootHandler extends XmlElementHandler {
+	var $listing;
+
+	function ArticlesRootHandler(& $listing) {
+		$this->listing = & $listing;
+	}
+
+	function & get_articles_handler($attributes) {
+		return new ArticlesHandler($this->listing);
+	}
+}
+
+class ArticlesHandler extends XmlElementHandler {
+	var $listing;
+
+	function ArticlesHandler(& $listing) {
+		$this->listing = & $listing;
+	}
+
+	function & get_article_handler($attributes) {
+		return new ArticleHandler(new Article(), $attributes);
+	}
+	
+	function end_article_handler(& $handler) {
+		$this->listing->add_article($handler->article);
+	}
+}
+
 class ArticleFileHandler extends XmlFileHandler {
 	var $article;
 
@@ -221,6 +273,7 @@ class ArticleRootHandler extends XmlElementHandler {
 
 class ArticleHandler extends XmlElementHandler {
 	var $article;
+	var $base;
 
 	function ArticleHandler(& $article, & $attributes) {
 		$this->article = & $article;
@@ -272,10 +325,20 @@ class ArticleHandler extends XmlElementHandler {
 	function end_translation_handler(& $handler) {
 		$this->article->add_translation($handler->translation);
 	}
+	
+	function & get_base_handler(& $attributes) {
+		return new SimpleTextHandler();
+	}
+	
+	function end_base_handler(& $handler) {
+		$this->base = $handler->text;
+	}
 
 	function end($name) {
 		if ($this->article->date)
 			$this->article->date = strtotime($this->article->date);
+		if ($this->base)
+			$this->article->root = $this->base;
 	}
 }
 
