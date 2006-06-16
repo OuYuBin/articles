@@ -27,13 +27,13 @@
 <b>Summary</b>
 
 <br>
-  Model-Driven Software Development is not just about generating code. Several 
+  Model-Driven Software Development (MDSD) is not just about generating code. Several 
   additional challenges have to be mastered. These include: how to get usable 
-  graphical and textual  editors for your DSL, how to validate your models against 
+  graphical and textual  editors for your Domain Specific Language (DSL), how to validate your models against 
   your metamodels, how to define model modifications and transformations and finally, 
   how to write scalable, maintainable and extensible code generators. In this article 
   we show how to tackle all these challenges, based on a collection of Open Source 
-  tools: Eclipse, EMF, GMF as well as openArchitectureWare. We believe that 
+  tools: Eclipse, Eclipse Modeling Framework (EMF), Graphical Modeling Framework (GMF) as well as openArchitectureWare. We believe that 
   this tool chain provides a proven and stable stack for making MDSD a practical reality.
   <p><b> By <a href="http://www.voelter.de">Markus Voelter</a>, <a href="http://www.kolbware.de">Bernd Kolb</a>, <a href="http://www.efftinge.de">Sven Efftinge</a>, all of them Independent Consultants</b> <br>
     <font size="-1">June 15, 2006</font> </p>
@@ -48,7 +48,7 @@ The following challenges arise:
 
 <ul>
 <li>You'll need good editors for your models: This has traditionally been a problem 
-that has been addressed by using UML tools with profiles. With the advent of GMF and oAW's xText 
+that has been addressed by using Unified Modeling Language (UML) tools with profiles. With the advent of the Graphical Modeling Framework (GMF) and oAW's xText 
 things are changing to the better. 
 <li>Verifying the models as you build them: Models must be verified for correctness interactively 
 during modelling, as well as just before transformation/generation.
@@ -62,7 +62,7 @@ thought – even if it sounds trivial.
 
 <p>
 Note that in this article we're not going to address issues such as why you would want to 
-do MDSD at all, which advantages it has, how you'll have to organize your project, etc. 
+do Model-Driven Software Development (MDSD) at all, which advantages it has, how you'll have to organize your project, etc. 
 If you're interested in these aspects (which we assume you already know for this article), 
 we recommend reading [<a href="#SV06">SV06</a>]. We assume that you consider MDSD to be useful – and based on 
 that, we'll show you how to do it effectively with today's tooling.
@@ -72,9 +72,9 @@ that, we'll show you how to do it effectively with today's tooling.
 <p>
 Our example is based on state machines. Everybody knows state machines, so this sounds 
 like a reasonable example. We will start by defining a metamodel for state machines. 
-This will be based on the UML metamodel. We use Eclipse EMF to define it. 
+This will be based on the UML metamodel. We use Eclipse Modeling Framework (EMF) to define it. 
 We will then build a graphical editor for state machines using the well-known UML-based 
-notation; for this task we'll use the Eclipse GMF framework. We will then add additional 
+notation; for this task we'll use the Eclipse Graphical Modeling Framework (GMF) framework. We will then add additional 
 constraints (e.g. "states must have unique names"). To make things more convenient, we'll 
 use the oAW Checks language and integrate it with GMF. Next up will be a code generator 
 that creates an implementation of state machines in Java. We use oAW's xPand language. 
@@ -155,7 +155,7 @@ of the steps of this turorial. This is for two reasons. The first reason is that
 tutorial has been written before GMF was finalized. So there are still a couple of 
 glitches in the software (to get an updated tutorial, see [<a href="#GmfTut">GmfTut</a>]). The second reason 
 is that building an editor is simply non-trivial! Before GMF arrived, you had to do it 
-manually with GEF which was a very daunting task (unless you'd write your own generator, 
+manually with the Graphical Editing Framework (GEF) which was a very daunting task (unless you'd write your own generator, 
 as in [<a href="#RV05">RV05</a>]). Before even GEF, building a custom editor was not a viable alternative for
 most projects at all. So, GMF really is a huge step forward. And the remaining complexity 
 is actually a joke, compared to what you'd have had to do pre-GMF. So let's get started.
