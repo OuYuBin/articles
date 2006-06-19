@@ -236,7 +236,7 @@ class Article {
 	var $show = true;
 
 	function add_translation(&$translation) {
-		$translation->root = $this->root;
+		$translation->parent = & $this;
 		array_push($this->translations, $translation);
 	}
 	
@@ -426,7 +426,7 @@ class Translation {
 	var $language;
 	var $date;
 	var $authors = array();
-	var $root;
+	var $parent;
 	var $link;
 
 	function add_author(&$author) {
@@ -436,7 +436,8 @@ class Translation {
 	// Render the article as html.
 	function to_html(& $html) {
 		$image_file = "/flags/$this->language.gif";
-		$html .= "<table border=\"0\"><tr><td><a target=\"_blank\" href=\"$this->root/$this->link\"><img src=\"$image_file\" align=\"left\" alt=\"[$this->language]\"></a></td>";
+		$root = $this->parent->root;
+		$html .= "<table border=\"0\"><tr><td><a target=\"_blank\" href=\"$root/$this->link\"><img src=\"$image_file\" align=\"left\" alt=\"[$this->language]\"></a></td>";
 		$html .= "<td>This article is available in ";
 		switch ($this->language) {
 			case "cn" : $html .= "Chinese"; break;
