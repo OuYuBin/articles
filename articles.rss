@@ -28,6 +28,16 @@
 	if (!$filter) $filter = 'recent';
 	
 	/*
+	 * For backwards compatibility. The categories have
+	 * been changed, but the old ones may still be referenced
+	 */
+	$filter = strtoupper($filter);
+	if ($filter == 'UI') $filter = 'User interface';
+	if ($filter == 'USER INTERFACE') $filter = 'User interface';
+	if ($filter == 'WHITEPAPER') $filter = 'Whitepaper';
+	if ($filter == 'TUTORIAL') $filter = 'Tutorial';
+	
+	/*
 	 * Find the desired category. If no category
 	 * can be found using the specified filter, obtain
 	 * the 'recent' category.
