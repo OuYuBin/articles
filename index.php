@@ -89,7 +89,7 @@
 		<div class="sideitem">
 			<h6>Other Tutorials</h6>
 			<ul>
-			<li><a href="/webtools/jst/components/ws/1.5M6/tutorials/index.html">Web Service Tutorials for WTP 1.5</a></li>
+			<li><a href="http://www.eclipse.org/webtools/jst/components/ws/1.5/tutorials/index.html">Web Service Tutorials for WTP 1.5</a></li>
 			</ul>
 		</div>
 	</div>
