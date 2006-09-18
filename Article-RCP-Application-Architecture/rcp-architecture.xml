@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<article>
+	<title>Eclipse RCP Architecture Application Architecture</title>
+	<copyright year="2006">The Eclipse Foundation</copyright>
+	<revision>
+		<date>September 8, 2006</date>
+		<author>Wayne Beaton</author>
+		<email>wayne@eclipse.org</email>
+		<company>The Eclipse Foundation</company>
+		<link>http://www.eclipse.org</link>
+	</revision>
+
+	<abstract>
+		The Equinox implementation of OSGi R4 is one of the most
+		compelling features of the Eclipse Rich Client Platform (RCP).
+		At its heart, Equinox is a powerful component management system
+		that provides incredible value to your application: but only if
+		you architect your application to leverage that power. In this
+		article, we discuss how you can go about factoring your
+		application into multiple components.
+	</abstract>
+
+	<section>
+		<para>
+			The Equinox implementation of OSGi R4 is one of the most
+			compelling features of the Eclipse Rich Client Platform
+			(RCP). At its heart, Equinox is a powerful component
+			management system that provides incredible value to your
+			application: but only if you architect your application to
+			leverage that power. With Equinox, it is possible to
+			architect an application as a composition of components. The
+			benefits of doing so are many.
+		</para>
+		<para>
+			Architectually speaking, separating an application into
+			components encourages separation of the application code
+			into layers. The model-view-controller pattern is an example
+			of a layered architecture that separates the application's
+			concerns into multiple layers. The model layer implements
+			the domain specific business logic for your application.
+		</para>
+		<para>
+			An application, factored into multiple layers, is generally
+			easier to enhance and maintain. Ideally, each layer contains
+			code that is specifically focused on that layer (no view
+			code in the model layer) which makes the layer potentially
+			reusable. A well-designed model layer can be used in both
+			your Eclipse RCP application and your web application, for
+			example. By putting your data management logic into a
+			separate layer, it becomes easier to change or completely
+			replace that layer without change rippling across the entire
+			code base. At a minimum, each layer of your application can
+			be built as a separate component.
+		</para>
+		<para>
+			When Eclipse starts up, it loads the minimum set of
+			components required by the environment to function.
+			Additional components are then loaded as they are required.
+			This significantly reduces the start up time required by the
+			application.
+		</para>
+		<para>
+			An application composed of multiple components is generally
+			easier to update than one built as a single monolithic
+			component. Individual components, each containing some part
+			of the functionality can potentially be updated
+			individually; this reduces the amount of time required to
+			download and install updates. Of course this comes at the
+			expense of potentially increased complexity in managing
+			relationships and dependencies among components.
+		</para>
+		<para>
+			Version management makes updating components actually work.
+		</para>
+		<para>
+			An application composed of multiple components is generally
+			easy to extend. In fact, it is possible to--when
+			necessary--completely replace components to radically change
+			the behaviour of the application while minimizing the impact
+			of the rest of the code. Some ISVs use components to
+			customize the behaviour of their application for individual
+			customers without forking the code base.
+		</para>
+		<para>
+			A large number of small components make updating your
+			application easier. Rather than updating one huge monolithic
+			application runtime, you can update individual components.
+			The Eclipse Update Manager--in conjunction with an update
+			site--even does most of the heavy lifting for you. In
+			addition to the update benefit, a collection of components
+			is better able to take advantage of the lazy-loading feature
+			provided by Equinox. Equinox loads components only when they
+			are needed; this reduces the time and effort required when
+			the application initial starts up which improves the user's
+			experience.
+		</para>
+		<para>
+			Perhaps one of the more significant advantages of the
+			Equinox component model is the management of dependencies
+			between components. All components must explicitly declare
+			their dependencies on other components. In the Equinox
+			environment, when a component is required, all of the
+			components that it is dependent on are loaded before the
+			component itself (naturally). More importantly, Equinox
+			insulates components from other unrelated components. That
+			is, a component can only directly access the elements
+			contained within the components it is dependent upon. All
+			other components cannot be referenced and will not
+			interfere.
+		</para>
+		<para>
+			It is possible that two completely independent (i.e. no
+			direct dependencies) components can define classes with the
+			same full name and there is no conflict (contrast this with
+			standard Java in which the class that appears earliest on
+			the classpath wins). This extends to multiple versions of a
+			single component: it is possible to have individual plug-ins
+			reference different versions of the same component. Multiple
+			versions of the same component can run concurrently within
+			the environment without conflicting with one-another (this
+			works so long as the plug-in does not contribute anything to
+			the user interface; that just gets weird).
+		</para>
+	</section>
+
+	<section title="Balancing Act">
+		<para>
+			Architecting an application as a large collection of small
+			scale plug-ins can make it relatively easy to update your
+			application and potentially reduce startup time. However, a
+			large collection of plug-ins requires complex dependency
+			management and ultimately increases the runtime overhead of
+			the application. Managing that complexity can be an
+			incredible burden. As such, deciding on exactly how you
+			should divide your code into separate components takes some
+			effort.
+		</para>
+		<para>
+			On one extreme, you can build your application so that each
+			component contains a single class. On the other extreme, you
+			can build a single component for your application that
+			contains everything. The right solution lies somewhere in
+			the middle.
+		</para>
+	</section>
+
+	<section title="Observer Pattern">
+		<para>
+			Very often there is a huge divide between the ideological
+			theory and the practical reality. That is, it is easy to say
+			that multiple components are good and that they should be
+			used, but how do you actually make it work?
+		</para>
+		<para>
+			The observer pattern is an important mechanism for making a
+			proper separation of components work. This pattern is not
+			specific to Eclipse or even to Java (it is used extensively
+			Smalltalk and in other languages). It is one of the key
+			features of the JavaBeans specification.
+		</para>
+		<para>
+			Essentially, the observer pattern is used by one object to
+			watch changes in another without building a formal
+			relationship. Rather than the observed object knowing
+			anything specific about the observing objects, the observed
+			object instead fires the moral equivalent of an event. The
+			event comes in the form of a message being sent to a
+			listener object that is registered by the observer. The
+			windowing system that underlies Eclipse, the Standard Widget
+			Toolkit (SWT), does exactly this.
+		</para>
+		<para>
+			<xref-listing id="listener" />
+			shows a fragment of application code that creates a new SWT
+			Canvas and adds a paint listener to it.
+		</para>
+		<listing id="listener">
+			<caption>Registering a listener on an SWT Canvas</caption>
+			<code>
+				<![CDATA[
+canvas = new Canvas(parent, SWT.NONE);
+canvas.addPaintListener(new PaintListener() {
+	public void paint(PaintEvent event) {
+		event.gc.drawRectangle(10,10,50,50);
+	}
+});]]>
+			</code>
+		</listing>
+		<para>
+			When it is time for this canvas to be redrawn (either when
+			the canvas is exposed or it is explicitly asked to redraw),
+			it will send the
+			<code type="method">addPaintListener()</code>
+			message to all of the registered listeners.
+		</para>
+		<para>
+			This pattern is leveraged throughout the Eclipse code. Some
+			components register with the workbench selection service;
+			doing so invokes the listener whenever a selection occurs in
+			a view or editor. The Eclipse Corner Article
+			<a
+				href="http://www.eclipse.org/articles/Article-WorkbenchSelections/article.html">
+				Eclipse Workbench: Using the Selection Service
+			</a>
+			discusses the selection service in detail.
+		</para>
+		<para>This pattern can be leveraged in your code.</para>
+
+		<para>
+			One of the things that I implemented with the Sudoku game
+			was a disconnect between the model and the view. I provided
+			a representation of a Sudoku game that knows nothing of user
+			interface. It knows about cells and boxes and numbers; it
+			also knows if any given cell is considered valid. It knows
+			nothing about what colour should be used to draw a cell, how
+			thick the lines should be, or anything else that has
+			anything to do with drawing.
+		</para>
+		<para>
+			To help with the drawing part, and to avoid having to
+			continually recompute position information for individual
+			cells, I introduced the notion of a CellDrawer that does
+			know about colours, and line thickness, and such. It also
+			knows--in absolute coordinates--where to draw the cell. This
+			class is part of the user interface code.
+		</para>
+		<para>
+			I set up the Sudoku board so that it can be observed.
+			Interested parties, like a user interface, can register
+			event listeners that are triggered when a change occurs on
+			the board. I use the listeners consistently. When the user
+			clicks on the board or types a key, the user interface
+			translates that operation into a command that's passed to
+			the Sudoko board. The command is along the lines of "set the
+			value of the cell at position (5,4) to 7" (position is the
+			relative position of a cell, not a screen co-ordinate). The
+			board makes the necessary modifications and fires an event
+			to inform interested parties of the change. The user
+			interface is one of the interested parties, and when it
+			receives the event it redraws the board. I could have done
+			this a lot simpler: when the user clicks or types a key,
+			change the board and then get the user interface to redraw.
+			Why not just do this? Why all the extra event stuff?
+		</para>
+		<para>
+			Well... Chris answered this question pretty well. In a few
+			minutes on a plane, Chris added an ECF component to the
+			game: he made the Sudoku game multi-player. He did it
+			without interacting with the user interface, he just worked
+			directly with the model. When the remote user makes a
+			change, a message is sent. When that message is received,
+			the model is modified which causes an event to be triggered
+			resulting in the user interface updating. Pretty cool. And,
+			a fine example of extending a system in a way that the
+			original author had never considered.
+		</para>
+		<para>
+			I use the event in other places as well. The solver included
+			with the implementation modify the model which then triggers
+			an update of the user interface. The solvers know nothing
+			about the user interface.
+		</para>
+		<para>
+			At some point, I'll probably add a couple more views to the
+			game. An obvious view might show some statistics: how many
+			cells are left, how long as the game been going, how many
+			times has a particular cell been changed, etc. This view
+			will also just register itself to receive changed events
+			from the board and update itself whenever those events are
+			triggered. My main user interface will not have to know
+			anything about this new view and so will be totally
+			decoupled; but it will appear to the user to be tightly
+			integrated. Very cool.
+		</para>
+		<para>
+			This relationship is described by the Observer Pattern. It's
+			used extensively throughout the Eclipse code (including SWT)
+			and all over the place in Java. Heck, we even used it in
+			(wait for it, Denis...) Smalltalk! It's a pretty powerful
+			mechanism that may require a little bit of work up front,
+			but sure makes building applications a lot easier.
+		</para>
+	</section>
+	<section title="Applying the Theory">
+		<para>
+			As a starting point, divide your application into separate
+			plug-ins for the model and view. Ideally, a separate plug-in
+			to manage data concerns (i.e. storing and retrieving your
+			objects from a data source) should be considered as well.
+		</para>
+		<para>
+			After that, it may be desireable to build separate plug-ins
+			along functionality lines.
+		</para>
+	</section>
+</article>

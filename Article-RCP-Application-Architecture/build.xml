@@ -1,0 +1,25 @@
+<project name="eclipse.org article" default="build-doc" basedir=".">
+	
+	<!-- ========== Properties: User Defined Options ========================= -->	
+	
+	<property name="article.name" value="rcp-architecture"/>
+	<property name="article.stylesheet" value="article.xsl"/>
+	 
+	<property name="dest.dir" value="."/>
+			
+	<!-- ========== Targets =================================================== -->	
+		
+	<target name="init">
+	</target>
+	
+	<target name="build-doc" depends="init">
+		<echo>Building Article...</echo>
+		
+		<echo>Converting article to HTML...</echo>
+		<delete file="${dest.dir}${file.separator}${article.name}.html"/>
+		<xslt in="${article.name}.xml" out="${dest.dir}${file.separator}${article.name}.html" style="${article.stylesheet}">
+			
+		</xslt>
+	</target>
+	
+</project>
