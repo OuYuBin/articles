@@ -24,14 +24,44 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	<xsl:template match="itemized-list">
+		<ul>
+		<xsl:for-each select="item">
+			<li><xsl:value-of select="@title"/></li>
+		</xsl:for-each>
+		</ul>
+		<xsl:value-of select="segue"/>
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="item">
+		<h3><xsl:value-of select="@title"/></h3>
+		<xsl:apply-templates/>
+	</xsl:template>
+	
 	<xsl:template match="para">
 		<p><xsl:apply-templates /></p>
 	</xsl:template>
 	
 	<xsl:template match="xref-listing">
-		<a href="#{@id}">Listing XX</a>
+		<xsl:variable name="target_id"><xsl:value-of select="@id"/></xsl:variable>
+		<a href="#{@id}">Listing 
+		<xsl:for-each select="./xref-listing">
+			<xsl:if test="@id = $target_id">
+				<xsl:value-of select="position()"/>
+			</xsl:if>
+		</xsl:for-each>
+		</a>
+	</xsl:template>
+		
+	<xsl:template match="xref-figure">
+		<a href="#{@id}">Figure XX</a>
 	</xsl:template>
 	
+	<xsl:template match="xref-link">
+		<a href="#{@href}">Listing XX</a>
+	</xsl:template>
+		
 	<xsl:template match="a">
 		<a href="#{@href}"><xsl:apply-templates/></a>
 	</xsl:template>

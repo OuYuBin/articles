@@ -12,7 +12,7 @@
 	</revision>
 
 	<abstract>
-		The Equinox implementation of OSGi R4 is one of the most
+		The Equinox implementation of OSGi R4 is one of the more
 		compelling features of the Eclipse Rich Client Platform (RCP).
 		At its heart, Equinox is a powerful component management system
 		that provides incredible value to your application: but only if
@@ -20,26 +20,342 @@
 		article, we discuss how you can go about factoring your
 		application into multiple components.
 	</abstract>
-
 	<section>
 		<para>
-			The Equinox implementation of OSGi R4 is one of the most
-			compelling features of the Eclipse Rich Client Platform
-			(RCP). At its heart, Equinox is a powerful component
-			management system that provides incredible value to your
-			application: but only if you architect your application to
-			leverage that power. With Equinox, it is possible to
-			architect an application as a composition of components. The
-			benefits of doing so are many.
+			The Equinox component model is one of the more compelling features
+			of the Eclipse Rich Client Platform (RCP). At first glance, the
+			component model appears to be a mechanism for grouping
+			collections of code and resources together. Equinox provides more than
+			this. Eclipse components
+			
+			components provide management: the ability to dynamically
+			install, update, load, and unload components is included in
+			this. Also included is the management of dependencies among
+			components; one component needs to be able to declare what
+			other components (and versions of these components) it needs
+			to function. These dependencies are managed by the component
+			infrastructure at runtime. Standard Java doesn't have
+			anything like this.
 		</para>
 		<para>
-			Architectually speaking, separating an application into
-			components encourages separation of the application code
-			into layers. The model-view-controller pattern is an example
-			of a layered architecture that separates the application's
-			concerns into multiple layers. The model layer implements
-			the domain specific business logic for your application.
+			One of the greater strengths of the Eclipse Platform is the
+			underlying component model. It is this component model that
+			makes Eclipse relatively easy to extend with
+			highly-integrated yet loosely-coupled features. The Eclipse
+			Platform makes extensive use of the component model: it is
+			itself a composition of components as is every other
+			Eclipse-based product. This powerful component model is part
+			of the Eclipse Rich Client Platform.
 		</para>
+		<para>
+			The Eclipse component model is provided by the
+			<xref-link href="http://eclipse.org/equinox">
+				Equinox
+			</xref-link>
+			project. Equinox, which implements the OSGi R4
+			specification, supports a notion of components called
+			&quot;bundles&quot; (in the language of Eclipse, these
+			components have been traditionally known as
+			&quot;plug-ins&quot;). While Equinox provides the component
+			infrastructure, the composition of components is left to
+			application architects and developers. Components can be as
+			small or as large as desired. An application can be built as
+			a single component, as huge collection of extremely small
+			components (in the extreme, each component would contain a
+			single class), or somewhere in between (the ideal is
+			generally somewhere in between).
+		</para>
+		<para>
+			Architecting an application as a large collection of small
+			scale components can make it relatively easy to update your
+			application and potentially reduce startup time (Equinox
+			loads components as they are required). However, a large
+			collection of plug-ins requires complex dependency
+			management and ultimately increases the runtime overhead of
+			the application. Managing that complexity can be an
+			significant burden. As such, deciding on exactly how you
+			should divide your code into separate components takes some
+			effort. Determining how to factor the components is not
+			particularly difficult, but nor is it a trivial matter. It
+			generally takes several iterations to &quot;get it
+			right&quot;, and even then you sometimes have to settle for
+			&quot;good enough&quot; as you balance the various forces
+			that come into play while designing your archtecture.
+		</para>
+	</section>
+	<section title="Multiple Components are Good">
+		<para>
+			Eclipse is itself a collection of many components. Having
+			multiple components is a good thing; this is what makes
+			Eclipse so customizable.
+		</para>
+
+		<para>
+			By building your application as a collection of components,
+			you have potential to significantly reduce its memory
+			footprint. When an Eclipse RCP application starts up, the
+			entire collection of components is scanned and a registry of
+			those components is constructed. However, only the subset of
+			components required at startup are actually loaded and
+			initialized. Henceforth, components are loaded as they are
+			needed. This can result in a significant reduction in start
+			up time as well.
+		</para>
+
+		Update individual components rather than the whole.
+
+		Built-in extensibility. The application architecture that makes
+	</section>
+	<section title="Layered Architecture">
+		<para>
+			Use components to separate layers. Component model
+			encourages decoupling of components by enforcing a one-way
+			visibility restriction.
+		</para>
+		Loose coupling is good. Opens opportunities for reuse without
+		modifying or branching the code. Some
+		subset of the components in your application developed for the
+		desktop can be reused in devices such as cell phones.
+	</section>
+
+	use components to separate
+
+
+
+	<section>
+
+		<para>
+			In the development environment, components are represented
+			as individual &quot;Plug-in&quot; Projects (that is, each
+			&quot;Plug-in&quot; Project becomes a separate component in
+			the runtime environment). An example is shown in
+			<xref-figure id="plug-in-project" />
+			. At runtime, a component manifests as either a single
+			compressed archive file, or as a directory; in either case,
+			the component is actually a composition of files. Components
+			can contain Java code, other resources (such as image files,
+			for example) and a manifest. The manifest is a text file
+			that describes the component and how it interacts with the
+			environment.
+		</para>
+		<para>
+			Components are declaratively specified using a manifest. In
+			the manifest, the developer must specify what other
+			components the component has access to. This visibility
+			between components is strictly enforced at both build and
+			runtime. Component versions can be specified as part of the
+			declaration; this makes it possible for different components
+			to make use of different version of the same shared
+			component (contrast this with the support provided by
+			classpath ordering in standard Java).
+		</para>
+	</section>
+	<section title="Forces">
+		<para>
+			When developing an architecture it is important to keep the
+			various forces in mind. Getting it right is a process of
+			balancing many forces; not all are technical. These forces
+			include:
+		</para>
+		<itemized-list>
+			<segue>
+				These forces are discussed in greater detail below.
+			</segue>
+			<item title="Extensibility">
+				<para>
+					The application should be extensible. That is, after
+					the initial delivery of the application, it should
+					be possible to extend it to provide functionality
+					that was either not part of the initial
+					requirements, or could not be delivered in time for
+					the release.
+				</para>
+				<para>
+					In a similar vein, the application should be
+					customizable. Ideally, the application can be tuned
+					for different clients with slightly different needs.
+					In many cases, tuning can be done through property
+					files and parameters; in many cases, custom code is
+					required. Ideally, the application code should not
+					have to be branched to accommodate these
+					customizations. This is of particular concern to
+					independent software vendors (ISVs).
+				</para>
+				<para>
+					An application is extended and customized by adding
+					components. The application needs to be designed to
+					accept new components and allow added components to
+					participate and contribute.
+				</para>
+			</item>
+			<item title="Updateablility">
+				<para>
+					The application should be updatable. More
+					specifically, it should be easy to update parts of
+					the application without having to update the entire
+					application. Ideally, the application should not be
+					a single monolithic part that can only be updated in
+					it's entirety but rather a composition of multiple
+					parts that can be individually updated.
+				</para>
+			</item>
+			<item title="Start up time">
+				<para>
+					The application should start up quickly. Ideally, as
+					functionality is required, the behaviour
+					(application logic) for that functionality is
+					dynamically loaded.
+				</para>
+			</item>
+			<item title="Loose Coupling">
+				<para>
+					The various parts of the application should be
+					loosely coupled with other parts. Coupling is a
+					measure (more qualitative than quantitative) of how
+					much the various parts of the application know about
+					the other parts. Loosely coupled applications are
+					generally easier to extend than more tightly coupled
+					applications. Loosely coupled parts are also more
+					easily reused than their tightly coupled
+					counterparts.
+				</para>
+			</item>
+			<item title="Seemless Integration">
+				<para>
+					The parts of the application should seemlessly
+					integrate. That is, from the user's perspective, the
+					parts of the application, though developed
+					separately, should manifest as a single coherent
+					application.
+				</para>
+			</item>
+			<item title="Multiple Platform Support">
+				<para>
+					Multiple platform support. Realistically, it may not
+					be possible to use all parts of your application on
+					all platforms. A user interface designed for a
+					desktop system may not be appropriate for a
+					hand-held device. However, the underlying object
+					model, business logic, and some aspects of the user
+					interface should be easily reused across the
+					different platform types.
+				</para>
+				<para>
+					Ideally as much of your application as possible
+					should be developed as components that are reusable
+					across all the supported platforms (desktop, server,
+					and devices).
+				</para>
+			</item>
+			<item title="Multiple Version Support">
+				<para>
+					Support for multiple versions of some parts. That
+					is, it must be possible for some parts of the
+					application to use one version of of a library
+					(either third party, or custom built) while other
+					parts of the application use another version. This
+					is particularly true as the size of the application
+					and development team grows.
+				</para>
+			</item>
+		</itemized-list>
+	</section>
+	<section title="Bringing Balance to the Force">
+		<para>
+			The Equinox component management system provides the
+			infrastructure that you need to balance all of these
+			concerns. While Equinox can run your architecture, it
+			doesn't design it for you. You have to do that.
+		</para>
+		<para>
+			Traditional application architecture wisdom encourages
+			separating an application into into multiple layers. The
+			model-view-controller pattern is an example of a layered
+			architecture that provides a good starting point: one
+			component for your application's object model (including
+			business logic), one component for your application's view
+			(user interface components), and one component for your
+			application's control (the glue that binds the model and
+			view layers). Eclipse provides most of the view components
+			through the
+			<xref-link href="http://eclipse.org/swt">
+				Standard Widget Toolkit
+			</xref-link>
+			(SWT), leaving us with two components representing. the
+			model and control layers.
+		</para>
+		<para>
+			Two components is a good starting point. However, as an
+			application grows in size and complexity, so will these two
+			components. It may make sense to divide your application
+			along functional lines. That is, one set of components
+			(model and control) for each different subset of
+			functionality. A bank, for example, might consider building
+			one set of components for handling personal loans, one that
+			handles business loans, another for investments, and so
+			forth. Determining what constitutes a &quot;subset of
+			functionality&quot; is as much an art as it is science. One
+			starting point might be to divide the functionality along
+			departmental lines.
+		</para>
+		<para>
+			Overlaps between components will occur. These overlaps can
+			be factored out into separate components. In the
+			aforementioned banking example, commonalities between
+			personal and business loans might be factored into a
+			&quot;loans&quot; component that is shared.
+		</para>
+		<para>
+			Ultimately, determining how big your components should be
+			and how many of them you have will be accomplished by
+			balancing the various forces (technical, team, policies,
+			politics). Whatever the case, Equinox will support you.
+		</para>
+	</section>
+	<section title="Extension Points and Extensions">
+		<para>
+			One way that Eclipse facilitates extensibility is through
+			the extension point mechanism. Using the extension point
+			mechanism, component builders can provide hooks that other
+			components can use to contribute functionality.
+		</para>
+		<para>
+			Perhaps the most obvious use of extension points is found in
+			the Eclipse user interface. Eclipse provides, for example,
+			an extension point called &quot;popupMenus&quot;. By hooking
+			into this extension point, other components can add their
+			own entries to the pop-up menu for many views and editors.
+			There are similar extension points that allow components to
+			contribute to the toolbars and other aspects of the user
+			interface.
+		</para>
+		<para>
+			The use of extension points is not specific to the user
+			interface, nor is it limited to it. Nor is the use of
+			extension points the exclusive domain of the base Eclipse
+			code. Your application can (and likely should) define it's
+			own set of extension points. An application might, for
+			example, include an extension point that provides a hook for
+			adding backends to your application.
+		</para>
+		<para>
+			Consider an application that can store data in a database,
+			or on a server via (for example) a web service. You could
+			define a single component that provides the required code
+			for both (as shown in
+			<xref-figure id="single-component" />
+			); or you could define a component that includes an
+			extension point for backends, along with a separate
+			component for each kind of backend supported. By doing so,
+			you provide customizability in that it is possible to tune
+			the set of backends supported simply by including only the
+			backends you require. Additionally, you provide for
+			extensibility by allowing yourself or others to create their
+			own backends without requiring that they change your base
+			component's code.
+		</para>
+	</section>
+	<section>
 		<para>
 			An application, factored into multiple layers, is generally
 			easier to enhance and maintain. Ideally, each layer contains
@@ -124,26 +440,7 @@
 		</para>
 	</section>
 
-	<section title="Balancing Act">
-		<para>
-			Architecting an application as a large collection of small
-			scale plug-ins can make it relatively easy to update your
-			application and potentially reduce startup time. However, a
-			large collection of plug-ins requires complex dependency
-			management and ultimately increases the runtime overhead of
-			the application. Managing that complexity can be an
-			incredible burden. As such, deciding on exactly how you
-			should divide your code into separate components takes some
-			effort.
-		</para>
-		<para>
-			On one extreme, you can build your application so that each
-			component contains a single class. On the other extreme, you
-			can build a single component for your application that
-			contains everything. The right solution lies somewhere in
-			the middle.
-		</para>
-	</section>
+	<section title="Balancing Act"></section>
 
 	<section title="Observer Pattern">
 		<para>
