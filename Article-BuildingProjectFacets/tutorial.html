@@ -4,28 +4,27 @@
   
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>Building Project Facets</title>
+  <title>Extending WTP Using Project Facets</title>
   <link type="text/css" rel="stylesheet" href="tutorial.css"/>
 </head>
 
 <body>
 
-<h1 align="center">Building Project Facets</h1>
+<h1 align="center">Extending WTP Using Project Facets</h1>
 
 <blockquote>
 <b>Summary</b><br/>
-The Faceted Project Framework allows the plugin developer to think of projects
-as composed of units of functionality, otherwise known as facets, that can be 
-added and removed by the user. This tutorial walks you through an example of
-creating a couple of basic facets and in the process covers the majority of the
-framework's extension points. Note that this tutorial has been written for the
-Web Tools Platform v1.5. You will notice extension point differences if you are 
-using the 1.0.x line.
+The Faceted Project Framework allows the plugin developer to think of Web Tools 
+Platform (WTP) projects as composed of units of functionality, otherwise known 
+as facets, that can be added and removed by the user. This tutorial walks you 
+through an example of creating a couple of basic facets and in the process 
+covers the majority of the framework's extension points. This tutorial has been
+written for version 1.5 of the Web Tools Platform.
 <br/><br/>
 
 <b>Konstantin Komissarchik</b><br/>
 BEA Systems, Inc.<br/>
-August 30, 2006
+September 5, 2006
 </blockquote>
 
 <hr width="100%">
@@ -90,9 +89,11 @@ Appendix E: <a href="#wizard.context">Wizard Context</a><br/>
 
 <h2><a name="getting.started">1. Getting Started</a></h2>
 
-<p>To follow along with this tutorial, you will need to have Web Tools Platform
-v1.5 and it's dependencies installed on top of Eclipse v3.2 installation. You can
-download the install kits at the following locations:</p>
+<p>To follow along with this tutorial, you will need to have a working install 
+of Web Tools Platform v1.5. The tutorial is not designed to be used with 1.0.x
+version of WTP as there are numerous extension point and API differences. You 
+can download the install kits for WTP and its prerequisites, including Eclipse 
+Platform v3.2, at the following locations:</p>
 
 <ul>
   <li><a href="http://download.eclipse.org/eclipse/downloads/">Eclipse Platform Download Site</a></li>
@@ -1044,10 +1045,12 @@ you will most likely first encounter them while specifying the <code>requires</c
 constraint.</p>
 
 <p>A version expression is composed of multiple segments separated by commas. 
-The commas function as an OR operation. Each segment is either a single version
-or a range. Ranges are represented by bracket and dash notation such as [x-y).
-A bracket means inclusive, while the parenthesis means exclusive. Open ended
-ranges are also supported.</p>
+The commas function as an OR operation. Each segment is either a single version, 
+a range, or a wildcard. Ranges are represented by bracket and dash notation such 
+as [x-y). A bracket means inclusive, while the parenthesis means exclusive. Open 
+ended ranges are also supported. A wildcard (represented by '*' character) can
+be used to match any version. It is not possible to use the wildcard to match
+part of the version string.</p>
 
 <p>Here are some examples:</p>
 
@@ -1059,6 +1062,7 @@ ranges are also supported.</p>
 [3.7
 5.0)
 1.2,[3.0-4.5),[7.3
+*
 </pre>
 </div>
 
