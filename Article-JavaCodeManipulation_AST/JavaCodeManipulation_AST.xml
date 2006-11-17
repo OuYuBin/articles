@@ -1,0 +1,1071 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+	"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<article id="article">
+	<articleinfo>
+		<title>Abstract Syntax Tree</title>
+		<releaseinfo role="SVN"> $Id: JavaCodeManipulation_AST.xml,v 1.3 2006/01/18
+			17:23:33 wbeaton Exp $ </releaseinfo>
+		<date>November 15, 2006</date>
+		<authorgroup><author>
+			<firstname>Thomas</firstname>
+			<surname>Kuhn</surname>			<affiliation>
+				<orgname>Eye Media GmbH</orgname>
+			</affiliation></author><author>
+			<firstname>Olivier</firstname>
+			<surname>Thomann</surname>
+			<affiliation>
+				<orgname>IBM Ottawa Lab</orgname>
+			</affiliation> </author>
+		</authorgroup>
+		<copyright>
+			<year>2006</year>
+			<holder>Thomas Kuhn, Olivier Thomann. Made available under the EPL v1.0 </holder>
+		</copyright>
+		<abstract>
+			<para>The Abstract Syntax Tree is the base framework for many powerful tools of the
+				Eclipse IDE, including refactoring, Quick Fix and Quick Assist. The Abstract Syntax
+				Tree maps plain Java source code in a tree form. This tree is more convenient and
+				reliable to analyse and modify programmatically than text-based source. This
+				article shows how you can use the Abstract Syntax Tree for your own
+				applications.</para>
+		</abstract>
+		<legalnotice>
+			<para>Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. in
+				the United States, other countries, or both.</para>
+			<para>Other company, product, or service names may be trademarks or service marks of
+				others.</para>
+		</legalnotice>
+		
+	</articleinfo>
+	<section id="sec-introduction">
+		<title>Introduction</title>
+		<!--    
+		- What is it about
+		- Where is the AST used within the IDE
+		- Explain the example application that will be built
+		-->
+		<para>Wondering how Eclipse is doing all the magic like jumping conveniently to a
+			declaration, when you press
+			&quot;F3&quot; on a reference to a field or method? Or how &quot;Replace in file&quot;
+			solidly detects the declaration and all the references to the local variable and
+			modifies them synchronously? </para>
+		<para>Well, these and a big portion of the other source code modification and generation
+			tools, are based upon the Abstract Syntax Tree (AST). The AST is comparable to the DOM
+			tree model of an XML file. Just like with DOM, the AST allows you to modify the tree model and
+			reflects these modifications in the Java source code.</para>
+		<para>This article will refer to an example application, which covers most of the
+			interesting AST-related topics. Let us have a look at the application that was built to
+			illustrate this article: </para>
+		<section id="sec-example-application">
+			<title>Example Application</title>
+			<para>According to Java Practices <xref linkend="bib-java-practices"/>, you
+				should not declare local variables before using them. The goal of our application
+				will be to detect contradicting variable declarations and to move them to their
+				correct place. There are three cases our application has to deal with:
+				<orderedlist>
+					<listitem>
+						<para><emphasis>Removal of unnecessary declaration.</emphasis> If a
+							variable is declared and initialized, only to be overridden by another
+							assignment later on, the first declaration of the variable is an
+							<emphasis>unnecessary declaration</emphasis>.</para>
+					</listitem>
+					<listitem id="item-move-of-declaration">
+						<para><emphasis>Move of declaration.</emphasis> If a variable is declared,
+							and not immediatly referenced within the following statement, this variable
+							declaration has to be moved. The correct place for the declaration is the line
+							before it is first referenced.</para>
+					</listitem>
+					<listitem>
+						<para><emphasis>Move of declaration of a variable, that is referred within
+							different blocks.</emphasis> This is a subcase of case <xref
+								linkend="item-move-of-declaration"/>. Imagine that a variable is used
+							in both, a try- and a catch clause. Here the declaration cannot be moved right
+							before the first reference in the try-clause, since then it would not be
+							declared in the catch-clause. Our application has to deal with that and has to
+							move the declaration to the best possible place, which would be here one line
+							above the try-clause.</para>
+					</listitem>
+				</orderedlist> In <xref linkend="app-code-fragments-example"/> code snippets
+				to each of these cases are provided.</para>
+			<para>You can import the example application into your workspace <xref
+					linkend="bib-example-project"/> or install the plugin using the Eclipse Update
+				Manager <xref linkend="bib-example-update"/>.</para>
+		</section>
+		<section id="sec-workflow">
+			<title>Workflow</title>
+			<para> A typical workflow of an application using AST looks like this:
+				<figure id="fig-workflow">
+					<title>AST Workflow</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/workflow.png"/>
+						</imageobject>
+					</mediaobject>
+				</figure>
+				<orderedlist>
+					<listitem id="workflow-legend-1">
+						<simpara><emphasis>Java source</emphasis>: To start off you provide
+							some source code to parse. This source code can be supplied as a
+							Java file in your project or directly as a
+							<code>char[]</code> that contains Java source</simpara>
+					</listitem>
+					<listitem id="workflow-legend-2">
+						<simpara><emphasis>Parse</emphasis>: The source code described at
+							<xref linkend="workflow-legend-1"/> is parsed. All
+							you need for this step is provided by the class
+							<code>org.eclipse.jdt.core.dom.ASTParser</code>. See <xref
+								linkend="sec-parsing-a-source-file"/>.</simpara>
+					</listitem>
+					<listitem id="workflow-legend-3">
+						<simpara>The <emphasis>Abstract Syntax Tree</emphasis> is the result of step
+								<xref linkend="workflow-legend-2"/>. It is a tree model that entirely
+							represents the source you provided in step <xref
+								linkend="workflow-legend-1"/>. If requested, the parser also computes
+							and includes additional symbol resolved information called &quot;<link
+								linkend="sec-bindings">bindings</link>&quot;.</simpara>
+					</listitem>
+					<listitem id="workflow-legend-4">
+						<para><emphasis>Manipulating the AST</emphasis>: If the AST of point <xref
+								linkend="workflow-legend-3"/> needs to be changed, this can be done in two
+							ways:
+							<orderedlist numeration="loweralpha">
+								<listitem>
+									<simpara>By directly modifying the AST.</simpara>
+								</listitem>
+								<listitem>
+									<simpara>By noting the modifications in a separate protocol. This
+										protocol is handled by an instance of
+										<classname>ASTRewrite</classname>.</simpara>
+								</listitem>
+							</orderedlist> See more in <xref linkend="sec-how-to-apply-changes"/>.
+							</para>
+					</listitem>
+					<listitem id="workflow-legend-5">
+						<simpara><emphasis>Writing changes back</emphasis>: If changes have been
+							made, they need to be applied to the source code that was provided by <xref
+								linkend="workflow-legend-1"/>. This is described in detail in <xref
+								linkend="sec-write-it-down"/>.</simpara>
+					</listitem>
+					<listitem id="workflow-legend-6">
+						<simpara><emphasis>
+							<code>IDocument</code></emphasis>: Is a wrapper for the source code of step
+								<xref linkend="workflow-legend-1"/> and is needed at point <xref
+								linkend="workflow-legend-5"/></simpara>
+					</listitem>
+				</orderedlist>
+				</para>
+		</section>
+	</section>
+	<section id="sec-ast">
+		<title>The Abstract Syntax Tree (AST)</title>
+		<!--    
+		- Explain that a java source is represented as a tree of subclasses of ASTNode
+		- Analogue to the DOM of an XML Document
+		
+		TODO 
+		- class diagram of ASTNode subclasses
+		- wave in the example
+		-->
+		<para> As mentioned, the Abstract Syntax Tree is the way that Eclipse looks at your source
+			code: every Java source file is entirely represented as tree of AST nodes. These nodes
+			are all subclasses of <classname>ASTNode</classname>. Every subclass is
+			specialized for an element of the Java Programming Language. E.g. there are nodes for
+			method declarations ( <classname>MethodDeclaration</classname>), variable
+			declaration ( <classname>VariableDeclarationFragment</classname>),
+			assignments and so on. One very frequently used node is
+			<classname>SimpleName</classname>. A <classname>SimpleName</classname> is any
+			string of Java source that is not a keyword, a boolean literal (
+			<code>true</code> or
+			<code>false</code>) or the
+			<code>null</code> literal. For example, in
+			<code>i = 6 + j;</code>,
+			<code>i</code> and
+			<code>j</code> are represented by <classname>SimpleName</classname>s. In
+			<code>import net.sourceforge.earticleast</code>, 
+			<code>net</code>
+			<code>sourceforge</code> and
+			<code>earticleast</code> are mapped to <classname>SimpleName</classname>
+			s.</para>
+		<para> All AST-relevant classes are located in the package
+			<code>org.eclipse.jdt.core.dom</code> of the
+			<code>org.eclipse.jdt.core</code> plugin.</para>
+		<para> To discover how code is represented as AST, the AST Viewer plugin <xref
+				linkend="bib-ast-viewer"/> is a big help: Once installed you can simply mark source
+			code in the editor and let it be displayed in a tree form in the AST Viewer view. </para>
+		<section id="sec-parsing-a-source-file">
+			<title>Parsing source code</title>
+			<!--    
+			- JLS 2, JLS 3
+			
+			TODO
+			- describe "Java Expression" "Java Statement" better
+			-->
+			<para>Most of the time, an AST is not created from scratch, but rather parsed from
+				existing Java code. This is done using the <classname>ASTParser</classname>. It
+				processes whole Java files as well as portions of Java code. In the example
+				application the method <methodname>parse(ICompilationUnit unit)</methodname>
+				of the class <classname>AbstractASTArticle</classname> parses the source code
+				stored in the file that
+				<code>unit</code> points to:
+				
+				
+				<programlisting>protected CompilationUnit parse(ICompilationUnit unit) {
+	ASTParser parser = ASTParser.newParser(AST.JLS3); 
+	parser.setKind(ASTParser.K_COMPILATION_UNIT);
+	parser.setSource(unit); // set source
+	parser.setResolveBindings(true); // we need bindings later on
+	return (CompilationUnit) parser.createAST(null /* IProgressMonitor */); // parse
+}</programlisting>
+				</para>
+			<para>With
+				<code>ASTParser.newParser(AST.JLS3)</code>, we advise
+				the parser to parse the code following to the Java Language Specification, Third
+				Edition. JLS3 includes all Java Language Specifications up to the new syntax
+				introduced in Java 5. With the update of Eclipse towards JLS3, changes have been made
+				to the AST API. To preserve compatibility, the <classname>ASTParser</classname>
+				can be run in the deprecated JLS2 mode. </para>
+			<para>
+				<code>parser.setKind(ASTParser.K_COMPILATION_UNIT)</code> tells the parser,
+				that it has to expect an <classname>ICompilationUnit</classname> as input. An
+				<classname>ICompilationUnit</classname> is a pointer to a Java file. The parser
+				supports five kinds of input: </para>
+			<para><emphasis>Entire source file</emphasis>: The parser expects the source
+				either as a pointer to a Java file (which means as an
+				<classname>ICompilationUnit</classname>, see <xref
+								linkend="sec-java-model"/>) or as
+				<code>char[]</code>.
+				<itemizedlist>
+					<listitem>
+						<simpara>
+							<code>K_COMPILATION_UNIT</code> </simpara>
+					</listitem>
+				</itemizedlist></para>
+			
+			<para><emphasis>Portion of Java code</emphasis>: The parser processes a portion of
+				code. The input format is
+				<code>char[]</code>.
+				<itemizedlist>
+					<listitem>
+						<simpara>
+							<code>K_EXPRESSION</code>: the input contains a Java expression. E.g.
+							<code>new String()</code>,
+							<code>4+6</code> or
+							<code>i</code>.</simpara>
+					</listitem>
+					<listitem>
+						<simpara>
+							<code>K_STATEMENTS</code>: the input contains a Java statement like
+							<code>new String();</code> or
+							<code>synchronized (this) { ... }</code>.</simpara>
+					</listitem>
+					<listitem>
+						<simpara>
+							<code>K_CLASS_BODY_DECLARATIONS</code>: the input contains elements of a
+							Java class like method declarations, field declarations, static blocks,
+							etc.</simpara>
+					</listitem>
+			</itemizedlist> </para>
+			
+			<section id="sec-java-model">
+				<title>Java Model</title>
+				<!--    
+				- Brief introduction to the Java Model
+				- Focused on how to find an ICompilationUnit
+				
+				-->
+				<para>The Java Model is a whole different story. It is out of scope of this article to dive deeper into its details within this article. The parts looked at will be the ones which intersect with the AST. The motivation to discuss it here is, to use it as an entry point to build an Abstract Syntax Tree of a source file. Remember, the
+					<classname>ICompilationUnit</classname> is one of the possible parameters for
+					the AST parser.</para>
+				<para>The Java Model represents a Java Project in a tree structure, which is
+					visualized by the well known &quot;Package Explorer&quot; view:</para>
+				<figure id="fig-java-model-overview">
+					<title>Java Model Overview</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/java-model-overview.png"/>
+						</imageobject>
+					</mediaobject>
+				</figure>
+				<para>The nodes of the Java Model implement one of the following interfaces:
+					<itemizedlist>
+						<listitem>
+							<simpara>
+								<code>IJavaProject</code>: Is the node of the Java Model and represents a
+								Java Project. It contains
+								<code>IPackageFragmentRoot</code>s as child nodes.</simpara>
+						</listitem>
+						<listitem>
+							<simpara>
+								<code>IPackageFragmentRoot</code>: can be a source or a class folder of a
+								project, a
+								<code>.zip</code> or a
+								<code>.jar</code> file.
+								<code>IPackageFragmentRoot</code> can hold source or binary
+								files.</simpara>
+						</listitem>
+						<listitem>
+							<simpara>
+								<code>IPackageFragment</code>: A single package. It contains
+								<code>ICompilationUnit</code>s or
+								<code>IClassFile</code>s, depending on whether the
+								<code>IPackageFragmentRoot</code> is of type source or of type binary.
+								Note that
+								<code>IPackageFragment</code> are not organized as parent-children.
+								E.g.
+								<code>net.sf.a</code> is not the parent of
+								<code>net.sf.a.b</code>. They are two independent children of the same
+								<code>IPackageFragmentRoot</code>.</simpara>
+						</listitem>
+						<listitem>
+							<simpara>
+								<code>ICompilationUnit</code>: a Java source file. </simpara>
+						</listitem>
+						<listitem>
+							<simpara>
+								<code>IImportDeclaration</code>,
+								<code>IType</code>,
+								<code>IField</code>,
+								<code>IInitializer</code>,
+								<code>IMethod</code>: children of
+								<code>ICompilationUnit</code>. The information provided by these nodes
+								is available from the AST, too. </simpara>
+						</listitem>
+					</itemizedlist></para>
+				<para>In contrast to the AST, these nodes are lightweight handles. It costs much less
+					to rebuild a portion of the Java Model than to rebuild an AST. That is also one reason
+					why the Java Model is not only defined down to the level of
+					<classname>ICompilationUnit</classname>. There are many cases where complete
+					information, like provided by the AST, is not needed. One example is the Outline
+					view: this view does not need to know the contents of a method body. It is more
+					important that it can be rebuilt fast, to keep in sync with its source code.</para>
+				<para>There are different ways to get an
+					<classname>ICompilationUnit</classname>. The example applications are
+					launched as actions from the package tree view. This is quite convenient: only add
+					an
+					<code>objectContribution</code> extension to the point
+					<code>org.eclipse.ui.popupMenus</code>. By choosing
+					<code> org.eclipse.jdt.core.ICompilationUnit</code> as
+					<code>objectClass</code>, the action will be only displayed in the context menu
+					of a compilation unit. Have a look at the example application's
+					<code>plugin.xml</code>. The compilation unit then can be retrieved from the
+					<interfacename>ISelection</interfacename>, that is passed to the
+					action's delegate (in the our example, this is
+					<classname>ASTArticleActionDelegate</classname>).</para>
+				<para>Another, programatic, approach is to get the project handle from the IDE and to
+					look for the compilation unit. This can be done by either step down the Java Model
+					tree to collect the desired <classname>ICompilationUnit</classname>s. Or, if
+					the qualified name of a type within the compilation unit is known, by calling the
+					<methodname>findType()</methodname> of the Java project:
+					
+					
+					<programlisting>IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+IProject project = root.getProject("someJavaProject");
+project.open(null /* IProgressMonitor */);
+		
+IJavaProject javaProject = JavaCore.create(project);
+IType lwType = javaProject.findType("net.sourceforge.earticleast.app.Activator");
+ICompilationUnit lwCompilationUnit = lwType.getCompilationUnit();</programlisting>
+					</para>
+			</section>
+		</section>
+		<section id="sec-how-to-find-an-ast-node">
+			<title>How to find an AST Node</title>
+			<!--    
+			- Using the ASTVisitor
+			
+			-->
+			<para>Even a simple &quot;Hello world&quot; program results in a quite complex tree.
+				How does one get the <classname>MethodInvocation</classname> of that
+				<code>println(&quot;Hello World&quot;)</code>? Scanning all the levels is a
+				possible, but not very convenient way.</para>
+			<para> There is a better solution: every
+				<code>ASTNode</code> allows to query for a child node by using a visitor (visitor
+				pattern <xref linkend="bib-visitor-pattern"/>). Have a look at
+				<classname>ASTVisitor</classname>. There you'll find for every subclass of
+				<classname>ASTNode</classname> two methods, one called
+				<methodname>visit()</methodname>, the other called
+				<methodname>endVisit()</methodname>. Further, the
+				<classname>ASTVisitor</classname> declares these two methods:
+				<methodname>preVisit(ASTNode node)</methodname> and
+				<methodname>postVisit(ASTNode node)</methodname>.</para>
+			<para>The subclass of <classname>ASTVisitor</classname> is passed to any node of the
+				AST. The AST will recursively step through the tree, calling the mentioned methods of
+				the visitor for every AST node in this order (for the example of a
+				<code>MethodInvocation</code>):
+				<itemizedlist>
+					<listitem>
+						<simpara><methodname>preVisit(ASTNode node)</methodname></simpara>
+					</listitem>
+					<listitem>
+						<simpara><methodname>visit(MethodInvocation node)</methodname>
+							</simpara>
+					</listitem>
+					<listitem>
+						<simpara>... now the children of the method invocation are recursively
+							processed if visit returns true</simpara>
+					</listitem>
+					<listitem>
+						<simpara><methodname>endVisit(MethodInvocation node)</methodname>
+							</simpara>
+					</listitem>
+					<listitem>
+						<simpara><methodname>postVisit(ASTNode node)</methodname></simpara>
+					</listitem>
+				</itemizedlist></para>
+			<para>In our example application, the
+				<classname>LocalVariableDetector</classname> is a subclass of
+				<classname>ASTVisitor</classname>. It is used, amongst other things, to collect
+				all local variable declarations of a compilation unit:
+				
+				<programlisting>public boolean visit(VariableDeclarationStatement node) {
+	for (Iterator iter = node.fragments().iterator(); iter.hasNext();) {
+		VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
+		// ... store these fragments somewhere
+	}
+	return false; // prevent that SimpleName is interpreted as reference
+}</programlisting>
+				</para>
+			<para>If
+				<code>false</code> is returned from <methodname>visit()</methodname>, the
+				subtree of the visited node will not be considered. This is to ignore parts of
+				the AST.</para>
+			<para>In the example, <methodname>process(CompilationUnit unit)</methodname> is
+				called from the outside to start visiting the compilation unit. The method is fairly
+				simple:
+				
+				
+				<programlisting>public void process(CompilationUnit unit) {
+	unit.accept(this);		
+}</programlisting>
+				</para>
+		</section>
+		<section id="sec-obtaining-information-from-an-ast-node">
+			<title>Obtaining Information from an AST Node</title>
+			<!-- 
+			- Tell wich information you can get from an ASTNode and show how you access it (static and generic API of ASTNode)
+			-->
+			<para>Every subclass of
+				<code>ASTNode</code> contains specific information for the Java element it
+				represents. E.g. a
+				<code>MethodDeclaration</code> will contain information about the name, return
+				type, parameters, etc. The information of a node is referred as
+				<emphasis>structural properties</emphasis>. Let us have a closer look at the
+				characteristics of the structural properties. Beneath you see the properties of
+				this method declaration:
+				
+				
+				<programlisting>public void start(BundleContext context) throws Exception {
+	super.start(context);
+}</programlisting>
+				<figure id="fig-properties-of-method-declaration">
+					<title>Structural properties of a method declaration</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/md-astview.png"/>
+						</imageobject>
+					</mediaobject>
+				</figure></para>
+			<para>Access to the values of a node's structural properties can be made using static or
+				generic methods:
+				<orderedlist>
+					<listitem>
+						<para><emphasis>static methods</emphasis>: every node offers methods to
+							access its properties: e.g.
+							<code>getName()</code>,
+							<code>exceptions()</code>, etc.</para>
+					</listitem>
+					<listitem>
+						<para><emphasis>generic method</emphasis>: ask for a property value using
+							the <methodname>getStructuralProperty(StructuralPropertyDescriptor
+							property)</methodname> method. Every AST subclass defines a set of
+							<classname>StructuralPropertyDescriptor</classname>s, one for every
+							structural property. The
+							<classname>StructuralPropertyDescriptor</classname> can be accessed
+							directly on the class to which they belong: e.g.
+							<code>MethodDeclaration.NAME_PROPERTY</code>. A list of all available
+							<code>StructuralPropertyDescriptor</code>s of a node can be retrieved by
+							calling the method
+							<code>structuralPropertiesForType()</code> on any instance of
+							<code>ASTNode</code>.</para>
+					</listitem>
+				</orderedlist></para>
+			
+			<para>The structural properties are grouped into three different kinds: properties
+				that hold simple values, properties which contain a single child AST node and
+				properties which contain a list of child AST nodes.
+				<figure id="fig-spd-subclasses">
+					<title>StructuralPropertyDescriptor and subclasses</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata
+								fileref="images/StructuralPropertyDescriptor-CD-s.png"/>
+						</imageobject>
+					</mediaobject>
+	<ulink url="images/StructuralPropertyDescriptor-CD.png">view full size</ulink>
+					</figure>
+				
+				
+				<!-- TODO further explanaition & class diagram -->
+				<itemizedlist>
+					<listitem>
+						<para>
+							<code>SimplePropertyDescriptor</code>: The value will be a
+							<code>String</code>, a primitive value wrapper for either
+							<code>Integer</code> or
+							<code>Boolean</code> or a basic AST constant. For a list of all possible value
+							classes of a simple property, see <xref
+								linkend="app-simple-property-value-classes"/></para>
+					</listitem>
+					<listitem>
+						<para>
+							<code>ChildPropertyDescriptor</code>: The value will be a node, an
+							instance of an
+							<code>ASTNode</code> subclass</para>
+					</listitem>
+					<listitem>
+						<para>
+							<code>ChildListPropertyDescriptor</code>: The value will be a
+							<code>List</code> of AST nodes</para>
+					</listitem>
+				</itemizedlist></para>
+			
+		</section>
+	</section>
+	<section id="sec-bindings">
+		<title>Bindings</title>
+		<!--
+		- Explain all, but focus on IVariableBinding: Used in our example to determine where the same variable is used
+		-->
+		<para>The AST, as far as we know it, is just a tree-form representation of source code.
+			Every element of the source code is mapped to a node or a subtree. Looking at a reference to a
+			variable, let's say
+			<code>i</code>, is represented by an instance of
+			<classname>SimpleName</classname> with &quot;i&quot; as
+			<code>IDENTIFIER</code> property-value. Bindings go one step further: they provide
+			extended resolved information for several elements of the AST. About the
+			<classname>SimpleName</classname> above they tell us that it is a reference to a local
+			variable of type int.</para>
+		<para>Various subclasses of <classname>ASTNode</classname> have binding
+			information. It is retrieved by calling
+			<methodname>resolveBinding()</methodname> on these classes. There are cases where
+			more than one binding is available: e.g. the class
+			<classname>MethodInvocation</classname> returns a binding to the method that is
+			invoked (<methodname>resolveMethodBinding()</methodname>). Furthermore a
+			binding to the return type of the method
+			(<methodname>resolveTypeBinding()</methodname>) and information about whether
+			the method invocation is involved into a boxing
+			(<methodname>resolveBoxing()</methodname>) or unboxing
+			(<methodname>resolveUnboxing()</methodname>) is offered. </para>
+		<para>Since evaluating bindings is costly, the binding service has to be explicitly
+			requested at parse time. This is done by passing
+			<code>true</code> the method
+			<code>ASTParser.setResolveBindings()</code> before the source is being parsed.
+			</para>
+		<para>
+			
+			<programlisting>int i = 7;
+System.out.println("Hello!");
+int x = i * 2;</programlisting>
+			the reference of the variable
+			<code>i</code> is represented by a
+			<code>SimpleName</code>. Without bindings you would not know nothing more than this:
+			
+			<screenshot>
+				<mediaobject>
+				  <imageobject>
+				    <imagedata fileref="images/sn-screenshot.png"/>
+				  </imageobject>
+				</mediaobject>
+			</screenshot>
+			</para>
+		<para> Bindings provide more information:
+			
+			<screenshot>
+				<mediaobject>
+				  <imageobject>
+				    <imagedata fileref="images/sn-bindings-screenshot.png"/>
+				  </imageobject>
+				</mediaobject>
+			</screenshot>
+			</para>
+		<para>Bindings allow you to comfortably find out to which declaration a reference
+			belongs, as well as to detect whether two elements are references to the same element: if
+			they are, the bindings returned by reference-nodes and declaration-nodes are
+			identical. For example, all <classname>SimpleNames</classname> that represent a
+			reference to a local variable
+			<code>i</code> return the same instance of
+			<code>IVariableBinding</code> from
+			<code>SimpleName.resolveBindings()</code>. The declaration node,
+			<code>VariableDeclarationFragment.resolveBinding()</code>, returns the same
+			instance of
+			<code>IVariableBinding</code>, too. If there is another declaration of a local
+			variable
+			<code>i</code> (within another method or block), another instance of
+			<code>IVariableBinding</code> is returned. Confusions caused by equally named
+			elements are avoided if bindings are used to identify an element (variable, method,
+			type, etc.).</para>
+		<para>The example application uses variable bindings for this purpose: for every
+			declaration, a manager object is created and added to a map. The binding of the
+			declaration figures as key, the created manager as value.
+			
+			
+			<programlisting>for (Iterator iter = node.fragments().iterator(); iter.hasNext();) {
+	VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
+
+	IVariableBinding binding = fragment.resolveBinding();
+	VariableBindingManager manager = new VariableBindingManager(fragment);
+	localVariableManagers.put(binding, manager);
+}</programlisting>
+			Then, if a
+			<code>SimpleName</code> is visited, the application checks, whether the binding of
+			this
+			<code>SimpleName</code> occurs in the map. If so, the
+			<code>SimpleName</code> is a reference to a local variable.
+			
+			
+			<programlisting>public boolean visit(SimpleName node) {
+	IBinding binding = node.resolveBinding();
+	if (localVariableManagers.containsKey(binding)) {
+		VariableBindingManager manager = localVariableManagers.get(binding);
+		manager.variableRefereneced(node);
+	}
+}</programlisting>
+			</para>
+</section>			
+	<section id="sec-error_recovery">
+		<title>Error Recovery</title>
+		<para> Since Eclipse 3.2, the DOM/AST support has the ability to recover from code with
+			syntax errors. In order to trigger it, you need to use the
+			<code>ASTParser#setStatementsRecovery()</code>. As its name says it, the error
+			recovery is done at the statement level. This however implies that the code is not
+			completely messed up as it cannot recover from all kinds of syntax errors. This being
+			said a missing semi-colon is no longer an problem anymore to retrieve the statements of a
+			method. Let's take an example: </para>
+<programlisting>
+public static void main(String[] args) {
+	System.out.print("Hello");
+	System.out.print(", ")
+	System.out.println("World!");
+}
+</programlisting>
+<para>With this source code, before Eclipse 3.2, the method body would be empty. Now with
+	Eclipse 3.2 and its error recovery it is possible to get a
+	<code>RECOVERED</code> expression statement that contains the method invocation. Not
+	only can you have nodes that can be traversed by a visitor, but in some cases it is even possible to
+	get bindings for the
+	<code>RECOVERED</code> statement. So in the example, you would end up with two statements
+	that have no problems and one <code>RECOVERED</code> statement.</para>
+<para>Any instance of a subclass of <classname>ASTNode</classname> can be tagged with some
+	bits that provide information about the way the node was created. This bits can be retrieved
+	by calling the method <code>ASTNode#getFlags()</code>. The whole list of bits
+	are:</para>
+	<itemizedlist>
+		<listitem>
+			<simpara><code>MALFORMED</code>: indicates node is syntactically malformed</simpara>
+		</listitem>
+		<listitem>
+			<simpara><code>ORIGINAL</code>: indicates original node created by ASTParser</simpara>
+		</listitem>
+		<listitem>
+			<simpara><code>PROTECT</code>: indicates node is protected from further modification</simpara>
+		</listitem>
+		<listitem>
+			<simpara><code>RECOVERED</code>: indicates node or a part of this node is recovered from source that contains a syntax error</simpara>
+		</listitem>
+</itemizedlist>
+<para>So when traversing a AST tree, you might want to check the flags of the traversed nodes. A
+	node flagged as
+	<code>RECOVERED</code> might not contain the expected nodes.</para>
+	</section>
+	<section id="sec-managing-comments">
+		<title>Managing Comments</title>
+<para>One of the most frustrating part of modifying an AST is the comment handling. The method
+	<code>CompilationUnit#getCommentList()</code> is used to return the list of comments
+	located in the compilation unit in the ascendant order. Unfortunately, this list cannot be
+	modified. This means that even if the AST Rewriter is used to add a comment inside a
+	compilation unit, the new comment would not appear inside the comments' list.</para>
+<para>
+In order to add a comment the following code snippet can be used:
+</para>
+<programlisting>
+CompilationUnit astRoot= ... ; // get the current compilation unit
+
+ASTRewrite rewrite= ASTRewrite.create(astRoot.getAST());
+Block block= ((TypeDeclaration) astRoot.types().get(0)).getMethods()[0].getBody();
+ListRewrite listRewrite= rewrite.getListRewrite(block, Block.STATEMENTS_PROPERTY);
+Statement placeHolder= rewrite.createStringPlaceholder("//mycomment", ASTNode.EMPTY_STATEMENT);
+listRewrite.insertFirst(placeHolder, null);
+
+textEdits= rewrite.rewriteAST(document, null);
+textEdits.apply(document);
+</programlisting>
+<para>The methods <code>CompilationUnit#getExtendedLength(ASTNode)</code> and <code>CompilationUnit#getExtendedStartPosition(ASTNode)</code> can be used to retrieve the range of a node that would
+contains preceding and trailing comments and whitespaces.
+</para>
+<para> If a comment is a javadoc comment defined prior to a method declaration, a field
+	declaration or a type declaration (including enum, annotations, interfaces and classes),
+	they can also be retrieved by calling the <methodname>getJavadoc()</methodname> method
+	on the corresponding declaration.</para>
+	</section>	
+	<section id="sec-how-to-apply-changes">
+		<title>How to Apply Changes</title>
+		<!--
+		- by directly changing the node
+		- by using ASTRewrite
+		-->
+		<para>This section will show how to modify an AST and how to store these modifications back
+			into Java source code.</para>
+		<para>New AST nodes may have to be created. New nodes are created by using the class
+			<classname>org.eclipse.jdt.core.dom.AST</classname> (here <classname>AST</classname> it is the name of an
+			actual class. Do not confuse with the abbreviation &quot;AST&quot; used within this
+			article). Have a look at this class: it offers methods to create every AST node type. An
+			instance of <classname>AST</classname> is created when source code is parsed. This
+			instance can be obtained from every node of the tree by calling the method
+			<methodname>getAST()</methodname>. The newly created nodes can only be added to the
+			tree that class <classname>AST</classname> was retrieved from.</para>
+		<para>Often it is comfortable to reuse an existing subtree of an AST and maybe just change
+			some details. AST nodes cannot be re-parented, once connected to an AST, they
+			cannot be attached to a different place of the tree. Though it is easy to create a copy from
+			a subtree:
+			<code>(Expression) ASTNode.copySubtree(ast, manager.getInitializer())</code>
+			. The parameter
+			<code>ast</code> is the target <classname>AST</classname>. This instance will be
+			used to create the new nodes. That allows to copy nodes from another
+			<classname>AST</classname> (established by another parser run) into the current
+			<classname>AST</classname> domain. </para>
+		
+		<para>There are two APIs to track modifications on an AST: either you can directly modify
+			the tree or you can make use of a separate protocol, managed by an instance of
+			<code>ASTRewrite</code>.The latter, using the
+			<code>ASTRewrite</code>, is the more sophisticated and preferable way. The changes
+			are noted by an instance of
+			<code>ASTRewrite</code>, the original AST is left untouched. It is possible to create
+			more than one instance of
+			<code>ASTRewrite</code> for the same AST, which means that different change logs can
+			be set up. &quot;Quick Fix&quot; makes use of this API: this is how for every Quick Fix
+			proposal a preview is created.
+			<example id="ex-adding-a-statement-ast-rewrite">
+				<title>Protocolling changes to a AST by using <classname>ASTRewrite</classname>
+					.</title>
+				
+				
+				<programlisting> rewrite = ASTRewrite.create(unit.getAST()); // unit instance of CompilationUnit
+// ...			
+VariableDeclarationStatement statement = createNewVariableDeclarationStatement(manager, ast);
+int firstReferenceIndex = getFirstReferenceListIndex(manager, block);
+ListRewrite statementsListRewrite = rewrite.getListRewrite(block, Block.STATEMENTS_PROPERTY);
+statementsListRewrite.insertAt(statement, firstReferenceIndex, null);</programlisting>
+			</example> The example shows, how a child is added to a child list property value. If a
+			single-child property is set, no list rewrite is necessary. For example, to set the name
+			of a <classname>MethodInvocation</classname>, the code would look like this:
+			
+			
+			<programlisting>rewrite.set(methodInvocation, MethodInvocation.NAME_PROPERTY, newName, null);</programlisting>
+			or
+			
+			
+			<programlisting>rewrite.replace(methodInvocation.getName() /* old name node*/, newName, null)</programlisting>
+			To set a simple property value, call <methodname>set()</methodname> like shown
+			above.</para>
+		<para>Let us have a look at the second way to change an AST. Instead of tracking the
+			modifications in separate protocols, we directly modify the AST. The only thing that
+			has to done before modifing the first node is to turn on the change recording by calling
+			<code>recordModifications()</code> on the root of the AST, the
+			<code>CompilationUnit</code>. Internally changes are logged to an
+			<classname>ASTRewrite</classname> as well, but this happens hidden to you.
+			<example id="ex-adding-a-statement-direct">
+				<title>Modifying an AST directly.</title>
+				
+				
+				<programlisting>unit.recordModifications();
+// ...			
+VariableDeclarationStatement statement = createNewVariableDeclarationStatement(manager, ast);
+block.statements().add(firstReferenceIndex, statement);</programlisting>
+			</example></para>
+		<para>The next section will tell how to write the modifications back into Java source
+			code.</para>
+		<section id="sec-write-it-down">
+			<title>Write it down</title>
+			<para>Once you have tracked changes, either by using <classname>ASTRewrite</classname>
+				or by modifying the tree nodes directly, these changes can be written back into Java
+				source code. Therefore a <classname>TextEdit</classname> object has to be
+				created. Here we leave the code related area of the AST, and enter a text based
+				environment. The <classname>TextEdit</classname> object contains character
+				based modification information. It is part of the
+				<code>org.eclipse.text</code> plugin.</para>
+			<para> How to obtain the
+				<code>TextEdit</code> object differs for the two mentioned ways only slightly:
+				<itemizedlist>
+					<listitem>
+						<para>If you used
+							<code>ASTRewrite</code>, ask the
+							<code>ASTRewrite</code> instance for the desired
+							<code>TextEdit</code> object by calling
+							<code>rewriteAST(IDocument, Map)</code>.</para>
+					</listitem>
+					<listitem>
+						<para>If you changed the tree nodes directly, the
+							<code>TextEdit</code> object is created by calling
+							<code>rewrite(IDocument document, Map options)</code> on
+							<classname>CompilationUnit</classname>.</para>
+					</listitem>
+				</itemizedlist> </para>
+			<para>The first parameter,
+				<code>document</code>, contains the source code that will be modified. The content of
+				this container is the same code that you fed into the
+				<classname>ASTParser</classname>. The second parameter is a map of options for the
+				source code formatter. To use the default options, pass
+				<code>null</code>.</para>
+			<para> Obtaining an
+				<code>IDocument</code> if you parsed source code from a
+				<code>String</code> is easy: create an object of the class
+				<code>org.eclipse.jface.text.Document</code> and pass the code string as
+				constructor parameter.</para>
+			<para>If you initially parsed an existing Java source file and would like to store the
+				changes back into this file, things get a little bit more tricky. You should not
+				directly write into this file, since you might not be the only editor that is
+				manipulating this source file. Within Eclipse, Java editors do not write directly on
+				a file resource, but on a shared working copy instead.
+				
+				
+				<programlisting>ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager(); // get the buffer manager
+IPath path = unit.getJavaElement().getPath(); // unit: instance of CompilationUnit
+try {
+	bufferManager.connect(path, null); // (1)
+	ITextFileBuffer textFileBuffer = bufferManager.getTextFileBuffer(path);
+	// retrieve the buffer
+	IDocument document = textFileBuffer.getDocument(); (2)
+	// ... edit the document here ... 
+	
+  // commit changes to underlying file
+	textFileBuffer
+		.commit(null /* ProgressMonitor */, false /* Overwrite */); // (3)
+
+} finally {
+	bufferManager.disconnect(path, null); // (4)
+}</programlisting>
+				<orderedlist>
+					<listitem>
+						<simpara>Connect a path to the buffer manager. After that call, the document for
+							the file described by
+							<code>path</code> can be obtained.</simpara>
+					</listitem>
+					
+					<listitem>
+						<simpara>Ask the buffer for the working copy by calling
+							<code>getTextFileBuffer</code>. From the
+							<code>ITextFileBuffer</code> we get the
+							<code>IDocument</code> instance we need.</simpara>
+					</listitem>
+					<listitem>
+						<simpara>Store changes to the underlying file.</simpara>
+					</listitem>					
+					<listitem>
+						<simpara>Disconnect the path. Do not modify the document after this
+							call.</simpara>
+					</listitem>
+				</orderedlist> </para>
+		</section>
+	</section>
+	<section id="sec-conclusion">
+		<title>
+			Conclusions
+		</title>
+		<para>This article has shown how to use the Eclipse AST for static code analysis and code
+			manipulation issues. It touched the Java Model, explained Bindings and showed how to
+			store changes made to the AST back into Java source code.</para>
+		<para>For remarks, questions, etc. enter a comment in the bugzilla entry of this article
+				<xref linkend="bib-article-bugzilla"/></para>
+	</section>
+	<bibliography id="bin-resources">
+		<title>Resources</title>
+		<biblioentry id="bib-example-project">
+			<bibliosource>Download the <ulink
+					url="http://earticleast.sourceforge.net/net.sourceforge.earticleast.app_1.0.0.zip">
+				Packed Example Project</ulink>. Use the option &quot;Existing Projects
+				into Workspace&quot; from the &quot;Import&quot; Wizard to add it
+				to your workspace.</bibliosource>
+		</biblioentry>
+		<biblioentry id="bib-example-update">
+			<bibliosource>To install the plugin, obtain using the Eclipse Update Manager. Update
+				Site: http://earticleast.sourceforge.net/update</bibliosource>
+		</biblioentry>						
+		<biblioentry id="bib-jts">
+			<bibliosource> <ulink
+					url="http://eclipsecon.org/2005/presentations/EclipseCON2005_Tutorial29.pdf">
+				Java Tool Smithing, Extending the Eclipse Java Development Tools </ulink>
+			</bibliosource>
+		</biblioentry>
+		
+		<biblioentry id="bib-java-practices">
+			<bibliosource> <ulink url="http://www.javapractices.com/Topic126.cjp"> Java
+				Practices </ulink>
+			</bibliosource>
+		</biblioentry>
+		
+		<biblioentry id="bib-ast-viewer">
+			<bibliosource> <ulink url="http://www.eclipse.org/jdt/ui/astview/index.php">
+				AST Viewer Plugin </ulink>
+			</bibliosource>
+		</biblioentry>
+		
+		<biblioentry id="bib-visitor-pattern">
+			<bibliosource> <ulink url="http://en.wikipedia.org/wiki/Visitor_pattern">
+				Wikipedia: Visitor Pattern </ulink>
+			</bibliosource>
+		</biblioentry>
+
+		<biblioentry id="bib-article-bugzilla">
+			<bibliosource><ulink
+					url="https://bugs.eclipse.org/bugs/show_bug.cgi?id=149490">
+				AST Article bugzilla entry</ulink>
+			</bibliosource>
+		</biblioentry>
+		
+	</bibliography>
+	
+	<appendix id="app-code-fragments-example">
+		<title>Code Fragments for Example Application Cases</title>
+		<para>In the introduction, three typical cases for our example application have been
+			presented (see <xref linkend="sec-example-application"/>). Clarifing code before / after code snippets follow to further clarify these cases.</para>
+		<orderedlist>
+			<listitem>
+				<para> <emphasis>Removal of unnecessary declaration.</emphasis> </para>
+				<para>Before:
+					<programlisting>int x = 0;
+... 
+x = 2 * 3;</programlisting> </para>
+				<para>After:
+					<programlisting>...
+int x = 2 * 3;</programlisting> </para>
+			</listitem>
+			
+			<listitem>
+				<para> <emphasis>Move of declaration.</emphasis> </para>
+				<para>Before:
+					
+					<programlisting>int x = 0;
+...
+System.out.println(x);
+...
+x = 2 * 3;</programlisting>
+					</para>
+				<para>After:
+					
+					<programlisting>...
+int x = 0;
+System.out.println(x);
+...
+x = 2 * 3;</programlisting>
+					</para>
+			</listitem>
+			
+			<listitem>
+				<para> <emphasis>Move of a declaration of a variable, that is used within different
+					blocks.</emphasis> </para>
+				<para>Before:
+					
+					<programlisting>int x = 0;
+...
+try {
+	x = 2 * 3;
+} catch (...) {
+	System.out.println(x);
+}
+</programlisting>
+					</para>
+				<para>After:
+					
+					<programlisting>...
+int x = 0;
+try {
+	x = 2 * 3;
+} catch (...) {
+	System.out.println(x);
+}
+</programlisting>
+					</para>
+			</listitem>
+			
+		</orderedlist>
+	</appendix>
+	<appendix id="app-bindings">
+		<title>Complete list of bindings</title>
+		<para>
+			<itemizedlist>
+				<listitem>
+					<simpara><interfacename>IAnnotationBinding</interfacename></simpara>
+				</listitem>
+				<listitem>
+					<simpara><interfacename>IMemberValuePairBinding</interfacename>
+						</simpara>
+				</listitem>
+				<listitem>
+					<simpara><interfacename>IMethodBinding</interfacename></simpara>
+				</listitem>
+				<listitem>
+					<simpara><interfacename>IPackageBinding</interfacename></simpara>
+				</listitem>
+				<listitem>
+					<simpara><interfacename>ITypeBinding</interfacename></simpara>
+				</listitem>
+				<listitem>
+					<simpara><interfacename>IVariableBinding</interfacename></simpara>
+				</listitem>
+			</itemizedlist> </para>
+	</appendix>
+	
+	<appendix id="app-simple-property-value-classes">
+		<title>Simple properties value classes</title>
+		<para> Below the list of all classes of which simple property values can be instance of (in
+			Eclipse version 3.2).
+			<itemizedlist>
+				<listitem>
+					<simpara>
+						<code>boolean</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>int</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>String</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>Modifier.ModifierKeyword</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>Assignment.Operator</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>InfixExpression.Operator</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>PostfixExpression.Operator</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>PrefixExpression.Operator</code></simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						<code>PrimitiveType.Code</code></simpara>
+				</listitem>
+			</itemizedlist> </para>
+	</appendix>
+</article>
+
+<!--  Steps
+
+1. write search section: done.
+2. work over done.
+3. finalize example app. use ASTRewrite. done.
+4. work over, wave in example  done
+5. graphics: class diags, source-to-ast-node, java-model vs ast diagram 
+6. appendix -->
