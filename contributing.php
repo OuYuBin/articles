@@ -34,11 +34,6 @@
 	
 		<img src="images/write.png" align="right" />
 		
-		<p>
-			Please direct any question on submitting an article to 
-			<a href="mailto:articles_editor@eclipse.org">(Editor)</a>.
-		</p>
-	    
 		<h2>Eclipse Corner Articles</h2>
 	
 	    <p>
@@ -71,7 +66,7 @@
 		
 	    <p>
 	    	Next, write down a short outline of your article and the main topics
-			you intend to cover. Open a new bugzilla entry for the article if there's 
+			you intend to cover. Open a <a href="https://bugs.eclipse.org/bugs/enter_bug.cgi?product=Community&component=Articles">new bugzilla entry</a> for the article if there's 
 			not one already and put your outline in the comments there. Indicate a 
 			rough idea of when you expect the article to be completed.
 		</p>
