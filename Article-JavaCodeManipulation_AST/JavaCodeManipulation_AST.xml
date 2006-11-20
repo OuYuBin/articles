@@ -6,7 +6,7 @@
 		<title>Abstract Syntax Tree</title>
 		<releaseinfo role="SVN"> $Id: JavaCodeManipulation_AST.xml,v 1.3 2006/01/18
 			17:23:33 wbeaton Exp $ </releaseinfo>
-		<date>November 15, 2006</date>
+		<date>November 20, 2006</date>
 		<authorgroup><author>
 			<firstname>Thomas</firstname>
 			<surname>Kuhn</surname>			<affiliation>
@@ -45,16 +45,16 @@
 		- Where is the AST used within the IDE
 		- Explain the example application that will be built
 		-->
-		<para>Wondering how Eclipse is doing all the magic like jumping conveniently to a
+		<para>Are you ondering how Eclipse is doing all the magic like jumping conveniently to a
 			declaration, when you press
 			&quot;F3&quot; on a reference to a field or method? Or how &quot;Replace in file&quot;
 			solidly detects the declaration and all the references to the local variable and
 			modifies them synchronously? </para>
-		<para>Well, these and a big portion of the other source code modification and generation
-			tools, are based upon the Abstract Syntax Tree (AST). The AST is comparable to the DOM
+		<para>Well, these&mdash;and a big portion of the other source code modification and generation
+			tools&mdash;are based upon the Abstract Syntax Tree (AST). The AST is comparable to the DOM
 			tree model of an XML file. Just like with DOM, the AST allows you to modify the tree model and
 			reflects these modifications in the Java source code.</para>
-		<para>This article will refer to an example application, which covers most of the
+		<para>This article refers to an example application which covers most of the
 			interesting AST-related topics. Let us have a look at the application that was built to
 			illustrate this article: </para>
 		<section id="sec-example-application">
@@ -72,15 +72,15 @@
 					</listitem>
 					<listitem id="item-move-of-declaration">
 						<para><emphasis>Move of declaration.</emphasis> If a variable is declared,
-							and not immediatly referenced within the following statement, this variable
+							and not immediately referenced within the following statement, this variable
 							declaration has to be moved. The correct place for the declaration is the line
 							before it is first referenced.</para>
 					</listitem>
 					<listitem>
-						<para><emphasis>Move of declaration of a variable, that is referred within
+						<para><emphasis>Move of declaration of a variable that is referred to from within
 							different blocks.</emphasis> This is a subcase of case <xref
 								linkend="item-move-of-declaration"/>. Imagine that a variable is used
-							in both, a try- and a catch clause. Here the declaration cannot be moved right
+							in both a try- and a catch clause. Here the declaration cannot be moved right
 							before the first reference in the try-clause, since then it would not be
 							declared in the catch-clause. Our application has to deal with that and has to
 							move the declaration to the best possible place, which would be here one line
@@ -89,7 +89,7 @@
 				</orderedlist> In <xref linkend="app-code-fragments-example"/> code snippets
 				to each of these cases are provided.</para>
 			<para>You can import the example application into your workspace <xref
-					linkend="bib-example-project"/> or install the plugin using the Eclipse Update
+					linkend="bib-example-project"/> or install the plug-in using the Eclipse Update
 				Manager <xref linkend="bib-example-update"/>.</para>
 		</section>
 		<section id="sec-workflow">
@@ -105,7 +105,7 @@
 				</figure>
 				<orderedlist>
 					<listitem id="workflow-legend-1">
-						<simpara><emphasis>Java source</emphasis>: To start off you provide
+						<simpara><emphasis>Java source</emphasis>: To start off, you provide
 							some source code to parse. This source code can be supplied as a
 							Java file in your project or directly as a
 							<code>char[]</code> that contains Java source</simpara>
@@ -185,8 +185,8 @@
 			<code>import net.sourceforge.earticleast</code>, 
 			<code>net</code>
 			<code>sourceforge</code> and
-			<code>earticleast</code> are mapped to <classname>SimpleName</classname>
-			s.</para>
+			<code>earticleast</code> are mapped to <classname>SimpleName</classname>s.
+			</para>
 		<para> All AST-relevant classes are located in the package
 			<code>org.eclipse.jdt.core.dom</code> of the
 			<code>org.eclipse.jdt.core</code> plugin.</para>
@@ -274,7 +274,7 @@
 				- Focused on how to find an ICompilationUnit
 				
 				-->
-				<para>The Java Model is a whole different story. It is out of scope of this article to dive deeper into its details within this article. The parts looked at will be the ones which intersect with the AST. The motivation to discuss it here is, to use it as an entry point to build an Abstract Syntax Tree of a source file. Remember, the
+				<para>The Java Model is a whole different story. It is out of scope of this article to dive deep into its details within. The parts looked at will be the ones which intersect with the AST. The motivation to discuss it here is, to use it as an entry point to build an Abstract Syntax Tree of a source file. Remember, the
 					<classname>ICompilationUnit</classname> is one of the possible parameters for
 					the AST parser.</para>
 				<para>The Java Model represents a Java Project in a tree structure, which is
@@ -336,7 +336,7 @@
 					to rebuild a portion of the Java Model than to rebuild an AST. That is also one reason
 					why the Java Model is not only defined down to the level of
 					<classname>ICompilationUnit</classname>. There are many cases where complete
-					information, like provided by the AST, is not needed. One example is the Outline
+					information, like that provided by the AST, is not needed. One example is the Outline
 					view: this view does not need to know the contents of a method body. It is more
 					important that it can be rebuilt fast, to keep in sync with its source code.</para>
 				<para>There are different ways to get an
@@ -352,7 +352,7 @@
 					<interfacename>ISelection</interfacename>, that is passed to the
 					action's delegate (in the our example, this is
 					<classname>ASTArticleActionDelegate</classname>).</para>
-				<para>Another, programatic, approach is to get the project handle from the IDE and to
+				<para>Another, programmatic, approach is to get the project handle from the IDE and to
 					look for the compilation unit. This can be done by either step down the Java Model
 					tree to collect the desired <classname>ICompilationUnit</classname>s. Or, if
 					the qualified name of a type within the compilation unit is known, by calling the
@@ -378,7 +378,7 @@ ICompilationUnit lwCompilationUnit = lwType.getCompilationUnit();</programlistin
 			<para>Even a simple &quot;Hello world&quot; program results in a quite complex tree.
 				How does one get the <classname>MethodInvocation</classname> of that
 				<code>println(&quot;Hello World&quot;)</code>? Scanning all the levels is a
-				possible, but not very convenient way.</para>
+				possible, but not very convenient.</para>
 			<para> There is a better solution: every
 				<code>ASTNode</code> allows to query for a child node by using a visitor (visitor
 				pattern <xref linkend="bib-visitor-pattern"/>). Have a look at
@@ -443,7 +443,7 @@ ICompilationUnit lwCompilationUnit = lwType.getCompilationUnit();</programlistin
 		<section id="sec-obtaining-information-from-an-ast-node">
 			<title>Obtaining Information from an AST Node</title>
 			<!-- 
-			- Tell wich information you can get from an ASTNode and show how you access it (static and generic API of ASTNode)
+			- Tell which information you can get from an ASTNode and show how you access it (static and generic API of ASTNode)
 			-->
 			<para>Every subclass of
 				<code>ASTNode</code> contains specific information for the Java element it
@@ -678,36 +678,6 @@ public static void main(String[] args) {
 	node flagged as
 	<code>RECOVERED</code> might not contain the expected nodes.</para>
 	</section>
-	<section id="sec-managing-comments">
-		<title>Managing Comments</title>
-<para>One of the most frustrating part of modifying an AST is the comment handling. The method
-	<code>CompilationUnit#getCommentList()</code> is used to return the list of comments
-	located in the compilation unit in the ascendant order. Unfortunately, this list cannot be
-	modified. This means that even if the AST Rewriter is used to add a comment inside a
-	compilation unit, the new comment would not appear inside the comments' list.</para>
-<para>
-In order to add a comment the following code snippet can be used:
-</para>
-<programlisting>
-CompilationUnit astRoot= ... ; // get the current compilation unit
-
-ASTRewrite rewrite= ASTRewrite.create(astRoot.getAST());
-Block block= ((TypeDeclaration) astRoot.types().get(0)).getMethods()[0].getBody();
-ListRewrite listRewrite= rewrite.getListRewrite(block, Block.STATEMENTS_PROPERTY);
-Statement placeHolder= rewrite.createStringPlaceholder("//mycomment", ASTNode.EMPTY_STATEMENT);
-listRewrite.insertFirst(placeHolder, null);
-
-textEdits= rewrite.rewriteAST(document, null);
-textEdits.apply(document);
-</programlisting>
-<para>The methods <code>CompilationUnit#getExtendedLength(ASTNode)</code> and <code>CompilationUnit#getExtendedStartPosition(ASTNode)</code> can be used to retrieve the range of a node that would
-contains preceding and trailing comments and whitespaces.
-</para>
-<para> If a comment is a javadoc comment defined prior to a method declaration, a field
-	declaration or a type declaration (including enum, annotations, interfaces and classes),
-	they can also be retrieved by calling the <methodname>getJavadoc()</methodname> method
-	on the corresponding declaration.</para>
-	</section>	
 	<section id="sec-how-to-apply-changes">
 		<title>How to Apply Changes</title>
 		<!--
@@ -724,7 +694,7 @@ contains preceding and trailing comments and whitespaces.
 			instance can be obtained from every node of the tree by calling the method
 			<methodname>getAST()</methodname>. The newly created nodes can only be added to the
 			tree that class <classname>AST</classname> was retrieved from.</para>
-		<para>Often it is comfortable to reuse an existing subtree of an AST and maybe just change
+		<para>Often it is convenient to reuse an existing subtree of an AST and maybe just change
 			some details. AST nodes cannot be re-parented, once connected to an AST, they
 			cannot be attached to a different place of the tree. Though it is easy to create a copy from
 			a subtree:
@@ -737,7 +707,7 @@ contains preceding and trailing comments and whitespaces.
 		
 		<para>There are two APIs to track modifications on an AST: either you can directly modify
 			the tree or you can make use of a separate protocol, managed by an instance of
-			<code>ASTRewrite</code>.The latter, using the
+			<code>ASTRewrite</code>. The latter, using the
 			<code>ASTRewrite</code>, is the more sophisticated and preferable way. The changes
 			are noted by an instance of
 			<code>ASTRewrite</code>, the original AST is left untouched. It is possible to create
@@ -770,7 +740,7 @@ statementsListRewrite.insertAt(statement, firstReferenceIndex, null);</programli
 			above.</para>
 		<para>Let us have a look at the second way to change an AST. Instead of tracking the
 			modifications in separate protocols, we directly modify the AST. The only thing that
-			has to done before modifing the first node is to turn on the change recording by calling
+			has to done before modifying the first node is to turn on the change recording by calling
 			<code>recordModifications()</code> on the root of the AST, the
 			<code>CompilationUnit</code>. Internally changes are logged to an
 			<classname>ASTRewrite</classname> as well, but this happens hidden to you.
@@ -868,6 +838,36 @@ try {
 				</orderedlist> </para>
 		</section>
 	</section>
+	<section id="sec-managing-comments">
+		<title>Managing Comments</title>
+<para>One of the most frustrating part of modifying an AST is the comment handling. The method
+	<code>CompilationUnit#getCommentList()</code> is used to return the list of comments
+	located in the compilation unit in the ascendant order. Unfortunately, this list cannot be
+	modified. This means that even if the AST Rewriter is used to add a comment inside a
+	compilation unit, the new comment would not appear inside the comments' list.</para>
+<para>
+In order to add a comment the following code snippet can be used:
+</para>
+<programlisting>
+CompilationUnit astRoot= ... ; // get the current compilation unit
+
+ASTRewrite rewrite= ASTRewrite.create(astRoot.getAST());
+Block block= ((TypeDeclaration) astRoot.types().get(0)).getMethods()[0].getBody();
+ListRewrite listRewrite= rewrite.getListRewrite(block, Block.STATEMENTS_PROPERTY);
+Statement placeHolder= rewrite.createStringPlaceholder("//mycomment", ASTNode.EMPTY_STATEMENT);
+listRewrite.insertFirst(placeHolder, null);
+
+textEdits= rewrite.rewriteAST(document, null);
+textEdits.apply(document);
+</programlisting>
+<para>The methods <code>CompilationUnit#getExtendedLength(ASTNode)</code> and <code>CompilationUnit#getExtendedStartPosition(ASTNode)</code> can be used to retrieve the range of a node that would
+contains preceding and trailing comments and whitespaces.
+</para>
+<para> If a comment is a javadoc comment defined prior to a method declaration, a field
+	declaration or a type declaration (including enum, annotations, interfaces and classes),
+	they can also be retrieved by calling the <methodname>getJavadoc()</methodname> method
+	on the corresponding declaration.</para>
+	</section>	
 	<section id="sec-conclusion">
 		<title>
 			Conclusions
@@ -876,7 +876,7 @@ try {
 			manipulation issues. It touched the Java Model, explained Bindings and showed how to
 			store changes made to the AST back into Java source code.</para>
 		<para>For remarks, questions, etc. enter a comment in the bugzilla entry of this article
-				<xref linkend="bib-article-bugzilla"/></para>
+				<xref linkend="bib-article-bugzilla"/>.</para>
 	</section>
 	<bibliography id="bin-resources">
 		<title>Resources</title>
@@ -885,7 +885,7 @@ try {
 					url="http://earticleast.sourceforge.net/net.sourceforge.earticleast.app_1.0.0.zip">
 				Packed Example Project</ulink>. Use the option &quot;Existing Projects
 				into Workspace&quot; from the &quot;Import&quot; Wizard to add it
-				to your workspace.</bibliosource>
+				to your workspace</bibliosource>
 		</biblioentry>
 		<biblioentry id="bib-example-update">
 			<bibliosource>To install the plugin, obtain using the Eclipse Update Manager. Update
