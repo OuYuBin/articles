@@ -7,7 +7,7 @@
 				reliable to analyse and modify programmatically than text-based source. This
 				article shows how you can use the Abstract Syntax Tree for your own
 				applications.<br><p><b>By 
-    				Thomas&nbsp;Kuhn, Eye Media GmbH<br>Olivier&nbsp;Thomann, IBM Ottawa Lab<br></b><span class="date">November 20, 2006<br></span></p></blockquote></div><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-introduction"></a>Introduction</h2></div></div></div><p>Are you ondering how Eclipse is doing all the magic like jumping conveniently to a
+    				Thomas&nbsp;Kuhn, Eye Media GmbH<br>Olivier&nbsp;Thomann, IBM Ottawa Lab<br></b><span class="date">November 20, 2006<br></span></p></blockquote></div><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-introduction"></a>Introduction</h2></div></div></div><p>Are you wondering how Eclipse is doing all the magic like jumping conveniently to a
 			declaration, when you press
 			"F3" on a reference to a field or method? Or how "Replace in file"
 			solidly detects the declaration and all the references to the local variable and
@@ -62,7 +62,7 @@
 			declaration ( <code class="classname">VariableDeclarationFragment</code>),
 			assignments and so on. One very frequently used node is
 			<code class="classname">SimpleName</code>. A <code class="classname">SimpleName</code> is any
-			string of Java source that is not a keyword, a boolean literal (
+			string of Java source that is not a keyword, a Boolean literal (
 			<code class="code">true</code> or
 			<code class="code">false</code>) or the
 			<code class="code">null</code> literal. For example, in
@@ -75,7 +75,7 @@
 			<code class="code">earticleast</code> are mapped to <code class="classname">SimpleName</code>s.
 			</p><p> All AST-relevant classes are located in the package
 			<code class="code">org.eclipse.jdt.core.dom</code> of the
-			<code class="code">org.eclipse.jdt.core</code> plugin.</p><p> To discover how code is represented as AST, the AST Viewer plugin [<a href="#bib-ast-viewer">5</a>] is a big help: Once installed you can simply mark source
+			<code class="code">org.eclipse.jdt.core</code> plug-in.</p><p> To discover how code is represented as AST, the AST Viewer plug-in [<a href="#bib-ast-viewer">5</a>] is a big help: Once installed you can simply mark source
 			code in the editor and let it be displayed in a tree form in the AST Viewer view. </p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-parsing-a-source-file"></a>Parsing source code</h3></div></div></div><p>Most of the time, an AST is not created from scratch, but rather parsed from
 				existing Java code. This is done using the <code class="classname">ASTParser</code>. It
 				processes whole Java files as well as portions of Java code. In the example
@@ -168,7 +168,7 @@
 					of a compilation unit. Have a look at the example application's
 					<code class="code">plugin.xml</code>. The compilation unit then can be retrieved from the
 					<code class="interfacename">ISelection</code>, that is passed to the
-					action's delegate (in the our example, this is
+					action's delegate (in the example, this is
 					<code class="classname">ASTArticleActionDelegate</code>).</p><p>Another, programmatic, approach is to get the project handle from the IDE and to
 					look for the compilation unit. This can be done by either step down the Java Model
 					tree to collect the desired <code class="classname">ICompilationUnit</code>s. Or, if
@@ -187,7 +187,7 @@ ICompilationUnit lwCompilationUnit = lwType.getCompilationUnit();</pre>
 				How does one get the <code class="classname">MethodInvocation</code> of that
 				<code class="code">println("Hello World")</code>? Scanning all the levels is a
 				possible, but not very convenient.</p><p> There is a better solution: every
-				<code class="code">ASTNode</code> allows to query for a child node by using a visitor (visitor
+				<code class="code">ASTNode</code> allows querying for a child node by using a visitor (visitor
 				pattern [<a href="#bib-visitor-pattern">6</a>]). Have a look at
 				<code class="classname">ASTVisitor</code>. There you'll find for every subclass of
 				<code class="classname">ASTNode</code> two methods, one called
@@ -266,6 +266,7 @@ ICompilationUnit lwCompilationUnit = lwType.getCompilationUnit();</pre>
 							<code class="code">String</code>, a primitive value wrapper for either
 							<code class="code">Integer</code> or
 							<code class="code">Boolean</code> or a basic AST constant. For a list of all possible value
+
 							classes of a simple property, see <a href="#app-simple-property-value-classes" title="C.&nbsp;Simple properties value classes">Appendix&nbsp;C, <i>Simple properties value classes</i></a></p></li><li><p>
 							<code class="code">ChildPropertyDescriptor</code>: The value will be a node, an
 							instance of an
@@ -385,7 +386,7 @@ public static void main(String[] args) {
 			<code class="code">(Expression) ASTNode.copySubtree(ast, manager.getInitializer())</code>
 			. The parameter
 			<code class="code">ast</code> is the target <code class="classname">AST</code>. This instance will be
-			used to create the new nodes. That allows to copy nodes from another
+			used to create the new nodes. That allows copying nodes from another
 			<code class="classname">AST</code> (established by another parser run) into the current
 			<code class="classname">AST</code> domain. </p><p>There are two APIs to track modifications on an AST: either you can directly modify
 			the tree or you can make use of a separate protocol, managed by an instance of
@@ -430,7 +431,7 @@ block.statements().add(firstReferenceIndex, statement);</pre></div></div><br cla
 				created. Here we leave the code related area of the AST, and enter a text based
 				environment. The <code class="classname">TextEdit</code> object contains character
 				based modification information. It is part of the
-				<code class="code">org.eclipse.text</code> plugin.</p><p> How to obtain the
+				<code class="code">org.eclipse.text</code> plug-in.</p><p> How to obtain the
 				<code class="code">TextEdit</code> object differs for the two mentioned ways only slightly:
 				<div class="itemizedlist"><ul type="disc"><li><p>If you used
 							<code class="code">ASTRewrite</code>, ask the
@@ -507,19 +508,19 @@ contains preceding and trailing comments and whitespaces.
 				[<a href="#bib-article-bugzilla">7</a>].</p></div><div class="bibliography"><div class="titlepage"><div><div><h2 class="title"><a name="bin-resources"></a>Resources</h2></div></div></div><div class="biblioentry"><a name="bib-example-project"></a><p>[1] <span class="bibliosource">Download the <a href="http://earticleast.sourceforge.net/net.sourceforge.earticleast.app_1.0.0.zip" target="_new">
 				Packed Example Project</a>. Use the option "Existing Projects
 				into Workspace" from the "Import" Wizard to add it
-				to your workspace. </span></p></div><div class="biblioentry"><a name="bib-example-update"></a><p>[2] <span class="bibliosource">To install the plugin, obtain using the Eclipse Update Manager. Update
+				to your workspace. </span></p></div><div class="biblioentry"><a name="bib-example-update"></a><p>[2] <span class="bibliosource">To install the plug-in, obtain using the Eclipse Update Manager. Update
 				Site: http://earticleast.sourceforge.net/update. </span></p></div><div class="biblioentry"><a name="bib-jts"></a><p>[3] <span class="bibliosource"> <a href="http://eclipsecon.org/2005/presentations/EclipseCON2005_Tutorial29.pdf" target="_new">
 				Java Tool Smithing, Extending the Eclipse Java Development Tools </a>
 			. </span></p></div><div class="biblioentry"><a name="bib-java-practices"></a><p>[4] <span class="bibliosource"> <a href="http://www.javapractices.com/Topic126.cjp" target="_new"> Java
 				Practices </a>
 			. </span></p></div><div class="biblioentry"><a name="bib-ast-viewer"></a><p>[5] <span class="bibliosource"> <a href="http://www.eclipse.org/jdt/ui/astview/index.php" target="_new">
-				AST Viewer Plugin </a>
+				AST Viewer Plug-in </a>
 			. </span></p></div><div class="biblioentry"><a name="bib-visitor-pattern"></a><p>[6] <span class="bibliosource"> <a href="http://en.wikipedia.org/wiki/Visitor_pattern" target="_new">
 				Wikipedia: Visitor Pattern </a>
 			. </span></p></div><div class="biblioentry"><a name="bib-article-bugzilla"></a><p>[7] <span class="bibliosource"><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=149490" target="_new">
 				AST Article bugzilla entry</a>
 			. </span></p></div></div><div class="appendix" lang="en"><h2 class="title" style="clear: both"><a name="app-code-fragments-example"></a>A.&nbsp;Code Fragments for Example Application Cases</h2><p>In the introduction, three typical cases for our example application have been
-			presented (see <a href="#sec-example-application" title="Example Application">the section called &ldquo;Example Application&rdquo;</a>). Clarifing code before / after code snippets follow to further clarify these cases.</p><div class="orderedlist"><ol type="1"><li><p> <span class="emphasis"><em>Removal of unnecessary declaration.</em></span> </p><p>Before:
+			presented (see <a href="#sec-example-application" title="Example Application">the section called &ldquo;Example Application&rdquo;</a>). Clarifying code before / after code snippets follow to further clarify these cases.</p><div class="orderedlist"><ol type="1"><li><p> <span class="emphasis"><em>Removal of unnecessary declaration.</em></span> </p><p>Before:
 					<pre class="programlisting">int x = 0;
 ... 
 x = 2 * 3;</pre> </p><p>After:

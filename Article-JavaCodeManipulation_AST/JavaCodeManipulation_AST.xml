@@ -45,7 +45,7 @@
 		- Where is the AST used within the IDE
 		- Explain the example application that will be built
 		-->
-		<para>Are you ondering how Eclipse is doing all the magic like jumping conveniently to a
+		<para>Are you wondering how Eclipse is doing all the magic like jumping conveniently to a
 			declaration, when you press
 			&quot;F3&quot; on a reference to a field or method? Or how &quot;Replace in file&quot;
 			solidly detects the declaration and all the references to the local variable and
@@ -175,7 +175,7 @@
 			declaration ( <classname>VariableDeclarationFragment</classname>),
 			assignments and so on. One very frequently used node is
 			<classname>SimpleName</classname>. A <classname>SimpleName</classname> is any
-			string of Java source that is not a keyword, a boolean literal (
+			string of Java source that is not a keyword, a Boolean literal (
 			<code>true</code> or
 			<code>false</code>) or the
 			<code>null</code> literal. For example, in
@@ -189,8 +189,8 @@
 			</para>
 		<para> All AST-relevant classes are located in the package
 			<code>org.eclipse.jdt.core.dom</code> of the
-			<code>org.eclipse.jdt.core</code> plugin.</para>
-		<para> To discover how code is represented as AST, the AST Viewer plugin <xref
+			<code>org.eclipse.jdt.core</code> plug-in.</para>
+		<para> To discover how code is represented as AST, the AST Viewer plug-in <xref
 				linkend="bib-ast-viewer"/> is a big help: Once installed you can simply mark source
 			code in the editor and let it be displayed in a tree form in the AST Viewer view. </para>
 		<section id="sec-parsing-a-source-file">
@@ -350,7 +350,7 @@
 					of a compilation unit. Have a look at the example application's
 					<code>plugin.xml</code>. The compilation unit then can be retrieved from the
 					<interfacename>ISelection</interfacename>, that is passed to the
-					action's delegate (in the our example, this is
+					action's delegate (in the example, this is
 					<classname>ASTArticleActionDelegate</classname>).</para>
 				<para>Another, programmatic, approach is to get the project handle from the IDE and to
 					look for the compilation unit. This can be done by either step down the Java Model
@@ -380,7 +380,7 @@ ICompilationUnit lwCompilationUnit = lwType.getCompilationUnit();</programlistin
 				<code>println(&quot;Hello World&quot;)</code>? Scanning all the levels is a
 				possible, but not very convenient.</para>
 			<para> There is a better solution: every
-				<code>ASTNode</code> allows to query for a child node by using a visitor (visitor
+				<code>ASTNode</code> allows querying for a child node by using a visitor (visitor
 				pattern <xref linkend="bib-visitor-pattern"/>). Have a look at
 				<classname>ASTVisitor</classname>. There you'll find for every subclass of
 				<classname>ASTNode</classname> two methods, one called
@@ -701,7 +701,7 @@ public static void main(String[] args) {
 			<code>(Expression) ASTNode.copySubtree(ast, manager.getInitializer())</code>
 			. The parameter
 			<code>ast</code> is the target <classname>AST</classname>. This instance will be
-			used to create the new nodes. That allows to copy nodes from another
+			used to create the new nodes. That allows copying nodes from another
 			<classname>AST</classname> (established by another parser run) into the current
 			<classname>AST</classname> domain. </para>
 		
@@ -763,7 +763,7 @@ block.statements().add(firstReferenceIndex, statement);</programlisting>
 				created. Here we leave the code related area of the AST, and enter a text based
 				environment. The <classname>TextEdit</classname> object contains character
 				based modification information. It is part of the
-				<code>org.eclipse.text</code> plugin.</para>
+				<code>org.eclipse.text</code> plug-in.</para>
 			<para> How to obtain the
 				<code>TextEdit</code> object differs for the two mentioned ways only slightly:
 				<itemizedlist>
@@ -888,7 +888,7 @@ contains preceding and trailing comments and whitespaces.
 				to your workspace</bibliosource>
 		</biblioentry>
 		<biblioentry id="bib-example-update">
-			<bibliosource>To install the plugin, obtain using the Eclipse Update Manager. Update
+			<bibliosource>To install the plug-in, obtain using the Eclipse Update Manager. Update
 				Site: http://earticleast.sourceforge.net/update</bibliosource>
 		</biblioentry>						
 		<biblioentry id="bib-jts">
@@ -906,7 +906,7 @@ contains preceding and trailing comments and whitespaces.
 		
 		<biblioentry id="bib-ast-viewer">
 			<bibliosource> <ulink url="http://www.eclipse.org/jdt/ui/astview/index.php">
-				AST Viewer Plugin </ulink>
+				AST Viewer Plug-in </ulink>
 			</bibliosource>
 		</biblioentry>
 		
@@ -928,7 +928,7 @@ contains preceding and trailing comments and whitespaces.
 	<appendix id="app-code-fragments-example">
 		<title>Code Fragments for Example Application Cases</title>
 		<para>In the introduction, three typical cases for our example application have been
-			presented (see <xref linkend="sec-example-application"/>). Clarifing code before / after code snippets follow to further clarify these cases.</para>
+			presented (see <xref linkend="sec-example-application"/>). Clarifying code before / after code snippets follow to further clarify these cases.</para>
 		<orderedlist>
 			<listitem>
 				<para> <emphasis>Removal of unnecessary declaration.</emphasis> </para>
