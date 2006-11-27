@@ -1,0 +1,500 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Web Services Development With The Eclipse Web Tools Platform</title>
+<link rel="stylesheet" href="default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2006 Virtusa Corp.</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Web Services Development With The Eclipse Web Tools Platform<br>
+</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  The Web Tools Platform (WTP) Project extends Eclipse with a set of open-source 
+  Web Application Development tools and API's. This tutorial focuses on its Web 
+  Service application development support. The tutorial will follow a common life 
+  cycle of a Web Service application through Service Discovery, WSDL identification, 
+  Stub Generation, Testing and WS-I compliance verification. 
+  <p><b> By Tyrell Perera, <a href="http://www.virtusa.com">Virtusa Corp</a>.</b><br>
+    <font size="-1">May 02, 2006</font> </p>
+</blockquote>
+
+<hr width="100%">
+<h1>Introduction </h1>
+<p> The Web Tools Platform (WTP) Project extends Eclipse with a set of open-source 
+  Web services development tools and API's. This tutorial gives an overview of 
+  the project and focuses on its Web Services support.</p>
+<p>At present the project is divided into three sub projects:</p>
+<p> • Web Standard Tools (WST)<br>
+  • J2EE Standard Tools (JST)<br>
+  • Java Server Faces Tools (JSF) </p>
+<p>The Web Standard Tools subproject contains support for XML Web services, including 
+  tools based on standards defined by the W3C, Oasis, WS-I and others. WS-I is 
+  an open industry organization chartered to promote Web services interoperability 
+  across platforms, operating systems and programming languages. The organization’s 
+  diverse community of Web services leaders helps customers to develop interoperable 
+  Web services by providing guidance, recommended practices and supporting resources.</p>
+<p>The J2EE Standard Tools subproject contains support for standards defined by 
+  the Java Community Process, such as JAX-RPC and JSR-109, and for reference implementations 
+  of these standards, such as Apache Axis. The project contains both a set of 
+  tools for Web services developers and a set of API's for Web services tool creators.</p>
+<p>The Java Server Faces Tools project will provide tools and API's for JSR 127 
+  which is part of Java EE 5. The project will operate as an incubator during 
+  the WTP 1.0 development cycle and will become a component of the JST subproject 
+  in WTP 1.5.</p>
+<p>Collectively, these three sub projects include tools for HTML, XML, Web Services, 
+  J2EE and JSF development along with Server tools for integrating application 
+  servers, including Apache Tomcat, Apache Geronimo, JBoss, IBM WebSphere and 
+  BEA WebLogic.</p>
+<p>&nbsp;</p>
+<p><img src="images/tip.gif" width="62" height="13"> This tutorial uses the Eclipse 
+  Web Tools Platform 1.0 and Apache Tomcat 5.5 for it's demonstrations. The locations 
+  for downloads are given in the <em><strong>References and Resources </strong></em>section 
+  at the end.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>Building a 'Stock Quote' Web Service Client Using the Eclipse WTP</h1>
+<p> Although WTP provides many tools that are useful in Web Application development, 
+  this tutorial will focus on the tools that are directly related to Web Services 
+  development, testing and deployment. These tools, mostly integrated under the 
+  Web Standards Tools sub project, are;</p>
+<p> 1. Web Service Explorer<br>
+  2. WSDL/XSD Editor<br>
+  3. Web Service Wizard and<br>
+  4. WS-I Test Tools <br>
+</p>
+<p>In the following sections of this tutorial, we will look into the usage of 
+  these tools in Web Services development. We will consider a scenario where we 
+  are entrusted to implement a Web Service client for a 'Stock Quote' service. 
+  Using the Eclipse WTP, we will;</p>
+<ul>
+  <li> Search for an exposed 'Stock Quote' service in a UDDI registry,</li>
+  <li>Access the WSDL for this service,</li>
+  <li>Import the WSDL to the Eclipse WTP workbench,</li>
+  <li>Generate code (stubs) using the WSDL,</li>
+  <li>Test the service and finally</li>
+  <li>Validate WS-I compliance</li>
+</ul>
+<p>At each stage of the tutorial, we will look at a demonstration of how the activities 
+  described can be done in the Eclipse WTP.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>Finding a candidate service using the 'Web Services Explorer'</h2>
+<p> The Web Services Explorer helps in the <em><strong>Discovery</strong></em>,<em><strong> 
+  Testing </strong></em>and<em><strong> Publishing</strong></em> of Web Services. 
+  In order to build a client, we need to first find an exposed Web Service, which 
+  satisfies our requirements. After finding several candidates from the published 
+  UDDI registry information, it is only natural to test the functionality of the 
+  methods provided by the services. The 'Web Services Explorer' provided by the 
+  Eclipse WTP provides support for each of these actions as outlined below.<br>
+</p>
+<p> <strong>1. Discovery</strong></p>
+<ul>
+  <li> Searching UDDI Registries </li>
+  <blockquote> 
+    <p>UDDI is an acronym for Universal Description, Discovery, and Integration. 
+      A platform-independent, XML-based registry for businesses worldwide to list 
+      themselves on the Internet. UDDI is an open industry initiative (sponsored 
+      by OASIS) enabling businesses to publish service listings and discover each 
+      other and define how the services or software applications interact over 
+      the Internet. A UDDI business registration consists of three components:</p>
+    <p> 1. White Pages - address, contact, and known identifiers;<br>
+      2. Yellow Pages - industrial categorizations based on standard taxonomies; 
+      and<br>
+      3. Green Pages - technical information about services exposed by the business</p>
+    <p>UDDI is nominally one of the core Web Services standards. It is designed 
+      to be interrogated by SOAP messages and to provide access to WSDL documents 
+      describing the protocol bindings and message formats required to interact 
+      with the web services listed in its directory.</p>
+  </blockquote>
+  <li> Navigating WSIL (Web Services Inspection Language) Documents </li>
+  <blockquote> 
+    <p>WS-Inspection is a web service specification for &quot;discovery documents&quot; 
+      developed in a joint effort by Microsoft and IBM. WS-Inspection lists groups 
+      of web services and their endpoints in an XML format. Currently, other standards 
+      are being used for this purpose, such as Microsoft's DISCO. It is expected 
+      that WS-Inspection will eventually replace these standards to become the 
+      universally accepted discovery standard for web services.</p>
+  </blockquote>
+  <li> Importing WSDL into development project 
+    <blockquote> 
+      <p>The Web Services Description Language (WSDL) is an XML format published 
+        for describing Web services. Version V 1.1 has not been endorsed by the 
+        World Wide Web Consortium (W3C), however it has released a draft for version 
+        2.0 on May 11, 2005, that will be a W3C recommendation, and thus endorsed 
+        by the W3C.<br>
+      </p>
+    </blockquote>
+  </li>
+</ul>
+<p><strong>2. Test</strong><br>
+  • Dynamic invocation based on WSDL<br>
+  • View SOAP messages<br>
+</p>
+<p><strong>3. Publish</strong><br>
+  • Publish WSDL into UDDI Registries</p>
+<p>&nbsp;</p>
+<p>In the demonstration below we will 'search' a UDDI registry using the Eclipse 
+  WTP and filter the results, in order to obtain a viable candidate service for 
+  our client. Then we will invoke some 'service operations' to check the actual 
+  outputs and finally 'import' the service WSDL to our workbench.</p>
+<p>&nbsp;</p>
+<h3>Demonstration</h3>
+<h4> Launching the Web Services Explorer</h4>
+<p><img src="images/tryit.gif" width="61" height="13"> Make sure that you are 
+  in the <em><strong>J2EE Perspective</strong></em> in Eclipse. In the J2EE perspective, 
+  clicking the 'Launch Web Services Explorer' button in the Eclipse WTP tool bar 
+  will launch the Web Services Explorer in your default web browser (in this instance, 
+  Mozilla Firefox). The default registry queried is the IBM Test UDDI registry. 
+</p>
+<p> <img src="images/launch-web-service-explorer.jpg" width="1024" height="768"></p>
+<p>Figure 1 - Eclipse WTP workbench with the ' <em><strong>Launch Web Services 
+  Explorer</strong></em>' button highlighted </p>
+<h4>&nbsp;</h4>
+<h4>Web Services Explorer Launched In the Eclipse WTP</h4>
+<p>In this tutorial we will use the 'XMethods' UDDI registry to get ourselves 
+  familiar with the Web Services Explorer. </p>
+<p><img src="images/tryit.gif" width="61" height="13"> Select the registry from 
+  the drop down list, register for an account, activate the account and we are 
+  ready to move forward.<br>
+  Click the 'Go' button to begin exploring the registry.</p>
+<h4><img src="images/web-service-explorer.jpg" width="1024" height="768"></h4>
+<p>Figure 2 - The Web Services Explorer<br>
+</p>
+<p>&nbsp;</p>
+<h4>Searching For Exposed Web Services in the UDDI registry<br>
+</h4>
+<p>After accessing the registry, we need to find a Web Service to work with. </p>
+<p><img src="images/tryit.gif" width="61" height="13"> Click the 'Find' button 
+  and type 'Stock Quote Services' as the <em><strong>name of this query</strong></em>. 
+  In the <em><strong>name</strong></em> text box, type 'Stock Quote' (which we 
+  know exists). In the combo box you get three selections as <em><strong>Businesses</strong></em>, 
+  <em> <strong>Services</strong></em> or <em><strong>Service Interfaces</strong></em>. 
+  Select ‘Services’ there. Click ‘Go’ to execute the search.</p>
+<p><img src="images/search-services.jpg" width="1024" height="768"></p>
+<p>Figure 3 - Searching for exposed Web Services</p>
+<p>&nbsp;</p>
+<p></p>
+<p><img src="images/services-found.jpg" width="1024" height="768"></p>
+<p>Figure 4 - Search query results displayed</p>
+<p>&nbsp;</p>
+<p><img src="images/tryit.gif" width="61" height="13"> Click on one of the results 
+  to view service information. Then click 'Add To WSDL Page' to add this service 
+  to the WSDL page to further explore it.</p>
+<p><img src="images/service-details-displayed.jpg" width="1024" height="768"></p>
+<p>Figure 5 - Add to WSDL action selected</p>
+<h4>&nbsp;</h4>
+<h4> Invoking Service Operations Available for Developers</h4>
+<p>We can explore and invoke WSDL operations in the WSDL Page. In this particular 
+  service, we can invoke the operation available to get a Stock Quote for a given 
+  symbol string. This is good because we can actually try out the service methods 
+  and verify whether the expected output is provided by them.</p>
+<p><img src="images/tryit.gif" width="61" height="13"> Type 'IBM' and check the 
+  'Status' panel for the returned data.</p>
+<h4><img src="images/invoking-service-operations.JPG" width="1024" height="768"></h4>
+<p>Figure 6 - Invoking a WSDL operation</p>
+<p></p>
+<p> </p>
+<h4>Importing the Service WSDL to the Workbench</h4>
+<p> After exploring and finding our services, the next step is to start using 
+  them in our Web Applications. In order to do this, we need to create Client 
+  stubs along with <em>Web Service Emulators</em> (to test our clients). Using 
+  the Eclipse WTP we can import the WSDL of the Web Service explored into the 
+  workbench. </p>
+<p><img src="images/tryit.gif" width="61" height="13"> Let's try this using the 
+  steps below.<br>
+</p>
+<blockquote>
+  <p> 1. Create a simple project in your Eclipse WTP workbench (Ex: WTPtutorial)<br>
+    2. Click 'Import WSDL To Workbench' button in the web services explorer, as 
+    illustrated below<br>
+    3. Select the appropriate project to import the WSDL to (in this instance, 
+    WTPtutorial)<br>
+    4. Give a name to the generated WSDL file in the project.</p>
+</blockquote>
+<h2><img src="images/impor-wsdl-to-workbench.JPG" width="1024" height="768"></h2>
+<p>Figure 7 - Importing the WSDL of the service to the workbench</p>
+<p></p>
+<h2>&nbsp;</h2>
+<h2>Editing Documents with the WSDL/XSD Editor</h2>
+<p>As described previously, The Web Services Description Language (WSDL) is the 
+  XML format published for describing Web services. WSDL describes the public 
+  interface to the web service. This is an XML-based service description on how 
+  to communicate using the web service; namely, the protocol bindings and message 
+  formats required to interact with the web services listed in its directory. 
+  The supported operations and messages are described abstractly, and then bound 
+  to a concrete network protocol and message format.</p>
+<p>WSDL is often used in combination with SOAP and XML Schema to provide web services 
+  over the internet. A client program connecting to a web service can read the 
+  WSDL to determine what functions are available on the server. Any special data 
+  types used are embedded in the WSDL file in the form of XML Schema. The client 
+  can then use SOAP to actually call one of the functions listed in the WSDL.</p>
+<p>An XML Schema Definition (XSD) is an instance of an XML schema written in the 
+  W3C's XML Schema language. An XSD defines a type of XML document in terms of 
+  constraints upon what elements and attributes may appear, their relationship 
+  to each other, what types of data may be in them, and other things.<br>
+</p>
+<p> The WSDL/XSD Editor provided by the Eclipse WTP provides the developer with 
+  functionality expected from an advanced editor such as;<br>
+</p>
+<p>• Graphical and Source editing modes<br>
+  • Seamless integration for editing inline XSD<br>
+  • Content Assist<br>
+  • Pop-up actions<br>
+  • Binding Wizard<br>
+  • Validation, including WS-I profiles<br>
+  • Extensible for WSDL extension elements</p>
+<p>Illustrated below is the WSDL imported from the above section. It is displayed 
+  in the WSDL editor running in ‘<em><strong>graphical</strong></em>’ mode.</p>
+<h3><img src="images/wsdl-editor-graphical-mode.JPG" width="1024" height="768"></h3>
+<p>Figure 8 - The WSDL editor running in graphical mode</p>
+<p></p>
+<h3> </h3>
+<h3>WSDL Editor Demonstration</h3>
+<p><br>
+  <img src="images/tryit.gif" width="61" height="13"> We will try the editor following 
+  the steps below.</p>
+<blockquote>
+  <p><br>
+    1. Open “StockQuote.wsdl” in WSDL Editor<br>
+    2. Go into graphical view of XML schema for messages<br>
+    3. Navigate into “GetQuote” element<br>
+    4. Switch to Source tab<br>
+    5. Navigate using linked Outline and Properties views</p>
+</blockquote>
+<p>In the illustration below, we can see the editor in 'Source' mode along with 
+  the Eclipse workbench content outline.</p>
+<h2><img src="images/wsdl-editor-demo.JPG" width="1024" height="768"></h2>
+<p>Figure 9 - The WSDL Editor running in 'Source' mode, with 'Content Outline' 
+  and syntax highlighting</p>
+<p></p>
+<h2> </h2>
+<h2>Generating Code Using the Web Services Wizard</h2>
+<p> The next stage in the tutorial is to start creating and accessing web services. 
+  The Eclipse WTP Web Services Wizard provides the tools for doing just that. 
+</p>
+<p>The wizard;<br>
+</p>
+<p> 1. Supports generate/deploy/test/publish lifecycle<br>
+  2. Configures project, server, and SOAP engine<br>
+  3. Has highly extensible
+<ul>
+  <li> SOAP engines</li>
+  <li> Code generators</li>
+  <li> Test facilities </li>
+</ul></p>
+<p>&nbsp;</p><h3>Web Services Client Wizard Demonstration</h3>
+<p> In this demonstration, we will create a Web Service client for our 'Stock 
+  Quote' service. We will follow the Generate, Deploy, Test and Publish life cycle. 
+</p>
+<h4><br>
+  1. Configuring the Server</h4>
+<p> First we must configure our server in the Eclipse WTP workbench. This demonstration 
+  will use the Apache Tomcat server. </p>
+<p><img src="images/tryit.gif" width="61" height="13"> Go to the Menu File -&gt; 
+  New -&gt; Other and Select Servers. Fill your server information as illustrated 
+  in the Add New Server wizard.</p>
+<p><br>
+  <img src="images/web-service-wizard-1.JPG" width="500" height="500"></p>
+<p>Figure 10 - Beginning to add a new server</p>
+<p>&nbsp;</p>
+<p><img src="images/web-service-wizard-2.JPG" width="518" height="538"></p>
+<p>Figure 11 - Selecting the server 'type'</p>
+<p>&nbsp;</p>
+<h4><br>
+  2. Complete the Web Services Wizard</h4>
+<p> <img src="images/tryit.gif" width="61" height="13"> The steps are illustrated 
+  in the following screen shots. They can be briefly outlined as;</p>
+<p>1. Run Web Service Client Wizard to generate Java proxy and JSP test page with 
+  TCP/IP monitor<br>
+  Go to Menu File -&gt; New -&gt; Other. Expand '<em><strong>Web Services</strong></em>'. 
+  Select '<strong><em>Web Service Client</em></strong>'. Click 'Next'.</p>
+<p><img src="images/create-web-service-1.jpg" width="500" height="500"></p>
+<p>Figure 12 - Beginning to create a new WEb Service client</p>
+<p>&nbsp;</p>
+<p>2. Select the 'Client proxy type' as '<em><strong>Java Proxy</strong></em>'. 
+  Make sure that you select the '<em><strong>Test the Web service</strong></em>' 
+  and '<em><strong>Monitor the web service</strong></em>' options.</p>
+<p><img src="images/create-web-service-2.jpg" width="500" height="500"> </p>
+<p>Figure 13 - Selecting the options for the generated Web Service client</p>
+<p>&nbsp;</p>
+<p>3. Click 'Browse' and select the '<em><strong>StockQuote.wsdl</strong></em>' 
+  file as the WSDL document.</p>
+<p><img src="images/create-web-service-3.jpg" width="500" height="685"> </p>
+<p>Figure 14 - Locating the imported WSDL</p>
+<p>&nbsp;</p>
+<p>4. Type 'StockQuoteClient' as the Client Project. All the generated code will 
+  be organized under this project in the Eclipse WTP.</p>
+<p><img src="images/create-web-service-4.jpg" width="500" height="685"> </p>
+<p>Figure 15 - Giving a name for the project, which will contain the generated 
+  client stubs</p>
+<p>&nbsp;</p>
+<p>5. Click 'Next' in this page. No modifications necessary.</p>
+<p><img src="images/create-web-service-5.jpg" width="500" height="685"></p>
+<p>Figure 16 - Final options before code generation</p>
+<p>&nbsp;</p>
+<p>6. If your Tomcat server is stopped, you might get this screen. Click 'Start 
+  Server' to start the server. Once the server is started successfully, click 
+  'Next'. </p>
+<p><img src="images/create-web-service-6.jpg" width="500" height="685"></p>
+<p>Figure 17 - Start the Tomcat server </p>
+<p>&nbsp;</p>
+<p>7. In this screen select the option 'Run test on server', since it's not selected 
+  by default. This will enable us to test the Web service in our Tomcat server 
+  with the Eclipse WTP generated JSP's. Click 'Finish' to complete the wizard.</p>
+<p><img src="images/create-web-service-7.jpg" width="500" height="685"></p>
+<p>Figure 18 - Selecting the service testing options</p>
+<p>&nbsp;</p>
+<p>8. Finally you can see the newly created project in the Eclipse WTP workbench 
+  (Under 'Dynamic Web Projects'), along with the generated files.</p>
+<p><img src="images/create-web-service-8.jpg" width="1024" height="768"></p>
+<p>Figure 19 - The generated code, displayed in the workbench</p>
+<p>&nbsp;</p>
+<h4>3. Test the Generated Client Stubs</h4>
+<p><img src="images/tryit.gif" width="61" height="13"> Here we are setting the 
+  end point of the web service (using setEndPoinnt() method) as ‘http://localhost:9913/stockquote.asmx’ 
+  instead of ‘http://www.webservicex.com/stockquote.asmx’. We do this in order 
+  to monitor our SOAP requests using TCP/IP monitor.</p>
+<p><img src="images/test-generated-stubs-1.JPG" width="1024" height="768"></p>
+<p>Figure 20 - Testing using the generated JSP's hosted in the Tomcat server</p>
+<p>&nbsp;</p>
+<p><img src="images/tryit.gif" width="61" height="13"> Now go to the Menu Window 
+  -&gt; Show View -&gt; Other. Expand Debug and select TCP/IP monitor. This will 
+  launch the TCP/IP monitor GUI. Right click as illustrated and select Properties.</p>
+<p><img src="images/test-generated-stubs-2.JPG" width="1024" height="768"></p>
+<p>Figure 21 - The TCP/IP monitor GUI</p>
+<p>&nbsp;</p>
+<p><img src="images/tryit.gif" width="61" height="13"> In the Properties dialog 
+  click Add. In the next dialog, enter 9913 as monitoring port and the ‘real’ 
+  end points details as illustrated below. Click OK and Start to begin monitoring.</p>
+<p>What happens here is that, all requests going to the real endpoint will be 
+  monitored by the TCP/IP monitor. Hence, we get the opportunity to intercept 
+  and view all SOAP messages and debug if required.</p>
+<p><img src="images/test-generated-stubs-3.JPG" width="1024" height="768"></p>
+<p>Figure 22 - Port mapping in the TCP/IP monitor</p>
+<p>&nbsp;</p>
+<p>Now that we have all this set up, let’s fire a test and see everything in action. 
+</p>
+<p><img src="images/tryit.gif" width="61" height="13"> Right click the project 
+  in the workbench. Click Run As -&gt; Run on Server. The test JSP page will come 
+  up. Set the end point as described above. Make sure the TCP/IP monitor is configured 
+  and running as illustrated above.</p>
+<p><img src="images/tryit.gif" width="61" height="13"> Click on the getStockQuote() 
+  method. Input a symbol (ex: ‘ibm’). If all is well you should get data similar 
+  to the following screen shot.</p>
+<h2><img src="images/test-generated-stubs-4.JPG" width="1024" height="768"></h2>
+<p>Figure 23 - Testing the service, while the SOAP messages are intercepted by 
+  the TCP/IP monitor</p>
+<p>&nbsp;</p>
+<p></p>
+<p> </p>
+<h2>Maintaining Interoperability Using the WS-I Compliance Tools</h2>
+<h2>&nbsp;</h2>
+<h2>What is WS-I?<br>
+</h2>
+<p>The Web Services Interoperability Organization is an open industry effort chartered 
+  to promote Web Services interoperability across platforms, applications and 
+  programming languages. It acts an a standards integrator to help Web services 
+  advance in a structured, coherent manner. The WS-I consists of approximately 
+  130 member organizations of which 70% are vendors and 30% are end-user organizations. 
+  It has a strong non-U.S. membership, including the very influential Japan SIG.<br>
+</p>
+<h2>WS-I Goals</h2>
+<p>1. Achieve Web services interoperability by integrating specifications, promoting 
+  consistent implementations and providing a visible representation of conformance.<br>
+  2. Accelerate Web services deployment by offering implementation guidance and 
+  best practices, delivering tools and sample applications and providing a implementer’s 
+  forum where developers can collaborate.<br>
+  3. Encourage Web services adoption by building industry consensus to reduce 
+  early adopter risks, providing a forum for end users to communicate requirements 
+  and raising awareness of customer business requirements</p>
+<p>&nbsp;</p>
+<p>The WS-I Compliance tools in Eclipse WTP helps the developer to verify interoperability 
+  of the web services developed. These tools are developed in the Eclipse Web 
+  Service Validation Tools (WSVT) Project and supports;</p>
+<p> • WS-I Basic Profile 1.0/1.1<br>
+  • Simple SOAP Binding Profile 1.0 and <br>
+  • Attachments Profile 1.0</p>
+<p>The Eclipse WTP provides us with;</p>
+<p> 1. A WSDL 1.1 Validator and<br>
+  2. A SOAP 1.1 Message Monitor/Analyzer</p>
+<h3>&nbsp;</h3>
+<h3>WS-I Test Tools Demonstration</h3>
+<h4><br>
+  1. Specify level of WS-I compliance in Preferences page</h4>
+<p><img src="images/tryit.gif" width="61" height="13"> Go to the Menu Window -&gt; 
+  Preferences. Expand Web Services. Select Profile Compliance and Validation </p>
+<p>We can set the desired levels of WS-I compliance validations here.</p>
+<p><img src="images/wsi-test-tools-1.JPG" width="690" height="532"></p>
+<p>Figure 24 - Setting the WS-I compliance levels</p>
+<h4></h4>
+<p></p>
+<h4>2. Save SOAP messages from TCP/IP to a WS-I log file</h4>
+<p> <img src="images/tryit.gif" width="61" height="13"> Click the appropriate 
+  button from the TCP/IP monitor GUI as illustrated below.<br>
+</p>
+<p> <img src="images/wsi-test-tools-2.JPG" width="1024" height="768"> </p>
+<p>Figure 25 - Launching the Logging Wizard</p>
+<p>&nbsp;</p>
+<h4>3. Specify WSDL file that describes messages</h4>
+<h4><img src="images/wsi-test-tools-3.JPG" width="503" height="570"></h4>
+<p>Figure 26 - Specifying a logging file</p>
+<h4>&nbsp; </h4>
+<h4>4. Select the WSDL file for the web service (Optional)</h4>
+<p><img src="images/wsi-test-tools-4.JPG" width="667" height="553"></p>
+<p>Figure 27 - Selecting the WSDL for the WEb Service</p>
+<p>&nbsp;</p>
+<h4></h4>
+<h4>5. View WS-I errors and warnings in Problems view</h4>
+<p> After setting everything up as illustrated, we can validate the message log 
+  file as shown in the following screen shot. Any issues will be listed in the 
+  Problems view of the workbench.</p>
+<h1><img src="images/wsi-test-tools-5.JPG" width="1024" height="768"> </h1>
+<p>Figure 28 - Validating the WS-I log file</p>
+<p></p>
+<h1></h1>
+<p></p>
+<h1>Conclusion </h1>
+<p> This tutorial illustrated a common life cycle of a Web Services application, 
+  in order to highlight the support rendered in its development, from the Eclipse 
+  Web Tools platform. This tutorial is in no way complete, since it would require 
+  a book to highlight all the features offered by the Eclipse WTP for Web Services 
+  and Web Application developers. Further information on the features of the Eclipse 
+  WTP can be found in the Eclipse WTP forums and mailing lists.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>References and Resources</h1>
+<ol>
+  <li>Eclipse WTP <a href="http://www.eclipse.org/webtools/">http://www.eclipse.org/webtools/</a></li>
+  <li>Web Services Interoperability Organization <a href="http://www.ws-i.org/">http://www.ws-i.org/</a></li>
+  <li>Apache AXIS <a href="http://ws.apache.org/axis/">http://ws.apache.org/axis/</a></li>
+  <li>Apache Tomcat <a href="http://tomcat.apache.org/">http://tomcat.apache.org/</a></li>
+  <li>Apache Geronimo <a href="http://geronimo.apache.org/">http://geronimo.apache.org/</a></li>
+  <li>JBoss <a href="http://www.jboss.org/">http://www.jboss.org/</a></li>
+  <li>IBM Websphere <a href="http://www.ibm.com/websphere">http://www.ibm.com/websphere</a></li>
+  <li>BEA Weblogic <a href="http://www.beasys.com/">http://www.beasys.com/</a></li>
+  <li>Wikipedia <a href="http://en.wikipedia.org/wiki/WSDL">http://en.wikipedia.org/wiki/WSDL</a>, 
+    <a href="http://en.wikipedia.org/wiki/UDDI">http://en.wikipedia.org/wiki/UDDI</a></li>
+</ol>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</body>
+</html>
