@@ -20,14 +20,42 @@
 	
 	# End: page-specific settings
 	#
-	include("scripts/articles.php");
-	$filter = $_GET['filter'];
-	if (!$filter) $filter = 'all';
-	$categories = get_categories_for_filtering_as_html('/articles/index.php', $filter);
-	$articles = get_articles_as_html($filter);
+	//include("scripts/articles.php");
+	require_once("../resources/scripts/resources_core.php");
+	require_once("../resources/scripts/resources_html.php");
+	require_once("../resources/scripts/filter_html.php");
+	
+	$filter = new Filter();
+	$filter->populate_from_html_request_header();
+	$filter->type = 'article';
+	
+	$resources_list = $Resources->get_resources($filter);
+	
+	$filter_summary = $filter->get_summary();
+	
+	$category_cloud = $Filters_HTML->get_category_cloud($filter, 'article', 0);
+	
+	
+	$count = count($resources_list);
+	//get_categories_for_filtering_as_html('/articles/index.php', $filter);
+	$articles =  $Resources_HTML->get_resources_table($resources_list, $filter, "$filter_summary ($count articles)");
+	//get_articles_as_html($filter);
 
 	# Paste your HTML content between the EOHTML markers!	
 	$html = <<<EOHTML
+	
+		<link rel="stylesheet" type="text/css" href="/resources/layout.css" media="screen" />
+		<script language="javascript">
+			function t(i, j) {
+				var e = document.getElementById(i);
+				var f = document.getElementById(j);
+				var t = e.className;
+				if (t.match('invisible')) { t = t.replace(/invisible/gi, 'visible'); }
+				else { t = t.replace(/visible/gi, 'invisible'); }
+				e.className = t;
+				f.className = t;
+			}
+		</script>
 <!--<div id="maincontent">-->
 	<div id="midcolumn">
 		<h1>$pageTitle</h1>
@@ -47,14 +75,14 @@
        		article <a href="Article-Authoring-With-Eclipse/AuthoringWithEclipse.html">Authoring with Eclipse</a>.
        	</p>
     	<p>
-      		Besides these, a number of other web sites carry technical articles about
+      		A number of other web sites carry technical articles about
 			Eclipse. You can find pointers to these on the 
-			<a href="/community/">Eclipse Community page</a>.
+			<a href="/community/">Eclipse Community page</a>. You can find these articles
+			and more on the <a href="/resources">Eclipse Resources</a> page.
 		</p>
 		
 		<p>
-			<strong>New!</strong> RSS feed for recent articles <a href="/articles/articles.rss?filter=recent"><img src="/images/rss.gif" title="RSS feed for Most Recent Articles" alt="[RSS]"></a>
-			(added or updated in the past year).
+			RSS feed for recent articles <a href="/resources/resources.rss?type=article&title=Eclipse%20Corner%20Articles&recent=true"><img src="/images/rss.gif" title="RSS feed for Most Recent Articles" alt="[RSS]"></a>.
 		</p>
 		
 		<form method="get" action="/search/search.cgi">
@@ -63,16 +91,13 @@
 			Search Articles: <input type="text" name="q" value="" />
 			<input type="submit" value="Search!" />
  		</form>
-		<div class="homeitem3col">
-			$articles
-		</div>
+ 		<hr/>
+ 		$articles
 	</div>
 	<div id="rightcolumn">
 		<div class="sideitem">
-			<h6>Filter</h6>
-			<ul>
-			$categories
-			</ul>
+			<h6>Categories</h6>
+			$category_cloud
 		</div>
 	</div>
 	<div id="rightcolumn">
