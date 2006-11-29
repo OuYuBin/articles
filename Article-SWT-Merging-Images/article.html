@@ -1,0 +1,213 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<title>Merging Images using Image API in Eclipse</title>
+<link rel="stylesheet" href="default_style.css">
+</head>
+
+<body LINK="#0000ff" VLINK="#800080">
+<div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
+  &copy; 2006 Annamalai C</font> 
+  <table border=0 cellspacing=0 cellpadding=2 width="100%">
+    <tr> 
+      <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
+        Corner Article</font></font></b></td>
+    </tr>
+  </table>
+</div>
+<div align="left"> 
+  <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
+</div>
+<p>&nbsp;</p>
+
+<h1 ALIGN="CENTER">Merging Images using Image API in Eclipse
+</h1>
+
+<blockquote>
+<b>Summary</b>
+
+<br>
+  In Eclipse there are some convienent and easy to use Image related APIs that are exposed for the developers to use.
+  In the scope of this article we would discussion how to merge two images like .jpg or .png into one using these APIs and understand the use of the image api in SWT.
+  <p><b> By Annamalai C, Robert BOSCH India Ltd.</b> <br>
+    <font size="-1">November 27, 2006</font> </p>
+</blockquote>
+
+<hr width="100%">
+<p>This first section of this article gives an introduction to the classes that help us to merge two given images into a third image.
+<ul>
+  <li><a href="#ImageData">ImageData</a></li>
+  <li><a href="#ImageLoader">ImageLoader</a></li>
+</ul>
+
+<p>The next section describes the steps involved in merging two images into one.
+<ul>
+  <li><a href="#StepsInvolved">Algorithm Involved</a></li>
+</ul>
+
+<p>Finally, the section discusses the implementation of the Merge Algorithm.
+<ul>
+  <li><a href="#MergeAlgorithm">Implementation of Merge Algorithm</a></li>
+</ul>
+
+
+
+<h2><a name="ImageData">ImageData</a></h2>
+<p>SWT's ImageData class represents the raw data making up an SWT Image
+  and determines the color for each pixel coordinate.ImageData can be thought of as the model for an image, whereas the Image is the view that's been prepared for output onto a specific device. The ImageData has a width and height, and a pixel value for each coordinate. The raw data of the image is a byte[], and the depth of the image specifies the number of bits that are used for each coordinate. 
+<br>
+<p>For more on <a href="http://www.eclipse.org/articles/Article-SWT-images/graphics-resources.html#ImageData"> ImageData</a>, refer to Article "Taking a look at SWT Images." 
+
+<h2><a name="ImageLoader">ImageLoader</a></h2>
+<p>To save ImageData into a file use the class org.eclipse.swt.graphics.ImageLoader. The image loader has a public field data typed to ImageData[]. The reason the data field is an array of ImageData is to support image file formats with more than one frame such as animated GIFs or interlaced JPEG files. 
+<br>
+<p>For more on <a href="http://www.eclipse.org/articles/Article-SWT-images/graphics-resources.html#Saving%20Images"> ImageLoader</a>, refer to Article "Taking a look at SWT Images." 
+
+<h2><a name="StepsInvolved">Algorithm Involved</a> </h2>
+<ol>
+<li>Create ImageData for the two images to be merged<l/i>
+<li>Create a ImageData for the third image to be generated from the data of two source images</li>
+<li>Merge pixel by pixel from Image1 to Image3</li>
+<li>Append pixel by pixel from Image2 to Image3</li>
+<li>Export the imageData to desired image type using ImageLoader</li>
+</ol>
+
+<h2><a name="MergeAlgorithm">Implementation of Merge Algorithm</a> </h2>
+
+<p>Our constructor would take 3 Strings parameters. They are as follows
+<ol>
+<li>FilePath of 2 images to be merged<l/i>
+<li>MergerDirection -horizontal or vertical
+</ol>
+
+<p> <img src="images/tag_1.gif" height="13" width="24">The constructor loads the two files to be merged using ImageData and <img src="images/tag_2.gif" height="13" width="24">then initialises the third ImageData object that would contain the merged image based on the width and height of the two images to be merged.
+
+<pre>
+
+public class ImageMergerUtility {
+//Two images to be merged
+ImageData imgData1;
+ImageData imgData2;
+
+//Image after Merger
+ImageData imgData3;
+
+//Alignment
+short alignment;
+
+public ImageMergerUtility(String imgPath1, String imgPath2, short alignment) {
+
+<img src="images/tag_1.gif" height="13" width="24">		imgData1 = new ImageData(imgPath1);
+		imgData2 = new ImageData(imgPath2);	
+
+
+<img src="images/tag_2.gif" height="13" width="24">		switch (alignment) {
+
+		case 0:
+			//If alignment is Horizontal, 
+			//imgData3 width should be equal to the sum of width of images imgData1 & imgData2
+			//imgData3 height should be equal to height of imgData1
+
+			imgData3 = new ImageData(imgData1.width + imgData2.width, imgData1.height,
+				imgData1.depth, imgData1.palette);
+
+
+		break;
+		case 1:
+			//If alignment is Vertical,
+			//imgData3 height should be equal to the sum of height of images imgData1 & imgData2
+			//imgData3 width should be equal to the width of imgData1
+ 
+		       imgData3 = new ImageData(imgData1.width, imgData1.height + imgData2.height,
+				imgData1.depth, imgData1.palette);
+
+		break;
+	
+	}
+
+
+} 
+
+</pre>
+
+<p> There is this another method called as mergeImage which actually implements the rest of the algorithm that is <img src="images/tag_3.gif" height="13" width="24">Merge pixel by pixel image1 into image3 and then followed by <img src="images/tag_4.gif" height="13" width="24">Append pixel by pixel from Image2 to Image3
+
+<pre>
+
+public void mergeImage() {
+
+	switch (alignment) {
+
+		case 0:
+
+<img src="images/tag_3.gif" height="13" width="24">		//Merge the 1st Image
+		int i = imgData1.x;
+		int j = imgData1.y;
+		for (; i < imgData1.width; i++) {
+			j = imgData1.y;
+			for (; j < imgData1.height; j++) {
+			imgData3.setPixel(i, j, imgData1.getPixel(i, j));
+			}
+		}
+		
+<img src="images/tag_4.gif" height="13" width="24">		//Merge the 2nd Image
+		i = imgData2.x;
+		int width = imgData1.width;
+		
+		for(;i < imgData2.width; i++) {
+			j = imgData2.y;
+			for(;j < imgData2.height; j++) {
+				imgData3.setPixel(width, j, imgData2.getPixel(i, j));
+			}
+		width++;
+		}
+
+		
+			break;
+		case 1:
+
+<img src="images/tag_3.gif" height="13" width="24">		//Merge the 1st Image
+		int i = imgData1.x;
+		int j = imgData1.y;
+		for (; i < imgData1.width; i++) {
+			j = imgData1.y;
+			for (; j < imgData1.height; j++) {
+				imgData4.setPixel(i, j, imgData1.getPixel(i, j));
+			}
+		}
+
+<img src="images/tag_4.gif" height="13" width="24">		//Merge the 2nd Image below the 1st Image.
+		x = imgData2.x;
+		for (; x < imgData2.width; x++) {
+		int y = imgData2.y;
+		int height = imgData1.height;
+		for (; y < imgData2.height; y++) {
+			imgData3.setPixel(x, height, imgData2.getPixel(x, y));
+			height++;
+			}
+		}
+
+		break;
+	}
+
+
+
+
+<img src="images/tag_5.gif" height="13" width="24">//	Export the image as a JPEG to be stored as ResourceGraph.jpg
+	ImageLoader imageLoader = new ImageLoader();
+	imageLoader.data = new ImageData[] { imgData3 };
+	imageLoader.save("C:/temp/ResourceGraph.jpg", SWT.IMAGE_JPEG);
+
+   }
+
+}
+
+</pre>
+
+<p> Having derived the new merged imageData,<img src="images/tag_5.gif" height="13" width="24"> we need to export the imageData to desired image type using ImageLoader class.
+
+
+
+</body>
+</html>
