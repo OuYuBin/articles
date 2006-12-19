@@ -38,7 +38,8 @@
 	
 	$count = count($resources_list);
 	//get_categories_for_filtering_as_html('/articles/index.php', $filter);
-	$articles =  $Resources_HTML->get_resources_table($resources_list, $filter, "$filter_summary ($count articles)");
+	$rss = "<a href=\"/resources/resources.rss?type=article&title=Eclipse%20Corner%20Articles\"><img src=\"/images/rss2.gif\"></a>";
+	$articles =  $Resources_HTML->get_resources_table($resources_list, $filter, "$filter_summary ($count articles) $rss");
 	//get_articles_as_html($filter);
 
 	# Paste your HTML content between the EOHTML markers!	
@@ -79,10 +80,6 @@
 			Eclipse. You can find pointers to these on the 
 			<a href="/community/">Eclipse Community page</a>. You can find these articles
 			and more on the <a href="/resources">Eclipse Resources</a> page.
-		</p>
-		
-		<p>
-			RSS feed for recent articles <a href="/resources/resources.rss?type=article&title=Eclipse%20Corner%20Articles&recent=true"><img src="/images/rss.gif" title="RSS feed for Most Recent Articles" alt="[RSS]"></a>.
 		</p>
 		
 		<form method="get" action="/search/search.cgi">
