@@ -36,7 +36,5 @@
 	
 ?>
 
-	<div class="article">
-		<?php include "$file" ?>		
-	</div>
+	<?php include "$file" ?>	
 

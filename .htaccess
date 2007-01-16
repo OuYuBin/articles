@@ -21,3 +21,10 @@ Redirect permanent "/articles/Article-ActiveX Support in SWT/ActiveX Support in 
 # Your First Plug-in
 # Redirect old/incorrect URLs to the correct location.
 Redirect permanent "/articles/Your First Plug-in.html" http:/articles/Article-Your%20First%20Plug-in/YourFirstPlugin.html
+
+#Redirect any URL for an article to the article.php file. Let it display the file (all prettied up).
+# Disabled for now. Will redirect all changes as the formats of articles are upgraded.
+#RedirectMatch "/articles/(.*)/(.*).(html?)" http:/articles/article.php?file=$1/$2.$3
+
+# Article-API use/eclipse-api-usage-rules.html "How to Use the Eclipse API"
+Redirect permanent "/articles/Article-API use/eclipse-api-usage-rules.html" http:/articles/article.php?file=Article-API-Use/index.html
