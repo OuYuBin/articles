@@ -28,7 +28,7 @@ International, Inc.</div>
 </div>
 <div class="content">
 <h3>What it means to be API</h3>
-The Eclipse platform defines API elements for use by its clients, namely
+<p>The Eclipse platform defines API elements for use by its clients, namely
 ISVs writing plug-ins. These plug-ins may in turn define API elements
 for their clients, and so on. API elements are the public face: they
 carry a specification about what they are supposed to do, and about how
@@ -36,13 +36,13 @@ they are intended to be used. API elements are supported: the Eclipse
 platform team will fix implementation bugs where there is a deviation
 from the specified behavior. Since there is often a high cost associated
 with breaking API changes, the Eclipse platform team will also try to
-evolve API elements gracefully through successive major releases.
+evolve API elements gracefully through successive major releases.</p>
 <h3>How to tell API from non-API</h3>
-By their very nature, API elements are documented and have a
+<p>By their very nature, API elements are documented and have a
 specification, in contrast to non-API elements which are internal
 implementation details usually without published documentation or
 specifications. So if you cannot find the documentation for something,
-that's usually a good indicator that it's not API.
+that's usually a good indicator that it's not API.</p>
 <p>To try to draw the line more starkly, the code base for the
 platform is separated into API and non-API packages, with all API
 elements being declared in designated API packages.</p>
@@ -83,13 +83,13 @@ elements being declared in designated API packages.</p>
 	field either declared in, or inherited by, an API class or interface.
 	The names of API fields may legitimately appear in client code.</li>
 </ul>
-Everything else is considered internal implementation detail and off
+<p>Everything else is considered internal implementation detail and off
 limits to all clients. Legitimate client code must never reference the
 names of non-API elements (not even using Java reflection). In some
 cases, the Java language's name accessibility rules are used to disallow
 illegal references. However, there are many cases where this is simply
 not possible. Observing this one simple rule avoids the problem
-completely:
+completely:</p>
 <ul>
 	<li><b>Stick to officially documented APIs. </b>Only reference
 	packages that are documented in the <b><i>published API Javadoc</i></b>
@@ -100,24 +100,24 @@ completely:
 </ul>
 
 <h3>General Rules</h3>
-The specification of API elements is generated from Javadoc comments in
+<p>The specification of API elements is generated from Javadoc comments in
 the element's Java source code. For some types of elements, the
 specification is in the form of a contract. For example, in the case of
 methods, the contract is between two parties, the caller of the method
-and the implementor of the method. The fundamental ground rule is:
+and the implementor of the method. The fundamental ground rule is:</p>
 <ul>
 	<li><b>Honor all contracts.</b> The contracts are described in the
 	published Javadoc for the API elements you are using.</li>
 </ul>
-The term "must", when used in an API contract, means that it is
+<p>The term "must", when used in an API contract, means that it is
 incumbent on the party to ensure that the condition would always be met;
 any failure to do so would be considered a programming error with
-unspecified (and perhaps unpredictable) consequences.
+unspecified (and perhaps unpredictable) consequences.</p>
 <ul>
 	<li><b>You must honor "must". </b>Pay especially close heed to
 	conditions where "must" is used.</li>
 </ul>
-Other common sense rules:
+<p>Other common sense rules:</p>
 <ul>
 	<li><b>Do not rely on incidental behavior. </b>Incidental behavior
 	is behavior observed by experiment or in practice, but which is not
@@ -139,9 +139,9 @@ Other common sense rules:
 </ul>
 
 <h3>Calling public API methods</h3>
-For most clients, the bulk of the Eclipse API takes the form of public
+<p>For most clients, the bulk of the Eclipse API takes the form of public
 methods on API interfaces or classes, provided for the client to call
-when appropriate.
+when appropriate.</p>
 <ul>
 	<li><b>Ensure preconditions.</b> Do ensure that an API method's
 	preconditions are met before calling the method. Conversely, the caller
@@ -169,7 +169,7 @@ when appropriate.
 </ul>
 
 <h3>Instantiating platform API classes</h3>
-Not all concrete API classes are intended to be instantiated by just
+<p>Not all concrete API classes are intended to be instantiated by just
 anyone. API classes have an instantiation contract indicating the terms
 under which instances may be created. The contract may also cover things
 like residual initialization responsibilities (for example, configuring
@@ -177,7 +177,7 @@ a certain property before the instance is fully active) and associated
 lifecycle responsibilities (for example, calling <tt>dispose()</tt> to
 free up OS resources hung on to by the instance). Classes that are
 designed to be instantiated by clients are explicitly flagged in the
-Javadoc class comment (with words like "Clients may instantiate.").
+Javadoc class comment (with words like "Clients may instantiate.").</p>
 <ul>
 	<li><b>Restricted instantiators.</b> Do not instantiate an API
 	class that is documented as available only to certain parties unless
@@ -188,12 +188,12 @@ Javadoc class comment (with words like "Clients may instantiate.").
 </ul>
 
 <h3>Subclassing platform API classes</h3>
-Only a subset of the API classes were designed to be subclassed. API
+<p>Only a subset of the API classes were designed to be subclassed. API
 classes have a subclass contract indicating the terms under which
 subclasses may be declared. This contract also covers initialization
 responsibilities and lifecycle responsibilities. Classes that are
 designed to be subclassed by clients are explicitly flagged in the
-Javadoc class comment (with words like "Clients may subclass.").
+Javadoc class comment (with words like "Clients may subclass.").</p>
 <ul>
 	<li><b>Restricted subclassers.</b> Do not subclass an API class
 	that is not intended to be subclassed. Treat these classes as if they
@@ -202,17 +202,17 @@ Javadoc class comment (with words like "Clients may subclass.").
 </ul>
 
 <h3>Calling protected API methods</h3>
-Calling inherited protected and public methods from within a subclass is
+<p>Calling inherited protected and public methods from within a subclass is
 generally allowed; however, this often requires more care to correctly
-call than to call public methods from outside the hierarchy.
+call than to call public methods from outside the hierarchy.</p>
 <h3>Overriding API methods</h3>
-Only a subset of the public and protected API methods were designed to
+<p>Only a subset of the public and protected API methods were designed to
 be overridden. Each API method has a subclass contract indicating the
 terms under which a subclass may override it. By default, overriding is
 not permitted. It is important to check the subclass contract on the
 actual method implementation being overridden; the terms of subclass
 contracts are not automatically passed along when that method is
-overridden.
+overridden.</p>
 <ul>
 	<li><b>Do not override a public or protected API method unless
 	it is explicitly allowed.</b> Unless otherwise indicated, treat all methods
@@ -220,25 +220,18 @@ overridden.
 	final" methods). If the kind of overriding allowed is:</li>
 
 	<ul>
-		"
-		<b>implement</b>
-		" - the abstract method declared on the subclass must be implemented
-		by a concrete subclass
-		<br>
-		"
-		<b>extend</b>
-		" - the method declared on the subclass must invoke the method on the
-		superclass (exactly once)
-		<br>
-		"
-		<b>re-implement</b>
-		" - the method declared on the subclass must not invoke the method on
-		the superclass
-		<br>
-		"
-		<b>override</b>
-		" - the method declared on the subclass is free to invoke the method
-		on the superclass as it sees fit
+		<li>&quot;<b>implement</b>&quot;
+		 - the abstract method declared on the subclass must be implemented
+		by a concrete subclass</li>
+		<li>
+		&quot;<b>extend</b>&quot; - the method declared on the subclass must invoke the method on the
+		superclass (exactly once)</li>
+		<li>
+		&quot;<b>re-implement</b>&quot; - the method declared on the subclass must not invoke the method on
+		the superclass</li>
+		<li>
+		&quot;<b>override</b>&quot; - the method declared on the subclass is free to invoke the method
+		on the superclass as it sees fit</li>
 	</ul>
 
 	<li><b>Ensure postconditions. </b>Do ensure that any
@@ -263,12 +256,12 @@ overridden.
 </ul>
 
 <h3>Implementing platform API interfaces</h3>
-Only a subset of the API interfaces were designed to be implemented by
+<p>Only a subset of the API interfaces were designed to be implemented by
 clients. API interfaces have a contract indicating the terms under which
 it may be implemented. Interfaces that are designed to be implemented by
 clients are explicitly flagged in the Javadoc class comment (with words
 like "Clients may implement."). A client may declare a subinterface of
-an API interface if and only if they are allowed to implement it.
+an API interface if and only if they are allowed to implement it.</p>
 <ul>
 	<li><b>Restricted implementors.</b> Do not implement an API
 	interface that is documented as available only to certain parties
@@ -277,35 +270,35 @@ an API interface if and only if they are allowed to implement it.
 </ul>
 
 <h3>Implementing public API methods</h3>
-See "Overriding API methods".
+<p>See "Overriding API methods".</p>
 <h3>Accessing Fields in API classes and interfaces</h3>
-Clients may read API fields, most of which are final. Certain
+<p>Clients may read API fields, most of which are final. Certain
 struct-like objects may have non-final public fields, which clients may
-read and write unless otherwise indicated.
+read and write unless otherwise indicated.</p>
 <ul>
 	<li><b>Null fields.</b> Do not set an API field to null unless
 	this is explicitly allowed.</li>
 </ul>
 
 <h3>Casting Objects of a known API type</h3>
-An object of a known API type may only be cast to a different API type
+<p>An object of a known API type may only be cast to a different API type
 (or conditionally cast using instanceof) if this is explicitly allowed
-in the API.
+in the API.</p>
 <ul>
 	<li><b>Cast and instanceof.</b> Do not use instanceof and cast
 	expressions to increase what is known about an object beyond what the
 	API supports. Improper use exposes incidental implementation details
 	not guaranteed by the API.</li>
 </ul>
-And, of course, casting any object to a non-API class or interface is
-always inappropriate.
+<p>And, of course, casting any object to a non-API class or interface is
+always inappropriate.</p>
 <h3>Not Following the Rules</h3>
-Whether done knowingly or unwittingly, there are consequences for
+<p>Whether done knowingly or unwittingly, there are consequences for
 transgressing the rules. It might be easier for all involved if there
 were API police that would bust you for breaking the rules. However,
 that is not the case. For the most part, API conformance operates as an
 honor system, with each client responsible for knowing the rules and
-adhering to them.
+adhering to them.</p>
 <p>The contracts on the API elements delimit the behavior that is
 supported and sustained. As the Eclipse platform matures and evolves, it
 will be the API contracts that guide how this evolution happens. Outside
@@ -327,8 +320,8 @@ co-exist with other plug-ins. If everyone plays by the rules, the
 Eclipse platform will provide a stable and supported base on which to
 build exciting new products.</p>
 </div>
-<div class="notices">Java and all Java-based trademarks and logos
+<div class="notices"><p>Java and all Java-based trademarks and logos
 are trademarks or registered trademarks of Sun Microsystems, Inc. in the
-United States, other countries, or both.</div>
+United States, other countries, or both.</p></div>
 </body>
 </html>
