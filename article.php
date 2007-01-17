@@ -44,8 +44,8 @@
 		<a target="_blank" href="/articles/printable.php?file=<?= $file ?>"><img src="/articles/images/printer.gif"/> Printer-friendly version</a>
 	</div>
 
-	<div style="clear:both"/>
-	
+	<div style="clear:both;"/>
+	<br/>
 	<div class="article">
 		<?php include "$file" ?>		
 	</div>
