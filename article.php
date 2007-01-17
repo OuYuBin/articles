@@ -37,9 +37,15 @@
 	
 	ob_start();
 ?>
-	<div style="text-align: right;"><a target="_blank" href="/articles/printable.php?file=<?= $file ?>"><img src="/articles/images/printer.gif"/> Printer-friendly version</a>
+	<div style="float: left;">
+		<a href="/articles/index.php"><img src="/articles/images/back.gif"/> Back to Articles</a>
+	</div>
+	<div style="float: right;">
+		<a target="_blank" href="/articles/printable.php?file=<?= $file ?>"><img src="/articles/images/printer.gif"/> Printer-friendly version</a>
 	</div>
 
+	<div style="clear:both"/>
+	
 	<div class="article">
 		<?php include "$file" ?>		
 	</div>
