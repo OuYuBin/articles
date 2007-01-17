@@ -40,6 +40,6 @@
 	<base href="http://<?= $host ?>/articles/<?= $file ?>"/>
 	<title>Eclipse Corner Article</title>
 </head>
-<body>
+<body onLoad="window.print();">
 	<?php include "$file" ?>	
 </body>
