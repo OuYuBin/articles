@@ -5,38 +5,24 @@
    <meta name="Author" content="OTI Employee">
    <meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
    <title>Contributing Actions to the Eclipse Workbench</title>
-   <link rel="stylesheet" href="../../default_style.css">
+   <link rel="stylesheet" href="../article.css">
 </head>
 <body>
 
-<center>
-  <div align="right"><font face="Times New Roman, Times, serif" size="2">Copyright 
-    &copy; 2001 Object Technology International, Inc.</font> 
-    <table border=0 cellspacing=0 cellpadding=2 width="100%">
-      <tr> 
-        <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
-          Corner Article</font></font></b></td>
-      </tr>
-    </table>
-  </div>
-  <div align="left"> 
-    <h1><img src="images/Idea.jpg" height=86 width=120 align=CENTER></h1>
-  </div>
-
 <h1>Contributing Actions to the Eclipse Workbench</h1>
-</center>
 
-<h3>
-Summary</h3>
-The Eclipse Platform is an open and extensible platform. This article explains
+<div class="summary">
+	<h2>Summary</h2>
+<p>The Eclipse Platform is an open and extensible platform. This article explains
 in detail how the Workbench can be extended to add new actions and provides
-guidance to the plug-in developers on how they can design for extensibility.
-<p><b>By Simon Arsenault, OTI</b>
-<br>October 18, 2001
-<p>
-<hr WIDTH="100%">
-<h3>
-Introduction</h3>
+guidance to the plug-in developers on how they can design for extensibility.</p>
+<div class="author">By Simon Arsenault, OTI</div>
+<div class="copyright">Copyright &copy; 2001 Object Technology International, Inc.</div>
+<div class= "date">October 18, 2001</div>
+</div>
+
+<div class="content">
+<h2>Introduction</h2>
 The Eclipse Platform allows a plug-in to extend other plug-ins, allowing
 for a tight integration and therefore a better experience for the end user.
 This article illustrates how to contribute actions to views and editors
@@ -68,8 +54,8 @@ from other plug-ins.
 <p>To follow along with the examples in this article, refer to the section
 <a href="#Running the examples">running
 the examples</a>.
-<h3>
-Contributing actions to context menus</h3>
+<h2>
+Contributing actions to context menus</h2>
 The ability to add actions to the context menu of a view or editor allows
 tight integration between plug-ins. For example, the Version and Configuration
 Management plug-in (VCM) adds a number of new actions to existing views
@@ -80,7 +66,7 @@ manage resources from existing views.
   of action contributions. Actions can either be contributed to the context menu 
   of a specific editor or view, or they can be registered against a specific object 
   type. The following three examples will look at each in detail. 
-  <h4> Example 1: Adding an action to the default text editor</h4>
+  <h3> Example 1: Adding an action to the default text editor</h3>
   Let's look at how to add a single action to the context menu of the default 
   text editor provided by the Workbench plug-in. 
   <pre>&lt;extension point="org.eclipse.ui.popupMenus">&nbsp;
@@ -152,8 +138,8 @@ manage resources from existing views.
     this example</a>. Notice the action added at the end of the editor's context 
     menu. This is where the “additions” group is located in the default text editor 
     context menu. 
-  <h4> <a NAME="Example: Adding sub-menu to the Navigator"></a>Example 2: Adding 
-    a sub-menu to the Navigator view</h4>
+  <h3> <a NAME="Example: Adding sub-menu to the Navigator"></a>Example 2: Adding 
+    a sub-menu to the Navigator view</h3>
   Let's look at how to add one action and a sub-menu with two actions to the Navigator 
   view. 
   <pre>&lt;extension point="org.eclipse.ui.popupMenus">&nbsp;
@@ -267,8 +253,8 @@ manage resources from existing views.
     is unfortunate, but this issue was discovered only after the API was frozen. 
 </dl>
 
-<h4>
-Example 3: Adding an action to an object</h4>
+<h3>
+Example 3: Adding an action to an object</h3>
 Let's look at how to add a single action to a .java file in a Java project.
 <pre>&lt;extension point="org.eclipse.ui.popupMenus">&nbsp;
 <img SRC="images/tag_a.jpg" height=13 width=24>&lt;objectContribution&nbsp;
@@ -342,9 +328,9 @@ part given to the delegate via the last setActivePart method call.
 this example</a>. Notice the object action contribution is added to the
 Navigator's context menu because a .java file within a Java project is
 selected.
-<h4>
+<h3>
 <a NAME="Developer: Allowing action contribution to your"></a>Developer
-Guideline: Supporting action contributions in your own context menus</h4>
+Guideline: Supporting action contributions in your own context menus</h3>
 Within the Workbench, action contributions to a context menu is only possible
 when the menu is made known to the Workbench. This is a voluntary process,
 but plug-ins are encouraged to expose their menus so that ISVs may extend
@@ -397,13 +383,13 @@ objects the action contribution applies to. The Workbench will retrieve
 the filter for the selection by testing to see if it implements IActionFilter.
 If that fails, the Workbench will ask for a filter through the IAdaptable
 mechanism.
-<h3>
-Contributing actions to a view's menu or toolbar</h3>
+<h2>
+Contributing actions to a view's menu or toolbar</h2>
 A view has a local pull down menu and a toolbar which is initially populated
 by the view itself. Other plug-ins can contribute actions to this menu
 and toolbar by using the org.eclipse.ui.viewActions extension point.
-<h4>
-Example 4: Adding actions to the Navigator view's menu and toolbar</h4>
+<h3>
+Example 4: Adding actions to the Navigator view's menu and toolbar</h3>
 Let's look at how to contribute a different action to both the pull down
 menu and toolbar of the Navigator view.
 <pre>&lt;extension point="org.eclipse.ui.viewActions">&nbsp;
@@ -476,8 +462,8 @@ the <i>enablesFor</i> attribute is not specified.
 this example</a>. Notice the action added to the Navigator's pull down
 menu. The action added in the toolbar is disabled because the current selection
 does not contain .java files, but instead .txt files.
-<h4>
-Developer Guideline: Supporting action contributions in your own views</h4>
+<h3>
+Developer Guideline: Supporting action contributions in your own views</h3>
 Developers of a view should include the standard insertion point identifier
 IWorkbenchActionConstants.MB_ADDITIONS in the view's pull down menu. This
 reference point will be used for insertion of actions contributed by ISVs.
@@ -486,15 +472,15 @@ appropriate location for insertion. Other insertion points can be defined
 and published within the javadoc of the view. This is strongly recommended
 to allow ISVs better control of where the action will be inserted within
 the pull down menu.
-<h3>
-Contributing actions to an editor's menu or toolbar</h3>
+<h2>
+Contributing actions to an editor's menu or toolbar</h2>
 An editor will contribute its actions to the main menu bar and toolbar
 of the Workbench window. Another plug-in can contribute actions for a particular
 editor by using the org.eclipse.ui.editorActions extension point. Each
 action extension is created and shared by all instances of the same editor
 type.
-<h4>
-Example 5: Adding actions to the default text editor's toolbar</h4>
+<h3>
+Example 5: Adding actions to the default text editor's toolbar</h3>
 Let's look at how to contribute two actions to the toolbar of the default
 text editor.
 <pre>&lt;extension point="org.eclipse.ui.editorActions">&nbsp;
@@ -547,8 +533,8 @@ provided by the Workbench window main toolbar.
 <p>The image above shows the result of <a href="#Running the examples">running
 this example</a>. Notice the action next to the save tool items and the
 action added at the end of the toolbar.
-<h4>
-Example 6: Adding actions to the default text editor's menu bar</h4>
+<h3>
+Example 6: Adding actions to the default text editor's menu bar</h3>
 Let's look at how to contribute to the default text editor's menu bar the
 following:
 <ul>
@@ -652,8 +638,8 @@ is used to represent the path to the Perspective menu and the constant
 IWorkbenchActionConstants.M_WORKBENCH is used to represent the path to
 the Project menu. This is for historical reasons; these menus were renamed
 after the constants were defined as API.
-<h4>
-Developer Guideline: Supporting action contributions in your own editors</h4>
+<h3>
+Developer Guideline: Supporting action contributions in your own editors</h3>
 Publishers of an editor should include the standard insertion point identifier
 IWorkbenchActionConstants.MB_ADDITIONS in all top level menus added by
 the editor. This reference point is used for insertion of actions contributed
@@ -662,8 +648,8 @@ menu at an appropriate location for insertion. Other insertion points can
 be defined and published within the javadoc of the editor. This is strongly
 recommended to allow ISVs better control of where the action is inserted
 within the menu bar.
-<h3>
-Contributing actions via action sets</h3>
+<h2>
+Contributing actions via action sets</h2>
 An action set is a mechanism that allows a plug-in to contribute menus,
 menu items, and toolbar items to the main menu bar and toolbar of the Workbench
 window. It is important to understand what action sets are meant to be
@@ -681,8 +667,8 @@ even when the action set is not visible.
 an action set. These actions appear in the Workbench window by user preference.
 See the customize perspective dialog by selecting the menu item Perspective->Customize...
 and then expanding the Other category.
-<h4>
-Example 7: Adding an action set</h4>
+<h3>
+Example 7: Adding an action set</h3>
 Let's look at how to add an action set which contains two toolbar items.
 <pre>&lt;extension point="org.eclipse.ui.actionSets">
 &nbsp;&nbsp; &lt;actionSet
@@ -754,8 +740,8 @@ this example</a>. Notice the two actions added at the end of the toolbar,
 with one having a drop down menu option. To show this action set in the
 current perspective, select the menu item Perspective->Customize..., expand
 the Other category, and check the option "Action Set 1".
-<h3>
-Conclusion</h3>
+<h2>
+Conclusion</h2>
 This article has covered the extension points that a plug-in may use to
 contribute actions to the Workbench. The best way to learn more about action
 contributions is to take the examples and experiment with them. Plug-in
@@ -765,17 +751,18 @@ More information is available in the Platform Plug-in Developer Guide from
 the Help perspective, and in the org.eclipse.ui extension points documentation
 from the Platform Plug-in Developer Guide, expand Reference->Extension
 Points Reference->Workbench.
-<h3>
-<a NAME="Running the examples"></a>Running the examples</h3>
+<h2>
+<a NAME="Running the examples"></a>Running the examples</h2>
 The file "<a href="source/action_contribution_examples.zip">action_contribution_examples.zip</a>"
 contains the complete source code for all the examples in this article.
 Extract the content of the ZIP file into the Eclipse "plugins" directory
 to install the action contribution example plug-in. Then edit the plugin.xml
 file to uncomment the example to be run.
-
-
-<p><small>Java and all Java-based trademarks and logos are trademarks or registered
+</div>
+<div class="notices">
+<p>Java and all Java-based trademarks and logos are trademarks or registered
 trademarks of Sun Microsystems, Inc. in the United States, other countries, or
-both.</small></p>
+both.</p>
+</div>
 </body>
 </html>
