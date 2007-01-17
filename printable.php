@@ -35,6 +35,11 @@
 	#
 	
 ?>
-
+<html>
+<head>
+	<base href="http://<?= $host ?>/articles/<?= $file ?>"/>
+	<title>Eclipse Corner Article</title>
+</head>
+<body>
 	<?php include "$file" ?>	
-
+</body>
