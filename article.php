@@ -38,7 +38,7 @@
 	ob_start();
 ?>
 	<div style="float: left;">
-		<a href="/articles/index.php"><img src="/articles/images/back.gif"/> Back to Articles</a>
+		<a href="/articles/index.php"><img src="/articles/images/back.gif"/> Back to Eclipse Corner Articles</a>
 	</div>
 	<div style="float: right;">
 		<a target="_blank" href="/articles/printable.php?file=<?= $file ?>"><img src="/articles/images/printer.gif"/> Printer-friendly version</a>
