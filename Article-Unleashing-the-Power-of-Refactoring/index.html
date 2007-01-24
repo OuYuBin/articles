@@ -1,0 +1,850 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Unleashing the Power of Refactoring</title>
+<meta http-equiv="Content-Type"
+	content="text/html; charset=windows-1252">
+<link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<h1>Unleashing the Power of Refactoring</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>Refactorings as a tool to automate behavior-preserving
+transformations to source code are not only very popular in agile
+development environments, but have been widely established as a
+cornerstone of the daily software development process, regardless of the
+methodology being used. Most major development environments such as
+Eclipse offer a set of powerful refactorings to substantially increase
+development productivity. While built-in refactorings perform most of
+the tedious and error-prone tasks such as renaming or moving software
+elements, sometimes the need arises to develop a custom solution to
+streamline repetitive tasks. It is time to write your own refactoring!</p>
+<p>In this article, Tobias Widmer sheds light on the services
+offered by the Eclipse Java Development Tools (JDT) and the Refactoring
+Language Toolkit (LTK) to support automated Java&trade; refactorings, explains
+how these services are used by refactorings to perform searches on the
+Java workspace, rewrite existing code and provide a rich user-interface
+to present the results of the refactoring. To demonstrate this
+combination of Java-specific and language-neutral frameworks, this
+article presents a simple but working refactoring implementation for an
+'Introduce Indirection' refactoring designed to introduce an indirection
+method for existing method invocations.</p>
+<div class="author">By Tobias Widmer, IBM Rational Research Lab
+Zurich</div>
+<div class="copyright">Copyright &copy; 2006 IBM Corporation.</div>
+<div class="date">Originally published in Eclipse Magazine, July
+4, 2006</div>
+<div class="date">January 28, 2006</div>
+</div>
+
+<div class="content">
+<h2>Introduction</h2>
+<p>The Java Development Tooling (JDT) as part of the Eclipse
+top-level project provides a rich set of automated refactorings. It
+includes basic refactorings such as safe rename and move refactorings,
+advanced refactorings like &quot;Extract Method&quot; or &quot;Extract
+Superclass&quot;, and complex refactorings to be performed across large
+workspaces such as &quot;Use Supertype&quot; or &quot;Infer Type
+Arguments&quot;. However, for specific tasks that have to be repeated
+over and over again, writing your own refactoring may be a viable
+solution to automate tedious code rewriting processes in your
+development chain.</p>
+<p>Recent trends in the Java refactoring tooling have shown an
+increased awareness of API code, which in general must not be changed by
+manual rewriting nor by automated refactorings. The &quot;Change Method
+Signature&quot; refactoring offers the option to generate a delegate
+method to preserve API compatibility, as do the safe move or rename
+refactorings. A recently introduced refactoring called &quot;Introduce
+Indirection&quot; serves a similar purpose, except that this refactoring
+may be used to alter the way a binary API is used in client code. It is
+applicable to method invocations and rewrites them to use a new
+indirection method forwarding to the original API. Such indirection
+methods can be used to add additional checks before calling external
+APIs, log information to the console or help adopting new API by
+implementing any necessary glue code.</p>
+<div class="figure"><a name="figure1"></a><img
+	src="images/figure1.png" alt="" />
+<div class="caption">Figure 1: Introduce Indirection.</div></div>
+<p>The &quot;Introduce Indirection&quot; refactoring performed on
+the method <code>A#foo()</code> in <a href="#figure1">Figure 1</a> first
+searches for all method invocations to <code>foo</code>. The only
+occurrence can be found in the constructor of class <code>B</code>. The
+refactoring inserts the new indirection method <code>indirection(A)</code>
+which delegates to the original <code>foo</code> method. The method
+invocation to <code>foo</code> in constructor <code>B()</code> is
+redirected to call the new indirection method.</p>
+<p>In this article, we will combine the richness of the JDT tooling
+API with the power of the extensible services provided by the LTK
+refactoring framework to implement an &quot;Introduce Indirection&quot;
+refactoring from scratch. Readers will become familiar with the
+architecture of refactorings, refactoring history integration,
+refactoring scripting support and Java-specific facilities such as
+searching the Java workspace or rewriting existing Java code.</p>
+<div class="sidebar">
+<p>This article is written for Java developers, Java tooling
+implementers and language tooling implementers in general. Since its
+content is about extensibility of the JDT tooling, an exposure to Java
+programming, Java language semantics, Eclipse architecture and
+refactoring is desirable.</p>
+</div>
+
+<h2>Runtime Requirements</h2>
+<p>Here is a list of requirements for running the example
+refactoring in this article:</p>
+<ul>
+	<li>J2SE 5 Java Runtime Environment</li>
+	<li>Eclipse SDK 3.2 or higher</li>
+</ul>
+
+<p>The example code discussed in this article is available <a href="code.zip">here</a>.</p>
+
+<div class="sidebar">
+<p>The scope of this article is limited to:</p>
+<ul>
+	<li>Discussing architectural principles used when implementing
+	refactorings</li>
+	<li>Discussing usage of Java tooling services in refactorings</li>
+	<li>Discussing advanced facilities offered by the LTK Refactoring
+	framework</li>
+	<li>Demonstrating refactoring implementation with code examples</li>
+</ul>
+
+<p>The following issues are not covered under the scope of the
+example refactoring:</p>
+<ul>
+	<li>Full precondition checking</li>
+	<li>Fault tolerance during refactoring scripting</li>
+	<li>Full analysis of semantic shifts</li>
+</ul>
+</div>
+
+<h2>Writing your own Java Refactoring</h2>
+<p>In general, implementing a refactoring is not an easy task. The
+specific situation will present many problems that need to be overcome
+in addition to the refactoring design itself. For example, it is common
+to find that there are workspaces that do not compile without errors,
+problems adhering to the programming language rules and errors in user
+input. Covering all these issues in this article is not feasible;
+however, we will provide a high-level overview of how to implement a
+refactoring. The example refactoring developed in this article is fully
+functional, but lacks thorough error handling, some advanced
+precondition checking and semantic shift analysis.</p>
+
+<p>In the first part of the article, we will identify requirements
+our example refactoring must adhere to. In the second part, we will
+describe the refactoring architecture as implemented by the LTK
+Refactoring plug-ins. The most commonly used ingredients for a
+refactoring are discussed and explained in detail. The third part
+presents the implementation of the example refactoring &quot;Introduce
+Indirection&quot;. We will demonstrate the basic services offered by the
+JDT tooling and the LTK Refactoring toolkit using code snippets of the
+source code from the example refactoring.</p>
+
+<h2>Performing some Requirements Analysis</h2>
+<p>Before diving into coding a full-blown Java refactoring, it may
+be advantageous to think about what properties and capabilities our
+example refactoring should have. We first identify a series of
+functional requirements:</p>
+<ul>
+	<li><b>Refactoring Implementation:</b> The &quot;Introduce
+	Indirection&quot; refactoring should implement a refactoring to replace
+	all method invocations to a certain method by a call to a new static
+	method declared in an arbitrary type. This static method is called the
+	indirection method in the following discussions and takes a single
+	argument of the common super type of the receivers of all method
+	invocations. Its implementation simply forwards to the original method
+	as default.</li>
+	<li><b>Refactoring User Interface:</b> The example refactoring
+	should offer a basic refactoring wizard which provides facilities to
+	enter the necessary input used to initialize the refactoring object.</li>
+	<li><b>Precondition Checking:</b> The example refactoring should
+	perform some basic precondition checking such as asserting an
+	error-free workspace and valid user input. This includes checking for
+	existing Java methods and types, as well as a correct new name for the
+	new indirection method.</li>
+	<li><b>Preservation of Semantics:</b> The refactoring must
+	preserve the semantics of the refactored code according to the Java
+	programming language. In particular, this includes correct changing of
+	import declarations and resolving all visibility-related issues.</li>
+	<li><b>Refactoring History Integration:</b> The example
+	refactoring should be seamlessly integrated into the refactoring
+	history of the Eclipse workspace. Executing the &quot;Introduce
+	Indirection&quot; refactoring must result in a refactoring descriptor
+	which is persisted in the global refactoring history by the refactoring
+	framework.</li>
+	<li><b>Refactoring Scripting:</b> The refactoring should be
+	executable using refactoring scripts. Its implementation must be
+	designed to allow object creation and initialization to occur at
+	different points of time. We have to contribute a refactoring
+	contribution object which allows the refactoring framework to
+	dynamically instantiate our example refactoring.</li>
+</ul>
+<p>The necessary framework and services needed to implement the
+identified requirements will be discussed in the next part of this
+article. Besides the functional requirements, we also list some
+non-functional requirements which lead the implementation design of the
+refactoring:</p>
+<ul>
+	<li><b>Java Compilation:</b> The refactoring must hold at most one
+	<a
+		href="http://www.eclipse.org/articles/Article-JavaCodeManipulation_AST/index.html">AST</a>
+	at a time in memory. This ensures scalability of the refactoring
+	implementation when executing the refactoring on large workspaces.</li>
+	<li><b>Refactoring Performance:</b> The refactoring implementation
+	should be designed with performance and low resource needs in mind.
+	This implies careful usage of the Java model, the Java search and
+	opening of Java files during change generation.</li>
+	<li><b>Storing of State:</b> The example refactoring should not
+	store any intermediate state except for change information.
+	Intermediate state may raise life-cycle problems when refactorings are
+	executed using a refactoring wizard user interface.</li>
+</ul>
+<p>The above requirements will form the basis of the discussions
+that follow in this article. We start by giving a quick overview of the
+design and architecture of refactorings.</p>
+
+<h2>Behind the Scenes of Refactorings: Architecture and Design</h2>
+<p>Automated refactorings implemented for the Eclipse Platform
+benefit from a powerful refactoring framework supplied by the plug-in <code>org.eclipse.ltk.core.refactoring</code>
+and its user-interface counterpart <code>org.eclipse.ltk.ui.refactoring</code>.
+This refactoring framework provides the necessary infrastructure to
+contribute your refactoring to the refactoring history, the refactoring
+scripting facility and the Eclipse workbench itself. It comes with
+services to reliably execute a refactoring on a local workspace, taking
+care of the details related to precondition checking, change creation
+and change validation. The refactoring framework user-interface provides
+abstract implementations of refactoring wizards, refactoring input pages
+and will show precondition checking errors and change previews.</p>
+
+<div class="sidebar">
+<p>Most of the functionality supplied by the refactoring framework
+is implemented in abstract classes which follow the &quot;Template&quot;
+design pattern. The task of a refactoring implementer often consists
+only of filling the remaining gaps with refactoring- and
+language-specific functionality.</p>
+</div>
+
+<p>Here are the most common components that need to be implemented
+for a new refactoring:</p>
+
+<p><b>Refactoring Class:</b> The refactoring class is the principal
+component of a refactoring and implements most of the
+refactoring-specific functionality. It is required to extend the
+abstract class <code>org.eclipse.ltk.core.refactoring.Refactoring</code>.
+For a quick overview of refactoring participants please see <a
+	href="http://www.eclipse.org/articles/Article-LTK/ltk.html">The
+Language Toolkit: An API for Automated Refactorings in Eclipse-based
+IDEs</a></p>
+<p>Most of the implementation of a refactoring is distributed among
+the following three template methods of class <code>Refactoring</code>:</p>
+<blockquote>
+<p><b><code>checkInitialConditions(IProgressMonitor)</code>:</b>
+This method is called when launching the refactoring and used to
+implement basic activation checking. Typically, <code>checkInitialConditions</code>
+confirms that the workspace to be refactored appears to be in a
+consistent state. In our case, the <code>checkInitialConditions</code>
+method of the example &quot;Introduce Indirection&quot; refactoring
+checks for the existence of the compilation unit containing the method
+to introduce an indirection and confirms that its Java model structure
+can be determined. It returns a status object of type <code>org.eclipse.ltk.core.refactoring.RefactoringStatus</code>.
+A refactoring status is used to communicate the result of the
+precondition checking process to the refactoring execution framework. A
+status of severity <code>RefactoringStatus#FATAL</code> terminates the
+refactoring because basic preconditions have not been satisfied.</p>
+<p>Implementations of <code>checkInitialConditions</code> should be
+short-running, since the result of the initial condition checking may
+determine the behavior of the refactoring user-interface on startup.</p>
+<div class="sidebar">
+<p>Method <code>checkInitialConditions</code> may be called more
+than once, depending on the refactoring activation process in the
+user-interface!</p>
+</div>
+
+<p><b><code>checkFinalConditions(IProgressMonitor)</code>:</b> This
+method is called after <code>checkInitialConditions</code>, once the
+user has provided all necessary inputs to the refactoring.
+Implementations of <code>checkFinalConditions</code> are usually
+long-running and perform all remaining precondition checks before change
+generation. In most cases, in addition to further precondition checking,
+<code>checkFinalConditions</code> also collects the necessary data to,
+later on, facilitate change generation. The reason for this is that
+final precondition checking almost always performs the same computations
+as change generation later does as well. In our case, the <code>checkFinalConditions</code>
+method of the example &quot;Introduce Indirection&quot; refactoring
+performs the remaining precondition checks, searches for references to
+the input method and rewrites all compilation units where a reference to
+the input method has been found. The result of the rewriting process is
+stored as a set of change descriptions to be retrieved later during
+change generation.</p>
+<p>Returning a status of severity <code>RefactoringStatus#FATAL</code>
+terminates the precondition checking and presents the unsatisfied
+conditions to the user. In this case, of course the refactoring
+preconditions need to be met in order to go on to the next steps.</p>
+
+<div class="sidebar">
+<p>Method <code>checkFinalConditions</code> may be called more than
+once depending on the user-interface of the refactoring and its
+interaction with the refactoring class, but always after all calls to <code>checkInitialConditions</code>
+and before the invocation of <code>createChange</code>!</p>
+</div>
+
+<p><b><code>createChange(IProgressMonitor)</code>:</b> This method
+is called after all preconditions have been checked and the refactoring
+framework has not detected any unsatisfied condition resulting in a
+fatal error status. In most instances, <code>createChange</code> returns
+a change object of type <code>org.eclipse.ltk.core.refactoring.Change</code>,
+based on the pre-computed information from <code>checkFinalConditions</code>.
+The change object is used by the refactoring user-interface to generate
+a preview of the change, and by the core refactoring framework to apply
+the recorded change to the workspace. After <code>createChange</code>
+has been called and the resulting change has been applied to the
+workspace, the refactoring is considered terminated.
+</blockquote>
+<p><b>Refactoring Descriptor (optional):</b> Refactoring descriptors
+are mementos that capture the properties of a specific refactoring
+instance in order to uniquely describe that particular instance. A
+refactoring descriptor extends the abstract class <code>org.eclipse.ltk.core.refactoring.RefactoringDescriptor</code>
+and stores vital information such as a unique refactoring id, a
+timestamp, a human-readable description and further data which is
+specific to a certain refactoring. The id of a refactoring descriptor
+allows the refactoring framework to distinguish various types of
+refactorings. Implementing the method <code>createRefactoring(RefactoringStatus)</code>
+will return a fully configured refactoring instance indicating that all
+necessary input has been provided to the refactoring and that the
+returned instance is ready to be executed by the framework. In our case,
+the refactoring descriptor for the &quot;Introduce Indirection&quot;
+refactoring stores information about the input method, the type
+declaring the new indirection method, the name of the indirection method
+and a flag indicating whether or not to update references (<a
+	href="#figure2">Figure 2</a>).</p>
+<p>Refactoring descriptors are obtained by the refactoring framework
+by calling <code>Change#getDescriptor()</code> as soon as a change has
+been applied to the workspace. Optionally, this method returns an <code>org.eclipse.ltk.core.refactoring.RefactoringChangeDescriptor</code>
+object encapsulating the actual refactoring descriptor.</p>
+
+<div class="sidebar">
+<p>Refactorings that are intended to participate in the refactoring
+history and refactoring scripting service must therefore re-implement
+the <code>Change#getDescriptor</code> method to provide a proper
+refactoring descriptor.</p>
+</div>
+
+<p><b>Refactoring Contribution (optional):</b> Refactoring
+contributions are a means to register refactorings with the core
+refactoring framework dynamically instantiating a refactoring object.
+This mechanism is used by the refactoring history service and the
+refactoring scripting service to recreate a particular, fully configured
+refactoring instance from a memento such as a refactoring script.
+Refactoring contributions are registered via the extension point <code>org.eclipse.ltk.core.refactoring.refactoringContributions</code>
+and must extend the abstract class <code>org.eclipse.ltk.core.refactoring.RefactoringContribution</code>.
+Refactoring contributions are optional, meaning that a refactoring can
+be executed without being registered with the refactoring framework
+using the described mechanism.</p>
+
+<p>A successful implementation of a refactoring contribution must
+implement the following two template methods:</p>
+<blockquote>
+<p><b><code>createDescriptor(String, String, String,
+String, Map, int)</code>:</b> This method is used by the refactoring framework to
+create a refactoring descriptor based on a memento such as a refactoring
+script. The format of the fifth method argument, the argument map, is
+refactoring-specific. In our case, the refactoring contribution for the
+example refactoring uses a simple key-value pair scheme to store the
+state of a refactoring instance.</p>
+
+<p><b><code>retrieveArgumentsMap(RefactoringDescriptor)</code>:</b>
+This method is used by the refactoring framework to persist
+refactoring-specific state in a memento such as a refactoring script.
+Implementations of this method must return an argument map in the same
+format as it is passed to the method <code>createDescriptor</code>. This
+pair of methods provides a generic and extensible mechanism to persist
+and instantiate refactoring descriptors.</p>
+
+<div class="sidebar">
+<p>Refactorings that are intended to participate in refactoring
+scripting must therefore provide an appropriate refactoring contribution
+and register it with the refactoring framework using the extension point
+<code>org.eclipse.ltk.core.refactoring.refactoringContributions.</code></p>
+</div>
+</blockquote>
+<p><b>Refactoring Wizard:</b> Refactoring wizards are used to
+present refactorings in the user-interface. A refactoring wizard
+implementation must extend the abstract class <code>org.eclipse.ltk.ui.refactoring.RefactoringWizard</code>.
+Refactoring wizards provide all the logic to orchestrate the display of
+error pages and change preview pages depending on the status of the
+precondition checking and change generation. A wizard class is required
+to implement the abstract method <code>addUserInputPages</code> to add
+refactoring-specific input pages to the refactoring wizard. A new input
+page is added to the &quot;Introduce Indirection&quot; wizard consisting
+of a text field to enter the indirection method name, a combo box to
+specify the type which declares the new indirection method and a
+checkbox to control whether or not references are updated.</p>
+<p><b>Refactoring Action:</b> Refactoring actions are used to launch
+the refactoring from the user-interface. Usually, the task of an action
+consists of listening to selection changes from the workbench <a
+	href="http://www.eclipse.org/articles/Article-WorkbenchSelections/article.html">selection
+service</a> and updating its enablement state accordingly. Checking whether
+or not the action should be rendered in enabled state should happen
+quickly, which is the reason why we only check for a selected method in
+our example refactoring action. For a full treatment of the subject
+please consult <a
+	href="http://www.eclipse.org/articles/Article-action-contribution/Contributing%20Actions%20to%20the%20Eclipse%20Workbench.html">Contributing
+Actions to the Eclipse Workbench</a>.
+<h2>Deep Dive: Implementing the &quot;Introduce Indirection&quot;
+Refactoring</h2>
+<p>The first part of this article provides an overview of all the
+components that we will implement in our example &quot;Introduce
+Indirection&quot; refactoring. We will present our example components in
+the same order as they appeared in the architecture overview. All the
+necessary source code for the following discussion is provided with this
+article. See the resources section at the end of this article for
+further information.</p>
+<h3>In the Land of Refactorings</h3>
+<p>The implementation of the refactoring class is located in <code>IntroduceIndirectionRefactoring.java</code>.
+From line 97 to 105 we declare all fields describing the state of the
+refactoring. First, we declare a map of type <code>Map&lt;ICompilationUnit,
+TextFileChange&gt;</code> which later on is used to store already computed
+change objects. Further, we store the refactoring inputs identified in <a
+	href="#figure2">Figure 2</a> in corresponding instance variables of the
+refactoring class. Obviously, we also declare the necessary accessor
+methods to be used by the refactoring wizard to set up the refactoring
+according to the user input.</p>
+<div class="figure"><a name="figure2"></a>
+<table>
+	<tbody>
+		<tr>
+			<th>Refactoring Inputs</th>
+			<th>Java Type</th>
+		</tr>
+		<tr>
+			<td>Method Handle</td>
+			<td><code>IMethod</code></td>
+		</tr>
+		<tr>
+			<td>Indirection Method Name</td>
+			<td><code>String</code></td>
+		</tr>
+		<tr>
+			<td>Declaring Type Handle</td>
+			<td><code>IType</code></td>
+		</tr>
+		<tr>
+			<td>Update References Flag</td>
+			<td><code>boolean</code></td>
+		</tr>
+	</tbody>
+</table>
+
+<div class="caption">
+<p>Figure 2: Refactoring Input.</p>
+</div></div>
+
+<p>The method <code>checkInitialConditions(IProgressMonitor)</code>
+is fairly simple in our case. The only input that has to be set at this
+point in time is the method handle. The other input elements are not
+known yet. On line 222 we test whether the method handle has been
+correctly set, and test for its existence on line 224. Finally, we also
+check whether the method handle represents a binary method and whether
+the declaring compilation unit is in a reasonably well-formed state
+(line 227). In case one of the above conditions is not satisfied, we
+return a refactoring status with fatal severity to terminate the
+refactoring immediately. Otherwise we return a new refactoring status
+with default severity <code>RefactoringStatus#OK</code> to signal the refactoring
+framework to proceed with the execution of the refactoring.</p>
+
+<div class="figure"><a name="figure3"></a><img
+	src="images/figure3.png" />
+<div class="caption">
+<p>Figure 3: Initial precondition checking.</p>
+</div></div>
+
+<p>The second method which implements precondition checking,
+<code>checkFinalConditions(IProgressMonitor)</code>, is somewhat more complex. This
+is discussed in more detail earlier in this article: the computations
+for precondition checking and change generation intersect to a fair
+degree. From line 134 to 180 we search for all references to the input
+method and group the resulting search matches by project and compilation
+unit.</p>
+
+<p>The <code>ASTParser</code> creates a new <code>AST</code> with resolved bindings for every
+compilation unit passed to the API described above. The refactoring
+obtains the ASTs via an <code>ASTRequestor</code>, one AST at a time.</p>
+
+<div class="sidebar">
+<p>This &quot;Requestor&quot; pattern is commonly used when
+interfacing with the Java core tooling such as the compiler, search
+engine, code assist and more.</p>
+</div>
+
+<p>The AST requestor then delegates the precondition checking and
+change generation to the method <code>rewriteCompilationUnit(ASTRequestor,
+ICompilationUnit, Collection, CompilationUnit, RefactoringStatus)</code> which
+implements further precondition checking and rewrites the obtained AST.</p>
+<div class="figure"><a name="figure4"></a><img
+	src="images/figure4.png" />
+<div class="caption">
+<p>Figure 4: Creating ASTs.</p>
+</div></div>
+
+<p>Method <code>rewriteCompilationUnit</code> coordinates the rewriting process
+by deciding what to rewrite in which compilation unit. If the
+compilation unit happens to be the one which declares the declaring type
+of the new indirection method (line 511), we call
+<code>rewriteDeclaringType(ASTRequestor, ASTRewrite, ImportRewrite,
+ICompilationUnit, CompilationUnit)</code> to insert the new indirection method
+into the existing type declaration. Next, we check whether references to
+the input method have to be updated (line 513). If yes, we try to locate
+the search matches in the AST and call
+<code>rewriteMethodInvocation(ASTRequestor, ASTRewrite, ImportRewrite,
+MethodInvocation)</code>. If successful, we invoke <code>rewriteAST(ICompilationUnit,
+ASTRewrite, ImportRewrite)</code> to rewrite the AST and store a description of
+the change to be executed on the compilation unit. If not, we call
+<code>rewriteAST</code> as well, but immediately return without rewriting any method
+invocations.</p>
+
+<div class="figure"><a name="figure5"></a><img
+	src="images/figure5.png" />
+<div class="caption">
+<p>Figure 5: Rewriting a compilation unit.</p>
+</div></div>
+
+<p>Let's have a quick look at method <code>rewriteDeclaringType</code>. We need
+to acquire a binding of the input method. The API
+<code>ASTRequestor#createBindings(String[])</code> can be used for this purpose.</p>
+
+<div class="sidebar">
+<p>A compilation unit AST can only resolve bindings of elements
+declared in the corresponding compilation unit. Since we have to obtain
+a binding for the input method (which obviously is not declared in this
+compilation unit), we have to resolve the binding using the
+<code>ASTRequestor</code>. AST requestors not only offer API to obtain ASTs, but are
+also able to obtain bindings for elements declared in the scope of the
+compilation units passed to the <code>ASTParser#createASTs method.</code></p>
+<p>To ensure that this works, we have passed the compilation units
+containing the declaring type of the indirection method and the
+compilation unit containing the input method as well (line 149 to 150).</p>
+</div>
+
+<div class="figure"><a name="figure6"></a><img
+	src="images/figure6.png" />
+<div class="caption">
+<p>Figure 6: Obtaining bindings from the <code>ASTRequestor</code>.</p>
+</div></div>
+
+<p>The remaining code of this method is straight-forward. First, we
+assemble the new method declaration for the indirection method. On line
+552 we add the necessary modifiers to declare the method as
+&quot;public static&quot;. Then we check whether the input method is
+declared as &quot;static&quot;. If this is the case, we have to insert
+one additional method argument which represents the target of the (not
+yet redirected) method call. Further, if the declaring type of the input
+method is generic, any type arguments of enclosing types have to be
+added as well.</p>
+<p>On lines 574 to 611 we copy the method arguments, type parameters
+and exceptions, create the body of the method declaration with one
+method invocation statement that implements the actual indirection and
+construct a method comment according to the project preferences.</p>
+
+<div class="sidebar">
+<p>Note the usage of the import rewrite object to create a new <code>Type</code>
+node to be used as new return type on line 584. Class <code>ImportRewrite</code>
+automatically decides whether the returned type node has to be fully
+qualified or not, and whether a new import declaration has to be
+inserted into the compilation unit.</p>
+<p>Import rewrites are used throughout the code rewriting to ensure
+that no imports are missing and that no compile errors are introduced
+due to clashing type names.</p>
+</div>
+
+<p>Finally, on lines 613 to 616 we insert the newly created method
+declaration into the type declaration.</p>
+
+<p>The method <code>rewriteMethodInvocation</code> is somewhat simpler. On lines
+623 to 627 we use the same pattern as described in <a href="#figure6">Figure 6</a> to obtain a
+binding for the declaring type of the new indirection method. Contrary
+to <code>rewriteDeclaringType</code>, this method not only performs AST rewriting but
+also some precondition checking. We check whether the original method
+invocation has some type arguments. In this case we have to skip the
+method invocation. Instead of rewriting it, we return a refactoring
+status object with a warning severity explaining the reason why this
+occurrence has not been rewritten.</p>
+<p>Method invocations with &quot;this&quot; expression receivers
+need some further attention. The code on lines 648 to 670 handles such
+cases and inserts the necessary qualifications for enclosing types. On
+line 673, we move the old method arguments to the argument list of the
+newly created method invocation.</p>
+
+<div class="sidebar">
+<p>Class <code>ASTRewrite</code> provides developers with a tool to describe
+changes to a compilation unit on the AST level. Essentially, it
+implements a tree rewriter on ASTs. It offers methods to declare
+insertions, removals, moves or copies of AST nodes. Instead of altering
+the source code on the text level or directly changing ASTs, this
+service only records changes to ASTs, and leaves the ASTs itself intact.
+ASTs are resource-intensive objects which should only be created once
+for a given workspace state. As soon as all changes have been recorded
+by the <code>ASTRewrite</code> instance, clients may call the API <code>rewriteAST</code> to
+transform the recorded changes to a text edit tree, which is a change
+description on the text level. The resulting text edit tree can then be
+applied to an <code>IDocument</code> instance to finally alter the source code.</p>
+<p>Furthermore, <code>ASTRewrite</code> offers convenient mechanisms called &quot;Move
+and Copy Targets&quot;. Such targets are simple placeholder nodes with no
+textual representation. During the rewriting process, the AST rewriter
+determines the source of a move or copy target and performs a textual
+move or copy, respectively. The advantage of this mechanism over a deep copy of
+the corresponding AST subtree is that custom formatting conventions are
+not lost during tree rewriting.</p>
+</div>
+
+<p>Finally, we replace the old method invocation with the new one
+and return the refactoring status which has been computed during
+precondition checking (line 675).</p>
+
+<p>The method <code>rewriteAST</code> implements the actual AST rewriting
+process. It is used exactly once per compilation unit and creates a text
+edit tree based on the recorded changes on the AST. First, we call the
+API <code>ASTRewrite#rewriteAST</code> to obtain the text edit tree corresponding to
+the modifications recorded on the AST. Next, we call the API
+<code>ImportRewrite#rewriteImports(IProgressMonitor)</code> to obtain the text edit
+tree capturing the import declaration changes. Since these text edit
+trees are disjoint by design, we can simply merge them and create an
+<code>org.eclipse.ltk.core.refactoring.TextFileChange</code> object from the
+resulting multi text edit. On line 493 we also set the text type of the
+change to &quot;java&quot;.</p>
+
+<div class="sidebar">
+<p>Setting the text type of the change to &quot;java&quot; magically
+turns on Java syntax highlighting in the change preview. The reason for
+this is that the LTK Refactoring framework uses the compare viewers
+offered by the Platform Compare framework to display the refactoring
+preview. JDT UI contributes a Java-aware compare viewer which is used
+here in context to give a quick overview of the expected changes to be
+performed on the workspace.</p>
+</div>
+
+<p>The resulting change object is stored to be later picked up by
+the change generation implemented in method
+<code>createChange(IProgressMonitor)</code>. Resource-wise, these change objects are
+quite cheap to keep in memory, since they only encapsulate a text edit
+tree which describes the modifications to be performed on the underlying
+compilation unit buffer.</p>
+
+<div class="figure"><a name="figure7"></a><img
+	src="images/figure7.png" />
+<div class="caption">
+<p>Figure 7: Assembling change objects from AST rewriting results.</p>
+</div></div>
+
+<div class="sidebar">
+<p>You may wonder why <code>checkFinalConditions(IProgressMonitor)</code> does
+not check for validity of the declaring type handle or the syntax of the
+new method name. For a better user experience, simple validity checks
+should be performed as the user provides the input. The validity checks
+for the declaring type and the method name are implemented by
+corresponding setter methods invoked from the refactoring
+user-interface. The result of these setter methods is immediately
+reflected in the refactoring wizard, thus providing a more natural user
+experience.</p>
+</div>
+
+<p>There is not much left to do for the method <code>createChange</code>. All
+change information has already been gathered and is ready to be
+encapsulated by a composite changed object (line 326). The role of the
+<code>getDescriptor()</code> method that is overridden for the returned change object
+is described in the next section on refactoring scripting.</p>
+
+
+<div class="figure"><a name="figure8"></a><img
+	src="images/figure8.png" />
+<div class="caption">
+<p>Figure 8: Creating the refactoring change object.</p>
+</div></div>
+
+<h2>Meet Refactoring History and Scripting Services</h2>
+<p>In the previous section we have provided an overview of the basic
+functionality of the example refactoring. In this section we will show
+how to integrate the refactoring with the refactoring core framework,
+the refactoring history and refactoring scripting services!</p>
+
+<p>In order to let the refactoring framework persist the refactoring
+instance in the refactoring history, we simply override the
+<code>getDescriptor()</code> method of the change object being returned by
+<code>createChange()</code>. The method <code>getDescriptor()</code> returns 
+an <code>org.eclipse.ltk.core.refactoring.RefactoringChangeDescriptor</code>
+object encapsulating a custom refactoring descriptor. Its implementation
+can be found in <code>IntroduceIndirectionDescriptor.java</code>.</p>
+
+<div class="figure"><a name="#figure9"></a>
+<table>
+	<tbody>
+		<tr>
+			<th>Refactoring Descriptor Input</th>
+			<th>Java Type</th>
+			<th>Values</th>
+		</tr>
+		<tr>
+			<td>Project Name</td>
+			<td>String</td>
+			<td>IProject#getName or null</td>
+		</tr>
+		<tr>
+			<td>Description</td>
+			<td>String</td>
+			<td>non-empty, non-null</td>
+		</tr>
+		<tr>
+			<td>Comment</td>
+			<td>String</td>
+			<td>non-empty or null</td>
+		</tr>
+		<tr>
+			<td>Argument Map</td>
+			<td>Map&lt;String, String&gt;</td>
+			<td>non-null</td>
+		</tr>
+	</tbody>
+</table>
+<div class="caption">
+<p>Figure 9: Refactoring Descriptor Input.</p>
+</div></div>
+
+<p>The constructor of the refactoring descriptor takes a project
+name, a human-readable description, a comment and an argument map as
+arguments. In case the refactoring could not be uniquely associated with
+a single project, we may pass null as project name. The argument map is
+a simple dictionary with <code>String</code>-typed key-value pairs capturing the four
+refactoring input elements listed in <a href="#figure9">Figure 9</a>.
+The constructor of the base class
+<code>org.eclipse.ltk.core.refactoring.RefactoringDescriptor</code> takes an
+additional refactoring id
+(<code>&quot;net.eclipsemag.introduce.indirection&quot;</code>) and refactoring
+descriptor flags (<code>RefactoringDescriptor.STRUCTURAL_CHANGE |
+RefactoringDescriptor.MULTI_CHANGE</code>) which indicate that the
+refactoring may causes structural changes to the Java workspace which
+can span multiple files. This information is used by the refactoring
+history service to provide categorization of refactorings and optimize
+query times for context-specific history queries. The factory method
+<code>createRefactoring(RefactoringStatus)</code> instantiates a new refactoring
+object, calls <code>initialize(Map)</code> to set the input of the refactoring based
+on the data from the refactoring descriptor and returns the fully
+configured refactoring instance which is ready to be executed.</p>
+
+<p>The second component necessary to integrate the refactoring into
+the refactoring framework is a refactoring contribution. Its
+implementation resides in file
+<code>IntroduceIndirectionRefactoringContribution.java</code>. The factory method
+<code>createDescriptor</code> returns a new <code>IntroduceIndirectionDescriptor</code> object
+initialized with the specified arguments. Nothing more is needed to
+dynamically instantiate a refactoring instance!</p>
+<p>The second method to be re-implemented is
+<code>retrieveArgumentMap(RefactoringDescriptor)</code>. We test whether the passed
+refactoring descriptor is indeed an <code>IntroduceIndirectionDescriptor</code> (line
+17). If it is, we only have to return its argument map. Otherwise, we
+pass the ball to the super implementation. With these two small
+additions, our example refactorings is able to be automatically recorded
+and eventually replayed on any arbitrary workspace.</p>
+
+<h2>Presenting the Refactoring to the User</h2>
+<p>So far, we have discussed the refactoring implementation which is
+necessary to execute the refactoring head-less, without any user
+interaction. The primary focus of this article is the design and
+implementation of Java refactorings. We do not describe in detail how
+refactoring user-interface are constructed. More information can be
+found by consulting any of the Eclipse Corner SWT articles listed in the
+resources section of this article.</p>
+<p>The user input needed to execute the refactoring has been
+identified in <a href="#figure2">Figure 2</a>. We just contribute a
+<code>UserInputWizardPage</code> with the necessary SWT widgets to let the user
+provide this input. The code for the refactoring wizard and its input
+page can be found in <code>IntroduceIndirectionWizard.java</code> and
+<code>IntroduceIndirectionInputPage.java</code>, respectively.</p>
+
+<div class="figure"><a name="figure10"></a><img
+	src="images/dialog.jpg" />
+<div class="caption">
+<p>Figure 10: Introduce Indirection Wizard.</p>
+</div></div>
+
+<p>The only step which is missing now is the action to launch the
+refactoring from the workbench. For our example refactoring we use an <code>IWorkbenchWindowActionDelegate</code>
+for the sake of simplicity. The code of this action delegate can be
+found in <code>IntroduceIndirectionAction.java</code>. Such a delegate
+can be easily registered with the extension point
+&quot;org.eclipse.ui.actionSets&quot;. The following snippet shows how
+to do this:</p>
+
+<div class="figure"><a name="figure11"></a><img
+	src="images/figure11.png" />
+<div class="caption">
+<p>Figure 11: Registering the Introduce Indirection Action.</p>
+</div></div>
+
+<p>The snippet displayed in <a href="#figure11">Figure 11</a> is the
+last step towards a fully functional &quot;Introduce Indirection&quot;
+refactoring. Having arrived here, we have now implemented an advanced
+Java refactoring with a clean user-interface, high rewriting performance
+and full refactoring history and refactoring scripting support!</p>
+<h2>Running the Introduce Indirection Example Refactoring</h2>
+<p>Test driving the example refactoring implemented in this article
+takes just a few simple steps. Unzip the code download for this article
+to your Eclipse workspace. Import the unzipped code as a Java project
+called &quot;net.eclipsemag.refactoring&quot;. Follow the next four
+steps and explore the result!</p>
+<ul>
+	<li>Create a new Eclipse Application and launch it</li>
+	<li>Import some Java code into the workspace of the Eclipse
+	Application</li>
+	<li>Select a Java method in the editor outline or the Package
+	Explorer</li>
+	<li>Invoke <span class="menu-selection">Introduce
+	Indirection...</span> from the Eclipse Magazine main menu</li>
+</ul>
+<div class="figure"><a name="figure12"></a><img
+	src="images/preview.jpg" />
+<div class="caption">
+<p>Figure 12: Running the Introduce Indirection refactoring.</p>
+</div></div>
+
+<h2>Summary</h2>
+<p>The article described an example refactoring implementation for
+an &quot;Introduce Indirection&quot; refactoring. It walks the reader
+through the architecture and design of refactorings, discusses
+implementation details and provides guidance on implementing a Java
+refactoring using the APIs offered by the JDT project and the LTK
+Refactoring framework. In particular, it focuses on common design
+principles and refactoring architecture. We show how a refactoring is
+designed from scratch using a proven methodology, we explain how a
+self-written refactoring can participate in the workbench refactoring
+history and the refactoring scripting service and we present a
+user-interface to interact with the refactoring. Finally, we give a
+simplified but working implementation of an &quot;Introduce
+Indirection&quot; refactoring to prove the viability of the refactoring
+design described in this article.</p>
+
+<h2>Acknowledgements</h2>
+<p>Thanks go to Dirk B&auml;umer and Bernd Kolb for valuable
+comments and suggestions on an initial draft of this article.</p>
+
+<h2>Resources</h2>
+<ul>
+<li><a href="http://www.eclipse.org/eclipse">Eclipse Project Homepage</a></li>
+<li><a href="http://www.eclipse.org/jdt">Eclipse JDT Project Homepage</a></li>
+<li><a href="http://www.eclipse.org/articles/Article-LTK/ltk.html">The Language Toolkit: An API for Automated Refactorings in Eclipse-based IDEs</a></li>
+<li><a href="http://www.eclipse.org/articles/Article-action-contribution/Contributing%20Actions%20to%20the%20Eclipse%20Workbench.html">Contributing Actions to the Eclipse Workbench</a></li>
+<li><a href="http://www.eclipse.org/articles/?sort=date&category=SWT">Eclipse Corner SWT Articles</a></li>
+<li><a href="code.zip">Code Download for this article</a></li>
+</ul>
+
+<div class="notices">
+<p>IBM is a registered trademark of International Business Machines
+Corporation in the United States, other countries, or both.</p>
+<p>Java and all Java-based trademarks are trademarks of Sun
+Microsystems, Inc. in the United States, other countries, or both.</p>
+<p>Other company, product, and service names may be trademarks or
+service marks of others.</p>
+</div>
+</div>
+</body>
+</html>
