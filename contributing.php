@@ -20,9 +20,10 @@ $pageAuthor		= "Wayne Beaton";
 
 # Add page-specific Nav bars here
 # Format is Link text, link URL (can be http://www.someothersite.com/), target (_self, _blank), level (1, 2 or 3)
-# $Nav->addNavSeparator("My Page Links", 	"downloads.php");
-# $Nav->addCustomNav("My Link", "mypage.php", "_self", 3);
-# $Nav->addCustomNav("Google", "http://www.google.com/", "_blank", 3);
+$Nav->addNavSeparator("Contributing", 	null);
+$Nav->addCustomNav("Eclipse Public License", "http://www.eclipse.org/org/documents/epl-v10.php", "_self", 1);
+$Nav->addCustomNav("Website Terms of Use", "http://www.eclipse.org/legal/termsofuse.php", "_self", 1);
+$Nav->addCustomNav("Article Template", "article-template.zip", "_self", 1);
 
 # End: page-specific settings
 
@@ -87,7 +88,7 @@ despite an apparent lack of immediate interest by the committee.</p>
 <p><strong>Articles are released under the Eclipse Public License (<a
 	href="http://www.eclipse.org/org/documents/epl-v10.php">EPL</a>).</strong>
 By putting the article on our server, it's subject to the EPL and
-Eclipse &quot;<a href="http://www.eclipse.org/legal/termsofuse.html">Terms
+Eclipse &quot;<a href="http://www.eclipse.org/legal/termsofuse.php">Terms
 of Use</a>&quot;. The content of the article must be licensable under
 the EPL. If the article shows code, that code must be compatible with
 the EPL along with the rest of the content.</p>
@@ -187,7 +188,7 @@ marked as closed. Stand back and watch as the masses come running to
 read it.</p>
 
 <small> Articles submitted to Eclipse Corner are accepted for posting
-under the &quot;<a href="http://www.eclipse.org/legal/termsofuse.html">Terms
+under the &quot;<a href="http://www.eclipse.org/legal/termsofuse.php">Terms
 of Use</a>&quot;. </small></div>
 </div>
 <?php
