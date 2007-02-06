@@ -45,6 +45,12 @@
 	</div>
 
 	<div style="clear:both;"/>
+	<? if (strtotime("now") < strtotime("February 8, 2007")) { ?>
+	<br/>
+	<div style="width:480px;display:block;margin-left:auto;margin-right:auto"><a href="http://www.eclipsecon.org/2007/"><img border="0" 
+ src="http://www.eclipsecon.org/2007/image480x60.gif" 
+ width="480" height="60" alt="EclipseCon 2007"/></a></div>
+ 	<? } ?>
 	<br/>
 	<div class="article">
 		<?php include "$file" ?>		
