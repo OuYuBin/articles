@@ -1,0 +1,1265 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Building Eclipse Plugins with Maven 2</title><link rel="stylesheet" href="default_style.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.70.1"><meta name="description" content="In a mature and agile development environment, it is vital that the developers are kept productive and that builds are done continuously and dependably. Eclipse is a great environment for developers and Maven 2 (in conjunction with Continuum or Cruise Control) is a great environment for continuous integration. As with most great software, both Eclipse and Maven 2 tend to be somewhat opinionated and the two don't always see eye to eye on how things should be done. This article describes how to use Maven 2 with Eclipse in general. In particular we will focus on how to develop, package and test Eclipse plugins using Eclipse (Callisto) and Maven 2 (2.0.4) efficiently."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div align="RIGHT"><font face="Times New Roman, Times, serif" size="2">Copyright &copy;
+                2006&nbsp;Princeton Softech, Inc.</font><table border="0" cellspacing="0" cellpadding="2" width="100%"><tr><td align="LEFT" valign="TOP" colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse Corner Article</font></font></b></td></tr></table></div><div align="LEFT"><h1><img src="images/Idea.jpg" height="86" width="120" align="CENTER"></h1></div><div class="article" lang="en"><div class="titlepage"><div><h1 align="center">Building Eclipse Plugins with Maven 2</h1><blockquote><b>Summary</b><br>In a mature and agile development environment, it is vital that the developers are kept productive and that builds are
+                done continuously and dependably. Eclipse is a great environment for developers and Maven 2 (in conjunction with Continuum
+                or Cruise Control) is a great environment for continuous integration. As with most great software, both Eclipse and Maven 2
+                tend to be somewhat opinionated and the two don't always see eye to eye on how things should be done. This article describes
+                how to use Maven 2 with Eclipse in general. In particular we will focus on how to develop, package and test Eclipse plugins
+                using Eclipse (Callisto) and Maven 2 (2.0.4) efficiently.<br><p><b>By Peter H.&nbsp;Petersen, Princeton Softech, Inc.<br>Sumit&nbsp;Gupta, Princeton Softech, Inc.<br></b></p></blockquote></div><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e58"></a>Environment</h2></div></div></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The information provided in this article pertains to the following:</p></td></tr></table></div><div class="itemizedlist"><ul type="disc"><li>
+                    <a href="http://download.eclipse.org/eclipse/downloads/drops/R-3.2-200606291905/index.php" target="_new">Eclipse 3.2.0
+                    (Callisto)</a>
+                </li><li>
+                    <a href="http://maven.apache.org/download.html" target="_new">Maven 2.0.4</a>
+                </li><li>
+                    <a href="http://maven.apache.org/continuum/download.html" target="_new">Continuum 1.0.3</a>
+                </li></ul></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Since we began writing this article, we have actually successfully upgraded Callisto from SDK 3.2.0 to SDK 3.2.1 along
+                with most of the rest of the Callisto projects.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e86"></a>Introduction</h2></div></div></div><p>Before delving into the nitty-gritty details, let's start with a little bit of background on Eclipse and Maven 2 and also
+            cover the goals and requirements for the build system we put together.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e91"></a>Eclipse</h3></div></div></div><p>If you've already worked with Eclipse on a daily basis, you can probably skip this section. If not, a little background
+                about how Eclipse likes (or wants) to do things might be helpful.</p><p>Like most other IDEs, Eclipse organizes your work into projects. A project is essentially a directory, in which your
+                packages, source files and other resources (like XML files, icons, images and resource bundles) are created and modified.
+                What sets Eclipse apart from most other IDEs is its notion of a workspace. Eclipse cannot function without one and
+                historically it's been the <span class="emphasis"><em>de facto</em></span> location for your projects to live. The workspace also contains
+                Eclipse's metadata directory (appropriately called <code class="code">.metadata</code>), which contains the settings, preferences and
+                other information that needs to persist between invocations.</p><p>In earlier versions of Eclipse, it was not possible to have projects in other locations, but this constraint has mostly
+                been removed in the later versions.</p><p>The more serious constraint, with respect to the Eclipse workspace, is that Eclipse wants it to be flat. As a rule of
+                thumb, an Eclipse workspace cannot have Java projects that exist in a hierarchy, so people have gotten used to simply
+                organizing their projects as a flat list of top-level directories and then manage their inter-dependencies through Eclipse's
+                built-in facility for project dependencies and build path management. For most tools and add-ons, this constraint is not
+                necessarily a problem, and e.g. Ant is often used in conjunction with Eclipse to do automated builds and testing.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e108"></a>Maven 2</h3></div></div></div><p>Maven 2 is an elegant project build/management framework that follows the mantra of "Convention over Configuration" made
+                popular by the "Ruby on Rails" community. The premise is that by following the conventions laid out by Maven 2, a developer
+                can very quickly put together a project that can be compiled, tested and packaged in a meaningful way and even get code
+                coverage to boot! </p><p>Maven 2 can be used to build pretty much anything. It does this by stepping through a series of
+                <span class="emphasis"><em>phases</em></span> in an attempt to reach the <span class="emphasis"><em>goal</em></span> of the build. All these phases put together
+                are called a <span class="emphasis"><em>lifecycle</em></span>. The phases that come into play for a given lifecycle depend on the kind of
+                library or executable you are building. The default lifecycle for building Java "jar" libraries is as follows: </p><div class="figure"><a name="d0e124"></a><p class="title"><b>Figure&nbsp;1.&nbsp;Maven 2 default lifecycle</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/lifecycle.png" alt="Maven 2 default lifecycle"></div></div></div><p><br class="figure-break"> You can find a reference to all the build phases here <a href="http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html" target="_new">Introduction to the
+                Lifecycle</a>. As you will see later on we tie into some of these build phases to facilitate the building and testing of
+                Eclipse plugins. </p><p>Following of the conventions in Maven 2 mostly boils down to abiding by the directory structure that Maven 2 predefines.
+                In other words, any code in the predefined source directory will be compiled and packaged, and any test code in the
+                predefined test source directory will be compiled and run against the code in source, and so on.</p><p>Maven 2 draws all truth from the Project Object Model (POM) which is defined in a file, named <code class="code">pom.xml</code>, at the
+                root of your project . We often say in-house, "if it ain't in the POM, it doesn't exist". POMs, and therefore projects, can
+                be arranged in hierarchies. A POM will inherit properties that it does not define itself from its parent. This inheritance
+                feature can obviously be powerful when attempting to manage projects and can reduce duplicated effort, but may irk some of
+                our well loved IDEs.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e141"></a>Goals and Requirements</h3></div></div></div><p>When choosing the tools to use in a development and build environment, it's important to understand what the goals are.
+                For example, in some development organizations the primary concern is developer productivity while "ancillary" disciplines
+                like change and configuration management; build; integration and testing take a back seat to that. In other organizations,
+                it's the other way around and developers may well suffer from having to work with a difficult or arcane build environment.</p><p>Today, many development organizations have managed to come up with a reasonable "middle of the road" tooling and
+                methodology story, that keeps the developers productive (and mostly happy) but also ensures that builds can be done
+                repeatedly and with a large degree of confidence and automation.</p><p>When we set out to design and implement our build environment, we already knew that we'd want to use Eclipse as the Java
+                IDE, as we're implementing our product's design-time environment as a Rich Client Platform (RCP) application, that will also
+                leverage 3<sup>rd</sup> party plugins. On the other hand, we also had hard requirements on the overall build
+                system to support an agile development methodology with continuous integration and a very high degree of transparency in
+                terms of the overall state of affairs with the source code and releasable bits. So it was clear that we wanted to completely
+                automate the following: </p><div class="itemizedlist"><ul type="disc"><li>Compilation</li><li>Unit testing</li><li>Javadoc generation</li><li>Code coverage</li><li>Code style checking</li><li>Release</li></ul></div><p>Of course, all of this has to happen on several different platforms, each with their own quirks, special
+                requirements and caveats.</p><p>Our first conclusion was that relying on Ant to get all this done would be a huge effort - especially in the area of
+                dependency management and transparency.</p><p>Our second conclusion was that it would be imperative to not cripple or impede the tools we picked. For example, we wanted
+                to leverage all of Eclipse's Plugin Development Environment (PDE) to ensure developer productivity, but we also wanted to
+                use Maven 2 the way it was meant to be used.</p><p>The result is an environment that allowed for very little compromise on neither Eclipse's nor Maven 2's part.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e179"></a>Using Eclipse and Maven 2 with Standard Packaging</h2></div></div></div><p>Before getting knee-deep in the intricacies of building Eclipse plugins with Maven 2, we want to cover the details of how to
+            use Eclipse and Maven 2 together in general. So, if you build plain old jars and/or J2EE deployable artifacts, like ears and
+            wars, this section covers most of what you need.</p><p>The primary thing that kept us sane (or at least on track), while getting the build environment together, was keeping in mind
+            that from the point of view of Maven 2, there is no Eclipse. Like the kid in The Matrix, telling Neo that "there is no spoon",
+            we repeatedly had to remind each other that "there is no Eclipse."</p><p>For most things, this is actually not that big of an issue, but as you'll see below, it's not quite that straightforward for
+            Eclipse plugins.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e188"></a>Location of Source Code</h3></div></div></div><p>The first, and perhaps most crucial, thing to get in place (and get used to) is the location of the source code. As
+                mentioned above, most Eclipse developers are probably used to simply stashing away all their source in a flat workspace, but
+                Maven 2 ultimately doesn't like that. More accurately: Maven 2 <span class="emphasis"><em>can</em></span> handle a flat layout, but a lot of
+                Maven 2 plugins and ancillary tools assume that the source is hierarchical (and since Maven 2 inherently understands that,
+                it can give you more help), so after spending quite a bit of time trying to get all the pieces to play nice in a flat
+                workspace, we grabbed the bull by the horns and went with Maven 2's convention. Since Eclipse ultimately doesn't like to
+                have nested Java projects in the workspace, we decided to keep all of our projects in a location other than Eclipse's
+                workspace.</p><p>The net result of this is that we, by convention, keep all our source code in a directory called <code class="code">projects</code> and
+                only use the Eclipse workspace for the metadata. On Windows we keep the <code class="code">projects</code> directory in the root of
+                either the <code class="code">C:\</code> or <code class="code">D:\</code> drive (for command-line convenience) and on other OS's we keep it in the
+                user's home directory. We keep the Eclipse workspace in the default location (usually the user's home directory).</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e210"></a>Source Code Layout</h3></div></div></div><p>The second thing to get used to is having your projects organized in a hierarchy. As mentioned above, a hierarchical
+                project structure is the Maven 2 convention and when adhering to that, Maven 2 can provide you with more help.</p><p>By convention, a project created underneath another project becomes a child of that. In Maven 2 terminology the child
+                project becomes a <code class="code">module</code> in the parent project. This is crucial for cutting down on configuration (remember:
+                Maven 2 is all about "Convention over Configuration") and we leverage this capability to both organize and configure our
+                projects. Specifically, we have a root project that holds the "super POM". Underneath that, we have a module for each type
+                of project we need, like J2EE and Eclipse plugins. The actual projects of that type in turn live underneath their respective
+                parent. Artifacts that are platform neutral and whose packaging is <code class="code">jar</code> simply live underneath the root project,
+                as they don't require any further configuration.</p><p>Just like in an OO class hierarchy, the common, general information lives at the top and the specialized information lives
+                further down the hierarchy. For example, all the repository and plugin configuration that is common to all the projects sits
+                in the "super POM" and configuration specific to all the Eclipse plugins sits in the Eclipse plugin parent POM. This way,
+                comparatively little configuration is needed in each of the projects that most developers are working on. Specifically, our
+                plugin project POMs only contain the group ID, artifact ID and version of the parent and the plugin itself.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e225"></a>Source Code Management (SCM)</h3></div></div></div><p>Source code management is largely "business as usual", but a few things must be kept in mind. We happen to use CVS, but
+                other supported SCM systems, like e.g. Subversion, should be usable with the same results and caveats described below.</p><p>As mentioned above, we decided to go the hierarchical route. One major contributor to that decision happens to be
+                Continuum, which has some hard and fast assumptions about how things are organized. While trying to use Maven 2 with a flat
+                layout, we found out the hard way that Continuum (at the time of writing, we're using version 1.0.3) does not grok the flat
+                layout. Continuum uses Maven 2 to do the actual build, so it is required to go and get the latest sources from the source
+                code repository <span class="emphasis"><em>before</em></span> invoking Maven 2. Each POM may have SCM information in it, but in order to build
+                a top-level project along with all of its modules, Continuum is forced to "calculate" where each of the modules lives, since
+                it can't very well get the project's SCM information out of the POM, until it has checked it out of SCM.</p><p>The net result of this is that only top-level projects are actual CVS modules; all child projects are simply
+                sub-directories underneath the module. If you, like us, were used to the flat layout with every project being a module, this
+                may take a little getting used to.</p><p>One of a few (in our opinion minor) issues we've encountered with this, is that sometimes Eclipse gets a little confused
+                about the state of affairs with respect to SCM. We tend to keep the relevant (grand)parent project(s) open in Eclipse as
+                well as the actual projects we write code in, since a majority of the configuration information we keep is stored in the
+                parent POM(s). Since the child projects are sub-directories under their parent, Eclipse essentially ends up with two (or
+                more) views of each project's directory structure: one for the project itself and one underneath the project's directory
+                under its parent. This leads to mixed messages about whether or not a project's code and resources are up to date or not;
+                and when adding a new child project to CVS, we often end up seeing the newly created <code class="code">CVS</code> directories as new
+                Java packages. More often than not, a quick refresh in the right spot will fix everything, but sometimes we need to close
+                and reopen a project to get rid of the normally hidden <code class="code">CVS</code> directories.</p><div class="tip" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.gif"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>Getting used to hitting <code class="code">F5</code> in the topmost parent project, helps keep things synchronized.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e251"></a>The Maven 2 Plugin for Eclipse</h3></div></div></div><p>As we point out throughout this document, Maven 2, like Eclipse, is a framework that relies on plugins to do the actual
+                work. In the case of Maven 2, plugins are responsible for things like compilation, testing, code instrumentation (e.g. for
+                code coverage), reporting and packaging. Not surprisingly, Maven 2 plugins can be built in a number of different ways (even
+                using different languages) and also not surprisingly, you can use Maven 2 to build and package Maven 2 plugins. Maven 2
+                plugins that are written in Java, are made up of one or more so called Mojos. A Mojo is a Java class that contains some
+                special Javadoc tags (and other goodies) that allow Maven 2 to figure out what parameters are needed and required and what
+                phase (or phases) of the lifecycle the class should partake in.</p><p>The nice folks at <a href="http://mojo.codehaus.org/" target="_new">codehaus</a> have made a bunch of Mojos available for public
+                consumption amongst which is an <a href="http://maven.apache.org/plugins/maven-eclipse-plugin/" target="_new">Eclipse plugin</a>
+                for Maven 2.</p><p>This plugin is one of the primary bridges we use between Maven 2 and Eclipse. After reminding ourselves once more that
+                "there is no spoon" and thus no Eclipse, we never check into SCM any Eclipse project artifacts i.e. <code class="code">.project,
+                    .classpath, .wtpmodules, .components, .settings etc</code>. So once a project is checked out of SCM you can duly go to
+                the root of project you are interested in working on and type <code class="code"> mvn eclipse:eclipse </code> which goes and looks at the
+                project's POM file and conveniently generates appropriate <code class="code">.project</code> and <code class="code">.classpath</code> files as well as
+                the rest of the necessary Eclipse artifacts. As mentioned above we keep all our code in a <code class="code">projects</code> directory,
+                so at this point a developer would use Eclipse's <code class="code">Import -&gt; Existing projects into Workspace</code> option to get the
+                project into Eclipse.</p><p>This whole process allows us to maintain a single source of truth for all project information, the POM.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e286"></a>What Makes Eclipse Plugins a Special Case?</h2></div></div></div><p>Now that we've covered Eclipse and Maven 2 in general, we can move on to dealing with the Eclipse plugins. What makes Eclipse
+            plugins so different that they need special attention in the first place? Well, it depends on what you're trying to accomplish.
+            If your only goal is to build plugins using Maven 2, you could almost use Maven 2 out-of-the-box, but if you also want to be
+            able to use PDE for launch and debug and have the ability to do automated tests, code coverage, etc., then you need to handle a
+            few things in a way that Maven 2 doesn't support without some tweaking.</p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p> When we talk about Maven 2, we're actually talking about the available Maven 2 plugins rather than Maven 2 proper. Like
+                Eclipse/RCP, Maven 2 is a framework in which numerous capabilities have been implemented. As you'll see in the following
+                sections, we've solved the plugin special case handling by creating a Maven 2 plugin that does what we need.</p></td></tr></table></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e294"></a>Packaging</h3></div></div></div><p>At face value, an Eclipse plugin is nothing special: it's a jar or directory containing the usual suspects:</p><div class="itemizedlist"><ul type="disc"><li>Compiled classes</li><li>The manifest</li><li>I18N/L10N resources</li><li>Images and icons</li></ul></div><p>and of course the plugin specifics:</p><div class="itemizedlist"><ul type="disc"><li>plugin.xml</li><li>plugin.properties</li></ul></div><p>possibly along with:</p><div class="itemizedlist"><ul type="disc"><li>Other jars</li></ul></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>With Eclipse now being OSGi based, the manifest technically is also a plugin-specific resource. The manifest now
+                    declares things like name, ID and version of the plugin (or <span class="emphasis"><em>bundle</em></span> in OSGi speak) as well as the
+                    dependencies; all these details used to be expressed in the <code class="code">plugin.xml</code> file.</p></td></tr></table></div><p>In the case where a plugin contains other jars it is deployed as a directory-based plugin, whereas a plugin that does not
+                have jars and also doesn't need a directory-based home, can (and should) be packaged as a single jar.</p><p>In the latter case, this maps well to the default Maven 2 packaging type of <code class="code">jar</code>, but Maven 2 really doesn't
+                have the notion of a <code class="code">directory</code> packaging, so it is necessary to use the <code class="code">pom</code> type. The reason for
+                this is that when a plugin exposes packages that live in one or more jars, Maven 2 needs to know about those jars, so that
+                it can satisfy dependencies. Without this, other plugins that depend upon classes in such a jar could never be
+            compiled.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e347"></a>Layout</h3></div></div></div><p>One of the really nice features of PDE is its ability to do self-hosting of plugins under development. Essentially, PDE
+                can launch a second instance of your development environment that also contains the plugin(s) under development. This
+                behavior makes debug and testing very easy, but requires that the plugin projects are laid out exactly the way the plugin
+                will be packaged when released.</p><div class="tip" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.gif"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>The default behavior of PDE is to launch the second instance of Eclipse with all the plugins of the development
+                    environment along with all plugins under development in that environment. This, of course, can be configured through the
+                    launch configuration editor's "Plug-ins" tab.</p></td></tr></table></div><p>The challenge here is that Maven 2, by default, expects everything to be neatly tucked away under the
+                    <code class="code">src/main/resources</code> directory. If we stuck all the plugin's icons and images along with the
+                <code class="code">plugin.xml</code> and <code class="code">plugin.properties</code> files in that directory, Maven 2 would correctly package the
+                plugin for release but PDE wouldn't be able to launch it correctly, making debugging the plugin virtually impossible.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e366"></a>Dependency Management</h3></div></div></div><p>Maven 2 must have all the dependencies spelled out in the POM for it to resolve and manage them. In contrast, Eclipse
+                plugins must have dependencies clearly defined in their manifest file. This is a major point of conflict, but while Maven 2
+                can be taught otherwise, Eclipse will not budge on this issue. All dependencies <span class="emphasis"><em>must</em></span> exist in the
+                manifest and they are resolved from there during development as well as in the runtime.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e374"></a>Testing</h3></div></div></div><p>Perhaps the biggest difference between plain old jar projects and an Eclipse plugin project is that of unit testing.</p><p>The PDE folks have, of course, done an excellent job of making running, debugging and testing plugins easy. For the most
+                part, there is really no difference between unit testing a set of "normal" classes and a set of plugin classes when working
+                in Eclipse.</p><p>The challenge, when using Maven 2 (or Ant or another "external to Eclipse" build infrastructure), is that unit testing has
+                to take place in the context of an Eclipse instance. All but the simplest plugin classes cannot execute correctly without
+                all of the core Eclipse infrastructure around it, along with whatever other Eclipse plugins the plugin in question depends
+                upon.</p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>We have decided to not attempt to unit test SWT UI pieces - a decision, by the way, that is orthogonal to our choice
+                    of using Maven 2. Regardless of your build environment, Eclipse plugins are usually tested using JUnit and trying to
+                    automate SWT events etc. in that environment does not seem productive. By convention, we try to keep the UI layer as
+                    thin as humanly possible and keep all the business logic squirreled away in classes that don't interact directly with
+                    SWT and only sparsely so with JFace - making it much more natural to test with JUnit. Also, we tend to not
+                        <span class="emphasis"><em>directly</em></span> unit test code that is generated (like EMF Ecore models or Hibernate POJOs) and since
+                    we use the very excellent Jigloo GUI builder from <a href="http://cloudgarden.com/jigloo/index.html" target="_new">Cloudgarden
+                    </a> to create all the <code class="code">Composite</code>s for our views, wizard pages etc. the amount of direct SWT code we
+                    write ourselves is fairly limited. Our company uses dedicated UI testing tools to do automated functional testing of the
+                    GUI.</p></td></tr></table></div><p>The solution to this, as provided by the Eclipse folks, is the Eclipse test framework. This framework is essentially an
+                Eclipse plugin that provides the ability to run an Eclipse workbench, and get it to execute a suite of JUnit tests, using
+                Ant. You can download the test framework from the same <a href="http://download.eclipse.org/eclipse/downloads/drops/R-3.2-200606291905/index.php" target="_new">location</a> as where you get
+                the Eclipse SDK proper.</p><p>A final, minor thing needs to be dealt with: Eclipse, of course, uses JNI to provide the underlying implementation for
+                SWT. When working in Eclipse, this is effectively not an issue because the PDE self hosting mechanism makes both the
+                cross-platform SWT API as well as the platform specific implementation available. In a multi-platform environment, the
+                correct SWT plugin needs to be made available for the compile phase, before any testing can take place.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e402"></a>The Solution</h2></div></div></div><p>Now that you understand the various problems we were facing you can hopefully appreciate that we didn't just run straight to
+            the keyboard to write some Mojo's just because we could (cough, cough).</p><p>Just to re-iterate, the solution keeps in mind two key requirements of our development process. The first being that when the
+            developer is writing, compiling and testing the code in Eclipse, he/she should not really have to care about Maven 2. The other
+            requirement being that the developer or machine building and testing the Eclipse plugins using Maven 2, should/will not have any
+            notion about anything Eclipse.</p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The build system and infrastructure solution presented here does not yet handle any aspects of Eclipse features. At the
+                time of writing, we believe that features need to be dealt with only during the Maven 2 release phase, which we would like
+                to cover in part 2 of this article.</p></td></tr></table></div><p>We realized that the Eclipse plugins we write can be fundamentally put into two categories. We had Eclipse plugins that
+            contained code in them, which we called <span class="emphasis"><em>Source Plugins</em></span> and we had other Eclipse plugins whose sole purpose
+            was to expose jars that other plugins depended on. We called these <span class="emphasis"><em>Binary Plugins</em></span>. Just to be completely
+            honest, we did have plugins that contained jars as well as code, but to keep things simple (as we like to do) we decided that it
+            was easy enough to keep our Eclipse plugins purely <span class="emphasis"><em>source</em></span> or <span class="emphasis"><em>binary</em></span>.</p><p>After some trials with implementing this concept using the default build lifecycle and the predefined packaging types
+                <code class="code">pom</code> and <code class="code">jar</code>, we reverted to using packaging types that we created called
+            <code class="code">source-plugin</code> (for all Eclipse plugin projects that contained source code) and <code class="code">binary-plugin</code> (for all
+            Eclipse projects that simply exposed jars). This allowed us to control two of the concerning issues, packaging and testing. In
+            order to create our own packaging types, we had to define our own Maven 2 lifecycles. The configuration and some explanation for
+            this can be found in <a href="#lifecycle-definition" title="Lifecycle Definitions">the section called &#8220;Lifecycle Definitions&#8221;</a>.</p><p>We then proceeded to solve all the issues described in the above sections by writing Mojos or by providing configuration to
+            existing Mojos. These are all described in some detail in the following sub-sections. Most of the Mojo's we wrote help existing
+            Maven 2 plugins do their work in spite of putting information that they need in places that they do not inherently understand
+            (but Eclipse does). Some Mojos we wrote go the other way and help take information from a Maven 2 POM and generate appropriate
+            files that allow Eclipse to obtain the same information.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e444"></a>Maven 2 Plugin (Mojos)</h3></div></div></div><p>
+                </p><div class="itemizedlist"><ul type="disc"><li><p><b>Deploy Mojo.&nbsp;</b>(Issue: Maven 2 has to find Eclipse dependencies)</p><p>We set out to use Maven 2 the way it was meant to. Maven 2 does an excellent job of dependency management. All
+                            it needs is a <code class="code">groupId</code>, <code class="code">artifactId</code> and a <code class="code">version</code> to locate any artifact in
+                            a repository. We were at first diligent about trying to find all the Eclipse plugins that our plugins would
+                            depend upon in well known Maven 2 repositories. When that failed, we came up with a Mojo that would scrape all
+                            the plugins in an Eclipse installation and deploy them in our internal Maven 2 repository. </p><p>The Deploy Mojo does exactly this. It knows how to scrape an existing Eclipse installation and create a script
+                            file that contains all the <code class="code">mvn deploy</code> commands needed to deploy all the jars.</p><p>For a jar based plugin, we simply deploy the jar, using the plugin's id and version as the Maven 2 artifact id
+                            and version.</p><p>For a directory based plugin, we deploy a <code class="code">pom</code> for the entire plugin that contains the
+                            dependencies on the jars it needs and/or provides. This way, when another plugin depends on it, the POM provides
+                            all the jars so that compilation will work.</p><div class="example"><a name="d0e479"></a><p class="title"><b>Example&nbsp;1.&nbsp;Eclipse Scrape and Deploy</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    if (!eclipseHome.isDirectory()) {
+        throw new MojoExecutionException(
+            "The 'eclipseHome' location '" +
+             eclipseHome +
+              "' is not a valid directory");
+    }
+    if (repositoryHome == null) {
+        repositoryHome = new File(
+            System.getProperty(KEY_USER_DIR));
+        getLog().info("Defaulting 'repositoryHome' to '" +
+            repositoryHome + "'");
+    }
+    if (!repositoryHome.isDirectory()) {
+        throw new MojoExecutionException(
+            "The 'repositoryHome' location '" +
+            repositoryHome +
+            "' is not a valid directory");
+    }
+    if (prefix == null) {
+        getLog().info("Defaulting 'prefix' to '&lt;none&gt;'");
+    }
+    if (prefix != null) {
+        String[] temp = prefix.split(",");
+        for (int i = 0; i &lt; temp.length; i++) {
+            String prefix = temp[i];
+            if (!prefix.endsWith(".")) {
+                prefix = prefix + ".";
+            }
+            prefixes.add(prefix);
+        }
+    }
+    try {
+        populateRepository();
+    } catch (IOException e) {
+        throw new MojoExecutionException(
+            "Repository population failed", e);
+    }
+    try {
+        writePOMs();
+    } catch (IOException e) {
+        throw new MojoExecutionException(
+            "POM writing failed", e);
+    }
+    try {
+        createPOMDeploymentScript();
+    } catch (IOException e) {
+        throw new MojoExecutionException(
+            "POM deployment script creation failed", e);
+    }
+}
+                            </pre></div></div><br class="example-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>An Eclipse plugin manifest lets you specify which packages, if any, a plugin actually exposes for other
+                                plugins to use, regardless of the actual packages found in all its jars. When we scrape an Eclipse
+                                installation we do <span class="emphasis"><em>not</em></span> honor this information and simply make all the jars available.
+                                Since Maven 2's compiler plugin does not have the same capability, allowing it to compile against a subset
+                                of packages in a jar, we decided that this would be a minor issue.</p></td></tr></table></div></li><li><p><b>POM Modifier Mojo.&nbsp;</b>(Issue: Eclipse plugin must have dependencies in its manifest file)</p><p>For all our <code class="code">source-plugin</code> projects we define the dependencies in the manifest file keeping
+                            Eclipse happy, and making developing Eclipse plugins in Eclipse as easy as it should be. So we know that all
+                            this while we claimed that "if it ain't in the POM, it doesn't exist", and now by putting dependencies in the
+                            manifest file, Maven 2 can't resolve any of the dependencies for us. The solution here is to dynamically augment
+                            the POM, during the build, with information from the Eclipse plugin's manifest. Thus we created this Mojo that
+                            parses out the manifest file and <span class="emphasis"><em>modifies</em></span> the POM (in memory) with the dependencies in the
+                            appropriate build <span class="emphasis"><em>phase</em></span>.</p><div class="example"><a name="d0e507"></a><p class="title"><b>Example&nbsp;2.&nbsp;In-Memory POM Modification</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    if (logModifications) {
+        logOriginalPom();
+    }
+    if ((manifest == null) || !manifest.exists()) {
+        String path = baseDirectory.getAbsolutePath() +
+            File.separator +
+            ManifestConstants.MANIFEST_DIRECTORY +
+            File.separator +
+            ManifestConstants.MANIFEST_FILE_NAME;
+        manifest = new File(path);
+    }
+    if (manifest.exists()) {
+        try {
+            FileInputStream fileInputStream =
+                new FileInputStream(manifest);
+            Manifest manifest = new Manifest(fileInputStream);
+            ManifestParser parser = new ManifestParser(manifest);
+            parser.setGroupId(mavenProject.getGroupId());
+            parser.parse();
+            DependencyManagement parsedManagement =
+                parser.getDependencyManagement();
+            List dependencies = parsedManagement.getDependencies();
+            if (dependencies != null &amp;&amp; dependencies.size() &gt; 0) {
+                Iterator iterator = dependencies.iterator();
+                while (iterator.hasNext()) {
+                    Dependency dependency =
+                        (Dependency) iterator.next();
+                    if (dependency.getVersion() == null) {
+                        dependency.setVersion(parser.getVersion());
+                    }
+                    convertToSnapshotVersion(dependency);
+                    if (ManifestConstants.SCOPE_SYSTEM.equals(
+                        dependency.getScope())) {
+                        String systemPath =
+                            dependency.getSystemPath();
+                        File file = new File(systemPath);
+                        if (!file.exists()) {
+                            file = new File(baseDirectory,
+                                systemPath);
+                            dependency.setSystemPath(
+                                file.getAbsolutePath());
+                        }
+                    } else {
+                        String type =
+                            mavenProject.getProperties().
+                                getProperty(
+                                    dependency.getArtifactId());
+                        if (type != null) {
+                            dependency.setType(type);
+                        } else {
+                            Artifact artifact =
+                                artifactFactory.createBuildArtifact(
+                                    dependency.getGroupId(),
+                                    dependency.getArtifactId(),
+                                    dependency.getVersion(),
+                                    "jar");
+                            try {
+                                artifactResolver.resolve(
+                                    artifact,
+                                    mavenProject.
+                                        getRemoteArtifactRepositories(),
+                                    artifactRepository);
+                                dependency.setType("jar");
+                            } catch (Exception e) {
+                                // Do Nothing
+                                // since the default is 'pom'
+                            }
+                        }
+                    }
+                    mavenProject.getDependencies().add(dependency);
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException(
+                "Failed to update POM from Eclipse Manifest", e);
+        }
+    } else if (requireManifest) {
+        throw new MojoExecutionException(
+            "The Manifest file cannot be found.");
+    }
+    if (logModifications) {
+        logModifiedPom();
+    }
+}
+                            </pre></div></div><br class="example-break"><p>We attach this Mojo to the <code class="code">process-resources</code> phase of the build lifecycle as it is right before
+                            the <code class="code">compile</code> phase.</p><p>A sticky point in all of this is that manifest file entries for dependencies generally don't contain the same
+                            amount of information that Maven 2 POMs do. As mentioned, we use the Eclipse plugin id and version as the Maven
+                            2 artifact id and version. Currently, Eclipse is smart enough to pick a matching, dependent plugin based on the
+                            id alone, but Maven 2 still requires a specific version spelled out. Luckily, the OSGi infrastructure does
+                            support the presence of a version and the Eclipse manifest editor also has support for entering it, so it is a
+                            requirement - for this Mojo to work correctly - that all Eclipse plugin dependencies have a version. Admittedly,
+                            this is a tad annoying, but since it's defaulted to <code class="code">1.0.0</code> it's easy to recognize when Maven 2
+                            complains about a missing Callisto jar with that version.</p><div class="figure"><a name="d0e525"></a><p class="title"><b>Figure&nbsp;2.&nbsp;An Eclipse Plugin with Versioned Dependencies</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/pde-depend-versions.png" alt="An Eclipse Plugin with Versioned Dependencies"></div></div></div><br class="figure-break"><p>Having resolved the <code class="code">version</code>, there is still no <code class="code">groupId</code> and certainly no packaging
+                            type to be found. At this point we go by the assumption that all Eclipse plugins we develop and all Eclipse
+                            plugins we scrape belong to the same <code class="code">groupId</code>. That leaves us with the problem of finding out what
+                            packaging type the dependency is. Plugins come in two flavors: jar ("mapped" to the <code class="code">jar</code> packaging)
+                            and directory (mapped to the <code class="code">pom</code> packaging). Since Eclipse and OSGi don't make any distinction
+                            between the two, there is no way to specify this in the manifest, so we have solved this issue in two ways: </p><div class="itemizedlist"><ul type="circle"><li>We look for a <code class="code">pom</code> and if that doesn't exist, we assume it's a <code class="code">jar</code>.
+                                        Regrettably, this can be quite slow, because Maven 2 tries to find all artifacts both locally and
+                                        remotely.</li><li><p>We support the configuration of the plugin packaging in the POM, so before resolving a dependency
+                                        we check that configuration and if found - we're done. For this we employ the use of properties in
+                                        Maven 2. Using properties we map the <code class="code">artifactId</code> of an artifact to its packaging type.
+                                        The listing below is a snippet from a pom.xml file. </p><div class="example"><a name="d0e564"></a><p class="title"><b>Example&nbsp;3.&nbsp;Properties Map Artifact Packaging </b></p><div class="example-contents"><pre class="programlisting">
+&lt;properties&gt;
+    &lt;org.eclipse.core.runtime&gt;
+        jar
+    &lt;/org.eclipse.core.runtime&gt;
+    &lt;org.eclipse.jface&gt;
+        jar
+    &lt;/org.eclipse.jface&gt;
+    &lt;org.eclipse.ui&gt;
+        jar
+    &lt;/org.eclipse.ui&gt;
+    &lt;org.eclipse.datatools.connectivity&gt;
+        pom
+    &lt;/org.eclipse.datatools.connectivity&gt;
+    &lt;org.eclipse.datatools.modelbase.dbdefinition&gt;
+        pom
+    &lt;/org.eclipse.datatools.modelbase.dbdefinition&gt;
+    &lt;org.eclipse.datatools.modelbase.sql&gt;
+        pom
+    &lt;/org.eclipse.datatools.modelbase.sql&gt;
+    &lt;org.eclipse.datatools.connectivity.sqm.core&gt;
+        jar
+    &lt;/org.eclipse.datatools.connectivity.sqm.core&gt;
+    &lt;org.eclipse.datatools.connectivity.sqm.core.ui&gt;
+        pom
+    &lt;/org.eclipse.datatools.connectivity.sqm.core.ui&gt;
+    &lt;org.eclipse.datatools.connectivity.sqm.server.ui&gt;
+        pom
+    &lt;/org.eclipse.datatools.connectivity.sqm.server.ui&gt;
+    &lt;org.eclipse.datatools.connectivity.ui&gt;
+        pom
+    &lt;/org.eclipse.datatools.connectivity.ui&gt;
+    &lt;org.eclipse.datatools.connectivity.ui.dse&gt;
+        pom
+    &lt;/org.eclipse.datatools.connectivity.ui.dse&gt;
+    &lt;org.eclipse.datatools.modelbase.sql&gt;
+        pom
+    &lt;/org.eclipse.datatools.modelbase.sql&gt;
+    &lt;org.junit&gt;
+        pom
+    &lt;/org.junit&gt;
+&lt;/properties&gt;
+                                            </pre></div></div><p><br class="example-break">
+                                    </p></li></ul></div><p>For troubleshooting purposes, the Mojo usually spits out a before and after image of the POM; that way it's
+                            easy to see what it has done and fix any issues there might be.</p></li><li><p><b>Plugin Packaging Mojos.&nbsp;</b>(Issue: Eclipse plugins need to packaged a certain way)</p><p>This came mostly as an unfortunate side affect of using our own Maven 2 lifecycle definitions and our own
+                            packaging types. The default packaging Mojos have some assumptions of how certain packaging types can be
+                            packaged and how others (like <code class="code">pom</code> packagings) can be excluded from the norm. Since there is no
+                            extension mechanism for packaging types we couldn't define our <code class="code">binary-plugin</code> as a kind of
+                            <code class="code">pom</code> packaging. Hence these Mojos that know how to treat our packagings.</p><p>This Mojo, while packaging, will also pick the manifest file from the <code class="code">META-INF</code> directory located
+                            at the root of the plugin project. At the time of writing this article, the default jar packager in Maven 2
+                            would ignore this manifest file even if it was specified as a resource.</p><div class="example"><a name="d0e594"></a><p class="title"><b>Example&nbsp;4.&nbsp;Eclipse Plugin Packaging</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    String packaging = project.getPackaging();
+    if ((packaging.equals("pom")) ||
+        (packaging.equals("binary-plugin"))) {
+        getLog().debug(
+            "Nothing to do for packaging '" +
+            packaging +
+            "'");
+        return;
+    }
+    File jarFile = createArchive();
+    String classifier = getClassifier();
+    if (classifier != null) {
+        projectHelper.attachArtifact(
+            getProject(),
+            "jar",
+            classifier,
+            jarFile);
+    } else {
+        getProject().getArtifact().setFile(jarFile);
+    }
+}
+                            </pre></div></div><br class="example-break"></li><li><p><b>Manifest Generator Mojo.&nbsp;</b>(Issue: Maven wants all dependencies in the POM)</p><p>This Mojo pertains to the plugins with <code class="code">binary-plugin</code> packaging only. Since these plugins are made
+                            up of 3<sup>rd</sup> party jars only, there is no code to maintain, check in or build. In fact,
+                            everything needed can be well described in the POM, so that's the only artifact we keep in CVS. For build,
+                            packaging and release this is all good, but when testing other plugins that depend on a plugin like this, PDE
+                            will have a problem because it requires a valid manifest and all the jars to actually exist in the project.</p><p>The solution here is to get all the project information, stored in the POM, from Maven 2 and have the Mojo
+                            create a valid Eclipse plugin manifest on the fly. Also, since it spells out the dependencies the Mojo can copy
+                            all the jars from the Maven 2 repository into the right spot in the plugin project, enabling PDE to execute any
+                            other plugin that depends on <code class="code">binary-plugin</code> type plugin.</p><div class="example"><a name="d0e618"></a><p class="title"><b>Example&nbsp;5.&nbsp;Eclipse Plugin Manifest Generation</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    File manifestDirectory = new File(
+        destinationDirectory,
+        MANIFEST_DIRECTORY);
+    getLog().debug("The manifestDir is " + manifestDirectory);
+    if (!manifestDirectory.exists()) {
+        if (!manifestDirectory.mkdir()) {
+            throw new MojoExecutionException(
+            "Unable to create directory '" +
+            manifestDirectory +
+            "'");
+        }
+    }
+    libDirectory = new File(destinationDirectory, LIB_DIRECTORY);
+    getLog().debug("The libDir is " + libDirectory);
+    if (!libDirectory.exists()) {
+        if (!libDirectory.mkdir()) {
+            throw new MojoExecutionException(
+                "Unable to create directory '" +
+                libDirectory +
+                "'");
+        }
+    }
+    File manifestFile = getManifestFile(manifestDirectory);
+    Manifest manifest = new Manifest();
+    Attributes mainAttributes = manifest.getMainAttributes();
+    writeInitialManifestAttributes(mainAttributes);
+    resolveBundleClasspathEntries(mainAttributes);
+    writeManifestToFile(manifestFile, manifest);
+}
+                            </pre></div></div><br class="example-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The <span class="emphasis"><em>only</em></span> artifact we ever check in is the POM itself, since everything else either is
+                                managed by Maven 2 or can be generated cheaply. Ordinarily we would have preferred to stick the jars and the
+                                manifest under the <code class="code">target</code> directory, but PDE wants everything in its proper place, right under
+                                the project's directory. This is not really a problem, other than the fact that we have to remember to not
+                                check the manifest or the jars into CVS and <code class="code">mvn clean</code> doesn't clean the jars or the manifest.
+                                We handle the former partly thought process (only a few developers "own" and manipulate the
+                                    <code class="code">binary-plugin</code> packaged plugins) and partly by keeping <code class="code">.cvsignore</code> up to date.
+                                The latter could be handled by tweaking the <code class="code">clean</code> phase, but it has not annoyed us enough yet
+                                to do so.</p></td></tr></table></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Eclipse and OSGi allow you specify which packages in a jar are actually available for other plugins to
+                                use. Maven 2 does not have anything equivalent, so when generating the Eclipse plugin manifest on the fly,
+                                we introspect all the dependency jars and export <span class="emphasis"><em>all</em></span> packages in these jars. While
+                                there might be scenarios where we really only want some jar's packages exposed and not necessarily packages
+                                from any jars they depend upon (and thus are required dependencies), we don't see this as enough of an issue
+                                to change the process around this.</p></td></tr></table></div></li><li><p><b>PDE Test Mojo.&nbsp;</b>(Issue: Need to be able to run tests in Eclipse)</p><p>Since one of our goals was to use the standard Maven 2 lifecycle and associated phases, we wanted to allow the
+                            developers to simply use <code class="code">mvn test</code> for testing and <code class="code">mvn cobertura:cobertura</code> for code
+                            coverage analysis. This, of course, is a bit of a challenge, since Maven 2 doesn't know anything about Eclipse
+                            and its test framework.</p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Since the Eclipse test framework is Ant based, it needs a build file that it can execute. This build file
+                                usually relies on a more complex build file, provided by the test framework, so it's actually fairly simple.
+                                A typical build file contains targets for initialization; execution of the test suite; cleanup and a target
+                                for running the previous three in the right order. The <code class="code">init</code>, <code class="code">cleanup</code> and
+                                <code class="code">run</code> targets are pretty much the same for all plugins but the <code class="code">suite</code> target contains
+                                an Ant call (to the provided build file) for each test. Maintaining this target, of course, is a manual and
+                                error-prone task.</p></td></tr></table></div><p>The solution, provided by this Mojo, is to automatically orchestrate the entire test phase - and do it in such
+                            a way that the rest of the Maven 2 build infrastructure can work with it.</p><div class="example"><a name="d0e681"></a><p class="title"><b>Example&nbsp;6.&nbsp;The PDE Test Orchestration</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    if (!needsToRunTests()) {
+        return;
+    }
+    setupDefaults();
+    PDETestEclipseValidator validator =
+        new PDETestEclipseValidator(getLog(),
+            baseDirectory,
+            eclipseDirectory,
+            prefixes,
+            testFrameworkVersion);
+    validator.execute();
+    File targetDirectory = new File(baseDirectory,
+        PDETestConstants.TARGET_DIRECTORY);
+    File testDirectory = new File(targetDirectory,
+        PDETestConstants.PDE_TEST_DIRECTORY);
+    if (!testDirectory.exists()) {
+        if (!testDirectory.mkdirs()) {
+            throw new MojoExecutionException(
+                "Unable to create '" +
+                PDETestConstants.PDE_TEST_DIRECTORY +
+                "' directory '" +
+                testDirectory +
+                "'");
+        }
+    }
+    PDETestEclipseCleaner cleaner = new PDETestEclipseCleaner(
+        getLog(),
+        baseDirectory,
+        eclipseDirectory,
+        prefixes);
+    cleaner.execute();
+    File buildFile = new File(testDirectory, "test.xml");
+    PDETestFileBuilder builder = new PDETestFileBuilder(
+        getLog(),
+        baseDirectory,
+        eclipseDirectory,
+        prefixes,
+        project,
+        buildFile,
+        testOutputDirectory,
+        project.getArtifactId(),
+        testFrameworkVersion);
+    builder.execute();
+    PDETestDeployer deployer = new PDETestDeployer(
+        getLog(),
+        baseDirectory,
+        eclipseDirectory,
+        prefixes,
+        project,
+        session);
+    deployer.execute();
+    PDETestRunner runner = new PDETestRunner(
+        getLog(),
+        baseDirectory,
+        eclipseDirectory,
+        prefixes
+        buildFile,
+        testFailureIgnore);
+    runner.execute();
+}
+                            </pre></div></div><br class="example-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The helper classes, like <code class="code">PDETestEclipseValidator</code> used by the Mojo, are purposefully modeled
+                                closely after a Mojo proper. However, since they're not actually Mojos they don't require the extract
+                                Javadoc based markup and can be used more freely.</p></td></tr></table></div><p>The first step, done by the Mojo, is to validate the Eclipse test instance. Since the test framework cannot do
+                            self hosting, like PDE, a second Eclipse instance is required for testing. By convention, we keep that in the
+                            user's home directory, but the location can be configured. So before doing anything else, a sanity check is made
+                            to ensure that there <span class="emphasis"><em>is</em></span> a valid Eclipse instance with the correct version of the test
+                            framework installed.</p><div class="example"><a name="d0e697"></a><p class="title"><b>Example&nbsp;7.&nbsp;The PDE Test Eclipse Validation</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    File eclipseDirectory = getEclipseDirectory();
+    getLog().info(
+        "Validating target Eclipse environment in '" +
+        eclipseDirectory +
+        "'...");
+    if (!eclipseDirectory.isDirectory()) {
+        throw new MojoExecutionException(
+        "The Eclipse directory location '" +
+        eclipseDirectory +
+        "' is not a valid directory");
+    }
+    File startupJarFile = getStartupJarFile();
+    getLog().debug(
+        "Eclipse startup jar must be in '" +
+        startupJarFile +
+        ".");
+    if (!startupJarFile.exists()) {
+        getLog().debug(
+            "The file '" +
+            startupJarFile +
+            "' does not exist.");
+        throw new MojoExecutionException(
+        "The required startup jar file was not found in '" +
+        eclipseDirectory +
+        "'");
+    }
+    File pluginsDirectory = getPluginsDirectory();
+    getLog().debug(
+        "Eclipse plugins directory must be in '" +
+        pluginsDirectory +
+        ".");
+    if (!pluginsDirectory.isDirectory()) {
+        getLog().debug(
+        "The location '" +
+        pluginsDirectory +
+        "' does not exist or is not a directory.");
+        throw new MojoExecutionException(
+            "The required plugins directory was not found in '" +
+            eclipseDirectory +
+            "'");
+    }
+    getLog().debug(
+        "The Eclipse PDE test framework version is '" +
+        testFrameworkVersion +
+        "'.");
+    File testPluginDirectory = new File(
+        pluginsDirectory,
+        "org.eclipse.test_" +
+        testFrameworkVersion);
+    getLog().debug(
+        "The Eclipse PDE test framework plugin must be in '" +
+        testPluginDirectory +
+        "'.");
+    if (!testPluginDirectory.isDirectory()) {
+        getLog().debug(
+            "The Eclipse PDE test framework plugin does not exist.");
+        throw new MojoExecutionException(
+            "The required Eclipse test framework plugin '" +
+            "org.eclipse.test_" +
+            testFrameworkVersion +
+            "' was not found in '" +
+            pluginsDirectory +
+            "'");
+    }
+}
+                            </pre></div></div><br class="example-break"><p>The second step, done by the Mojo, is to clean out any plugins deployed for a previous test. The Mojo has a
+                            configurable parameter that specifies the plugin prefix(es) under test. These are the plugins
+                            <span class="emphasis"><em>not</em></span> provided by Callisto. If not configured, the default is the first two segments of the
+                            artifact id of the artifact under test (which usually ends up being the reverse of your top-level internet
+                            domain name). For example, if you're testing a plugin with id <code class="code">com.princetonsoftech.foo.bar</code>, the
+                            default list of prefixes will contain a single entry of <code class="code">com.princetonsoftech</code>. If you're not using
+                            the reverse internet domain notation, the default list will contain a single entry with the entire artifact id
+                            (in which case you probably will need to configure the list). Any plugin that has an id that matches any of the
+                            prefix(es) is simply deleted (so do <span class="emphasis"><em>not</em></span> configure that list with <code class="code">org.eclipse</code>
+                            as that will render your Eclipse installation fairly useless).</p><div class="example"><a name="d0e719"></a><p class="title"><b>Example&nbsp;8.&nbsp;The PDE Test Cleanup</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    File eclipseDirectory = getEclipseDirectory();
+    getLog().info(
+        "Cleaning target Eclipse environment in '" +
+        eclipseDirectory +
+        "'...");
+    File pluginsDirectory = getPluginsDirectory();
+    getLog().debug(
+        "Looking for plugins in '" +
+        pluginsDirectory +
+        "'...");
+    File[] files = pluginsDirectory.listFiles();
+    for (int i = 0; i &lt; files.length; i++) {
+        String name = files[i].getName();
+        if (!isMatchForPrefix(name)) {
+            getLog().debug("Skipping plugin '" + name + "'.");
+            continue;
+        }
+        getLog().info("Cleaning plug-in '" + name + "'...");
+        if (files[i].isDirectory()) {
+            deleteDirectory(files[i]);
+        } else {
+            deleteFile(files[i]);
+        }
+    }
+}
+                            </pre></div></div><br class="example-break"><p>The third step, done by the Mojo, is to locate all JUnit tests and automatically construct the required Ant
+                            build file that will be used by the test framework. The Mojo pretty much follows the same conventions as the
+                            normal Surefire plugin and will pick anything that starts or ends with <code class="code">Test</code> and doesn't start with
+                                <code class="code">Abstract</code>. In the next release of the Mojo, we'll make that configurable. A small twist here is
+                            that Cobertura relies on the test phase to execute the tests (which is good, by the way, since it makes code
+                            coverage analysis as easy to orchestrate as a test is), so we need to detect if the Cobertura run-time jar is
+                            needed. We do this simply by looking for it in the list of dependencies; if found, we add it to the boot
+                            classpath of Eclipse for each test launch. This is conveniently and easily done in the build file, using the
+                                <code class="code">vmargs</code> property. Also, when running with Cobertura, the <code class="code">cobertura.ser</code> file needs
+                            to be moved to the home directory of Eclipse and it needs to be moved back after the run. In either case, the
+                            JUnit XML report files, needed by Surefire for formatting, need to be copied to the plugin's
+                                <code class="code">target/surefire-reports</code> directory. Since Ant is so excellent at doing this, we simply construct
+                            the build file with all the necessary file operations.</p><div class="example"><a name="d0e741"></a><p class="title"><b>Example&nbsp;9.&nbsp;The PDE Test Ant File Construction</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    getLog().info(
+        "Building 'test.xml' for PDE testing in '" +
+        file +
+        "'...");
+    findCoberturaJar();
+    buffer.append("&lt;?xml version=\"1.0\"?&gt;\n\n");
+    buffer.append("&lt;!-- Auto-generated file - DO NOT MODIFY! --&gt;\n\n");
+    buffer.append("&lt;project name=\"");
+    getLog().debug("The artifact id is '" + artifactId + "'.");
+    buffer.append(artifactId);
+    buffer.append("\" default=\"run\" basedir=\"");
+    buffer.append(getBaseDirectory().getAbsolutePath());
+    buffer.append("\"&gt;\n");
+    appendProperties();
+    appendInitTarget();
+    List testClasses = new ArrayList();
+    findTestClasses(directory, testClasses);
+    appendSuiteTarget(testClasses);
+    appendCleanupTarget();
+    appendRunTarget();
+    buffer.append("&lt;/project&gt;\n");
+    try {
+        FileWriter writer = new FileWriter(file);
+        writer.write(buffer.toString());
+        writer.close();
+    } catch (IOException e) {
+        throw new MojoExecutionException(
+            "Unable to create 'test.xml'", e);
+    }
+}
+                            </pre></div></div><br class="example-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Since we always construct the build file from scratch during each test run, we stick it in
+                                    <code class="code">target/pde-test</code>, since we obviously never check it in or otherwise manipulate it
+                            manually.</p></td></tr></table></div><p>You can take a look at a sample <a href="test.xml" target="_new">test.xml</a> file, built for a Cobertura analysis,
+                            here.</p><p>The fourth step, done by the Mojo, is to deploy the plugin under test along with all of its dependencies. This
+                            is actually a fairly easy thing to do, since Maven 2 has all the information needed.</p><div class="example"><a name="d0e759"></a><p class="title"><b>Example&nbsp;10.&nbsp;The PDE Test Artifact Deployment</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    getLog().info(
+        "Deploying test artifacts and dependencies to target " + 
+        "Eclipse environment in '" +
+        getEclipseDirectory() +
+        "'...");
+    deployPluginArtifact();
+    deployDependencies();
+}
+
+/**
+ * Deploys the plugin artifact itself.
+ * @throws MojoExecutionException
+ */
+private void deployPluginArtifact() throws MojoExecutionException {
+    getLog().debug("Deploying the plugin artifact...");
+    File targetDirectory = new File(
+        getBaseDirectory(),
+        PDETestConstants.TARGET_DIRECTORY);
+    File testDirectory = new File(
+        targetDirectory,
+        PDETestConstants.PDE_TEST_DIRECTORY);
+    String artifactName =
+        project.getArtifactId() + "-" +
+        project.getVersion() +
+        DeployConstants.EXTENSION_JAR;
+    File sourceFile = new File(testDirectory, artifactName);
+    File pluginsDirectory = getPluginsDirectory();
+    File destinationFile = new File(pluginsDirectory, artifactName);
+    try {
+        copyFile(sourceFile, destinationFile);
+    } catch (IOException e) {
+        throw new MojoExecutionException(
+        "Unable to deploy plugin artifact", e);
+    }
+}
+                            </pre></div></div><br class="example-break"><p>As is the case for the pre-test cleanup step, the Mojo needs to know what dependent plugins to look for and
+                            which ones are provided. So the same prefix list configuration (or suitable default) is employed to take care of
+                            that. A jar based plugin, with the <code class="code">source-plugin</code> packaging, is easy, because it involves nothing
+                            more than copying a jar from the Maven 2 repository to the Eclipse <code class="code">plugins</code> directory. A directory
+                            based plugin is a little more complex because in our world that always implies that it's packaging is
+                                <code class="code">binary-plugin</code> and as outlined above, the only artifact we keep around for those is the
+                                <code class="code">pom.xml</code> file. As also mentioned earlier, we need to reify these plugins on the fly to enable
+                            PDE launch, debug and test, so the PDE test Mojo reuses that code to create each binary plugin directly in the
+                            Eclipse <code class="code">plugins</code> directory.</p><div class="example"><a name="d0e781"></a><p class="title"><b>Example&nbsp;11.&nbsp;The PDE Test Dependency Deployment</b></p><div class="example-contents"><pre class="programlisting">
+/**
+ * Deploys the plugin artifact's dependencies.
+ * @throws MojoExecutionException 
+ * @throws MojoFailureException 
+ */
+private void deployDependencies()
+        throws MojoExecutionException, MojoFailureException {
+    getLog().debug("Deploying the dependent artifacts...");
+    Iterator artifacts = project.getDependencyArtifacts().iterator();
+    while (artifacts.hasNext()) {
+        Artifact artifact = (Artifact) artifacts.next();
+        getLog().debug("Processing artifact: " + artifact);
+        String scope = artifact.getScope();
+        if (!Artifact.SCOPE_COMPILE.equals(scope)) {
+            getLog().debug(
+                "Skipping artifact with '" +
+                scope +
+                "' scope.");
+            continue;
+        }
+        if (isMatchForPrefix(artifact.getArtifactId())) {
+            String type = artifact.getType();
+            if (DeployConstants.PACKAGING_JAR.equals(type)) {
+                deployJar(artifact);
+            } else if (DeployConstants.PACKAGING_POM.equals(type)) {
+                deployPom(artifact);
+            } else {
+                getLog().warn(
+                    "Don't know how to deploy artifact with type '" +
+                    type +
+                    "'.");
+            }
+        }
+    }
+}
+                            </pre></div></div><br class="example-break"><p>The fifth, and last, step for the Mojo is to launch Eclipse with the newly constructed build file. For that
+                            purpose, we've created a simple program runner class that uses standard Java <code class="code">Runtime.exec()</code> method
+                            to launch a <code class="code">Process</code> along with a couple of <code class="code">Thread</code>s to read the standard output and
+                            error streams.</p><div class="example"><a name="d0e797"></a><p class="title"><b>Example&nbsp;12.&nbsp;The PDE Test Execution</b></p><div class="example-contents"><pre class="programlisting">
+protected void doExecute()
+        throws MojoExecutionException, MojoFailureException {
+    String command = createCommand();
+    ProgramRunner runner = new ProgramRunner(command);
+    try {
+        runner.execute();
+    } catch (IOException e) {
+        throw new MojoExecutionException(
+            "The Eclipse launch failed", e);
+    } catch (InterruptedException e) {
+        throw new MojoExecutionException(
+            "The Eclipse execution was interrupted", e);
+    }
+    extractErrorsAndFailures();
+}
+                            </pre></div></div><br class="example-break"><p>One minor twist we had to take care of here is that of the underlying operating system and architecture. The
+                            Eclipse launcher usually takes care of all of this, but since the test framework command line requires the user
+                            to specify this, the Mojo has a few simple methods to find the OS and architecture values.</p><p>When using Maven 2 with Surefire, you'll notice that in addition to providing the text files, used for
+                            reporting, it also spits out the test statistics on standard out. The Eclipse test framework Ant file doesn't do
+                            this, so the Mojo reads all the JUnit XML files and formats the pertinent content in a way similar to Surefire.
+                            Lastly, from an Ant perspective each test execution is a successful build if the Ant file runs without error -
+                            regardless of whether or not any errors were found. This can be confusing for developers who are used to
+                            Surefire, so in addition to listing the test results on standard out, the Mojo also checks to see if there were
+                            any failures or errors - and if so, it fails the Maven build.</p><div class="example"><a name="d0e806"></a><p class="title"><b>Example&nbsp;13.&nbsp;The PDE Test Dump and Extract</b></p><div class="example-contents"><pre class="programlisting">
+/**
+ * Extracts errors and failures from the surefire reports.
+ * @throws MojoExecutionException
+ * @throws MojoFailureException
+ */
+private void extractErrorsAndFailures()
+        throws MojoExecutionException, MojoFailureException {
+    getLog().info(
+        "Extracting errors and failures from surefire reports");
+    System.out.println(
+        "-------------------------------------------------------");
+    System.out.println(" T E S T S ");
+    System.out.println(
+        "-------------------------------------------------------");
+    File targetDirectory = new File(
+        getBaseDirectory(),
+        PDETestConstants.TARGET_DIRECTORY);
+    File surefireDirectory = new File(
+        targetDirectory,
+        PDETestConstants.SUREFIRE_DIRECTORY);
+    if (!surefireDirectory.isDirectory()) {
+        getLog().warn(
+            "The surefire reports directory '" +
+            surefireDirectory +
+            "' was not created.");
+        return;
+    }
+    File[] files = surefireDirectory.listFiles();
+    if ((files == null) || (files.length == 0)) {
+        getLog().warn("No surefire reports were moved.");
+        return;
+    }
+    try {
+        DocumentBuilderFactory factory =
+            DocumentBuilderFactory.newInstance();
+        builder = factory.newDocumentBuilder();
+    } catch (Exception e) {
+        throw new MojoExecutionException(
+            "Unable to create XML document builder", e);
+    }
+    for (int i = 0; i &lt; files.length; i++) {
+        String name = files[i].getName();
+        if (name.endsWith(".xml")) {
+            extractErrorsAndFailures(files[i]);
+        }
+    }
+    if ((failures &gt; 0) || (errors &gt; 0)) {
+        if (testFailureIgnore) {
+            getLog().info("Ignoring test failures");
+            return;
+        }
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("There are test ");
+        if (failures &gt; 0) {
+            buffer.append("failures");
+            if (errors &gt; 0) {
+                buffer.append(" and ");
+            }
+        }
+        if (errors &gt; 0) {
+            buffer.append("errors");
+        }
+        buffer.append(".");
+        throw new MojoFailureException(buffer.toString());
+    }
+}
+                            </pre></div></div><br class="example-break"></li></ul></div><p>
+            </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="lifecycle-definition"></a>Lifecycle Definitions</h3></div></div></div><p>Maven 2 allows you to specify custom lifecycle definitions. To do this all you need to do is place a file called
+                    <code class="code">components.xml</code> in your Maven 2 plugin jar under <code class="code">META-INF/plexus</code> and then configure your plugin
+                as an <span class="emphasis"><em>extension</em></span>. The definitions you provide basically take the form of <span class="emphasis"><em>Plexus
+                Components</em></span>. </p><p>For our solution we essentially define a set of components that know how to handle artifacts with the packaging
+                    <code class="code">source-plugin</code> or <code class="code">binary-plugin</code>, and also know what lifecycle phases these artifacts should
+                have for their default lifecycle.</p><p>
+                </p><div class="itemizedlist"><ul type="disc"><li><p><b>source-plugin.&nbsp;</b>An Eclipse plugin that contains source code</p><p>This Lifecycle definition is meant for all Eclipse plugins that you are developing that contain any kind of
+                            source. We put the following definition in a <code class="code">components.xml</code> in our plugin. </p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>When you define your own packaging, Maven 2 by convention will install the artifact with the extension
+                                    being the new packaging type. So in this case it would be <code class="code">.source-plugin</code>. We play a little
+                                    trick here and say that the extension for <code class="code">source-plugin</code> artifacts should be
+                                    <code class="code">jar</code>. Thus anything java still knows what the artifact is and can compile against it.</p></td></tr></table></div><p>
+                            </p><div class="example"><a name="d0e864"></a><p class="title"><b>Example&nbsp;14.&nbsp;Components entry for source-plugin</b></p><div class="example-contents"><pre class="programlisting">
+&lt;component&gt;
+    &lt;role&gt;
+        org.apache.maven.lifecycle.mapping.LifecycleMapping
+    &lt;/role&gt;
+    &lt;role-hint&gt;source-plugin&lt;/role-hint&gt;
+    &lt;implementation&gt;
+        org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+    &lt;/implementation&gt;
+    &lt;configuration&gt;
+        &lt;lifecycles&gt;
+            &lt;lifecycle&gt;
+                &lt;id&gt;default&lt;/id&gt;
+                &lt;phases&gt;
+                    &lt;process-resources&gt;
+                        org.apache.maven.plugins:maven-resources-plugin:resources
+                    &lt;/process-resources&gt;
+                    &lt;compile&gt;
+                        org.apache.maven.plugins:maven-compiler-plugin:compile
+                    &lt;/compile&gt;
+                    &lt;process-test-resources&gt;
+                        org.apache.maven.plugins:maven-resources-plugin:testResources
+                    &lt;/process-test-resources&gt;
+                    &lt;test-compile&gt;
+                        org.apache.maven.plugins:maven-compiler-plugin:testCompile
+                    &lt;/test-compile&gt;
+                    &lt;test&gt;
+                        org.apache.maven.plugins:maven-psteclipse-plugin:test
+                    &lt;/test&gt;
+                    &lt;package&gt;
+                        org.apache.maven.plugins:maven-psteclipse-plugin:package
+                    &lt;/package&gt;
+                    &lt;install&gt;
+                        org.apache.maven.plugins:maven-install-plugin:install
+                    &lt;/install&gt;
+                    &lt;deploy&gt;
+                        org.apache.maven.plugins:maven-deploy-plugin:deploy
+                    &lt;/deploy&gt;
+                &lt;/phases&gt;
+            &lt;/lifecycle&gt;
+        &lt;/lifecycles&gt;
+    &lt;/configuration&gt;
+&lt;/component&gt;
+                                </pre></div></div><p><br class="example-break">
+                        </p></li><li><p><b>binary-plugin.&nbsp;</b>An Eclipse plugin that only contains jars and no source code</p><p>This Lifecycle definition is meant for all Eclipse plugins that expose the dependencies that your
+                            source-plugins need. They do not contain any kind of source. We put the following definition in a
+                                <code class="code">components.xml</code> in our plugin. </p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Again, like in the <code class="code">source-plugin</code> case, we play a similar trick and define the extension
+                                    of all <code class="code">binary-plugin</code> artifacts to be <code class="code">pom</code>. Thereby, we have only ever either
+                                    poms or jars to deal with.</p></td></tr></table></div><p>
+                            </p><div class="example"><a name="d0e894"></a><p class="title"><b>Example&nbsp;15.&nbsp;Components entry for binary-plugin</b></p><div class="example-contents"><pre class="programlisting">
+&lt;component&gt;
+    &lt;role&gt;
+        org.apache.maven.lifecycle.mapping.LifecycleMapping
+    &lt;/role&gt;
+    &lt;role-hint&gt;binary-plugin&lt;/role-hint&gt;
+    &lt;implementation&gt;
+        org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+    &lt;/implementation&gt;
+    &lt;configuration&gt;
+        &lt;lifecycles&gt;
+            &lt;lifecycle&gt;
+                &lt;id&gt;default&lt;/id&gt;
+                &lt;phases&gt;
+                    &lt;package&gt;
+                        org.apache.maven.plugins:maven-site-plugin:attach-descriptor
+                    &lt;/package&gt;
+                    &lt;install&gt;
+                        org.apache.maven.plugins:maven-psteclipse-plugin:install
+                    &lt;/install&gt;
+                    &lt;deploy&gt;
+                        org.apache.maven.plugins:maven-deploy-plugin:deploy
+                    &lt;/deploy&gt;
+                &lt;/phases&gt;
+                &lt;optional-mojos&gt;
+                    &lt;optional-mojo&gt;
+                        org.apache.maven.plugins:maven-site-plugin:attach-descriptor
+                    &lt;/optional-mojo&gt;
+                &lt;/optional-mojos&gt;
+            &lt;/lifecycle&gt;
+        &lt;/lifecycles&gt;
+    &lt;/configuration&gt;
+&lt;/component&gt;
+
+&lt;component&gt;
+    &lt;role&gt;
+        org.apache.maven.artifact.handler.ArtifactHandler
+    &lt;/role&gt;
+    &lt;role-hint&gt;source-plugin&lt;/role-hint&gt;
+    &lt;implementation&gt;
+        org.apache.maven.artifact.handler.DefaultArtifactHandler
+    &lt;/implementation&gt;
+    &lt;configuration&gt;
+        &lt;extension&gt;jar&lt;/extension&gt;
+        &lt;type&gt;source-plugin&lt;/type&gt;
+        &lt;packaging&gt;source-plugin&lt;/packaging&gt;
+        &lt;language&gt;java&lt;/language&gt;
+        &lt;addedToClasspath&gt;true&lt;/addedToClasspath&gt;
+    &lt;/configuration&gt;
+&lt;/component&gt;
+
+&lt;component&gt;
+    &lt;role&gt;
+        org.apache.maven.artifact.handler.ArtifactHandler
+    &lt;/role&gt;
+    &lt;role-hint&gt;binary-plugin&lt;/role-hint&gt;
+    &lt;implementation&gt;
+        org.apache.maven.artifact.handler.DefaultArtifactHandler
+    &lt;/implementation&gt;
+    &lt;configuration&gt;
+        &lt;extension&gt;pom&lt;/extension&gt;
+        &lt;type&gt;binary-plugin&lt;/type&gt;
+        &lt;packaging&gt;binary-plugin&lt;/packaging&gt;
+        &lt;language&gt;java&lt;/language&gt;
+        &lt;addedToClasspath&gt;true&lt;/addedToClasspath&gt;
+    &lt;/configuration&gt;
+&lt;/component&gt;
+                                </pre></div></div><p><br class="example-break">
+                        </p></li></ul></div><p>
+            </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e901"></a>Configuration</h3></div></div></div><p>We have arranged our project hierarchy so that all our Eclipse plugin projects sit under one parent. We call this our
+                Eclipse Plugin Super POM. This has been convenient as all configuration that plugin projects require can be defined once.</p><p>Besides the configuration for the Maven 2 plugin that we provide (described later in <a href="#pom-config" title="POM Configuration">the section called &#8220;POM Configuration&#8221;</a>) the
+                only necessary configuration for all of this to work is that of the resources</p><p>
+                </p><div class="example"><a name="d0e912"></a><p class="title"><b>Example&nbsp;16.&nbsp;Resources configuration for Eclipse plugins</b></p><div class="example-contents"><pre class="programlisting">
+&lt;resources&gt;
+    &lt;resource&gt;
+        &lt;directory&gt;src/main/java&lt;/directory&gt;
+        &lt;includes&gt;
+            &lt;include&gt;**/*.properties&lt;/include&gt;
+            &lt;include&gt;**/*.xml&lt;/include&gt;
+        &lt;/includes&gt;
+    &lt;/resource&gt;
+    &lt;resource&gt;
+        &lt;directory&gt;.&lt;/directory&gt;
+        &lt;includes&gt;
+            &lt;include&gt;plugin.xml&lt;/include&gt;
+            &lt;include&gt;plugin.properties&lt;/include&gt;
+            &lt;include&gt;model/**&lt;/include&gt;
+            &lt;include&gt;icons/**&lt;/include&gt;
+        &lt;/includes&gt;
+    &lt;/resource&gt;
+&lt;/resources&gt;
+                    </pre></div></div><p><br class="example-break">
+            </p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e918"></a>Putting It All Together</h2></div></div></div><p>Now that we have a gone through in some detail, what the issues are, and how we went about resolving them, you probably just
+            want to know how to pull it all together. In brief, you need our Mojos, you need to configure your POM(s) and you need to
+            provide an Eclipse installation for testing purposes, other than the Eclipse you use for development. The reason for this is
+            that the test framework requires that all the plugins under test (and their dependencies) are installed. Unlike PDE, it cannot
+            (yet) magically add the plugin(s) under development and not touch the Eclipse installation.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e923"></a>Getting the Mojos</h3></div></div></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>We would like to provide the complete source for our Mojos and ultimately contribute everything to the community. At
+                    the time of writing, we and our legal counsel are poring over various licenses etc. trying to figure out how to do this.
+                    We expect this to be resolved in a hopefully satisfactorily manner as soon as possible.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e929"></a>Installing the Test Eclipse Instance</h3></div></div></div><p>If you follow the convention over configuration mantra, install a Callisto release into your home directory. I.e. on
+                Windows your Eclipse directory would be <code class="code">C:\Documents and
+                Settings\</code><span class="emphasis"><em>username</em></span><code class="code">\eclipse</code>; on Unix/Linux/BSD it would be
+                    <code class="code">/home/</code><span class="emphasis"><em>username</em></span><code class="code">/eclipse</code> and on Mac OS X it would be
+                    <code class="code">/Users/</code><span class="emphasis"><em>username</em></span><code class="code">/eclipse</code>. The reason for this convention is not a Maven 2
+                one, but rather the need for supporting the Eclipse test framework on multiple platforms. Between Windows, Unix/Linux and
+                Mac OS X the user's home directory is a simply a simple, convenient common denominator. </p><p>Besides the Callisto SDK you will need <code class="code">eclipse-test-framework-3.2.zip</code> unzipped on top of your installation as
+                well the set of base Eclipse plugins that you depend on (DTP, WTP, EMF, GEF etc.)</p><div class="tip" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.gif"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>The Eclipse test framework provides a lot of the same JUnit infrastructure that is provided already by the SDK, so
+                    depending on your unzipper, it may prompt you for permission to overwrite certain things. Simply accept all the
+                    overwrites and proceed.</p></td></tr></table></div><p>And that is pretty much it. If you decide to install Eclipse somewhere else, simply specify the
+                <code class="code">eclipseDirectory</code> parameter in the plugin configuration in the POM.</p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Please do <span class="emphasis"><em>not</em></span> attempt to use your normal Eclipse instance for Maven 2 testing. The plugins you
+                    test, along with their dependencies, will repeatedly be deployed in - and cleaned from - the <code class="code">plugins</code>
+                    directory and may therefore wreak havoc on your development environment. Since the test instance is ever only used for
+                    the automated testing, the repeated deploy/clean cycles only happen when it's not actually running.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="pom-config"></a>POM Configuration</h3></div></div></div><p>To have some chance of success, you will need to stick the following configuration in your Eclipse plugin projects' POM,
+                or in a super POM for all your Eclipse plugin projects. You can also take a look at all the below configuration put together
+                in a super POM <a href="example-pom.xml" target="_new">here</a>.</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e985"></a>Configuring the PST Maven 2 Eclipse plugin</h4></div></div></div><p>Once you have obtained our plugin (we are calling it the "PST Maven 2 Eclipse plugin" for now) you can configure it
+                    the following way. </p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Please make a special observation of the <code class="code">&lt;extensions/&gt;</code> element. If you wind up
+                            writing your own plugin that contains a <code class="code">components.xml</code> you will need to specify the configuration
+                            element <code class="code">&lt;extensions&gt;true&lt;/extensions&gt;</code></p></td></tr></table></div><p>
+                    </p><div class="example"><a name="d0e1002"></a><p class="title"><b>Example&nbsp;17.&nbsp;PST Eclipse configuration</b></p><div class="example-contents"><pre class="programlisting">
+&lt;plugin&gt;
+    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;maven-psteclipse-plugin&lt;/artifactId&gt;
+    &lt;version&gt;1.0.6&lt;/version&gt;
+    &lt;extensions&gt;true&lt;/extensions&gt;
+    &lt;configuration&gt;
+        &lt;logModifications&gt;true&lt;/logModifications&gt;
+        &lt;testFrameworkVersion&gt;3.1.0&lt;/testFrameworkVersion&gt;
+    &lt;/configuration&gt;
+    &lt;executions&gt;
+        &lt;execution&gt;
+            &lt;id&gt;test-package&lt;/id&gt;
+            &lt;phase&gt;test-compile&lt;/phase&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;testPackage&lt;/goal&gt;
+            &lt;/goals&gt;
+        &lt;/execution&gt;
+        &lt;execution&gt;
+            &lt;id&gt;update&lt;/id&gt;
+            &lt;phase&gt;process-resources&lt;/phase&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;update&lt;/goal&gt;
+            &lt;/goals&gt;
+        &lt;/execution&gt;
+        &lt;execution&gt;
+            &lt;id&gt;update-site-classpath&lt;/id&gt;
+            &lt;phase&gt;pre-site&lt;/phase&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;update&lt;/goal&gt;
+            &lt;/goals&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;
+                        </pre></div></div><p><br class="example-break">
+                </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e1008"></a>Configuring the Maven 2 Eclipse plugin</h4></div></div></div><p>To get the Maven 2 Eclipse plugin (i.e. <code class="code">mvn eclipse:eclipse</code>) to generate the correct Eclipse project
+                    artifacts for your Eclipse plugins you will need to configure it the following way. </p><div class="example"><a name="d0e1016"></a><p class="title"><b>Example&nbsp;18.&nbsp;Eclipse plugin configuration</b></p><div class="example-contents"><pre class="programlisting">
+&lt;plugin&gt;
+    &lt;artifactId&gt;maven-eclipse-plugin&lt;/artifactId&gt;
+    &lt;configuration&gt;
+        &lt;projectnatures&gt;
+            &lt;projectnature&gt;
+			    org.eclipse.jdt.core.javanature
+            &lt;/projectnature&gt;
+            &lt;projectnature&gt;
+                org.eclipse.pde.PluginNature
+            &lt;/projectnature&gt;
+        &lt;/projectnatures&gt;
+        &lt;buildcommands&gt;
+            &lt;buildcommand&gt;
+                org.eclipse.jdt.core.javabuilder
+            &lt;/buildcommand&gt;
+            &lt;buildcommand&gt;
+                org.eclipse.pde.ManifestBuilder
+            &lt;/buildcommand&gt;
+            &lt;buildcommand&gt;
+                org.eclipse.pde.SchemaBuilder
+            &lt;/buildcommand&gt;    
+        &lt;/buildcommands&gt;
+        &lt;classpathContainers&gt;
+            &lt;classpathContainer&gt;
+                org.eclipse.pde.core.requiredPlugins
+            &lt;/classpathContainer&gt;
+        &lt;/classpathContainers&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;
+                        </pre></div></div><p><br class="example-break">
+                </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e1022"></a>Adding Profiles for various platforms</h4></div></div></div><p>This configuration is to mainly aid our Test Mojos in loading dependencies without knowing about the platform it is
+                    running on. The use of Maven 2 Profiles comes in good for being able to write platform neutral Mojos. </p><div class="example"><a name="d0e1027"></a><p class="title"><b>Example&nbsp;19.&nbsp;Sample Profile Configuration</b></p><div class="example-contents"><pre class="programlisting">
+&lt;profiles&gt;
+    &lt;profile&gt;
+        &lt;id&gt;org.eclipse.swt.win32&lt;/id&gt;
+        &lt;activation&gt;
+            &lt;os&gt;
+                &lt;name&gt;windows xp&lt;/name&gt;
+                &lt;arch&gt;x86&lt;/arch&gt;
+            &lt;/os&gt;
+        &lt;/activation&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;com.princetonsoftech.apollo&lt;/groupId&gt;
+                &lt;artifactId&gt;org.eclipse.swt.win32.win32.x86&lt;/artifactId&gt;
+                &lt;version&gt;3.2.1&lt;/version&gt;
+                &lt;type&gt;jar&lt;/type&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/profile&gt;
+    &lt;profile&gt;
+        &lt;id&gt;org.eclipse.swt.macosx&lt;/id&gt;
+        &lt;activation&gt;
+            &lt;os&gt;
+                &lt;name&gt;mac os x&lt;/name&gt;
+                &lt;arch&gt;i386&lt;/arch&gt;
+            &lt;/os&gt;
+        &lt;/activation&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;com.princetonsoftech.apollo&lt;/groupId&gt;
+                &lt;artifactId&gt;org.eclipse.swt.carbon.macosx&lt;/artifactId&gt;
+                &lt;version&gt;3.2.1&lt;/version&gt;
+                &lt;type&gt;jar&lt;/type&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/profile&gt;
+    &lt;profile&gt;
+        &lt;id&gt;org.eclipse.swt.linux&lt;/id&gt;
+        &lt;activation&gt;
+            &lt;os&gt;
+                &lt;name&gt;linux&lt;/name&gt;
+                &lt;arch&gt;i386&lt;/arch&gt;
+            &lt;/os&gt;
+        &lt;/activation&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;com.princetonsoftech.apollo&lt;/groupId&gt;
+                &lt;artifactId&gt;org.eclipse.swt.gtk.linux.x86&lt;/artifactId&gt;
+                &lt;version&gt;3.2.1&lt;/version&gt;
+                &lt;type&gt;jar&lt;/type&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/profile&gt;
+&lt;/profiles&gt;
+                        </pre></div></div><p><br class="example-break">
+                </p></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1033"></a>Using it all together</h2></div></div></div><p>Just to round things off, the following is a brief description of the development process for Eclipse binary and source
+            plugins. The descriptions below assume that all configuration/installation specified in the previous section has been done and
+            that all the projects sit in a hierarchy.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e1038"></a>Developing binary plugins</h3></div></div></div><p>You can begin by creating a Maven 2 project by using the archetype for creating projects. Do this under the project that
+                contains the POM with all the configuration described in the previous section.
+                </p><pre class="programlisting"><code class="code">mvn archetype:create -DgroupId=com.mycompany.app -DartifactId=my-binary-plugin</code></pre><p>
+                This should give you the basic template for your project. </p><p>Now once you do a </p><pre class="programlisting"><code class="code">mvn eclipse:eclipse</code></pre><p> you will be able to import the project
+                into Eclipse. Open up the POM file (<code class="code">pom.xml</code>) in Eclipse and change the <code class="code">&lt;packaging&gt;</code>
+                element to <code class="code">&lt;packaging&gt;binary-plugin&lt;/packaging&gt;</code>. Also add all the dependencies that you want the
+                binary plugin to expose right into the pom file. It may look like the example below when you are done: </p><div class="example"><a name="d0e1062"></a><p class="title"><b>Example&nbsp;20.&nbsp;Example binary plugin POM</b></p><div class="example-contents"><pre class="programlisting">
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+        http://maven.apache.org/maven-v4_0_0.xsd"&gt;
+    &lt;parent&gt;
+        &lt;artifactId&gt;com.princetonsoftech.eclipse.plugin&lt;/artifactId&gt;
+        &lt;groupId&gt;com.princetonsoftech.eclipse&lt;/groupId&gt;
+         &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;groupId&gt;com.mycompany.app&lt;/groupId&gt;
+    &lt;artifactId&gt;my-binary-plugin&lt;/artifactId&gt;
+    &lt;name&gt;Example Binary Plug-in&lt;/name&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;binary-plugin&lt;/packaging&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+            &lt;artifactId&gt;hibernate&lt;/artifactId&gt;
+            &lt;version&gt;3.1.3&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+                    </pre></div></div><p><br class="example-break"></p><p>Before other Eclipse plugins can depend upon this newly created binary plugin, you must create all the PDE artifacts from
+                the POM. To do this, type </p><pre class="programlisting"><code class="code">mvn psteclipse:eclipse-plugin</code></pre><p> This will copy all the
+                dependencies, defined in the POM, into a <code class="code">lib</code> directory and generate an OSGi manifest file
+                (<code class="code">MANIFEST.MF</code>) in <code class="code">META-INF</code>. Before Eclipse knows what PDE artifacts to export and make available to
+                other plugins you must open the manifest file in Eclipse's PDE manifest editor and select the "Update the classpath and the
+                compiler compliance settings" link on the editor's "Overview" tab.</p><div class="figure"><a name="d0e1082"></a><p class="title"><b>Figure&nbsp;3.&nbsp;Eclipse PDE manifest editor</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/pde-update-classpath.png" alt="Eclipse PDE manifest editor"></div></div></div><br class="figure-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Whenever you change the POM for a binary plugin, the above steps must be executed again, in order to copy the correct
+                    dependent artifacts; create the manifest and update the classpath and compiler compliance settings.</p></td></tr></table></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The PDE test Mojo, described earlier, leverages this exact same mechanism when deploying the dependent plugins for a
+                    source plugin being tested, but rather than creating the PDE artifacts in your project directory, it creates them
+                    directly in the <code class="code">plugins/</code> directory in your test Eclipse instance.</p></td></tr></table></div><p>When doing a Maven 2 build of a binary plugin, the behavior seen is that of a "pom" packaging type. What this means, is
+                that no actual compilation, packaging or testing is performed, but all dependencies are resolved and provided to the
+                dependent plugins.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e1099"></a>Developing source plugins</h3></div></div></div><p>Creating a source plugin essentially is similar to creating a binary one. Simply do
+                </p><pre class="programlisting"><code class="code">mvn archetype:create -DgroupId=com.mycompany.app -DartifactId=my-source-plugin</code></pre><p>
+                and do a </p><pre class="programlisting"><code class="code">mvn eclipse:eclipse</code></pre><p>As with the binary plugin, import the project into Eclipse and change the packaging. However since this is a source plugin
+                you must change the packaging to <code class="code">source-plugin</code>. Your source plugin POM will end up looking something like the
+                following: </p><div class="example"><a name="d0e1116"></a><p class="title"><b>Example&nbsp;21.&nbsp;Example source plugin POM</b></p><div class="example-contents"><pre class="programlisting">
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+        http://maven.apache.org/maven-v4_0_0.xsd"&gt;
+    &lt;parent&gt;
+        &lt;artifactId&gt;com.princetonsoftech.eclipse.plugin&lt;/artifactId&gt;
+        &lt;groupId&gt;com.princetonsoftech.eclipse&lt;/groupId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;groupId&gt;com.mycompany.app&lt;/groupId&gt;
+    &lt;artifactId&gt;my-source-plugin&lt;/artifactId&gt;
+    &lt;name&gt;Example Source Plug-in&lt;/name&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;source-plugin&lt;/packaging&gt;
+&lt;/project&gt;
+                    </pre></div></div><p><br class="example-break"></p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.gif"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Please remember that source plugins do not ever have dependencies listed in the POM. You must add them as OSGi
+                    dependencies in the manifest. The dependencies are injected into the in-memory representation of the POM during the
+                    build.</p></td></tr></table></div><p>From now on you simply develop and test your Eclipse plugin in PDE as per usual. When building the plugin using Maven 2,
+                the normal build lifecycle comes into effect. For example, to do a clean install of your plugin, do
+                </p><pre class="programlisting"><code class="code">mvn clean install</code></pre><p> and to get a Cobertura code coverage report, do
+                </p><pre class="programlisting"><code class="code">mvn cobertura:cobertura</code></pre></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1133"></a>Acknowledgements</h2></div></div></div><p>Based on the excellent <a href="http://www.eclipse.org/articles/Article-Authoring-With-Eclipse/AuthoringWithEclipse.html" target="_new">article</a> by Chris Aniszczyk and Lawrence Mandel, from IBM, we decided to write this article in DocBook. We took the
+            liberty of further refining their kindly donated XSL stylesheet to include the "Eclipse Corner Article" banner and image. Please
+            find the stylesheet <a href="article.xsl" target="_new">here</a>.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1144"></a>External Links</h2></div></div></div><p>
+            </p><div class="itemizedlist"><ul type="disc"><li><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=158653" target="_new">Bugzilla Bug 15863</a> at
+                    Eclipse</li><li><a href="http://maven.apache.org/" target="_new">Maven 2</a> at Apache</li><li><a href="http://mojo.codehaus.org/" target="_new">Mojos</a> at Codehaus</li><li><a href="http://maven.apache.org/continuum/" target="_new">Continuum</a> at Apache</li></ul></div><p>
+        </p></div><p></p><h3>Trademarks</h3><div><div class="legalnotice"><a name="d0e46"></a><p>Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. in the United States, other countries, or
+                both.</p><p>Linux is a trademark of Linus Torvalds in the United States, other countries, or both.</p><p>Windows is a trademark of Microsoft Corporation in the United States, other countries, or both.</p><p>UNIX is a registered trademark of The Open Group in the United States and other countries.</p><p>Other company, product, or service names may be trademarks or service marks of others.</p></div></div></div></body></html>

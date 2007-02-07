@@ -1,0 +1,64 @@
+<!--
+        Build script for Eclipse.org Articles
+        $Id: build.xml,v 1.1 2007/02/07 21:21:57 wbeaton Exp $
+        author: Chris Aniszczyk <zx@us.ibm.com>
+        author: Lawrence Mandel <lmandel@ca.ibm.com>
+-->
+
+<project name="eclipse.org article (docbook)" default="build-doc" basedir=".">
+	
+	<!-- ========== Properties: User Defined Options ========================= -->	
+	
+	<property name="article.source.name" value="article"/>
+	<property name="article.dest.name" value="index"/>
+	<property name="article.stylesheet" value="../article.xsl"/>
+	
+	<property name="dest.dir" value="."/>
+	<property name="download.dir" value="${user.home}${file.separator}downloads"/>
+	
+	<property name="docbook.dir" value="${download.dir}${file.separator}docbook-xsl-1.71.1"/>
+	<property name="docbookxsl.url" value="http://downloads.sourceforge.net/docbook/docbook-xsl-1.71.1.zip"/>
+	
+	<property name="build.home" value="build"/>
+		
+	<!-- ========== Targets =================================================== -->	
+		
+	<target name="init">
+		<mkdir dir="${download.dir}"/>
+	</target>
+		
+	<target name="build-doc" depends="init, get-docbook-xsl">
+		<echo>Building Article...</echo>
+		<antcall target="docbook2html"/>
+		<antcall target="docbook2pdf"/>
+		<antcall target="dist"/>
+	</target>
+		
+	<target name="check-docbook">
+		<available file="${download.dir}${file.separator}docbook.zip" property="hasDocbook"/>
+	</target>
+			
+	<target name="get-docbook-xsl" description="Downloads docbook xsl" depends="init, check-docbook" unless="hasDocbook">
+		<echo>Downloading DocBook XSL...</echo>
+		<get dest="${download.dir}${file.separator}docbook.zip" src="${docbookxsl.url}"/>
+		<unzip src="${download.dir}${file.separator}docbook.zip" dest="${download.dir}"/>
+	</target>
+	
+	<target name="docbook2html" depends="get-docbook-xsl">
+		<echo>Converting article to HTML...</echo>
+		<delete file="${dest.dir}${file.separator}${article.name}.html"/>
+		<xslt in="${article.source.name}.xml" extension="xml" out="${dest.dir}${file.separator}${article.dest.name}.html" style="${article.stylesheet}">
+			<xmlcatalog>
+				<entity 
+					publicId="docbook.xsl"
+				    location="${docbook.dir}${file.separator}html${file.separator}docbook.xsl"/>
+			</xmlcatalog>
+			<param name="header.rule" expression="1" />
+			<param name="admon.graphics.extension" expression=".gif"/>
+			<param name="admon.textlabel" expression="0"/>
+			<param name="ulink.target" expression="_new"/>
+		</xslt>
+	</target>
+	
+
+</project>

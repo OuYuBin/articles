@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<!-- Auto-generated file - DO NOT MODIFY! -->
+
+<project name="com.princetonsoftech.eclipse.foo" default="run" basedir="D:\projects\com.princetonsoftech.eclipse\com.princetonsoftech.eclipse.plugin\com.princetonsoftech.eclipse.foo">
+	<property name="eclipse-home" value="C:\Documents and Settings\prippete01\eclipse" />
+	<property name="plugin-name" value="com.princetonsoftech.eclipse.foo" />
+	<property name="test-framework-version" value="3.1.0" />
+	<property name="library-file" value="${eclipse-home}/plugins/org.eclipse.test_${test-framework-version}/library.xml" />
+
+	<target name="init">
+		<delete>
+			<fileset dir="${eclipse-home}">
+				<include name="*.xml" />
+				<include name="cobertura.ser" />
+			</fileset>
+		</delete>
+		<move file="cobertura.ser" todir="${eclipse-home}" />
+	</target>
+
+	<target name="suite">
+		<property name="session-folder" value="${eclipse-home}/core_session_sniff_folder" />
+		<delete dir="${session-folder}" quiet="true" />
+		<ant target="core-test" antfile="${library-file}" dir="${eclipse-home}">
+			<property name="vmargs" value="-Xbootclasspath/a:&quot;C:\Documents and Settings\prippete01\.m2\repository\cobertura\cobertura\1.7\cobertura-1.7.jar&quot;" />
+			<property name="data-dir" value="&quot;${session-folder}&quot;" />
+			<property name="plugin-name" value="${plugin-name}" />
+			<property name="classname" value="com.princetonsoftech.eclipse.foo.FooTest" />
+		</ant>
+		<ant target="core-test" antfile="${library-file}" dir="${eclipse-home}">
+			<property name="vmargs" value="-Xbootclasspath/a:&quot;C:\Documents and Settings\prippete01\.m2\repository\cobertura\cobertura\1.7\cobertura-1.7.jar&quot;" />
+			<property name="data-dir" value="&quot;${session-folder}&quot;" />
+			<property name="plugin-name" value="${plugin-name}" />
+			<property name="classname" value="com.princetonsoftech.eclipse.foo.BarText" />
+		</ant>
+	    <ant target="core-test" antfile="${library-file}" dir="${eclipse-home}">
+	        <property name="vmargs" value="-Xbootclasspath/a:&quot;C:\Documents and Settings\prippete01\.m2\repository\cobertura\cobertura\1.7\cobertura-1.7.jar&quot;" />
+	        <property name="data-dir" value="&quot;${session-folder}&quot;" />
+	        <property name="plugin-name" value="${plugin-name}" />
+	        <property name="classname" value="com.princetonsoftech.eclipse.foo.BazText" />
+	    </ant>
+	</target>
+
+	<target name="cleanup">
+	</target>
+
+	<target name="run" depends="init,suite,cleanup">
+		<echo message="Moving surefire reports"/>
+		<mkdir dir="target/surefire-reports" />
+		<move todir="target/surefire-reports">
+			<fileset dir="${eclipse-home}">
+				<include name="*.xml" />
+			</fileset>
+		</move>
+		<move file="${eclipse-home}/cobertura.ser" todir="${basedir}" />
+	</target>
+
+</project>
