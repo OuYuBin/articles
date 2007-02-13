@@ -1,3 +1,4 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Building Eclipse Plugins with Maven 2</title><link href="../article.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.71.1" name="generator"><meta name="description" content="In a mature and agile development environment, it is vital that the developers are kept productive and that builds are done continuously and dependably. Eclipse is a great environment for developers and Maven 2 (in conjunction with Continuum or Cruise Control) is a great environment for continuous integration. As with most great software, both Eclipse and Maven 2 tend to be somewhat opinionated and the two don't always see eye to eye on how things should be done. This article describes how to use Maven 2 with Eclipse in general. In particular we will focus on how to develop, package and test Eclipse plugins using Eclipse (Callisto) and Maven 2 (2.0.4) efficiently."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><h1>Building Eclipse Plugins with Maven 2</h1><div class="summary"><h2>Summary</h2><p>In a mature and agile development environment, it is vital that the developers are kept productive and that builds are
                 done continuously and dependably. Eclipse is a great environment for developers and Maven 2 (in conjunction with Continuum
                 or Cruise Control) is a great environment for continuous integration. As with most great software, both Eclipse and Maven 2
@@ -9,16 +10,14 @@
 					Princeton Softech, Inc.<br>Sumit&nbsp;Gupta,
 					Princeton Softech, Inc.<br></div><div class="copyright">
 				Copyright &copy;
-				2006
-				&nbsp;
-				Princeton Softech, Inc.</div><div class="date"><span class="date">February 13, 2006<br></span></div></div><div class="content"><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10040"></a>Environment</h2></div></div></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>The information provided in this article pertains to the following:</p><div class="itemizedlist"><ul type="disc"><li>
-	                    <a href="http://download.eclipse.org/eclipse/downloads/drops/R-3.2-200606291905/index.php" target="_new">Eclipse 3.2.0
-	                    (Callisto)</a>
-	                </li><li>
-	                    <a href="http://maven.apache.org/download.html" target="_new">Maven 2.0.4</a>
-	                </li><li>
-	                    <a href="http://maven.apache.org/continuum/download.html" target="_new">Continuum 1.0.3</a>
-	                </li></ul></div></td></tr></table></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>Since we began writing this article, we have actually successfully upgraded Callisto from SDK 3.2.0 to SDK 3.2.1 along
+				2006&nbsp;Princeton Softech, Inc.</div><div class="date"><span class="date">February 13, 2006<br></span></div></div><div class="content"><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10040"></a>Environment</h2></div></div></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>The information provided in this article pertains to the following:</p><div class="itemizedlist"><ul type="disc"><li>
+                        <a href="http://download.eclipse.org/eclipse/downloads/drops/R-3.2-200606291905/index.php" target="_new">Eclipse 3.2.0
+                            (Callisto)</a>
+                    </li><li>
+                        <a href="http://maven.apache.org/download.html" target="_new">Maven 2.0.4</a>
+                    </li><li>
+                        <a href="http://maven.apache.org/continuum/download.html" target="_new">Continuum 1.0.3</a>
+                    </li></ul></div></td></tr></table></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>Since we began writing this article, we have actually successfully upgraded Callisto from SDK 3.2.0 to SDK 3.2.1 along
                 with most of the rest of the Callisto projects.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10060"></a>Introduction</h2></div></div></div><p>Before delving into the nitty-gritty details, let's start with a little bit of background on Eclipse and Maven 2 and also
             cover the goals and requirements for the build system we put together.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10066"></a>Eclipse</h3></div></div></div><p>If you've already worked with Eclipse on a daily basis, you can probably skip this section. If not, a little background
                 about how Eclipse likes (or wants) to do things might be helpful.</p><p>Like most other IDEs, Eclipse organizes your work into projects. A project is essentially a directory, in which your
@@ -1049,9 +1048,8 @@ private void extractErrorsAndFailures()
             want to know how to pull it all together. In brief, you need our Mojos, you need to configure your POM(s) and you need to
             provide an Eclipse installation for testing purposes, other than the Eclipse you use for development. The reason for this is
             that the test framework requires that all the plugins under test (and their dependencies) are installed. Unlike PDE, it cannot
-            (yet) magically add the plugin(s) under development and not touch the Eclipse installation.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N103D7"></a>Getting the Mojos</h3></div></div></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>We would like to provide the complete source for our Mojos and ultimately contribute everything to the community. At
-                    the time of writing, we and our legal counsel are poring over various licenses etc. trying to figure out how to do this.
-                    We expect this to be resolved in a hopefully satisfactorily manner as soon as possible.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N103DE"></a>Installing the Test Eclipse Instance</h3></div></div></div><p>If you follow the convention over configuration mantra, install a Callisto release into your home directory. I.e. on
+            (yet) magically add the plugin(s) under development and not touch the Eclipse installation.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N103D7"></a>Getting the Mojos</h3></div></div></div><p> The Mojos are available under the Apache 2.0 license at <a href="http://www.princetonsoftech.com/eclipse/mojos.zip" target="_new">http://www.princetonsoftech.com/eclipse/mojos.zip</a>
+            </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N103E1"></a>Installing the Test Eclipse Instance</h3></div></div></div><p>If you follow the convention over configuration mantra, install a Callisto release into your home directory. I.e. on
                 Windows your Eclipse directory would be <code class="code">C:\Documents and
                 Settings\</code><span class="emphasis"><em>username</em></span><code class="code">\eclipse</code>; on Unix/Linux/BSD it would be
                     <code class="code">/home/</code><span class="emphasis"><em>username</em></span><code class="code">/eclipse</code> and on Mac OS X it would be
@@ -1066,11 +1064,11 @@ private void extractErrorsAndFailures()
                     directory and may therefore wreak havoc on your development environment. Since the test instance is ever only used for
                     the automated testing, the repeated deploy/clean cycles only happen when it's not actually running.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="pom-config"></a>POM Configuration</h3></div></div></div><p>To have some chance of success, you will need to stick the following configuration in your Eclipse plugin projects' POM,
                 or in a super POM for all your Eclipse plugin projects. You can also take a look at all the below configuration put together
-                in a super POM <a href="example-pom.xml" target="_new">here</a>.</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1041A"></a>Configuring the PST Maven 2 Eclipse plugin</h4></div></div></div><p>Once you have obtained our plugin (we are calling it the "PST Maven 2 Eclipse plugin" for now) you can configure it
+                in a super POM <a href="example-pom.xml" target="_new">here</a>.</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1041D"></a>Configuring the PST Maven 2 Eclipse plugin</h4></div></div></div><p>Once you have obtained our plugin (we are calling it the "PST Maven 2 Eclipse plugin" for now) you can configure it
                     the following way. <div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>Please make a special observation of the <code class="code">&lt;extensions/&gt;</code> element. If you wind up
                             writing your own plugin that contains a <code class="code">components.xml</code> you will need to specify the configuration
                             element <code class="code">&lt;extensions&gt;true&lt;/extensions&gt;</code></p></td></tr></table></div>
-                    <div class="example"><a name="N1042C"></a><p class="title"><b>Example&nbsp;17.&nbsp;PST Eclipse configuration</b></p><div class="example-contents"><pre class="programlisting">
+                    <div class="example"><a name="N1042F"></a><p class="title"><b>Example&nbsp;17.&nbsp;PST Eclipse configuration</b></p><div class="example-contents"><pre class="programlisting">
 &lt;plugin&gt;
     &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
     &lt;artifactId&gt;maven-psteclipse-plugin&lt;/artifactId&gt;
@@ -1105,8 +1103,8 @@ private void extractErrorsAndFailures()
     &lt;/executions&gt;
 &lt;/plugin&gt;
                         </pre></div></div><br class="example-break">
-                </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10433"></a>Configuring the Maven 2 Eclipse plugin</h4></div></div></div><p>To get the Maven 2 Eclipse plugin (i.e. <code class="code">mvn eclipse:eclipse</code>) to generate the correct Eclipse project
-                    artifacts for your Eclipse plugins you will need to configure it the following way. <div class="example"><a name="N1043C"></a><p class="title"><b>Example&nbsp;18.&nbsp;Eclipse plugin configuration</b></p><div class="example-contents"><pre class="programlisting">
+                </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10436"></a>Configuring the Maven 2 Eclipse plugin</h4></div></div></div><p>To get the Maven 2 Eclipse plugin (i.e. <code class="code">mvn eclipse:eclipse</code>) to generate the correct Eclipse project
+                    artifacts for your Eclipse plugins you will need to configure it the following way. <div class="example"><a name="N1043F"></a><p class="title"><b>Example&nbsp;18.&nbsp;Eclipse plugin configuration</b></p><div class="example-contents"><pre class="programlisting">
 &lt;plugin&gt;
     &lt;artifactId&gt;maven-eclipse-plugin&lt;/artifactId&gt;
     &lt;configuration&gt;
@@ -1137,8 +1135,8 @@ private void extractErrorsAndFailures()
     &lt;/configuration&gt;
 &lt;/plugin&gt;
                         </pre></div></div><br class="example-break">
-                </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10443"></a>Adding Profiles for various platforms</h4></div></div></div><p>This configuration is to mainly aid our Test Mojos in loading dependencies without knowing about the platform it is
-                    running on. The use of Maven 2 Profiles comes in good for being able to write platform neutral Mojos. <div class="example"><a name="N10449"></a><p class="title"><b>Example&nbsp;19.&nbsp;Sample Profile Configuration</b></p><div class="example-contents"><pre class="programlisting">
+                </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10446"></a>Adding Profiles for various platforms</h4></div></div></div><p>This configuration is to mainly aid our Test Mojos in loading dependencies without knowing about the platform it is
+                    running on. The use of Maven 2 Profiles comes in good for being able to write platform neutral Mojos. <div class="example"><a name="N1044C"></a><p class="title"><b>Example&nbsp;19.&nbsp;Sample Profile Configuration</b></p><div class="example-contents"><pre class="programlisting">
 &lt;profiles&gt;
     &lt;profile&gt;
         &lt;id&gt;org.eclipse.swt.win32&lt;/id&gt;
@@ -1193,15 +1191,15 @@ private void extractErrorsAndFailures()
     &lt;/profile&gt;
 &lt;/profiles&gt;
                         </pre></div></div><br class="example-break">
-                </p></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10450"></a>Using it all together</h2></div></div></div><p>Just to round things off, the following is a brief description of the development process for Eclipse binary and source
+                </p></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10453"></a>Using it all together</h2></div></div></div><p>Just to round things off, the following is a brief description of the development process for Eclipse binary and source
             plugins. The descriptions below assume that all configuration/installation specified in the previous section has been done and
-            that all the projects sit in a hierarchy.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10456"></a>Developing binary plugins</h3></div></div></div><p>You can begin by creating a Maven 2 project by using the archetype for creating projects. Do this under the project that
+            that all the projects sit in a hierarchy.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10459"></a>Developing binary plugins</h3></div></div></div><p>You can begin by creating a Maven 2 project by using the archetype for creating projects. Do this under the project that
                 contains the POM with all the configuration described in the previous section.
                 <pre class="programlisting"><code class="code">mvn archetype:create -DgroupId=com.mycompany.app -DartifactId=my-binary-plugin</code></pre>
                 This should give you the basic template for your project. </p><p>Now once you do a <pre class="programlisting"><code class="code">mvn eclipse:eclipse</code></pre> you will be able to import the project
                 into Eclipse. Open up the POM file (<code class="code">pom.xml</code>) in Eclipse and change the <code class="code">&lt;packaging&gt;</code>
                 element to <code class="code">&lt;packaging&gt;binary-plugin&lt;/packaging&gt;</code>. Also add all the dependencies that you want the
-                binary plugin to expose right into the pom file. It may look like the example below when you are done: <div class="example"><a name="N10471"></a><p class="title"><b>Example&nbsp;20.&nbsp;Example binary plugin POM</b></p><div class="example-contents"><pre class="programlisting">
+                binary plugin to expose right into the pom file. It may look like the example below when you are done: <div class="example"><a name="N10474"></a><p class="title"><b>Example&nbsp;20.&nbsp;Example binary plugin POM</b></p><div class="example-contents"><pre class="programlisting">
 &lt;project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -1230,16 +1228,16 @@ private void extractErrorsAndFailures()
                 dependencies, defined in the POM, into a <code class="code">lib</code> directory and generate an OSGi manifest file
                 (<code class="code">MANIFEST.MF</code>) in <code class="code">META-INF</code>. Before Eclipse knows what PDE artifacts to export and make available to
                 other plugins you must open the manifest file in Eclipse's PDE manifest editor and select the "Update the classpath and the
-                compiler compliance settings" link on the editor's "Overview" tab.</p><div class="figure"><a name="N10487"></a><p class="title"><b>Figure&nbsp;3.&nbsp;Eclipse PDE manifest editor</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/pde-update-classpath.png" alt="Eclipse PDE manifest editor"></div></div></div><br class="figure-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>Whenever you change the POM for a binary plugin, the above steps must be executed again, in order to copy the correct
+                compiler compliance settings" link on the editor's "Overview" tab.</p><div class="figure"><a name="N1048A"></a><p class="title"><b>Figure&nbsp;3.&nbsp;Eclipse PDE manifest editor</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/pde-update-classpath.png" alt="Eclipse PDE manifest editor"></div></div></div><br class="figure-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>Whenever you change the POM for a binary plugin, the above steps must be executed again, in order to copy the correct
                     dependent artifacts; create the manifest and update the classpath and compiler compliance settings.</p></td></tr></table></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>The PDE test Mojo, described earlier, leverages this exact same mechanism when deploying the dependent plugins for a
                     source plugin being tested, but rather than creating the PDE artifacts in your project directory, it creates them
                     directly in the <code class="code">plugins/</code> directory in your test Eclipse instance.</p></td></tr></table></div><p>When doing a Maven 2 build of a binary plugin, the behavior seen is that of a "pom" packaging type. What this means, is
                 that no actual compilation, packaging or testing is performed, but all dependencies are resolved and provided to the
-                dependent plugins.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1049B"></a>Developing source plugins</h3></div></div></div><p>Creating a source plugin essentially is similar to creating a binary one. Simply do
+                dependent plugins.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1049E"></a>Developing source plugins</h3></div></div></div><p>Creating a source plugin essentially is similar to creating a binary one. Simply do
                 <pre class="programlisting"><code class="code">mvn archetype:create -DgroupId=com.mycompany.app -DartifactId=my-source-plugin</code></pre>
                 and do a <pre class="programlisting"><code class="code">mvn eclipse:eclipse</code></pre></p><p>As with the binary plugin, import the project into Eclipse and change the packaging. However since this is a source plugin
                 you must change the packaging to <code class="code">source-plugin</code>. Your source plugin POM will end up looking something like the
-                following: <div class="example"><a name="N104AF"></a><p class="title"><b>Example&nbsp;21.&nbsp;Example source plugin POM</b></p><div class="example-contents"><pre class="programlisting">
+                following: <div class="example"><a name="N104B2"></a><p class="title"><b>Example&nbsp;21.&nbsp;Example source plugin POM</b></p><div class="example-contents"><pre class="programlisting">
 &lt;project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -1261,10 +1259,11 @@ private void extractErrorsAndFailures()
                     build.</p></td></tr></table></div><p>From now on you simply develop and test your Eclipse plugin in PDE as per usual. When building the plugin using Maven 2,
                 the normal build lifecycle comes into effect. For example, to do a clean install of your plugin, do
                 <pre class="programlisting"><code class="code">mvn clean install</code></pre> and to get a Cobertura code coverage report, do
-                <pre class="programlisting"><code class="code">mvn cobertura:cobertura</code></pre></p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N104C3"></a>Acknowledgements</h2></div></div></div><p>Based on the excellent <a href="http://www.eclipse.org/articles/Article-Authoring-With-Eclipse/AuthoringWithEclipse.html" target="_new">article</a> by Chris Aniszczyk and Lawrence Mandel, from IBM, we decided to write this article in DocBook. We took the
+                <pre class="programlisting"><code class="code">mvn cobertura:cobertura</code></pre></p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N104C6"></a>Acknowledgements</h2></div></div></div><p>Based on the excellent <a href="http://www.eclipse.org/articles/Article-Authoring-With-Eclipse/AuthoringWithEclipse.html" target="_new">article</a> by Chris Aniszczyk and Lawrence Mandel, from IBM, we decided to write this article in DocBook. We took the
             liberty of further refining their kindly donated XSL stylesheet to include the "Eclipse Corner Article" banner and image. Please
-            find the stylesheet <a href="article.xsl" target="_new">here</a>.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N104D1"></a>External Links</h2></div></div></div><p>
+            find the stylesheet <a href="http://www.eclipse.org/articles/article.xsl" target="_new">here</a>. [The stylesheet has since been
+            further updated. - ed]</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N104D4"></a>External Links</h2></div></div></div><p>
             <div class="itemizedlist"><ul type="disc"><li><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=158653" target="_new">Bugzilla Bug 15863</a> at
-                    Eclipse</li><li><a href="http://maven.apache.org/" target="_new">Maven 2</a> at Apache</li><li><a href="http://mojo.codehaus.org/" target="_new">Mojos</a> at Codehaus</li><li><a href="http://maven.apache.org/continuum/" target="_new">Continuum</a> at Apache</li></ul></div>
+                    Eclipse</li><li><a href="http://maven.apache.org/" target="_new">Maven 2</a> at Apache</li><li><a href="http://mojo.codehaus.org/" target="_new">Mojos</a> at Codehaus</li><li><a href="http://maven.apache.org/continuum/" target="_new">Continuum</a> at Apache</li><li><a href="http://www.princetonsoftech.com/eclipse/mojos.zip" target="_new">Mojos</a> at Princeton Softech</li></ul></div>
         </p></div><div class="notices"><h3>Legal Notices</h3><p>Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. in the United States, other countries, or
                 both.</p><p>Linux is a trademark of Linus Torvalds in the United States, other countries, or both.</p><p>Windows is a trademark of Microsoft Corporation in the United States, other countries, or both.</p><p>UNIX is a registered trademark of The Open Group in the United States and other countries.</p><p>Other company, product, or service names may be trademarks or service marks of others.</p></div></div></body></html>
