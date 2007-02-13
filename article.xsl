@@ -1,12 +1,15 @@
 <?xml version='1.0'?>
 <!--
-	$Id: article.xsl,v 1.2 2007/02/08 19:46:57 wbeaton Exp $
+	$Id: article.xsl,v 1.3 2007/02/13 17:46:07 wbeaton Exp $
 	author: Chris Aniszczyk <zx@us.ibm.com>
 	author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	version="1.0">
 	<xsl:import href="docbook.xsl" />
+	
+	<xsl:output doctype-system="http://www.w3.org/TR/html4/loose.dtd" />
+	<xsl:output doctype-public="-//W3C//DTD HTML 4.01//EN" />
 
 	<xsl:param name="html.stylesheet" select="'../article.css'" />
 	<xsl:param name="admon.graphics" select="1" />
@@ -46,9 +49,7 @@
 			</div>
 			<div class="copyright">
 				Copyright &#x00A9;
-				<xsl:value-of select="//copyright/year[1]" />
-				&#160;
-				<xsl:value-of select="//copyright/holder[1]" />
+				<xsl:value-of select="//copyright/year[1]" />&#160;<xsl:value-of select="//copyright/holder[1]" />
 			</div>
 			<div class="date">
 				<xsl:apply-templates mode="article.titlepage.recto.mode"
