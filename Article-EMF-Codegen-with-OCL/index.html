@@ -1,0 +1,919 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<meta name="keywords" content="EMF, MDT, OCL, MDD, JET, code generation">
+<meta name="description" content="An exploration of using OCL to add model integrity support to code generation in the Eclipse Modeling Framework.">
+<title>Implementing Model Integrity in EMF with MDT OCL</title>
+<link rel="stylesheet" href="../article.css">
+</head>
+
+<body>
+
+<h1>Implementing Model Integrity in EMF with MDT OCL</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>This article illustrates how the MDT OCL parser/interpreter technology
+  adds to the value of EMF/JET code generation as a foundation for model-driven
+  development (MDD).  We will see, with fully functional
+  examples, how a model can be generated from an Ecore specification without
+  requiring any post-generation custom code, including complete implementations
+  of:</p>
+  <ul>
+    <li>invariant constraints</li>
+    <li>derived attributes and references</li>
+    <li>operations</li>
+  </ul>
+<div class="author">By Christian W. Damus, IBM Rational Software</div>
+<div class="copyright">Copyright &copy; 2006, 2007 International Business Machines Corp.</div>
+<div class="date">February 9, 2007<br/><i>Updated for EMF 2.3/Java 5.0 and MDT OCL 1.1.</i></div>
+</div>
+<div class="content">
+<h2>The Goal</h2>
+<p>
+First, let's have a look at what the result of our endeavour should look like.
+</p><p>
+Our abstract goal is to make it easy for the modeler/developer to ensure model integrity.
+In data modeling, data integrity is typically achieved by two different mechanisms: 
+integrity checks specified as invariant constraints and elimination of redundant
+data by deriving calculable values.  The former has a reactive nature and the latter
+a more proactive one.  Happily, OCL is well suited to the specification of both
+constraints and derived values (as properties and operations), being a simple but
+powerful expression language designed to be embedded in UML models (and models of
+related languages such as Ecore).
+</p><p>
+Our concrete goal in this article is to generate a complete model implementation
+for the following Ecore model, without having to fill in any <tt>TODO</tt>s with
+custom code:
+</p><p>
+<table border="0" cellpadding="8">
+<tr><td><img src="images/goal.png" alt="The Employee model"></td></tr>
+<caption align="bottom"><b>Figure 1</b> The Employee model from which we will generate our code</caption>
+</table>
+</p><p>
+When we have finished, our Ecore model will include annotations to provide OCL
+specifications of invariant constraints, derived properties, and operations.
+The generated model classes will have methods implementing these as described in
+the next few sections.
+</p>
+
+<h3>Invariant Constraints</h3>
+<p>
+The EMF Validation Framework prescribes the form of invariant constraints:
+boolean-valued operations in the package's validator class with the object to
+be validated, a <tt>DiagnosticChain</tt>, and a <tt>Map</tt> as input parameters.
+Violation of a constraint adds a <tt>Diagnostic</tt> to the
+chain and results in a <tt>false</tt> return value.
+</p><p>
+<i><b>Before OCL ...</b></i>
+</p><p>
+Without OCL, our generated code for invariant constraints is incomplete:
+we have to replace a <tt>TODO</tt> comment (<img src="images/tag_1.gif" height="13" width="24" align="CENTER">)
+with some useful code and remember to mark the method as not generated:
+</p>
+<pre class="snippet">
+    /**
+     * Validates the deptHasEmployees constraint of '&lt;em&gt;Department&lt;/em&gt;'.
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+    public boolean validateDepartment_deptHasEmployees(Department department,
+            DiagnosticChain diagnostics, Map&lt;Object, Object&gt; context) {
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER">     // TODO implement the constraint
+        // -&gt; specify the condition that violates the constraint
+        // -&gt; verify the diagnostic details, including severity, code, and message
+        // Ensure that you remove @generated or mark it @generated NOT
+        if (false) {
+            if (diagnostics != null) {
+                diagnostics.add
+                    (new BasicDiagnostic
+                        (Diagnostic.ERROR,
+                         DIAGNOSTIC_SOURCE,
+                         0,
+                         EcorePlugin.INSTANCE.getString("_UI_GenericConstraint_diagnostic", //$NON-NLS-1$
+                             new Object[] { "deptHasEmployees", getObjectLabel(department, //$NON-NLS-1$
+                                      context) }),
+                         new Object[] { department }));
+            }
+            return false;
+        }
+        return true;
+    }
+</pre>
+<p>
+<i><b>After OCL ...</b></i>
+</p><p>
+The following example shows the
+desired implementation of the constraint on departments stipulating that a
+<tt>Department</tt> that has a <tt>manager</tt> must also have one or more
+<tt>employees</tt>.  Note that the OCL expression of this constraint is stored
+in the EMF metadata; it is not manifest in the Java&trade; code at all.
+Thus, changing
+the constraint definition and re-testing doesn't even require that we regenerate
+the code (only if we use the GenModel option to initialize the <tt>EPackage</tt> from
+the Ecore model at run-time).
+</p>
+<pre class="snippet">
+    /**
+     * Validates the deptHasEmployees constraint of '&lt;em&gt;Department&lt;/em&gt;'.
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+    public boolean validateDepartment_deptHasEmployees(Department department,
+            DiagnosticChain diagnostics, Map&lt;Object, Object&gt; context) {
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER">     if (department_deptHasEmployeesInvOCL == null) {
+            OCL.Helper helper = OCL_ENV.createOCLHelper();
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER">         helper.setContext(EmployeePackage.Literals.DEPARTMENT);
+            
+            EAnnotation ocl = EmployeePackage.Literals.DEPARTMENT.getEAnnotation(OCL_ANNOTATION_SOURCE);
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER">         String expr = ocl.getDetails().get("deptHasEmployees"); //$NON-NLS-1$
+            
+            try {
+<img src="images/tag_4.gif" height="13" width="24" align="CENTER">             department_deptHasEmployeesInvOCL = helper.createInvariant(expr);
+            }
+            catch (ParserException e) {
+                throw new UnsupportedOperationException(e.getLocalizedMessage());
+            }
+        }
+        
+<img src="images/tag_5.gif" height="13" width="24" align="CENTER">     Query&lt;EClassifier, ?, ?&gt; query = OCL_ENV.createQuery(department_deptHasEmployeesInvOCL);
+        
+<img src="images/tag_6.gif" height="13" width="24" align="CENTER">     if (!query.check(department)) {
+            if (diagnostics != null) {
+                diagnostics.add
+                    (new BasicDiagnostic
+                        (Diagnostic.ERROR,
+                         DIAGNOSTIC_SOURCE,
+                         0,
+                         EcorePlugin.INSTANCE.getString("_UI_GenericConstraint_diagnostic", //$NON-NLS-1$
+                             new Object[] { "deptHasEmployees", getObjectLabel(department, //$NON-NLS-1$
+                                     context) }),
+                         new Object[] { department }));
+            }
+            return false;
+        }
+        return true;
+    }
+</pre>
+<p>
+Our validation method will start by checking (<img src="images/tag_1.gif" height="13" width="24" align="CENTER">)
+whether we have previously parsed and cached the OCL constraint.  If not,
+then we prepare the OCL parsing environment with the context classifier at <img src="images/tag_2.gif" height="13" width="24" align="CENTER">
+and obtain the constraint expression from an annotation on the <tt>EClassifier</tt>
+at <img src="images/tag_3.gif" height="13" width="24" align="CENTER">.  The OCL
+expression is parsed as an invariant constraint at <img src="images/tag_4.gif" height="13" width="24" align="CENTER">
+and cached so that it will not have to be parsed again.
+</p><p>
+Once we have our parsed OCL constraint, we construct an executable
+<tt>Query</tt> for it (<img src="images/tag_5.gif" height="13" width="24" align="CENTER">)
+and check whether this object satisfies the constraint (<img src="images/tag_6.gif" height="13" width="24" align="CENTER">).
+Java's <tt>this</tt> reference is bound to OCL's <tt>self</tt> variable.
+</p>
+
+<h3>Derived Properties</h3>
+<p>
+EMF implements derived properties as structural features that are marked as
+<tt>transient</tt> (not persisted) and <tt>volatile</tt> (no storage is allocated).
+Usually, they are also not <tt>changeable</tt>.
+</p><p>
+<i><b>Before OCL ...</b></i>
+</p><p>
+<p>
+Again, EMF's default code generation requires us to complete the implementation
+of the derivation and to protect our hand-written code from being overwritten
+the next time that we generate.  The starting point of this process is:
+</p>
+<pre class="snippet">
+    /**
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+    public EList getEmployees() {
+        // TODO: implement this method to return the 'Employees' reference list
+        // Ensure that you remove @generated or mark it @generated NOT
+        throw new UnsupportedOperationException();
+    }
+</pre>
+<p>
+<i><b>After OCL ...</b></i>
+</p><p>
+Once again, OCL can do all of the heavy lifting for us:
+</p>
+<pre class="snippet">
+    /**
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+    public EList getEmployees() {
+
+        EStructuralFeature eFeature = EmployeePackage.Literals.DEPARTMENT__EMPLOYEES;
+    
+        if (employeesDeriveOCL == null) { 
+            Helper helper = OCL_ENV.createOCLHelper();
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER">         helper.setAttributeContext(EmployeePackage.Literals.DEPARTMENT, eFeature);
+            
+            EAnnotation ocl = eFeature.getEAnnotation(OCL_ANNOTATION_SOURCE);
+            String derive = (String) ocl.getDetails().get("derive"); //$NON-NLS-1$
+            
+            try {
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER">             employeesDeriveOCL = helper.createQuery(derive);
+            } catch (ParserException e) {
+                throw new UnsupportedOperationException(e.getLocalizedMessage());
+            }
+        }
+        
+        Query&lt;EClassifier, ?, ?&gt; query = OCL_ENV.createQuery(employeesDeriveOCL);
+    
+        @SuppressWarnings("unchecked")
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER">     Collection&lt;Employee&gt; result = (Collection&lt;Employee&gt;) query.evaluate(this);
+        return new EcoreEList.UnmodifiableEList&lt;Employee&gt;(this, eFeature, result.size(), result.toArray());
+    
+    }
+</pre>
+<p>
+This method is just like the constraint, except in a few details.  First,
+as this is a property derivation, the OCL context is the structural feature
+(<img src="images/tag_1.gif" height="13" width="24" align="CENTER">), not the
+classifier.  Also, since it is not a constraint, we parse the OCL as a
+query (<img src="images/tag_2.gif" height="13" width="24" align="CENTER">), which
+is not required to be a boolean-valued expression.  Finally, queries are
+evaluated (<img src="images/tag_3.gif" height="13" width="24" align="CENTER">),
+not checked, returning a result conformant to the declared property type.  Our
+template will have to account for multi-valued and scalar properties of both
+reference and primitive types, taking care that <tt>EList</tt>s implement the
+<tt>InternalEList</tt> interface as expected by much of the EMF machinery.
+</p>
+
+<h3>Operations</h3>
+<p>
+OCL is often used to specify operation precondition and postcondition
+constraints.  A third kind of OCL expression defined on operations is the
+body expression, which defines the value of the operation in terms of its
+parameters and the properties of the context classifier. 
+</p><p>
+<i><b>Before OCL ...</b></i>
+</p><p>
+At the risk of being too repetitive, let us see what EMF generates by default
+for the implementation of <tt>EOperation</tt>s:
+</p>
+<pre class="snippet">
+    /**
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+    public boolean reportsTo(Employee mgr) {
+        // TODO: implement this method
+        // Ensure that you remove @generated or mark it @generated NOT
+        throw new UnsupportedOperationException();
+    }
+</pre>
+<p>
+<i><b>After OCL ...</b></i>
+</p><p>
+Here, our OCL-based code is just a little more elaborate (complicated by the
+fact of operations having parameters):
+</p>
+<pre class="snippet">
+    /**
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+    public boolean reportsTo(Employee mgr) {
+
+        if (reportsToBodyOCL == null) {
+            EOperation eOperation = EmployeePackage.Literals.EMPLOYEE.getEOperations().get(2);
+            OCL.Helper helper = OCL_ENV.createOCLHelper();
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER">         helper.setOperationContext(EmployeePackage.Literals.EMPLOYEE, eOperation);
+            EAnnotation ocl = eOperation.getEAnnotation(OCL_ANNOTATION_SOURCE);
+            String body = (String) ocl.getDetails().get("body"); //$NON-NLS-1$
+            
+            try {
+                reportsToBodyOCL = helper.createQuery(body);
+            } catch (ParserException e) {
+                throw new UnsupportedOperationException(e.getLocalizedMessage());
+            }
+        }
+        
+        Query&lt;EClassifier, ?, ?&gt; query = OCL_ENV.createQuery(reportsToBodyOCL);
+     
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER">     EvaluationEnvironment&lt;?, ?, ?, ?, ?&gt; evalEnv = query.getEvaluationEnvironment();
+        
+        evalEnv.add("mgr", mgr); //$NON-NLS-1$
+    
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER">     return ((Boolean) query.evaluate(this)).booleanValue();
+    
+    }
+</pre>
+<p>
+Again this method is very similar to the accessor for the derived property
+illustrated above.  The chief distinction is that the context
+(<img src="images/tag_1.gif" height="13" width="24" align="CENTER">) of the
+OCL expression is an operation, which ensures that the names and types of the
+parameters (if any) are known to the OCL parser.  When invoking the operation,
+these parameter variables are bound (<img src="images/tag_2.gif" height="13" width="24" align="CENTER">)
+to the actual argument values (the wildcards indicate that the type variables
+aren't important when we are only binding operation-call arguments).
+Finally, although this is not peculiar to
+operations (versus derived properties), the result in this case (<img src="images/tag_3.gif" height="13" width="24" align="CENTER">)
+is a primitive type whereas previously we saw a reference collection type.
+</p><p>
+OCL, by design, is a side-effect-free language.  This means, in particular, that
+an OCL expression cannot modify any elements of the model, nor even temporary
+objects that it creates (such as strings, collections, and tuples).  However,
+we can use OCL to implement operations that modify the properties of the receiver
+using OCL's <tt>Tuple</tt> types.  A tuple is a set of name-value pairs (called
+"tuple parts"), and given an expression that results in a tuple, generated code
+could assign the tuple's values to the properties corresponding to their names.
+If the tuple has a <tt>result</tt> part, this could even be used as a return
+value for the operation.
+</p>
+<div class="note">
+  <table class="note-table">
+  <tr><td valign="top"><img src="images/tryit.gif" width="61" height="13"></td>
+  <td>Extend the code generation example of this article to support side-effects.<br/><br/>
+  <i>Hint: this will require parsing the OCL expressions in the JET template,
+  itself, in order to detect that an expression has a tuple type and to
+  determine the names of the tuple parts.  In the MDT OCL implementation,
+  tuples are just dynamic <tt>EObject</tt>s with <tt>EStructuralFeature</tt>s
+  corresponding to the tuple parts.</i></td></tr></table>
+</div>
+
+<hr width="100%"/>
+<h2>Prerequisites</h2>
+<p>
+In addition to the latest available stable EMF build (milestone M4 of version 2.3 or later),
+we will be using the MDT OCL component (milestone M5 of version 1.1 or later) to parse and
+interpret OCL expressions on the Ecore metamodel, so our generated code will have an additional
+dependency on the <tt>org.eclipse.ocl.ecore</tt> plug-in.
+</p>
+<div class="note">
+  <table class="note-table">
+  <tr><td valign="top"><img src="images/tip.gif" width="62" height="13"></td>
+  <td> To obtain the OCL plug-ins, download the
+     <a href="http://www.eclipse.org/modeling/mdt/downloads/?project=ocl">SDK Zip</a>
+     and unzip it onto your Eclipse installation.</td></tr></table>
+</div>
+<p>
+Next, we create our EMF project.  I named it <tt>org.eclipse.ocl.examples.codegen</tt>;
+the name does not matter.  The basic non-UI plug-in template is sufficient, but
+we will add a <tt>model/</tt> and a <tt>templates/</tt> folder to it.  The former
+will contain our Ecore and code-gen models, the latter our custom JET templates.
+</p><p>
+<table border="0" cellpadding="8">
+<tr><td><img src="images/project.png" alt="The EMF project"></td></tr>
+<caption align="bottom"><b>Figure 2</b> The EMF project layout</caption>
+</table>
+</p><p>
+Now, we create the Employee model.  Save the <a href="Employee.ecore">Employee.ecore</a>
+file in your <tt>model/</tt> folder and open it.
+</p>
+<div class="note">
+  <table class="note-table">
+  <tr><td valign="top"><img src="images/tryit.gif" width="61" height="13"></td>
+  <td>Browse the annotations having the <tt>OCL</tt> source to see the kinds of
+      features we will generate using OCL.</td></tr></table>
+</div>
+<p>
+Create the <tt>Employee.genmodel</tt> file from this model:  select the <tt>Employee.ecore</tt>
+file and choose "File&nbsp;-&gt;&nbsp;New&nbsp;-&gt;&nbsp;Other...", taking the
+"EMF&nbsp;Modeling&nbsp;Framework&nbsp;/&nbsp;EMF&nbsp;Model" option.
+</p><p>
+In the genmodel editor, enable dynamic generation templates and specify the
+<tt>templates/</tt> directory as shown here:
+</p><p>
+<table border="0" cellpadding="8">
+<tr><td><img src="images/templateSettings.png" alt="Genmodel template settings"></td></tr>
+<caption align="bottom"><b>Figure 3</b> Genmodel configuration for dynamic templates</caption>
+</table>
+</p><p>
+Because our generated code requires the MDT OCL component, we add the
+<tt>org.eclipse.ocl.ecore</tt> plug-in as a Model Plug-in Variable.  Also, our custom
+templates depend on EMF 2.3's Java 5.0-style code generation, so be sure to set <tt>5.0</tt>
+in the <tt>Compliance Level</tt> property.
+</p><p>
+No other changes to the genmodel are required.  The rest of our work is in the
+templates (and in the OCL specifications in the Ecore model).
+</p>
+
+<hr width="100%"/>
+<h2>The Templates</h2>
+<p>
+In this section, we will explore (in not too great detail) the templates that will
+generate the code that we specified above.  The templates are necessarily ugly to
+look at and contain a good deal of content unrelated to the task at hand.
+Therefore, this article will only highlight some of the more salient bits.  For
+the complete text, see the accompanying example source project.
+</p><p>
+If you thought that you didn't know JET but the syntax of these templates looks
+familiar to you, then you are probably versant in JSP (Java Server Pages&trade;)
+technology.  The JET syntax is very similar, and the template compilation is
+essentially the same, even to compiling the resulting sources and dynamically
+loading the binary output into the host VM.
+</p><p>
+If you are not familiar with either JET or JSP, the EMF home page has plenty of
+documentation to get you started.  See <a href="#refs">below</a> for some references.
+Basically, there are three key things to know:
+</p>
+<ul>
+  <li>code between <tt>&lt%</tt> and <tt>%&gt;</tt> marks is Java code, which
+      JET compiles and executes.  These code fragments can declare and assign
+      variables, compute values, define <tt>for</tt> loops, etc.</li>
+  <li>code between <tt>%&gt</tt> and <tt>&lt;%</tt> marks is a text fragment
+      that JET will emit to the generated output.  This is akin to a
+      <tt>System.out.print(...)</tt> call with the literal text as the argument.
+      Where these text fragments occur in <tt>&lt% if (...) %&gt;</tt> conditions
+      or <tt>&lt% for (...) %&gt;</tt> loops, they are conditionally or repeatedly
+      emitted, etc.</li>
+  <li>code betwen <tt>&lt%=</tt> and <tt>%&gt;</tt> marks computes a string and
+      inserts it into the surrounding text fragment</li>
+</ul>
+<p>
+We will also encounter a couple of convenient constructs in EMF's templates that
+greatly simplify customization and promote re-use by letting our custom templates
+define only what's different in our system from base EMF.  These are insertion
+and override points.
+</p><p>
+An insertion point is indicated by an <tt>&lt%@include%&gt;</tt> directive with a
+relative path to a template fragment that should be inserted at this point.  The
+inclusion has a <tt>fail="silent"</tt> attribute instructing JET to just proceed
+if the include cannot be found.
+EMF has identified a number of such anchor points where it would be useful to
+inject custom code.
+</p><p>
+An overrideable block is indicated by an <tt>&lt%@include%&gt;</tt> directive with a
+relative path to a template fragment that should replace all of the content
+from a <tt>&lt%@start%&gt;</tt> directive to the following <tt>&lt%@end%&gt;</tt>.
+An override has a <tt>fail="alternative"</tt> attribute which instructs JET to
+just process everything between the start and end if the override cannot be found.
+</p>
+<h3>Basic Templates</h3>
+<p>
+We will be customizing the implementation classes of our model types and the validator class.
+The <tt>Class.javajet</tt> template has a wealth of override
+and insertion points for us to work with, so our class template will be very simple
+(the authors of this template anticipated where we might want to make customizations).
+The <tt>ValidatorClass.javajet</tt> template has no insertions or overrides, so we will
+have to replace it in its entirety (starting with a copy of EMF's original).
+</p><p>
+The <tt>templates/model/Class.javajet</tt> file looks like:
+</p>
+<pre class="snippet">
+    &lt;%@ jet package="org.eclipse.ocl.examples.codegen.templates.model" imports="java.util.* org.eclipse.emf.codegen.ecore.genmodel.* org.eclipse.emf.ecore.*" class="Class" version="$Id: index.html,v 1.1 2007/02/21 20:19:09 wbeaton Exp $" %&gt;
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER"> &lt;% final String oclNsURI = "http://www.eclipse.org/ocl/examples/OCL"; %&gt;
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER"> &lt;%@ include file="Class.javajet"%&gt;
+</pre>
+<p>
+The first line declares a package for our custom template and imports.  More interesting
+is <img src="images/tag_1.gif" height="13" width="24" align="CENTER">, where we
+define a constant that our other insertion and override templates will use: the source identifying
+the annotations containing the OCL specifications of our model.  The last
+line (<img src="images/tag_2.gif" height="13" width="24" align="CENTER">) includes
+the default template.  Most of our other templates will override or insert at various
+points in this template.
+</p>
+
+<h3>Generated Fields</h3>
+<p>
+We want to cache parsed OCL expressions in static fields of the generated
+implementation classes.  EMF's default template provides a convenient insertion
+point for additional fields:  the <tt>templates/model/Class/declaredFieldGenFeature.insert.javajetinc</tt>
+file:
+</p>
+<pre class="snippet">
+  &lt;%if (isImplementation) { boolean hasOCL = false;%&gt;
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER"> &lt;%for (GenOperation genOperation : genClass.getImplementedGenOperations()) {
+      String body = null;
+      EAnnotation ocl = genOperation.getEcoreOperation().getEAnnotation(oclNsURI);
+      if (ocl != null) body = ocl.getDetails().get("body");
+      if (body != null) { hasOCL = true;%&gt;
+      /**
+       * The parsed OCL expression for the body of the '{@link #&lt;%=genOperation.getName()%> &lt;em&gt;&lt;%=genOperation.getFormattedName()%>&lt;/em&gt;}' operation.
+       * &lt;!-- begin-user-doc --&gt;
+       * &lt;!-- end-user-doc --&gt;
+       * @see #&lt;%=genOperation.getName()%>
+       * @generated
+       */
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER">   private static OCLExpression&lt;EClassifier&gt; &lt;%=genOperation.getName()%&gt;BodyOCL;
+      
+      &lt;%}
+    }
+      
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER"> for (GenFeature genFeature : genClass.getImplementedGenFeatures()) {
+
+      // ... similar processing as for GenOperations ...
+
+    }
+      
+    if (hasOCL) { %&gt;
+<img src="images/tag_4.gif" height="13" width="24" align="CENTER">   private static final String OCL_ANNOTATION_SOURCE = "&lt;%=oclNsURI%&gt;";&lt;%=genModel.getNonNLS()%&gt;
+      
+      private static final org.eclipse.ocl.ecore.OCL OCL_ENV = org.eclipse.ocl.ecore.OCL.newInstance();
+    &lt;% }
+  }%&gt;
+</pre>
+(omitting the <tt>genModel.getImportedName(...)</tt> calls in references to Java types, for clarity).
+<p>
+First, we loop (<img src="images/tag_1.gif" height="13" width="24" align="CENTER">)
+through the class's <tt>GenOperation</tt>s, generating a static
+field (<img src="images/tag_2.gif" height="13" width="24" align="CENTER">)
+of type <tt>OCLExpression</tt> for each operation that has a <tt>body</tt>
+expression or an <tt>invariant</tt> constraint annotation (using the constant
+defined in our <tt>Class.javajet</tt> template, above).  We also do essentially
+the same (<img src="images/tag_3.gif" height="13" width="24" align="CENTER">)
+for all <tt>GenFeature</tt>s, looking for <tt>derive</tt> annotations.  Finally,
+if after all of this looping we have generated at least one OCL expression field,
+we also emit a manifest constant for the OCL annotation source, which is used
+in the generated methods.
+</p>
+
+<h3>Operation Template</h3>
+<p>
+As an example of the generated methods, let us consider the template for the
+OCL-specified operations.  The templates for derived properties will be similar).
+</p><p>
+The following is the content of the <tt>templates/model/Class/implementedGenOperation.TODO.override.javajetinc</tt>
+file.  This is an optional template that overrides the default <code>// TODO</code>
+comment in generated <tt>EOperation</tt>s:
+</p>
+<pre class="snippet">
+    &lt;%
+    String body = null;
+    EOperation eOperation = genOperation.getEcoreOperation();
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER"> EAnnotation ocl = eOperation.getEAnnotation(oclNsURI);
+    if (ocl != null) body = ocl.getDetails().get("body");
+    if (body == null) { %&gt;
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER">         // TODO: implement this method
+            // Ensure that you remove @generated or mark it @generated NOT
+            throw new UnsupportedOperationException();
+    &lt;% } else {
+        final String expr = genOperation.getName() + "BodyOCL"; %&gt;
+            if (&lt;%=expr%&gt; == null) {
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER">             EOperation eOperation = &lt;%=genOperation.getGenClass().getQualifiedClassifierAccessor()%&gt;.getEOperations().get(&lt;%=genOperation.getGenClass().getGenOperations().indexOf(genOperation)%&gt;);
+                org.eclipse.ocl.ecore.OCL.Helper helper = OCL_ENV.createOCLHelper();
+                helper.setOperationContext(&lt;%=genOperation.getGenClass().getQualifiedClassifierAccessor()%&gt;, eOperation);
+                EAnnotation ocl = eOperation.getEAnnotation(OCL_ANNOTATION_SOURCE);
+                String body = ocl.getDetails().get("body");&lt;%=genModel.getNonNLS()%&gt;
+            
+                try {
+                    &lt;%=expr%&gt; = helper.createQuery(body);
+                } catch (org.eclipse.ocl.ParserException e) {
+                    throw new UnsupportedOperationException(e.getLocalizedMessage());
+                }
+            }
+        
+<img src="images/tag_4.gif" height="13" width="24" align="CENTER">         org.eclipse.ocl.Query&lt;EClassifier, ?, ?&gt; query = OCL_ENV.createQuery(&lt;%=expr%&gt;);
+        &lt;% if (!genOperation.getEcoreOperation().getEParameters().isEmpty()) { %&gt; 
+<img src="images/tag_5.gif" height="13" width="24" align="CENTER">         org.eclipse.ocl.EvaluationEnvironment&lt;?, ?, ?, ?, ?&gt; evalEnv = query.getEvaluationEnvironment();
+            &lt;% for (EParameter param : genOperation.getEcoreOperation().getEParameters()) { %&gt;
+<img src="images/tag_6.gif" height="13" width="24" align="CENTER">         evalEnv.add("&lt;%=param.getName()%&gt;", &lt;%=param.getName()%&gt;);&lt;%=genModel.getNonNLS()%&gt;
+          &lt;% }
+        } 
+    
+<img src="images/tag_7.gif" height="13" width="24" align="CENTER">     if (genOperation.isListType()) { %&gt;
+            @SuppressWarnings("unchecked")
+            Collection&lt;&lt;%=genOperation.getListItemType()%&gt;&gt; result = (Collection&lt;&lt;%=genOperation.getListItemType()%&gt;&gt;) query.evaluate(this);
+            return new BasicEList.UnmodifiableEList&lt;&lt;%=genOperation.getListItemType()%&gt;&gt;(result.size(), result.toArray());
+        &lt;% } else if (genOperation.isPrimitiveType()) { %&gt;
+            return ((&lt;%=genOperation.getObjectType()%&gt;) query.evaluate(this)).&lt;%=genOperation.getPrimitiveValueFunction()%&gt;();
+        &lt;% } else { %&gt;
+            return (&lt;%=genOperation.getImportedType()%&gt;) query.evaluate(this);
+        &lt;% }
+    } %&gt;
+</pre>
+(again omitting the <tt>genModel.getImportedName(...)</tt> calls, for clarity).
+<p>
+First, we look for an OCL annotation with a body expression (<img src="images/tag_1.gif" height="13" width="24" align="CENTER">).
+If we do not find one, then we emit the default comment (<img src="images/tag_2.gif" height="13" width="24" align="CENTER">)
+and are done.  Otherwise, we continue by generating the lazy initialization (<img src="images/tag_3.gif" height="13" width="24" align="CENTER">)
+of the static OCL expression, followed by the code (<img src="images/tag_4.gif" height="13" width="24" align="CENTER">)
+that constructs the query and evaluation environment.
+</p><p>
+At <img src="images/tag_5.gif" height="13" width="24" align="CENTER">,
+we loop through the operation's parameters to generate the argument bindings
+( <img src="images/tag_6.gif" height="13" width="24" align="CENTER">) in the
+evaluation environment.  We do this only in the case that the operation has parameters
+</p><p>
+Finally, at <img src="images/tag_7.gif" height="13" width="24" align="CENTER">,
+we examine the result type of the operation and determine what kind of <tt>return</tt>
+statement to generate, with the appropriate cast on the result of the query
+evaluation.  The operation may be multi-valued, in which case the
+result is an <tt>EList</tt> type.  Otherwise, it is a scalar which may be a
+primitive type, which OCL returns as a wrapper object.  Note that a more robust
+implementation would have to consider also the possibility that the genmodel
+specifies that multi-valued features use array types rather than lists.
+</p>
+
+<h3>Validator Template</h3>
+<p>
+The last template that we will examine is that for the package's validator class.
+The <tt>Ecore</tt> extended meta-data annotation can specify a list of named constraints
+under the <tt>constraints</tt> detail key.  Ordinarily, this results in stub methods
+being generated in the validator class, named <tt>validate<i>Constraint</i></tt> according
+to each constraint's name, with <tt>TODO</tt> comments to replace by hand.
+</p><p>
+However, using OCL, we can specify the implementations of these validation methods.
+In our example, we will attach an <tt>OCL</tt> annotation to the <tt>EClassifier</tt>
+with a detail entry for each of the constraints listed in the <tt>Ecore</tt> annotation.
+Because the <tt>ValidatorClass.javajet</tt> template does not define convenient insertion
+and override templates, we must replace the entire template in our project.  The following
+excerpts show where we customize this template:
+</p>
+<pre class="snippet">
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER"> &lt;% final String oclNsURI = "http://www.eclipse.org/ocl/examples/OCL"; %&gt;
+    &lt;%GenPackage genPackage = (GenPackage)argument; GenModel genModel=genPackage.getGenModel();%&gt;
+    &lt;%final String singleWildcard = genModel.getComplianceLevel().getValue() &gt;= GenJDKLevel.JDK50 ? "&lt;?&gt;" : "";%&gt;
+    &lt;%@ include file="../Header.javajetinc"%&gt;
+    package &lt;%=genPackage.getUtilitiesPackageName()%&gt;;
+</pre>
+<p>
+As in the <tt>Class.javajet</tt> template, we declare a constant
+(<img src="images/tag_1.gif" height="13" width="24" align="CENTER">)
+for the OCL annotation source.
+Next, we add to the list of fields generated in the validator class, inserting fields for the
+parsed OCL constraints before the constructor:
+</p>
+<pre class="snippet">
+&lt;%boolean hasOCL = false;
+for (GenClassifier genClassifier : genPackage.getGenClassifiers()) {
+    EClassifier eClassifier = genClassifier.getEcoreClassifier();
+    EAnnotation annotation = eClassifier.getEAnnotation(oclNsURI);
+    if (annotation != null) {
+        for (String constraint : EcoreUtil.getConstraints(eClassifier)) {
+        
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER">         if (annotation.getDetails().get(constraint) != null) {
+                hasOCL = true;%&gt;
+    /**
+     * The parsed OCL expression for the definition of the '&lt;em&gt;&lt;%=constraint%&gt;&lt;/em&gt;' invariant constraint.
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER"> private static org.eclipse.ocl.ecore.Constraint &lt;%=genClassifier.getSafeUncapName()%&gt;_&lt;%=constraint%&gt;InvOCL;
+            &lt;%}
+        }
+    }
+}
+
+if (hasOCL) {%&gt;
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER"> private static final String OCL_ANNOTATION_SOURCE = "&lt;%=oclNsURI%&gt;";&lt;%=genModel.getNonNLS()%&gt;
+    
+    private static final org.eclipse.ocl.ecore.OCL OCL_ENV = org.eclipse.ocl.ecore.OCL.newInstance();
+&lt;%}%&gt;
+    /**
+     * Creates an instance of the switch.
+     * &lt;!-- begin-user-doc --&gt;
+     * &lt;!-- end-user-doc --&gt;
+     * @generated
+     */
+    public &lt;%=genPackage.getValidatorClassName()%&gt;()
+    {
+        super();
+&lt;%for (GenPackage baseGenPackage : genPackage.getAllValidatorBaseGenPackages()) {%&gt;
+        &lt;%=genPackage.getValidatorPackageUniqueSafeName(baseGenPackage)%&gt;Validator = &lt;%=baseGenPackage.getImportedValidatorClassName()%&gt;.INSTANCE;
+&lt;%}%&gt;
+    }
+</pre>
+(once again omitting the <tt>genModel.getImportedName(...)</tt> calls, for clarity).
+<p>
+For each constraint named in the <tt>Ecore</tt> annotation, we define
+(<img src="images/tag_3.gif" height="13" width="24" align="CENTER">) a static OCL
+<tt>Constraint</tt> field if the <tt>OCL</tt> annotation has a corresponding constraint
+expression (<img src="images/tag_1.gif" height="13" width="24" align="CENTER">),
+using the Classifier name to ensure uniqueness of constraint names.  As in
+the class template, if there is any OCL code to be generated for
+invariant constraints, we also emit (<img src="images/tag_3.gif" height="13" width="24" align="CENTER">)
+a constant for the OCL annotation and a field storing the <tt>OCL</tt> environment.
+</p><p>
+Lastly, we enhance the default case for the generated validation method (where the constraint
+name is not one of the pre-defined constraints recognized by EMF) to look for an OCL
+expression, if available:
+</p>
+<pre class="snippet">
+&lt;%} else { EAnnotation annotation = genClassifier.getEcoreClassifier().getEAnnotation(oclNsURI);
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER"> if (annotation != null && annotation.getDetails().get(constraint) != null) {
+        String invOCL = genClassifier.getSafeUncapName() + "_" + constraint + "InvOCL";%&gt;
+        if (&lt;%=invOCL%&gt; == null)
+        {
+            OCL.Helper helper = OCL_ENV.createOCLHelper();
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER">         helper.setContext(&lt;%=genClassifier.getQualifiedClassifierAccessor()%&gt;);
+            
+            EAnnotation ocl = &lt;%=genClassifier.getQualifiedClassifierAccessor()%&gt;.getEAnnotation(OCL_ANNOTATION_SOURCE);
+            String expr = ocl.getDetails().get("&lt;%=constraint%&gt;");&lt;%=genModel.getNonNLS()%&gt;
+            
+            try
+            {
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER">             &lt;%=invOCL%&gt; = helper.createInvariant(expr);
+            }
+            catch (org.eclipse.ocl.ParserException e)
+            {
+                throw new UnsupportedOperationException(e.getLocalizedMessage());
+            }
+        }
+        
+<img src="images/tag_4.gif" height="13" width="24" align="CENTER">     org.eclipse.ocl.Query&lt;EClassifier, ?, ?&gt; query = OCL_ENV.createQuery(&lt;%=invOCL%&gt;);
+        
+<img src="images/tag_5.gif" height="13" width="24" align="CENTER">     if (!query.check(&lt;%=genClassifier.getSafeUncapName()%&gt;))
+        {
+            if (&lt;%=diagnostics%&gt; != null)
+            {
+                &lt;%=diagnostics%&gt;.add
+                    (new &lt;%=genModel.getImportedName("org.eclipse.emf.common.util.BasicDiagnostic")%&gt;
+                        (&lt;%=genModel.getImportedName("org.eclipse.emf.common.util.Diagnostic")%&gt;.ERROR,
+                         DIAGNOSTIC_SOURCE,
+                         0,
+                         &lt;%=genModel.getImportedName("org.eclipse.emf.ecore.plugin.EcorePlugin")%&gt;.INSTANCE.getString("_UI_GenericConstraint_diagnostic", new Object[] { "&lt;%=constraint%&gt;", getObjectLabel(&lt;%=genClassifier.getSafeUncapName()%&gt;, &lt;%=context%&gt;) }),&lt;%=genModel.getNonNLS()%&gt;&lt;%=genModel.getNonNLS(2)%&gt;
+                         new Object[] { &lt;%=genClassifier.getSafeUncapName()%&gt; }));
+            }
+            return false;
+        }
+        return true;
+&lt;%} else {%&gt;
+        // TODO implement the constraint
+        // -&gt; specify the condition that violates the constraint
+        // -&gt; verify the diagnostic details, including severity, code, and message
+        // Ensure that you remove @generated or mark it @generated NOT
+<img src="images/tag_6.gif" height="13" width="24" align="CENTER">     if (false)
+        {
+            if (&lt;%=diagnostics%&gt; != null)
+            {
+                &lt;%=diagnostics%&gt;.add
+                    (new &lt;%=genModel.getImportedName("org.eclipse.emf.common.util.BasicDiagnostic")%&gt;
+                        (&lt;%=genModel.getImportedName("org.eclipse.emf.common.util.Diagnostic")%&gt;.ERROR,
+                         DIAGNOSTIC_SOURCE,
+                         0,
+                         &lt;%=genModel.getImportedName("org.eclipse.emf.ecore.plugin.EcorePlugin")%&gt;.INSTANCE.getString("_UI_GenericConstraint_diagnostic", new Object[] { "&lt;%=constraint%&gt;", getObjectLabel(&lt;%=genClassifier.getSafeUncapName()%&gt;, &lt;%=context%&gt;) }),&lt;%=genModel.getNonNLS()%&gt;&lt;%=genModel.getNonNLS(2)%&gt;
+                         new Object[] { &lt;%=genClassifier.getSafeUncapName()%&gt; }));
+            }
+            return false;
+        }
+        return true;
+&lt;%}}}%&gt;
+</pre>
+(once again omitting the <tt>genModel.getImportedName(...)</tt> calls, for clarity).
+<p>
+For each constraint for which the <tt>OCL</tt> annotation has a specification
+(<img src="images/tag_1.gif" height="13" width="24" align="CENTER">), we fill
+in the validation method.  As usual, we lazily initialize
+(<img src="images/tag_2.gif" height="13" width="24" align="CENTER">) the parsed OCL, except
+that this time it is parsed as an invariant <tt>Constraint</tt>
+(<img src="images/tag_3.gif" height="13" width="24" align="CENTER">) instead of as a
+query expression.
+</p><p>
+Again, as before, we generate code to create a <tt>Query</tt> object
+(<img src="images/tag_4.gif" height="13" width="24" align="CENTER">).  The difference,
+here, is that the <tt>Constraint</tt> is <tt>check</tt>ed
+(<img src="images/tag_5.gif" height="13" width="24" align="CENTER">), not evaluated,
+to determine whether it is met by the target object.
+</p><p>
+Finally, in the case that no OCL specification is available, the default behaviour of
+the template is preserved.  At <img src="images/tag_6.gif" height="13" width="24" align="CENTER">
+the stub method body is emitted with a reminder comment and a place to insert the constraint
+logic.
+</p>
+
+
+<h2>Source Code</h2>
+<p>To run the full example or simply to view the source code, unzip
+<a href="ocl-codegen.zip">ocl-codegen.zip</a> into your workspace.  Or, better
+yet, use the Eclipse Project Import wizard to import the ZIP as a project.
+</p>
+<div class="note">
+  <table class="note-table">
+  <tr><td valign="top"><img src="images/tryit.gif" width="61" height="13"></td>
+  <td>Open the <tt>model/employee.genmodel</tt> file in the
+  <tt>org.eclipse.emf.ocl.examples.codegen</tt> project and invoke "Generate All"
+  to see the code that is generated for the OCL-specified features.  Launch
+  a run-time workbench to create Employee models, validate them (see if you
+  can violate the "deptHasEmployees" constraint defined on the Department class),
+  and perform queries using the Interactive OCL Console (use the "New&nbsp;Console" menu in
+  the Console view).</td></tr></table>
+</div>
+<p>
+The following figure shows an example Employee model with an employee selected
+who has a manager associated with a department and is also a manager of others.
+The <tt>Department</tt> and <tt>Is Manager</tt> properties are derived.
+</p><p>
+<table border="0" cellpadding="8">
+<tr><td><img src="images/derived.png" alt="Derived properties"></td></tr>
+<caption align="bottom"><b>Figure 4</b> An Employee model showing derived properties</caption>
+</table>
+</p><p>
+The Interactive OCL Console can be used to exercise the operations.  In this
+example, we find all of the "reports to (directly or indirectly)" relationships
+among managers in the Acme company:
+</p><p>
+<table border="0" cellpadding="8">
+<tr><td><img src="images/query.png" alt="Querying a model instance"></td></tr>
+<caption align="bottom"><b>Figure 5</b> A query utilizing the OCL-specified operations and properties</caption>
+</table>
+</p>
+<p>
+This query accesses the derived <tt>isManager</tt> property and calls the
+<tt>reportsTo(Employee)</tt> operation, both of which we implemented using OCL.
+It is worth noting here that OCL encourages the definition of additional properties
+and operations externally to the model, as conveniences for the formulation of
+constraints.  The OCL implementation supports these "def:" expressions
+via the <tt>OCL.parse()</tt> and <tt>OCLHelper.define()</tt> APIs.
+</p>
+<div class="note">
+  <table class="note-table">
+  <tr><td valign="top"><img src="images/tryit.gif" width="61" height="13"></td>
+  <td>A fun exercise for the reader might be to enhance the Interactive OCL Console
+      example to allow user input of "def:" expressions, so that queries such as the
+      specimen above can be formulated without depending on the model itself
+      providing these features.</td></tr></table>
+</div>
+
+<p>
+Figure 6 illustrates a violation of our "deptHasEmployees" example constraint,
+detected by the
+validator.  The "OCL Development" department has a manager that is not really
+a manager, because it has no reports (the <tt>Employee.isManager</tt> property
+is derived from the existence of <tt>directReports</tt>).  This is not a valid
+department according to our example constraint, as it results in a department
+having a <tt>manager</tt> but no <tt>employees</tt> (the latter being derived,
+again via OCL, from the manager's reports).
+</p><p>
+<table border="0" cellpadding="8">
+<tr><td><img src="images/validation.png" alt="OCL Constraint Violation"></td></tr>
+<caption align="bottom"><b>Figure 6</b> Validation problem reporting an OCL constraint violation</caption>
+</table>
+</p>
+<p>
+When an Ecore model contains <tt>Ecore</tt> annotations naming invariant constraints,
+the EMF code generator creates an <tt>EValidator</tt> implementation for the package.
+This validator is registered against the generated <tt>EPackage</tt> in the
+<tt>EValidator.Registry</tt>, where it is found by the "Validate" context menu
+action and invoked iteratively on the elements of an instance model.
+</p>
+<div class="note">
+  <table class="note-table">
+  <tr><td valign="top"><img src="images/note.gif" width="61" height="13"></td>
+  <td>The EMF Validation Framework, of which the <tt>EValidator</tt> API is a
+      component, is completely different from the EMFT Validation Framework.
+      The latter is geared towards third-party contributions of constraints to
+      models (rather than defining them within the model).  Constraints
+      are defined on an extension point to contribute them to a common library
+      of constraints, from which client applications can select which ones they
+      want to include in validation operations.  The EMFT Validation SDK
+      includes an example plug-in defining an <tt>EValidator</tt> that enables
+      delegation of the EMF Validation Framework to EMFT.  For more details, see
+      the <a href="#refs">reference</a> at the bottom of this document.</td></tr></table>
+</div>
+
+<h2>Conclusion</h2>
+<p>
+We have seen how, using the MDT OCL technology, we can use OCL to quickly and
+easily generate a complete model, with
+</p>
+<ul>
+  <li>invariant constraints to support validation of instance models</li>
+  <li>query operations, in support not only of the generated API but also
+      invariant constraints specified in OCL</li>
+  <li>derived properties, also supporting both the API and invariant constraints</li>
+</ul>
+<p>
+We used the EMF GenModel's dynamic template support to extend the code generation
+system.  A more complete implementation would use the adapter-based
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=75925#c8">generator extensibility framework</a>
+with statically compiled templates to transform
+OCL expressions into Java for maximal efficiency.  For the subset of OCL for which
+MDT OCL provides evaluation support, transformation to Java would not be very
+difficult and could even surpass OCL's evaluation capabilities (e.g., by
+implementing <tt>@pre</tt> expressions in operation postcondition constraints).
+</p>
+
+<h2><a name="refs">References</a></h2>
+<dl>
+  <dt>EMF Code Generation</dt>
+     <dd><a href="http://www.eclipse.org/modeling/emf/docs/presentations/EclipseCon/EclipseCon2006_EMF_Advanced.pdf">Advanced Features of the Eclipse Modeling Framework</a> (EclipseCon tutorial)<br/>
+     <a href="http://www.eclipse.org/modeling/emf/docs/#tutorials">Other JET-related tutorials</a><br/>
+     <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=75925">Extensible Code Generator (Bug 75925)</a><br/>
+     <a href="http://dev.eclipse.org/viewcvs/indextools.cgi/org.eclipse.emf/doc/org.eclipse.emf.doc/references/overview/EMF.Validation.html">EMF Validation Framework Overview</a></dd>
+  <dt>MDT, EMFT</dt>
+     <dd><a href="http://www.eclipse.org/modeling/mdt/downloads/?project=ocl">OCL SDK Download</a> (includes on-line Developer Guide and Interactive OCL Console example)<br/>
+     <a href="http://www.eclipse.org/emft/downloads/?project=validation">Validation SDK Download</a> (includes on-line Developer Guide and <tt>EValidator</tt> adapter example)</dd>
+  <dt>OCL 2.0</dt>
+     <dd><a href="http://www.omg.org/technology/documents/modeling_spec_catalog.htm#OCL">Specification</a></dd>
+</dl>
+
+<h2>Acknowledgments</h2>
+<p>
+The author would like to thank Fr&eacute;d&eacute;ric Plante, Ed Merks,
+and Richard Gronback for their helpful editorial suggestions.
+</p>
+</div>
+<div class="notices">
+<h3>Legal Notices</h3>
+Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States, other countries, or both.<br/>
+IBM is a registered trademark of International Business Machines Corporation in the United States, other countries, or both.<br/>
+Other company, product, or service names may be trademarks or service marks of others.
+</div>
+</body>
+</html>
