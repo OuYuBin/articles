@@ -1,0 +1,976 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<title>Using TPTP to Automate Functional Testing</title>
+
+<link rel=Stylesheet type="text/css" media=all
+	href="../Article-TPTPAutomateFunctionalTesting/default_style.css">
+<link rel="stylesheet" href="../article.css" type="text/css" />
+</head>
+
+<body>
+<h1>Using TPTP to Automate Functional Testing</h1>
+
+<div class="summary">
+<h2>Summary</h2>
+This article provides an overview and some details of the design of a
+functional test automation solution that was built using testing
+frameworks available within the TPTP Testing Tools Project.
+
+<div class="author">By Govin Varadarajan &amp; Kim Letkeman, IBM
+Canada</div>
+<div class="copyright">Copyright &copy; 2007 International
+Business Machines Corp.</div>
+<div class="date">March 29, 2007</div>
+</div>
+
+<div class="content">
+<h1>Introduction</h1>
+
+<p>This paper discusses
+the design of a functional and performance testing solution using TPTP
+[1] and TPTP Automated GUI Recorder [2].   This solution is used within
+the Rational Modeling Platform group’s Test Automation system (RMPTAS)
+[5] to execute functional and performance tests.  The Test Automation
+System is an end-to-end testing framework, supporting the execution of
+multiple types of tests and including a front-end viewer (a web
+interface for displaying the test results) and a back-end (a database to
+store results from test executions).</p>
+
+<h2><a name="_Toc154289790">Background and Philosophy</a></h2>
+
+<p>The Rational Modeling
+team has had automated tests for a long time, but these tests required
+significant maintenance and their framework required too much
+baby-sitting to really be called <i>automated.</i></p>
+
+<p>So the team began
+again from scratch with these basic guidelines:</p>
+
+<ul>
+	<li>The system must
+	reliably see every relevant build and must respond without manual
+	intervention</li>
+	<li>The system must be
+	easily maintained, which required that it be a modular design and that
+	it use well-supported components</li>
+	<li>Writing automated
+	tests must be easy &#133; that is, unnecessary barriers to entry must be
+	eliminated</li>
+	<li>There must be as
+	little extra overhead for developers as possible, i.e. no extra
+	applications to install</li>
+	<li>Tests should be
+	able to verify everything, not just GUI results, so a white box flavor
+	is desirable</li>
+	<li>It must be possible
+	to validate test executions without the use of technologies such as
+	bitmap comparison that render the test cases brittle.</li>
+</ul>
+
+<p>The fundamental goal
+for the test automation solution is to relieve developers of the burden
+of manual regression testing. Regression testing is extremely
+repetitive, and developers find it boring after the first time through.
+Running regression tests eventually becomes a study in quick and
+painless execution, which of course means that issues are missed.</p>
+
+<p>The result is false
+negatives, where a failure is missed simply because the developer glazes
+over from too deep a familiarity with the test cases. Ironically, false
+positives are also common, where failures are caught in later regression
+tests, leading development to incorrectly assume a recent break and to
+waste a lot of debugging time.</p>
+
+<h2><a name="_Toc154289791">Technology</a></h2>
+
+<p>For the automation framework, a custom
+perl-script-based solution was rejected as it has proven unreliable in
+the past. Instead, the Software Test Automation Framework (STAF), an
+open-source solution from IBM’s Automated Integration and Middleware
+division was chosen as a well-supported automation infra-structure. </p>
+
+<p>For the test scripting
+language and supporting tools, several approaches were examined. Abbot,
+a tool allowing automation of keystrokes and mouse events, was explored
+in depth because of its ability to be run in the developer’s environment
+with minimal overhead. Tests can be crafted using the familiar JUnit
+style. Where Abbot came up short was in support (none) and script
+recording (awkward using the related Costello tools.)</p>
+
+
+<p>External applications
+were also examined, and are in fact supported in our automation
+framework. Rational Functional Tester (RFT) is a powerful test
+application with a vibrant community and plenty of support. However, in
+a developer’s environment, the sheer size of the installation is a
+barrier to entry; as well, RFT is designed to run along side of the
+application under test, requiring very much a black box approach. This
+is perfect for use by dedicated test teams, but is not as efficient when
+used by development teams, as it makes it more difficult to use white
+box techniques for verification points.</p>
+
+<p>The automation project
+was turned on its head with the arrival of the Automated GUI Recorder
+(AGR) from the Test and Performance Tools Platform (TPTP) open source
+project. This is a very easy-to-use test case recording system that
+creates simple XML scripts into which verification hooks can easily be
+inserted and tracked by the test automation framework. Stylistically, it
+uses the very familiar junit framework and is fully extensible. Work is
+underway to complete the missing features (drag and drop and GEF figure
+and palette support) in order to have a complete automation recorder that is <i>not</i>
+sensitive to minor GUI changes during test case verification.  It is
+important to clarify the type of minor GUI changes that is being talked
+about here.  An example of a minor GUI change is a difference in layout
+of a diagram that could occur between two runs of a test case.  Some
+times one might find that the location of an item on a diagram surface
+has changed by a few pixels for some reason in the current execution of
+a test case compared to that in a previous execution.  In such a case,
+any bitmap comparison based verification technique that compares the
+current diagram with the previous one will provide a false verdict that
+the test case has failed. </p>
+
+<p>An important aspect of
+an automated test solution is the ability to verify test executions for
+correctness.  In the earlier perl-script-based system, verification was
+achieved using custom bitmap comparison techniques, which were brittle
+and produced frequent false positives.  In the new solution we wanted to
+avoid the use of bitmap comparisons, and instead use custom verification
+libraries that directly examine (using object-based recognition) our
+data to confirm the correctness of the previous step(s.)  The AGR’s
+verification support via the <i>verification hook mechanism [3] </i>supports
+our approach because it provides a convenient means for invoking custom
+verification libraries that do not use any bitmap comparisons.  Details
+on the &quot;verification hook&quot; based verification mechanism provided by AGR
+may be found in the section entitled &quot;Test Verification&quot; later in this
+article and the AGR User Guide [3].</p>
+
+<p>Testers and developers
+can record AGR-based functional tests, augmenting them with verification
+points that use well-tested libraries. Included are methods for finding
+named elements in a model and the like. Tests will be expected to follow
+naming and structure guidelines and to be added into our configuration
+management system, where the automation system will pick and execute
+them on every product build. Both component assembly and packaged
+installation builds are supported. Great care should be taken to avoid
+introducing unnecessary behavior difference in your installs, so that
+your tests can move seamlessly between test development and production
+environments.</p>
+
+<h1><a name="_Toc154289792">Testing Solution Design</a></h1>
+
+<p>Our functional test automation solution uses TPTP
+AGR 4.2.1 to record and playback tests and TPTP Automatable Service
+Framework (ASF) to automate the execution of tests and querying of test
+results.   For those who are not very familiar with the TPTP
+technologies that are used in this solution, some back ground
+information is provided in Appendix -A</p>
+
+<h2>Overview</h2>
+
+<p>Figure 1 shows a high
+level view of the solution design with TPTP platform components in light
+green and our custom components in dark green.  As seen in Figure 1, the
+TPTP Testing Tools Project, which is based on the TPTP Platform Project;
+provides means to create and execute various types of tests such as
+JUnit, URL (Web stress testing), AGR and Manual tests.  TPTP models test
+suites containing these types of tests in instances of EMF models
+implementing open-source test data model specifications such as the
+OMG’s UML2 Testing Profile (UML2TP).   When any of these types of tests
+are executed, test results become available in execution history files
+which are also EMF model instances. These execution history files may be
+viewed using the Test Log view, reported using the integrated and
+extensible BIRT reports and queried for test execution information and
+results. </p>
+
+<div class="figure"><img src="images/image001.jpg"><br>
+Figure 1: Test Automation Solution Design</div>
+
+<p>For test automation,
+execution of tests may be automated using a Test Execution Service that
+the TPTP Automatable Service Framework (ASF) provides.  This service may
+be invoked using a command-line interface/adapter that the service
+implementation provides.  In order to completely automate a test
+solution, one also needs a mechanism to automatically query execution
+history files.  At the time of developing this solution, no suitable
+facility was available from TPTP for querying the execution history
+files.  Hence, a new ASF service named Model Query service was
+implemented to query execution history files.</p>
+
+<p>In our functional test
+automation solution design, AGR tests are executed using the ASF Test
+Execution service’s command-line interface.   Artifacts produced during
+the execution of the tests are semantically verified using a custom
+Model Verification Library, thereby confirming the successful execution
+of tests.  The execution history files resulting from the test execution
+are queried for results using the Model Query service that we
+implemented.  This Model Query service is invoked using a command-line
+interface/adapter that is provided by the service implementation.  The
+information obtained upon querying the execution histories is written to
+a log file for further use, although alternatively this information
+could be directly written to a database using another ASF service
+(referred to as database mutation service, in Figure 1).  The RMPTAS
+reads the log file and populates a database with the test results.</p>
+
+<p>While the above
+section provides an over view of the solution design, the next few
+sections describe the various components of the test automation solution
+design in some detail.</p>
+
+<h2><a name="_Toc154289793">Test Execution Service</a></h2>
+
+<p>As mentioned above, ASF provides a test execution
+service for the programmatic launch, execution and generation of test
+results.  With the test execution service, tests can be launched using a
+headless Eclipse from ant scripts, shell scripts and arbitrary
+programs.  Multiple tests can be run at the same time given enough
+memory on the executing machine (each service execution currently
+requires a separate Eclipse host instance).  Even if tests are running
+on remote machines using TPTP remote test execution features and
+deployment, the service consumer’s machine is the machine that runs the
+Eclipse host instances.</p>
+
+<p>Thus, in the design of
+our automatable functional and performance testing solution, functional
+tests are developed using AGR.  TPTP captures the developed test suites
+in instances of the TPTP Testing Profile model (serialized as compressed
+XMI in *.testsuite files).   The Test Execution Service provided by TPTP
+Automatable Service Framework (ASF) is used to execute the test suites
+using the command-line interface that the service implementation
+provides.</p>
+
+<h2><a name="_Toc154289794">Workspace Creator</a> Application</h2>
+
+<p>Upon attempting to use the ASF test execution
+service via the command-line interface/adapter one will quickly realize
+that one needs to provide the location of an Eclipse workspace
+containing the test suites as one of the arguments.    Thus we designed
+and implemented a workspace creator application (rich client platform
+application) that when given an Eclipse plug-in containing the test
+suites produces/creates an Eclipse workspace containing the test
+plug-in. This application also provides a command-line interface/adapter
+in order to facilitate easy invocation from within our test automation
+system.  Thus, RMPTAS gathers the plug-ins containing the test suites
+from source control, invokes the workspace creator to create Eclipse
+workspaces with the test plug-ins and then invokes the test execution
+service to execute the tests.  This is followed by a call to the model
+query service to query the test execution results (test execution
+history serialized as compressed XMI in *.execution files).</p>
+
+<h2><a name="_Toc154289795">Model Query Service</a></h2>
+
+<p>The execution of the test suites result in the
+creation of instances of TPTP Execution History model (serialized as
+compressed XMI in *.execution files).   Execution of one test suite
+produces one instance of the Execution History model.  We implemented an
+Execution History model query service that runs on the ASF to extract
+the required results from the Execution History model instances.   To
+enable the RMPTAS to use the service from the command line a
+command-line interface/adapter was implemented.  The model query service
+queries the Execution History and Testing Profile model instances to
+obtain all the required result items (see Appendix-A for details of TPTP
+data models).  The result items that are gathered from model instances
+include name of the test suite, names of test cases with in the test
+suite, test case verdicts – pass/fail/inconclusive and any messages
+(exception, stack traces&#133;etc) available from failed test cases.    The
+time taken by the system to execute each test case in a test suite can
+also be gathered from the Execution History model instances.  Presently,
+no other performance related parameters, such as memory consumed, are
+available in the Execution History model.  However, users can monitor
+the target host (Linux and Windows) using the TPTP monitoring tools.  It
+is understood that TPTP is working on integrating system monitoring with
+test execution. Also, there is a feature enhancement request on AGR to
+support gathering such values. When this feature enhancement is
+implemented one should be able to gather other performance related data
+from the Execution History model instances.</p>
+
+<p>As mentioned earlier, in the current design the
+results are written to a log file that is read by a database population
+utility that RMPTAS already has in place.  An alternative to the design
+would have been to use a database mutation service (based on ASF) to
+directly populate the results in a database.  However, the former was
+chosen in order to reuse some of the functionality that was already
+available within RMPTAS.</p>
+
+<h2><a name="_Toc154289796">Test Verification</a></h2>
+
+<p>Besides providing a mechanism to record and play
+back user interactions with the graphical user interface, AGR provides
+some basic test verification infrastructure.  With this infrastructure,
+users can ascertain simple things such as presence or absence of menu
+items using AGR verification-by-selection mechanism.  AGR also supports
+a &quot;verification hook&quot; based test verification mechanism.  To use this
+test verification mechanism a test developer typically inserts a
+verification point name during the test recording process (for a
+tutorial on AGR, please see [3]).  This verification point is captured
+as a JUnit method within a verification class associated with the test
+suite, which extends from the JUnit framework.</p>
+
+<p>The verification hook based verification
+mechanism is used in the present solution design to semantically verify
+the contents of the models produced during the execution of functional
+tests on IBM Rational Modeling tools, such as Rational Software
+Architect; using a custom Model Verification Library. This verification
+library has been designed such that it can be easily invoked from within
+the Java-hook methods with just a couple of lines of code.  Test case
+developers may use and contribute to this test verification library
+and/or write new verification libraries for their particular test
+verification needs.</p>
+
+<p>Here is an example to further substantiate the
+above.  In this example, a user action of creating a UML Class in a
+modeling project is recorded as an AGR test case.  The system creates a
+class named &quot;Class1&quot; by default. </p>
+
+<div class="figure"><img src="images/image002.jpg"><br>
+Figure 2: User gesture of recording the creation of a UML Class using AGR
+</div>
+
+<p>While Figure 2 shows the user gesture, Figure 3
+shows the XML script that is generated by AGR in the test case for this
+user action.   The reference to the verification hook method that was
+inserted during the test case recording may be seen in the XML macro
+associated with this test case (this is marked in red and bold in the
+script in Figure 3). This verification hook is invoked when the test
+case is executed.</p>
+
+<div class="figure" style="margin-left:10px;margin-right:10px">
+Figure 3: AGR test case XML macro for creating a UML Class
+	<div style="text-align:left">
+<pre>
+&lt;macro version="0.1" &gt;
+	&lt;shell descriptive="Modeling - ModelerClassDiagram..." 
+		id="org.eclipse.ui.internal.WorkbenchWindow" return-code="-1" &gt;
+		&lt;command descriptive="AModelingProject" type="item-select" 
+			contextId="view/org.eclipse.ui.navigator.ProjectExplorer" 
+			widgetId="org.eclipse.swt.widgets.Tree#{{/}}-{{1.0}}" &gt;
+			&lt;item path="org.eclipse.swt.widgets.TreeItem#{{/AModelingProject}}-{{1.0}}"/&gt;
+		&lt;/command&gt;
+		&lt;command type="focus" contextId="view/org.eclipse.ui.navigator.ProjectExplorer" 
+			widgetId="org.eclipse.swt.widgets.Composite#1" /&gt;
+		&lt;command descriptive="Package1" type="item-select" 
+			contextId="view/org.eclipse.ui.navigator.ProjectExplorer" 
+			widgetId="org.eclipse.swt.widgets.Tree#{{/}}-{{1.0}}" &gt;
+			&lt;item path="com.ibm.xtools.uml.navigator.ModelServerElement0|1||0||2|"/&gt;
+		&lt;/command&gt;
+		&lt;command descriptive="Class" type="select" 
+			contextId="popup/view/org.eclipse.ui.navigator.ProjectExplorer/org.eclipse.swt.widgets.Tree#{{/}}-{{1.0}}" 
+			widgetId="org.eclipse.ui.internal.PluginActionContributionItem#{{Add &amp;UML-&amp;Class}}-{{0.8}}{{0|7}}-{{0.6}}{{true}}-{{0.1}}{{30}}-{{0.1}}{{Ar&amp;tifact}}-{{0.2}}{{&amp;Component}}-{{0.2}}" &gt;
+			&lt;parent widgetId="com.ibm.xtools.modeler.ui.actions.AddUMLMenu"/&gt;
+		&lt;/command&gt;
+		<font color="red"><strong>&lt;command type="verification" 
+			contextId="view/org.eclipse.ui.navigator.ProjectExplorer" 
+			location="/com.ibm.xtools.test.automation.samples.all.agrtests/src" 
+			resource="com.ibm.xtools.test.automation.samples.all.agrtests.verify.ModelerClassDiagramVerifier" 
+			hook="verifyClassCreation:Qorg.eclipse.ui.IViewPart;"/&gt;</strong></font>
+		&lt;command type="wait" /&gt;
+	&lt;/shell&gt;
+&lt;/macro&gt;
+</pre>
+	</div>
+</div>
+<p>Figure 4 provides the details of the JUnit
+verification hook method.  With in this JUnit method, one may see the
+call being made to the custom model verification library –
+ModelVerifier, that is used to semantically verify and assert that a UML
+Class named &quot;Class1&quot; that was created during the test case execution is
+indeed present within a UML Model named &quot;Blank Model.emx&quot;.</p>
+
+
+
+<div class="figure"><img src="images/image003.gif">
+
+<br>Figure 4:  JUnit verification hook method
+associated with the AGR test case recording</div>
+
+<p>One may specify any number of verification points
+while recording a test case, although only one is specified in the above
+example.  If a test developer chooses to do more than one concrete
+action within a single test case, it may be beneficial to use multiple
+verification points with each one located within the test case
+immediately after the concrete action.  This will help in quick and easy
+debugging of any problems encountered during test case execution.</p>
+
+<p>The next section provides an over view of the
+work flow of how AGR test developers in the Rational Modeling Platform
+Team could contribute tests to be executed by RMPTAS.</p>
+
+<h1><a name="_Toc154289797">Test </a>Execution in RMPTAS</h1>
+
+<p>This section describes how developers and testers
+contribute tests to be run by the RMPTAS. A test organization similar to
+that specified in the AGR User Guide [3] will be followed while
+developing the functional tests.   In this test organization, a plug-in
+project (whose name ends with a &quot;.agrtests&quot;) holds both the AGR test
+suites and its verification code.  The test suites are contained within
+a folder named &quot;test-resources&quot; and the verification code is contained
+in a package within the &quot;src&quot; directory.   The &quot;test-resources&quot; folder
+may contain any number of test suites with a corresponding verification
+class containing its verification hook methods within the &quot;src&quot; folder. 
+An example of such a configuration may be found in Figure 5.</p>
+
+<div class="figure"><img src="images/image004.jpg"></br>
+Figure 5: Organization of AGR Based Functional and Performance Tests</div>
+
+<p>The simple steps that
+any functional test developer would need to follow for contributing
+tests to be executed by the RMPTAS are:</p>
+<ul>
+<li>Set up test
+development environment with AGR and Model Verification library (or any
+other verification library that is needed) and a standalone Agent
+Controller (although the IAC will suffice).</li>
+
+<li>Start the
+standalone Agent Controller.</li>
+
+<li>Create a
+plug-in project whose name ends with &quot;.agrtests&quot;.</li>
+
+<li>Create
+functional tests using AGR, Model verification library and any other
+custom verification libraries.</li>
+
+<li>Test developed functional tests in Quick and Standard modes to ensure that they execute
+properly.</li>
+
+<li>Submit code into source control.</li>
+</ul>
+
+<p>RMPTAS will
+automatically pick up the test plug-ins from source control, create
+entries in the database for any new tests found, execute the tests and
+gather results.</p>
+
+<h1>Some Known Issues with AGR</h1>
+
+<p>While AGR has become much more stable than when
+it was originally released as a Technology Preview item over a year ago,
+this section lists some of the presently known issues in AGR.  It may be
+worth noting that while the problems listed below were found with
+TPTP4.2.1 and 4.3, it is understood that some of the issues are slated
+to be resolved (or already resolved) in the current release of TPTP
+(TPTP 4.4). </p>
+
+<h3>Known Problems with AGR 4.2.1 and 4.3</h3>
+<ol>
+	<li>If the location of a widget is different
+	between the test development and test execution environments, the test
+	cases fail to execute on an &quot;item-select&quot; command.  The default
+	adaptive widget resolver must be robust and capable of dealing with
+	cases such as this (<a
+		href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=128271">https://bugs.eclipse.org/bugs/show_bug.cgi?id=128271</a>,
+	<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=163943">https://bugs.eclipse.org/bugs/show_bug.cgi?id=163943</a>). 
+	These defects have been addressed in TPTP4.3 AGR and TPTP4.4 AGR.  See
+	the section on AGR in Appendix-A for details on how AGR resolves items
+	in a tree.</li>
+
+<p>As an aside, it has
+been seen in the authors' experience, some test case developers, instead
+of creating test cases from scratch; tend to copy XML script from
+another similar test case in order to save time.  This not necessarily
+works all the time.  One of the reasons is that stated as a problem in
+item#1 above. That is, the index of the tree item that the test
+developer wants to work with in the new test case may not necessarily be
+the same as the item in the test case that was copied from.  Note:
+Initial trials with TPTP4.4 AGR indicate that more robust widget
+resolving mechanism has indeed been implemented and the problem stated
+in Item#1 seems to have been resolved.</p>
+
+	<li>A similar problem is encountered due to any
+	small change in the GUI, such as when index of an item changes in a
+	tree.  In the example below (see Figures 6, 7 &amp; 8), the index of
+	the Package element – &quot;Package1&quot; is different in the two cases.  As a
+	result, for example: when one tries to select  &quot;Package1&quot; and create a
+	UML Class element (using the test case script in Figure 3 above) within
+	it, one will quickly notice that the test (Figure 3) passes in one case
+	(Figure 6) but fails in the others (Figure 7 &amp; Figure 8).  AGR
+	needs to be fairly resilient to gracefully handle such simple changes
+	in the GUI.</li>
+
+<div class="figure"><img src="images/image005.gif"><br>
+Figure 6: Package Element &quot;Package1&quot; is
+the third element within Blank Model</div>
+
+<div class="figure"><img src="images/image006.jpg"><br>
+Figure 7: Package Element &quot;Package1&quot; is
+the first element within Blank Model</div>
+
+<div class="figure"><img src="images/image007.jpg"><br>
+Figure 8: Package Element &quot;Package1&quot; is
+the sixth element within Blank Model</div>
+
+
+	<li>Difference in the state of tree items makes
+	the test cases to fail.  For example: when a tree item is already open
+	during test case development, a test case developer may directly select
+	an item contained within the already open tree item.  Suppose, the
+	environment where the test is executed has that tree closed; then the
+	test case fails on an &quot;item-select&quot; command as it is unable to select
+	the item within the closed tree.  The default adaptive widget resolver
+	must be robust and capable of dealing with cases such as this (<a
+		href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=164197">https://bugs.eclipse.org/bugs/show_bug.cgi?id=164197</a>). 
+		This defect has been addressed in TPTP4.4 AGR.</li>
+
+
+
+<p>Workaround: A
+possible workaround solution is to always expand the parent item first
+and then select the child which you want to edit and modify it. Even in
+the case where the parent is already expanded, one can close the
+expansion and then re-expand the parent and the recording should play
+back successfully.</p>
+
+<p>As an aside, while it
+is understood that it is necessary to develop the test cases in an
+environment that is exactly the same as the one in which the test case
+will be executed, this is a very big constraint and often very difficult
+to maintain.</p>
+
+	<li>Inability to deal with unexpected pop-up
+	messages (such as &quot;capability enablement prompt&quot;, for example) that
+	does not appear on the development environment while the test case is
+	developed, however it appears on the runtime environment when the test
+	case is executed.  Since this is an unexpected dialog and has the
+	focus, the system does not know how to proceed further and fails during
+	test case execution (<a
+		href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=168754">https://bugs.eclipse.org/bugs/show_bug.cgi?id=168754</a>).
+	This defect has been slated to be addressed in TPTP4.4 AGR.</li>
+
+<p>Workaround: A possible
+work around for this issue is to enable all capabilities up front in a
+separate test case before the actual tests.</p>
+
+	<li>The difference in the name of menu items
+	between platforms (Linux and Windows) renders AGR test cases
+	non-portable from one platform to another.  For example: &quot;File &gt; New&quot; on Windows has a different
+	order of shortcut keys compared to that on Linux.  Due to this reason,
+	the test cases developed on one platform do not necessarily execute on
+	the other platform (<a
+		href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=170375">https://bugs.eclipse.org/bugs/show_bug.cgi?id=170375</a> 
+	and <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=159725">https://bugs.eclipse.org/bugs/show_bug.cgi?id=159725</a>).  
+	The former defect has been slated to be addressed by TPTP in
+	TPTP4.4 AGR.</li>
+
+	<li>AGR does not provide a mechanism for listening
+	to events from user interactions with native dialogs.  An example of a
+	native dialog is the file dialog that appears when users click on a
+	browse button (<a
+		href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=164192">https://bugs.eclipse.org/bugs/show_bug.cgi?id=164192</a>). 
+	A target date for a fix to this problem has not yet been decided.</li>
+
+	<li>In order to minimize test recorder’s
+	sensitivity to UI changes, a feature called &quot;Object Mine&quot; was recently
+	introduced.  This feature helps keep the test macro modifications to a
+	minimum when widget IDs need to be changed.  (<a
+		href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=144763">https://bugs.eclipse.org/bugs/show_bug.cgi?id=144763</a>
+	).  This feature enhancement was introduced in TPTP4.3 AGR</li>
+
+<p>Note: With the
+object mine feature enabled, a test developer needs to be cautious to
+not take short cuts such as copy/paste test cases when recording a test
+case that is similar to one that was recorded earlier (for example:
+recording the creation of a UML Class versus the creation of a UML
+Interface in Rational Software Architect). When the object mine
+feature is enabled, some of the common information gets captured in the
+object mine and thus copying just the information from one test case
+macro to another will not always work correctly.  To avoid any problems,
+it was found best not to follow any such short cuts, but rather generate
+all test cases with appropriate user gestures.</p>
+
+	<li>Very often developers develop new Eclipse
+	plug-ins and AGR test plug-ins containing test cases that test the new
+	features provided by the new plug-ins in the same workspace.  In such a
+	case, the run-time environment that is launched on executing the AGR
+	tests does not contain the features provided by the new plug-in
+	contained in the development workspace.  AGR needs to make it easier
+	for users to run AGR test suites against plug-ins that are included in
+	the workspace. (<a
+		href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=165526">https://bugs.eclipse.org/bugs/show_bug.cgi?id=165526</a>).  
+		A target date for a fix to this problem has not yet been decided.</li>
+</ol>
+
+<h3>AGR Feature Enhancements:</h3>
+
+<ol>
+
+<li>AGR
+presently does not support GEF based recording/replay (<a
+	href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=133099">Bug 133099</a>
+).  This feature enhancement work is in progress.</li>
+
+<li>AGR
+presently does not support drag/drop (<a
+	href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=148184"> Bug148184</a>
+).  This feature enhancement work is in progress.</li>
+
+<li>Enable
+automated performance testing of Eclipse applications using the
+Automated GUI Recorder (<a
+	href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=134747">Bug 134747</a>
+). This feature enhancement has not yet been targeted to any TPTP
+release.</li>
+
+<li>Inability
+to create a TPTP test suite containing different types of TPTP tests –
+such as a mixture of  TPTP AGR tests, TPTP JUnit tests, TPTP Manual
+tests&#133; etc. (<a
+	href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=123277">Bug 123277</a>). 
+	This feature enhancement has not yet been targeted to any TPTP
+release.</li>
+</ol>
+
+<h2><a name="_Toc154289798">Concluding Remarks</a></h2>
+
+<p>At the time of writing
+this paper, AGR is still a Technology Preview feature and has a few
+issues that need to be fixed, but is seen to have a very strong
+potential for being used as a reliable tool for functional testing of
+Eclipse based applications. Work is underway to provide GEF support in
+order to provide a complete automated testing environment.  Initial
+trials with TPTP4.4 AGR indicate that several of the problems listed in
+the &quot;Some Known Issues with AGR&quot; section may have been resolved.  Thus,
+an update to this article will be issued soon after TPTP4.4 GA.</p>
+
+<p>Users/extenders interested in getting involved with the TPTP project may find the information at the following URLs useful.  
+&quot;Building on TPTP&quot;:  <a href="http://www.eclipse.org/tptp/home/project_info/general/buildon.html">http://www.eclipse.org/tptp/home/project_info/general/buildon.html</a> .  
+&quot;Contributing to TPTP&quot;: <a
+	href="http://www.eclipse.org/tptp/home/project_info/general/contribute_or_feedback.html">http://www.eclipse.org/tptp/home/project_info/general/contribute_or_feedback.html</a></p>
+
+
+<h2><a name="_Toc154289799">Acknowledgements</a></h2>
+
+<p>The authors wish to
+thank Daniel Leroux, Yves Grenier, David Lander, Ali Mehregani, Scott
+Schneider, Paul Slauenwhite, Joseph P Toomey, Christian Damus, Duc Luu
+and Tao Weng.</p>
+
+<h2><a name="_Toc154289800">Background on the authors</a></h2>
+
+<p>Govin Varadarajan
+joined IBM in 2003 with over 5 years of work experience in the software
+industry developing network management and automated resource
+management/provisioning software solutions.  His responsibilities with
+the IBM Rational Modeling Division include development of test
+automation solutions, assessing and reporting on the quality of modeling
+products. He has a Masters degree in Computer Science from Queens’
+University and two other Masters degrees in the fields of Aerospace and
+Civil Engineering besides a Bachelor degree in Civil Engineering. </p>
+
+<p>Kim Letkeman joined
+IBM in 2003 with 24 years in large financial and telecommunications
+systems development. He is the development lead for the Rational
+Modeling Platform team.</p>
+
+<h2><a name="_Toc154289801">References</a></h2>
+
+<p>[1] Anon, &quot;Eclipse Test &amp; Performance Tools
+Platform Project (TPTP)&quot;, <a href="http://www.eclipse.org/tptp">http://www.eclipse.org/tptp</a></p>
+
+
+
+<p>[2] Anon, &quot;Technology Preview: Automated GUI
+Recording&quot;, <a
+	href="http://www.eclipse.org/tptp/home/downloads/downloads.php">http://www.eclipse.org/tptp/home/downloads/downloads.php</a></p>
+
+
+
+<p>[3] Anon, &quot;TPTP AGR User Guide&quot;,</p>
+
+<p><a
+	href="http://www.eclipse.org/tptp/test/documents/userguides/Intro-Auto-GUI-4-2-0.html">http://www.eclipse.org/tptp/test/documents/userguides/Intro-Auto-GUI-4-2-0.html</a></p>
+
+<p><a
+	href="http://www.eclipse.org/tptp/test/documents/userguides/Intro-Auto-GUI-4-3-0.html">http://www.eclipse.org/tptp/test/documents/userguides/Intro-Auto-GUI-4-3-0.html</a></p>
+
+
+
+<p>[4] Chan, E and Nagarajan, G, &quot;Profile your Java
+application using the Eclipse Test and Performance Tools Platform
+(TPTP)&quot;, EclipseCon 2006, <a
+	href="http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial">http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial</a></p>
+
+
+
+<p>[5] Yves Grenier, David Lander and Govin
+Varadarajan, &quot;Rational Modeling Platform Test Automation System&quot;, IBM
+Ottawa Lab.</p>
+
+
+
+<p>[6] Kaylor, A, &quot;The Eclipse Test and Performance
+Tools Platform&quot;, Dr. Dobb’s Portal, <a
+	href="http://www.ddj.com/184406283">http://www.ddj.com/dept/opensource/184406283</a></p>
+
+
+
+<p>[7] Schneider, S.E and Toomey, J, &quot;Achieving
+Continuous Integration with the Eclipse Test and Performance Tools
+Platform (TPTP):  Using TPTP Automatable Services to continually test
+and report on the health of your system&quot;, EclipseCon 2006, <a
+	href="http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial">http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial</a></p>
+
+
+
+<p>[8] Slauenwhite, P, &quot;Testing Applications Using
+the Eclipse Test and Performance Tools Platform (TPTP)&quot;, EclipseCon
+2006, <a
+	href="http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial">http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial</a></p>
+
+
+
+<p>[9] Slauenwhite, P, &quot;Problem Determination of
+J2EE Web Applications Using the Eclipse Test and Performance Tools
+Platform (TPTP)&quot;, EclipseCon 2006, <a
+	href="http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial">http://www.eclipsecon.org/2006/Sub.do?id=all&amp;type=tutorial</a></p>
+
+
+
+<h1><a name="_Toc154289803">Appendix A: Technology in the
+Functional Test Automation </a>Solution</h1>
+
+<p>This section provides
+background information on the technologies used within the functional
+test automation solution.</p>
+
+<h2><a name="_Toc154289804">TPTP</a></h2>
+
+<p>In 2004, the Eclipse Tools project named Hyades
+was promoted to an Eclipse Project and renamed &quot;Eclipse Test &amp;
+Performance Tools Platform Project (TPTP)&quot;. TPTP is an Open-source platform for Automated Software Quality
+tools including reference implementations for testing, tracing and
+monitoring software systems.   It addresses the entire test and
+performance life cycle, from early testing to production application
+monitoring, including test editing and execution, monitoring, tracing,
+profiling, and log analysis capabilities.<b> </b>The platform is
+designed to facilitate integration with tools used in the different
+processes of a software lifecycle under an Eclipse environment [1].  </p>
+
+
+
+<p>TPTP defines four sub projects – Platform,
+Testing Tools, Trace &amp; Profiling and Monitoring.  The sub-project
+that is most relevant to this paper is the Testing Tools sub-project.
+This sub-project extends the TPTP Platform and provides a common
+framework for testing tools thereby integrating disparate test types and
+execution environments.  It includes test tool reference implementations
+for Manual testing, JUnit and JUnit Plug-in testing, URL testing and
+Automated GUI Recording/Playback. <a name="OLE_LINK1">[1]. </a>The TPTP
+platform shares data through OMG-defined models.   These models are
+described in the next section.</p>
+
+<h2><a name="_Toc154289805">TPTP Data Models</a></h2>
+
+<p>TPTP implements four core EMF data models –
+Trace, Log, Statistical and Test.  These models are used as an
+integration point within TPTP. The TPTP User Interface and Execution
+Environment are built on these data models.  Model loaders consuming
+structured XML fragments originating from a variety of sources [4, 7, 8
+and 9] populate these models.</p>
+
+
+
+<p>The model that is most relevant for this paper is
+the Test model.  So, only this model will be described in some detail. 
+The Test model consists of Testing Profile (see Figure 9), Behavioral
+and Execution History data models (see Figure 10).   The Testing Profile
+data model provides a reference implementation of the UML2 Test
+Profile’s standalone MetaObject Facility model (UML2TP MOF).   UML2TP
+MOF provides a definition model for the creation, definition and
+management of test artifacts such as Test suites, Test cases and
+Datapools.   The Behavioral model implements the UML2 interactions
+meta-model.  This model is used for defining the behavior of test suites
+such as loops, invocations and synchronization.  The Execution History
+is a model for the creation, definition, management and persistence of
+test executions over time.   The execution of a test suite results in
+the creation of an execution history.  Execution History models include
+information about the tests that were deployed and executed, information
+about where it was executed (locations), verdicts, attachments, messages
+and console output from test executions. </p>
+
+
+
+<div class="figure"><img src="images/image008.jpg"><br>
+Figure 9: UML diagram of Testing Profile model (from [7])</div>
+
+<div class="figure"><img src="images/image009.jpg"><br>
+Figure 10: UML diagram of Execution History model (from [7])</div>
+
+<h2><a name="_Toc154289806">TPTP Agent Controller</a></h2>
+
+<p>By feeding data into the models described in the
+above section, tools open up possibilities for interaction with editors
+and viewers that are designed around these models.  The data models are
+supported by a common framework for accessing data-collection and
+test-execution agents.  In the context of TPTP, an &quot;agent&quot; is defined as
+a logical object that exposes services through the TPTP Agent
+Controller.  In TPTP, these agents run in a separate process from the
+Agent Controller (though multiple agents can exist within a single
+process). </p>
+
+
+
+<p>TPTP provides a client library that manages
+communications with an Agent Controller that can be running locally or
+on a remote system.  The Agent Controller is a process (daemon on UNIX
+and service on Windows) that resides on each deployment host and
+provides the mechanism by which client applications can either launch
+new host processes, or attach to agents that coexist within existing
+host processes. The client can reside on the same host as the Agent
+Controller, or it can be remote.  The test assets are deployed to the
+remote machine using the Agent Controller’s file transfer service. The
+Agent Controller provides a server that has the capability to launch and
+manage local or remote applications from a local TPTP workbench.  The
+Agent Controller manages access to and control of agents running on the
+target system. </p>
+
+
+
+<p>The Agent controller may be run as a stand-alone
+server/service to deploy and execute tests either locally or remotely. 
+TPTP workbench also provides a feature called the Integrated Agent
+Controller (IAC) that is used to launch tests locally from the TPTP
+workbench.   The biggest benefit of having Integrated Agent Controller
+is the simplification in the usage of TPTP functionalities in the local
+scenario by removing the dependencies on the local Agent Controller. For
+example: there is no need to install and configure the local Agent
+Controller when launching tests locally from the TPTP workbench.   IAC
+provides the entry-level functionalities of the standalone Agent
+Controller.&nbsp; To get the full functionalities, the standalone Agent
+Controller is still the way to go.  IAC is packaged in the TPTP Platform
+Runtime install image and therefore no separate install step is
+required.&nbsp; The Integrated Agent Controller does not require any
+configuration, but the user can configure it in the preferences page. 
+Unlike the stand-alone Agent Controller which requires the user to enter
+information such as the path for the Java executable, the IAC will
+determine the required information from Eclipse workbench during
+startup.</p>
+
+
+
+<h2><a name="_Toc154289807">TPTP Automated GUI Record</a>er</h2>
+
+<p>TPTP Automated GUI Recorder (AGR) allows users to
+record and playback user interactions under the Eclipse platform. The
+purpose of the feature is to allow users to automate functional test
+cases for applications developed under the Eclipse environment.   This
+section will only provide a quick overview of the AGR feature since a
+well-written user guide for the same may be found on the TPTP web site
+[3].   </p>
+
+
+
+<p>During the test case recording phase, AGR
+captures the user gestures as XML based scripts. The so recorded script
+is replayed when the test case is executed.   AGR provides a simple
+&quot;VCR-type&quot; interface to record test cases.   The recorded test cases may
+be executed either in Quick mode or Standard Mode.  In Quick mode, the
+tests are executed in the test development workbench.  This is typically
+used to quickly verify that a test case was properly recorded.  In the
+Standard mode the test cases are run on a run-time workbench using a
+launch configuration. </p>
+
+
+
+<p>AGR supports two types of test verification
+mechanisms – verification by selection and verification via
+&quot;verification-hook&quot; defined within a verification class that extends
+from JUnit framework.  Verification by selection is typically used for
+simple verification tasks such as ensuring the presence of a menu item. 
+The idea behind this method of verification is that if the system is
+able to select an item, then it means that the item exists.   
+Verification by verification-hook is a mechanism that uses a method
+(hook) in a JUnit based verification class to provide the verification
+functionality.  The support for verification-hook based verification
+basically opens the door to the use of different verification libraries
+that users may implement. On the test case recording interface, the test
+case developer provides the name of the verification hook method that
+will be used to verify the test case execution.</p>
+
+<p>Once the test cases are defined, the user needs
+to define a behavior that specifies how the test cases are to be
+executed.  A behavior typically includes invocations and loops.  TPTP
+supports both local and remote deployment and execution of tests.  If
+the tests are to be executed remotely the user has to define the remote
+context for the test suite execution.  Defining a context for test suite
+execution typically requires the user to create a deployment specifying
+what needs to be executed (the artifact containing the test suite and
+possible datapool) and where it needs to be executed (the location).  If
+such a deployment is not created, the default is local execution. </p>
+
+
+
+<p>In order to minimize test recorder’s sensitivity
+to UI changes, an optional feature that may be enabled while recording
+an AGR test case called &quot;Object Mine&quot; was introduced in TPTP 4.3 AGR. 
+This feature helps keep the test macro modifications to a minimum when
+widget IDs need to be changed.  However, as mentioned in the &quot;known
+problems&quot; section some problems may result when a test case developer
+tries to copy/paste test macros with Object Mine feature enabled.</p>
+
+
+
+<p>As explained in the section entitled &quot;Widget
+Resolving Mechanism&quot; of the AGR User Guide [3], AGR resolves widgets
+based on a number of properties that are defined on the widget.  These
+properties are specified in an XML file named &quot;widgetReg.xml&quot; that is
+typically located at
+&quot;&lt;ECLIPSE-HOME&gt;/plugins/org.eclipse.tptp.test.auto.gui/auto-gui/&quot;. 
+This file is read by AGR’s default widget resolver mechanism – adaptive
+widget resolver, to determine how a particular widget is to be
+resolved.  A weight attribute associated with each of the widget
+property indicates how well it identifies the widget.   During widget
+resolution time AGR determines the correct widget by matching the
+cumulative weight of a widget against the &quot;maxThreshold&quot; attribute value
+provided in the widgetReg.xml file against the appropriate widget
+class.   If widgetReg.xml does not contain any details for the widget in
+question, then default values are used for widget resolution.  AGR also
+supports a user-defined widget resolving mechanism.  It provides an
+extension point that allows clients to register their own personal
+widget resolvers. </p>
+
+
+
+<p>It was noticed that the default widget resolution
+support provided in TPTP4.2.0/TPTP4.2.1/TPTP4.2.2 and TPTP4.3 were
+insufficient and resulted in problem situations as described in the
+&quot;Known Issues&quot; section.  However, initial trials with TPTP4.4 AGR
+indicate that such issues have been fixed.  The TPTP AGR feature is
+presently a Technology Preview item [2].    At the time of writing this
+paper, some suggestions have been made for making TPTP AGR feature more
+robust and are being implemented.  RCP support is impending.</p>
+
+
+
+<h2><a name="_Toc154289808">TPTP Automatable Service Framework</a></h2>
+
+<p>TPTP provides an Automatable Service Framework
+(ASF) that features support for the provision and consumption of Eclipse
+hosted TPTP services from disparate environments.  Given that these
+services are fundamentally black-box components that publish themselves
+via extensions (with an associated specification of supported properties
+and a behavioral contract) it is possible to create a new service
+provider implementing the same service.  This implementation approach
+allows for a loose and dynamic binding between the service consumer and
+service provider. Users can develop automation client adapters that
+adapt new service consumer paradigms into the standard automation client
+interfaces provided in TPTP. Thus, using the ASF it is possible to take
+a program functionality that is typically limited to running inside of
+an isolated Eclipse instance and expose it publicly to consumers outside
+of the Eclipse environment by wrapping it with TPTP automatable service
+abstractions [7].</p>
+
+
+
+<p>At the time of writing this paper, TPTP provides
+a Test Execution service and various client adapters (Java, CLI and Ant)
+to invoke the service.  It also provides very rudimentary
+implementations of services for interpreting Test Execution History
+models and for publishing test results.</p>
+
+</div>
+
+</body>
+
+</html>
