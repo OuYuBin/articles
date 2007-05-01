@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Simple Image Effects for SWT</title>
+<meta http-equiv="Content-Type"
+	content="text/html; charset=windows-1252">
+<link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<h1>Simple Image Effects for SWT</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>This article explores simple emboss, blur, glow, and drop
+shadow algorithms that can be applied to images in SWT.</p>
+<div class="author">By Nicholas Rajendram, IBM Canada</div>
+<div class="copyright">Copyright &copy; 2007 IBM Canada.</div>
+<div class="date">April 20, 2007</div>
+</div>
+
+<div class="content">
+<h2>Introduction</h2>
+<p>This article discusses four image effect algorithms that I explored
+as part of my co-op work term on IBM's Eclipse SWT team. 
+Implementations of a simple emboss, blur, glow, and drop shadow are 
+included along with ideas for future improvements. My primary focus has
+been on exploring basic algorithms for these effects.</p>
+<h2>Emboss Algorithm</h2>
+<p>The simplest graphical effect to explore is embossing, which gives images
+a molded or chiseled appearance [1]. The algorithm entails comparing 
+the intensity of each pixel in an image to one or more of its neighbors.
+The red, green, and blue intensity components of a pixel are compared 
+separately, and the largest difference found is used to determine the 
+intensity of gray the resulting embossed pixel will display. An algorithm
+may compare each pixel with a neighbor to its left, right, top, bottom,
+or diagonal, or even a nearby pixel that is not adjacent at all.</p>
+<h3>Implementation</h3>
+<p>Testing revealed that choosing a comparison pixel that was not directly
+adjacent to the original pixel created the best embossed appearance.
+This implementation of emboss compares a pixel to its neighbor one row
+below and two columns to the left. Difficulties arise by following this
+approach because the first two columns and last row do not have comparison
+pixels. To solve the problem, these areas use a different comparison
+direction.</p>
+<div class="container">
+	<table width="700">
+	<tr>
+	  <td><img src="images/emboss.jpg"><br>Original Image</td>
+	  <td><img src="images/emboss_125.jpg"><br>Emboss: Gray level 125</td>
+	  <td><img src="images/emboss_0.jpg"><br>Emboss: Gray level 0</td>
+	</tr>	
+	</table>
+</div>
+<h3>Future Improvements</h3>
+<p>In the future, the comparison direction and distance should be
+configurable to allow for a more customizable emboss. In addition, the
+embossed results should be more three-dimensional in appearance, as
+they are in graphics packages like GIMP.</p>
+<h2>Average Blur Algorithm</h2>
+<p>Several types of blur filters exist such as Gaussian blur, average blur,
+and motion blur. The average blur algorithm is explored here because of its
+ fast run time and simple implementation. Similar to embossing, average 
+blurring is an area filter —that is, a filtered pixel is based on both the
+ original and its surrounding pixels [2]. Average blur is achieved by 
+averaging a pixel's RGB intensities with the intensities of surrounding 
+pixels within a certain square radius [2].</p>
+<h3>Implementation</h3>
+<p>Repeated calculations can be eliminated by performing the average blur
+in two separate stages: a horizontal blur and then a vertical blur [3]. 
+SWT's direct palette API supports retrieving an entire row of pixel data at
+once, but not an entire column. As a result, the implementation simultaneously
+performs a vertical blur on all columns of a row rather than all rows of a
+column. This approach improves overall performance and space complexity by 
+reducing the number of rows which must be cached during the vertical blurring 
+stage.</p>
+<div class="container">
+	<table width="800">
+	<tr>
+	  <td><img src="images/blur.jpg"><br>Original Image</td>
+	  <td><img src="images/blur_3.jpg"><br>Blur: Radius 3</td>
+	  <td><img src="images/blur_10.jpg"><br>Blur: Radius 10</td>
+	</tr>	
+	</table>
+</div>
+<h3>Future Improvements</h3>
+<p>Average blur can be improved, at the expense of performance, by
+considering a circular radius of neighboring pixels when blurring instead
+of a square radius. This alteration would help eliminate horizontal and 
+vertical artifacts that can become apparent in blurred images, especially if
+they include borders [2]. Such a change introduces many new code
+complexities because the blur cannot be completed in one averaging pass per
+direction. 
+<h2>Glow Algorithm</h2>
+<p>In order to create a glowing visual effect in SWT, I created my own custom
+algorithm. 
+Glow can be achieved by creating a solid border around an image, then
+ using alpha 
+blending to diffuse the border from opaque to transparent. </p>
+<h3>Implementation</h3>
+<p>My glow implementation is designed to create a glow around a rectangular image.
+First, a solid rectangular border is created around the image. The border's alpha
+values 
+are set based on a linear function of distance from the internal rectangle's
+perimeter. 
+In order to prevent the glow from becoming transparent too quickly, and
+to better highlight
+ the image, I introduced a highlight radius which creates a more
+opaque border 
+directly surrounding the image. 
+</p>
+<div class="container">
+	<table width="700">
+	<tr>
+	  <td><img src="images/glow.jpg"><br>Original Image</td>
+	  <td><img src="images/glow_15.jpg"><br>Glow: Radius 15</td>
+	  <td><img src="images/glow_30.jpg"><br>Glow: Radius 30</td>
+	</tr>	
+	</table>
+</div>
+<h3>Future Improvements</h3>
+<p>My implementation of glow could be improved by supporting shapes other than rectangles.</p>
+<h2>Drop Shadow Algorithm</h2>
+<p>A drop shadow is simply a specialized glow. By altering the glow algorithm to only glow on
+
+two sides, and with slightly altered dimensions, a drop shadow effect can be achieved.</p>
+<h3>Implementation</h3>
+<div class="container">
+	<table width="750">
+	<tr>
+	  <td style="vertical-align:top"><img src="images/dropshadow.jpg"><br><div style="caption"><b>Original Image</b></div></td>
+	  <td style="vertical-align:top"><img src="images/dropshadow_10.jpg"><br>Drop Shadow: Radius 10</td>
+	  <td style="vertical-align:top"><img src="images/dropshadow_20.jpg"><br>Drop Shadow: Radius 20</td>
+	</tr>	
+	</table>
+</div>
+<h3>Future Improvements</h3>
+<p>Like the glow algorithm, drop shadow can be improved by supporting shapes other than rectangles.
+
+Once glow is altered to support shapes, an implementation for drop shadow should easily follow. 
+In 
+addition, the direction of the drop shadow should be configurable.
+</p>
+<h2>Summary</h2>
+<p>The implementations of these four algorithms can be built upon and eventually used to provide
+
+advanced graphical effects for SWT. They should allow for more customization and display seamlessly
+
+on or around any shape. In addition, the original transparency information of images should be
+considered when applying image effects.
+</p>
+<h2 id="source">Source Code and Effects Tool</h2>
+<p>Source code for each effect algorithm is
+included in the following package, along with source for
+a GUI test application.</p>
+<h3><a href="imageEffects.zip">Download Source (zip)</a></h3>
+<br>
+<table width="700">
+	<tr>
+  	  <td><img src="images/screenshot.jpg"><br>Image Effects GUI</td>
+	</tr>	
+</table>
+<h2>Acknowledgements</h2>
+<p>I would like to thank the entire SWT team for creating a fun, easygoing work environment, with 
+special thanks to my
+mentor, Bogdan Gheorghe, for his ongoing support, encouragement, and patience. 
+My success (and this article) 
+would not be possible without his direction.
+</p>
+<h2>References</h2>
+<pre>[1] Java Tech: Image Embossing: http://today.java.net/pub/a/today/2005/12/08/image-embossing.html
+[2] Filter: Blur: http://www.jasonwaltman.com/thesis/filter-blur.html
+[3] Blur: http://www.blackpawn.com/texts/blur/default.html
+</pre>
+</body>
+</html>
