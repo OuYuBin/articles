@@ -1,0 +1,387 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html><head>
+<title></title>
+  <style type="text/css">
+    <!--code { font-family: Courier New, Courier; font-size: 10pt; margin: 0px; }-->
+  </style>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head><body>
+
+
+<!-- ======================================================== -->
+<!-- = Java Sourcecode to HTML automatically converted code = -->
+<!-- =   Java2Html Converter 5.0 [2006-02-26] by Markus Gebhard  markus@jave.de   = -->
+<!-- =     Further information: http://www.java2html.de     = -->
+<div align="left" class="java">
+<table border="0" cellpadding="3" cellspacing="0" bgcolor="#ffffff">
+   <tr>
+  <!-- start source code -->
+   <td nowrap="nowrap" valign="top" align="left">
+    <code>
+<font color="#7f0055"><b>package&nbsp;</b></font><font color="#000000">oclastview.visitors.arithSimp;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">java.util.Collection;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">java.util.List;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EClass;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EClassifier;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EEnumLiteral;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EObject;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EOperation;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EPackage;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EParameter;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EStructuralFeature;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.util.EcoreUtil;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.Environment;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.CallOperationAction;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.Constraint;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.EcoreEnvironmentFactory;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.SendSignalAction;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.AssociationClassCallExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.BooleanLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.CollectionItem;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.CollectionLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.CollectionLiteralPart;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.CollectionRange;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.EnumLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.IfExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.IntegerLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.InvalidLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.IterateExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.IteratorExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.LetExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.MessageExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.NullLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.OCLExpression;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.OperationCallExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.PropertyCallExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.RealLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.StateExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.StringLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.TupleLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.TupleLiteralPart;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.TypeExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.UnlimitedNaturalLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.Variable;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.utilities.AbstractVisitor;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.utilities.ExpressionInOCL;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.utilities.UMLReflection;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.utilities.Visitable;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Class;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Classifier;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.EnumerationLiteral;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Operation;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Package;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Parameter;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Property;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.State;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.ValueSpecification;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#7f0055"><b>public&nbsp;class&nbsp;</b></font><font color="#000000">OCLCloner&lt;C,&nbsp;O,&nbsp;P,&nbsp;EL,&nbsp;PM,&nbsp;S,&nbsp;COA,&nbsp;SSA,&nbsp;CT&gt;&nbsp;</font><font color="#7f0055"><b>extends</b></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">AbstractVisitor&lt;Visitable,&nbsp;C,&nbsp;O,&nbsp;P,&nbsp;EL,&nbsp;PM,&nbsp;S,&nbsp;COA,&nbsp;SSA,&nbsp;CT&gt;&nbsp;</font><font color="#000000">{</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">Environment&lt;?,&nbsp;C,&nbsp;O,&nbsp;P,&nbsp;EL,&nbsp;PM,&nbsp;S,&nbsp;COA,&nbsp;SSA,&nbsp;CT,&nbsp;?,&nbsp;?&gt;&nbsp;_env&nbsp;=&nbsp;</font><font color="#7f0055"><b>null</b></font><font color="#000000">;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;static&nbsp;</b></font><font color="#000000">OCLCloner&lt;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint&gt;&nbsp;getEcoreVersion</font><font color="#000000">()&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Environment&lt;EPackage,&nbsp;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint,&nbsp;EClass,&nbsp;EObject&gt;&nbsp;auxEnv&nbsp;=&nbsp;EcoreEnvironmentFactory.INSTANCE</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.createEnvironment</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLCloner&lt;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#7f0055"><b>new&nbsp;</b></font><font color="#000000">OCLCloner&lt;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint&gt;</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">auxEnv</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;static&nbsp;</b></font><font color="#000000">OCLCloner&lt;Classifier,&nbsp;Operation,&nbsp;Property,&nbsp;EnumerationLiteral,&nbsp;Parameter,&nbsp;State,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;org.eclipse.uml2.uml.Constraint&gt;&nbsp;getUML2Version</font><font color="#000000">()&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">org.eclipse.ocl.uml.OCL&nbsp;umlocl&nbsp;=&nbsp;org.eclipse.ocl.uml.OCL.newInstance</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Environment&lt;Package,&nbsp;Classifier,&nbsp;Operation,&nbsp;Property,&nbsp;EnumerationLiteral,&nbsp;Parameter,&nbsp;State,&nbsp;org.eclipse.uml2.uml.CallOperationAction,&nbsp;org.eclipse.uml2.uml.SendSignalAction,&nbsp;org.eclipse.uml2.uml.Constraint,&nbsp;Class,&nbsp;EObject&gt;&nbsp;auxEnv&nbsp;=&nbsp;umlocl</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.getEnvironment</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLCloner&lt;Classifier,&nbsp;Operation,&nbsp;Property,&nbsp;EnumerationLiteral,&nbsp;Parameter,&nbsp;State,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;org.eclipse.uml2.uml.Constraint&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#7f0055"><b>new&nbsp;</b></font><font color="#000000">OCLCloner</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">auxEnv</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>private&nbsp;final&nbsp;</b></font><font color="#000000">UMLReflection&lt;?,&nbsp;C,&nbsp;O,&nbsp;P,&nbsp;EL,&nbsp;PM,&nbsp;S,&nbsp;COA,&nbsp;SSA,&nbsp;CT&gt;&nbsp;uml;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#3f5fbf">/**</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;Initializes&nbsp;me&nbsp;with&nbsp;my&nbsp;environment.</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><font color="#7f9fbf">@param&nbsp;</font><font color="#3f5fbf">env</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;environment</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*/</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">OCLCloner</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Environment&lt;?,&nbsp;C,&nbsp;O,&nbsp;P,&nbsp;EL,&nbsp;PM,&nbsp;S,&nbsp;COA,&nbsp;SSA,&nbsp;CT,&nbsp;?,&nbsp;?&gt;&nbsp;env</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">_env&nbsp;=&nbsp;env;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>this</b></font><font color="#000000">.uml&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">env&nbsp;==&nbsp;</font><font color="#7f0055"><b>null</b></font><font color="#000000">)&nbsp;</font><font color="#000000">?&nbsp;</font><font color="#7f0055"><b>null&nbsp;</b></font><font color="#000000">:&nbsp;env.getUMLReflection</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">TypeExp&lt;C&gt;&nbsp;visitTypeExp</font><font color="#000000">(</font><font color="#000000">TypeExp&lt;C&gt;&nbsp;t</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">TypeExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">TypeExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">t</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;&nbsp;visitVariable</font><font color="#000000">(</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;&nbsp;variable</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">variable</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">StateExp&lt;C,&nbsp;S&gt;&nbsp;visitStateExp</font><font color="#000000">(</font><font color="#000000">StateExp&lt;C,&nbsp;S&gt;&nbsp;stateExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">StateExp&lt;C,&nbsp;S&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">StateExp&lt;C,&nbsp;S&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">stateExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">IntegerLiteralExp&lt;C&gt;&nbsp;visitIntegerLiteralExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">IntegerLiteralExp&lt;C&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">IntegerLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">IntegerLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">RealLiteralExp&lt;C&gt;&nbsp;visitRealLiteralExp</font><font color="#000000">(</font><font color="#000000">RealLiteralExp&lt;C&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">RealLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">RealLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">StringLiteralExp&lt;C&gt;&nbsp;visitStringLiteralExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">StringLiteralExp&lt;C&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">StringLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">StringLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">BooleanLiteralExp&lt;C&gt;&nbsp;visitBooleanLiteralExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">BooleanLiteralExp&lt;C&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">BooleanLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">BooleanLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">NullLiteralExp&lt;C&gt;&nbsp;visitNullLiteralExp</font><font color="#000000">(</font><font color="#000000">NullLiteralExp&lt;C&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">NullLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">NullLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">InvalidLiteralExp&lt;C&gt;&nbsp;visitInvalidLiteralExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">InvalidLiteralExp&lt;C&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">InvalidLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">InvalidLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">EnumLiteralExp&lt;C,&nbsp;EL&gt;&nbsp;visitEnumLiteralExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">EnumLiteralExp&lt;C,&nbsp;EL&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">EnumLiteralExp&lt;C,&nbsp;EL&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">EnumLiteralExp&lt;C,&nbsp;EL&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;</b></font><font color="#000000">UnlimitedNaturalLiteralExp&lt;C&gt;&nbsp;visitUnlimitedNaturalLiteralExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">UnlimitedNaturalLiteralExp&lt;C&gt;&nbsp;literalExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">UnlimitedNaturalLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">UnlimitedNaturalLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#3f7f5f">//&nbsp;handlers</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleAssociationClassCallExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">AssociationClassCallExp&lt;C,&nbsp;P&gt;&nbsp;callExp,&nbsp;Visitable&nbsp;sourceResult,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">List&lt;Visitable&gt;&nbsp;qualifierResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">AssociationClassCallExp&lt;C,&nbsp;P&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">AssociationClassCallExp&lt;C,&nbsp;P&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">callExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setSource</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">sourceResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getQualifier</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>for&nbsp;</b></font><font color="#000000">(</font><font color="#000000">Visitable&nbsp;oq&nbsp;:&nbsp;qualifierResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getQualifier</font><font color="#000000">()</font><font color="#000000">.add</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">oq</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleCollectionItem</font><font color="#000000">(</font><font color="#000000">CollectionItem&lt;C&gt;&nbsp;item,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;itemResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">CollectionItem&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">CollectionItem&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">item</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setItem</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">itemResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleCollectionLiteralExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">CollectionLiteralExp&lt;C&gt;&nbsp;literalExp,&nbsp;List&lt;Visitable&gt;&nbsp;partResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">CollectionLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">CollectionLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getPart</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getPart</font><font color="#000000">()</font><font color="#000000">.addAll</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">(</font><font color="#000000">Collection&lt;?&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">CollectionLiteralPart&lt;C&gt;&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">partResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleCollectionRange</font><font color="#000000">(</font><font color="#000000">CollectionRange&lt;C&gt;&nbsp;range,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;firstResult,&nbsp;Visitable&nbsp;lastResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">CollectionRange&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">CollectionRange&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">range</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setFirst</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">firstResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setLast</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">lastResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleConstraint</font><font color="#000000">(</font><font color="#000000">CT&nbsp;constraint,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;specificationResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">CT&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">CT</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">((</font><font color="#000000">EObject</font><font color="#000000">)&nbsp;</font><font color="#000000">constraint</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">constraint&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.Constraint</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">org.eclipse.ocl.ecore.Constraint&nbsp;ct&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">org.eclipse.ocl.ecore.Constraint</font><font color="#000000">)&nbsp;</font><font color="#000000">constraint;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">ct</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.setSpecification</font><font color="#000000">((</font><font color="#000000">ExpressionInOCL&lt;EClassifier,&nbsp;EParameter&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">specificationResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">constraint&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Constraint</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">org.eclipse.uml2.uml.Constraint&nbsp;ct&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">org.eclipse.uml2.uml.Constraint</font><font color="#000000">)&nbsp;</font><font color="#000000">constraint;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">ct.setSpecification</font><font color="#000000">((</font><font color="#000000">ValueSpecification</font><font color="#000000">)&nbsp;</font><font color="#000000">specificationResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">(</font><font color="#000000">Visitable</font><font color="#000000">)&nbsp;</font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleExpressionInOCL</font><font color="#000000">(</font><font color="#000000">ExpressionInOCL&lt;C,&nbsp;PM&gt;&nbsp;callExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;contextResult,&nbsp;Visitable&nbsp;resultResult,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">List&lt;Visitable&gt;&nbsp;parameterResults,&nbsp;Visitable&nbsp;bodyResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">ExpressionInOCL&lt;C,&nbsp;PM&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">ExpressionInOCL&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">callExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setBodyExpression</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">bodyResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setContextVariable</font><font color="#000000">((</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">contextResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setResultVariable</font><font color="#000000">((</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">resultResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleIfExp</font><font color="#000000">(</font><font color="#000000">IfExp&lt;C&gt;&nbsp;ifExp,&nbsp;Visitable&nbsp;conditionResult,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;thenResult,&nbsp;Visitable&nbsp;elseResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">IfExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">IfExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">ifExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setCondition</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">conditionResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setThenExpression</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">thenResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setElseExpression</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">elseResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleIterateExp</font><font color="#000000">(</font><font color="#000000">IterateExp&lt;C,&nbsp;PM&gt;&nbsp;callExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;sourceResult,&nbsp;List&lt;Visitable&gt;&nbsp;variableResults,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;resultResult,&nbsp;Visitable&nbsp;bodyResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">IterateExp&lt;C,&nbsp;PM&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">IterateExp&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">callExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setSource</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">sourceResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setBody</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">bodyResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setResult</font><font color="#000000">((</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">resultResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getIterator</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getIterator</font><font color="#000000">()</font><font color="#000000">.addAll</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">(</font><font color="#000000">Collection&lt;?&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">variableResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleIteratorExp</font><font color="#000000">(</font><font color="#000000">IteratorExp&lt;C,&nbsp;PM&gt;&nbsp;callExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;sourceResult,&nbsp;List&lt;Visitable&gt;&nbsp;variableResults,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;bodyResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">IteratorExp&lt;C,&nbsp;PM&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">IteratorExp&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">callExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setSource</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">sourceResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setBody</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">bodyResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getIterator</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getIterator</font><font color="#000000">()</font><font color="#000000">.addAll</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">(</font><font color="#000000">Collection&lt;?&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">variableResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleLetExp</font><font color="#000000">(</font><font color="#000000">LetExp&lt;C,&nbsp;PM&gt;&nbsp;letExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;variableResult,&nbsp;Visitable&nbsp;inResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">LetExp&lt;C,&nbsp;PM&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">LetExp&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">letExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setVariable</font><font color="#000000">((</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">variableResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleMessageExp</font><font color="#000000">(</font><font color="#000000">MessageExp&lt;C,&nbsp;COA,&nbsp;SSA&gt;&nbsp;messageExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;targetResult,&nbsp;List&lt;Visitable&gt;&nbsp;argumentResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">MessageExp&lt;C,&nbsp;COA,&nbsp;SSA&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">MessageExp&lt;C,&nbsp;COA,&nbsp;SSA&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">messageExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setTarget</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">targetResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getArgument</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getArgument</font><font color="#000000">()</font><font color="#000000">.addAll</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">(</font><font color="#000000">Collection&lt;?&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">OCLExpression&lt;C&gt;&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">argumentResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleOperationCallExp</font><font color="#000000">(</font><font color="#000000">OperationCallExp&lt;C,&nbsp;O&gt;&nbsp;callExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;sourceResult,&nbsp;List&lt;Visitable&gt;&nbsp;argumentResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OperationCallExp&lt;C,&nbsp;O&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">OperationCallExp&lt;C,&nbsp;O&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">callExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setSource</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">sourceResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getArgument</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getArgument</font><font color="#000000">()</font><font color="#000000">.addAll</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">(</font><font color="#000000">Collection&lt;?&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">OCLExpression&lt;C&gt;&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">argumentResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handlePropertyCallExp</font><font color="#000000">(</font><font color="#000000">PropertyCallExp&lt;C,&nbsp;P&gt;&nbsp;callExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;sourceResult,&nbsp;List&lt;Visitable&gt;&nbsp;qualifierResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">PropertyCallExp&lt;C,&nbsp;P&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">PropertyCallExp&lt;C,&nbsp;P&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">callExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setSource</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">sourceResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getQualifier</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getQualifier</font><font color="#000000">()</font><font color="#000000">.addAll</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">(</font><font color="#000000">Collection&lt;?&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">OCLExpression&lt;C&gt;&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">qualifierResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleTupleLiteralExp</font><font color="#000000">(</font><font color="#000000">TupleLiteralExp&lt;C,&nbsp;P&gt;&nbsp;literalExp,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">List&lt;Visitable&gt;&nbsp;partResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">TupleLiteralExp&lt;C,&nbsp;P&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">TupleLiteralExp&lt;C,&nbsp;P&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">literalExp</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getPart</font><font color="#000000">()</font><font color="#000000">.clear</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.getPart</font><font color="#000000">()</font><font color="#000000">.addAll</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">(</font><font color="#000000">Collection&lt;?&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">TupleLiteralPart&lt;C,&nbsp;P&gt;&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">partResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleTupleLiteralPart</font><font color="#000000">(</font><font color="#000000">TupleLiteralPart&lt;C,&nbsp;P&gt;&nbsp;part,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;valueResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">TupleLiteralPart&lt;C,&nbsp;P&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">TupleLiteralPart&lt;C,&nbsp;P&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.copy</font><font color="#000000">(</font><font color="#000000">part</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setValue</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">valueResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleVariable</font><font color="#000000">(</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;&nbsp;variable,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Visitable&nbsp;initResult</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">Variable&lt;C,&nbsp;PM&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">EcoreUtil.copy</font><font color="#000000">(</font><font color="#000000">variable</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setInitExpression</font><font color="#000000">((</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">initResult</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#000000">}</font></code>
+    
+   </td>
+  <!-- end source code -->
+   </tr>
+</table>
+</div>
+<!-- =       END of automatically generated HTML code       = -->
+<!-- ======================================================== -->
+
+
+</body></html>

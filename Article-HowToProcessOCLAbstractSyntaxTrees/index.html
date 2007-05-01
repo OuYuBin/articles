@@ -1,0 +1,1322 @@
+<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type"
+	CONTENT="text/html; charset=windows-1252">
+<title>How to process OCL Abstract Syntax Trees</title>
+<link rel="stylesheet" href="../article.css">
+</head>
+
+<body>
+<h1 ALIGN="CENTER">How to process OCL Abstract Syntax Trees</h1>
+
+<div class="summary">
+<h2>Summary</h2>
+
+<p>The MDT OCL project provides the building blocks for Model-Driven
+tools to weave OCL declarative specifications into software artifacts.
+We showcase some of these possibilities, taking as starting point a
+plug-in to visualize OCL ASTs in the form of annotated trees. This
+example motivates some practical tips about patterns for OCL visitors,
+including using Java 5 generics and achieving conciseness by letting MDT
+OCL take care of the &quot;walking&quot; order. To really reap the
+benefits of OCL-enriched specifications, tools in our modeling chain
+have to be able to transform such expressions into the target software
+platform (e.g. compile into Java, translate into SQL). Work in this area
+is summarized, to ease jump-starting your own OCL processing project.</p>
+
+<div class="author">By <a
+	href="http://www.sts.tu-harburg.de/~mi.garcia/">Miguel Garcia</a>,
+Technische Universität Hamburg-Harburg (Germany)</div>
+<div class="copyright">Copyright &copy; 2007 Miguel Garcia. Made
+available under the EPL v1.0</div>
+<div class="date">April 30th, 2007</div>
+</div>
+
+<div class="content">
+<h2>The building blocks at our disposal</h2>
+
+<p>The MDT OCL framework supports all the way from parsing a textual
+OCL expression to evaluating such expression on some object population,
+for both Ecore and UML2 models. This requires some infrastructure, which
+MDT OCL provides as visitors for:</p>
+<ul>
+	<li>validating the concrete-syntax tree (CST) prepared by the
+	parser (such tree contains instances of <tt>OCLCST.ecore</tt>)</li>
+	<li>resolving identifiers to declarations, i.e. transforming a CST
+	into an AST, whose nodes are instances of classes defined in <tt>OCL.ecore</tt>.
+
+
+	</li>
+	<li>evaluating an OCL AST, with <tt>org.eclipse.ocl.internal.evaluation.EvaluationVisitorImpl</tt>
+	being in charge of this</li>
+</ul>
+<p></p>
+
+The functionality listed above is accessed through a fa&ccedil;ade, <tt>org.eclipse.ocl.OCL</tt>.
+Details will be given later, but a quote from <a
+	href="http://wiki.eclipse.org/index.php/MDT_1.0_New_and_Noteworthy"><i>MDT
+New and Noteworthy</i></a> is useful at this point:
+
+<blockquote>The new <tt>org.eclipse.ocl.OCL</tt> generic
+class is the focal point of OCL parsing and evaluation. Besides creating
+<tt>org.eclipse.ocl.helper.OCLHelper</tt>s for parsing embedded
+constraints and <tt>org.eclipse.ocl.Query</tt>s for evaluating
+constraints, it can also parse OCL documents (text files external to the
+model).</blockquote>
+
+<p>Although this article does not focus on concrete-syntax trees
+prepared by the parser, two remarks are in order. First, CST classes are
+internal, i.e. not part of the public API of the MDT OCL plug-in. And
+second, the validation of a CST is actually performed by the same
+visitor in charge of the CST to AST conversion.</p>
+
+<p>OCL expressions cannot be understood in isolation, they always
+appear in the context of some model element. Sample contexts include:</p>
+<ul>
+	<li>a class (all OCL invariants have a class as context)</li>
+	<li>a class property (for example, an OCL query to compute a
+	derived attribute has that attribute as context)</li>
+	<li>an operation (pre- and postconditions, <tt>body</tt>
+	expressions)</li>
+</ul>
+The context of an expression determines which model elements are visible
+in the expression. For example, the formal arguments to an operation can
+be referred in a precondition but not in a class invariant.
+<p></p>
+
+The article <a
+	href="http://www.eclipse.org/articles/Article-EMF-Codegen-with-OCL/article.html"><i>Implementing
+Model Integrity in EMF with MDT OCL</i></a> describes the JET templates that
+take as input a user-written EMF model with OCL annotations and generate
+Java method bodies that evaluate these expressions at runtime. So, what
+else could be left to do? Actually, a lot. For example:
+<ul>
+	<li>we've carefully written OCL invariants to specify which object
+	populations should be ruled out according to the requirements (e.g. car
+	drivers younger than 16, a PC configuration with an under-rated power
+	supply). After code generation we may happily perform CRUD (Create,
+	Retrieve, Update, Delete) <i>yet the responsibility rests on the
+	developer to check whether invariants have been broken</i>. An efficient
+	mechanism to collect information in the background as updates are
+	performed would serve the purpose of flawlessly detecting invalid
+	snapshots of object populations.</li>
+	<li>again we've carefully written OCL queries, that we can invoke
+	as long as all objects reside in-memory. While ORM (Object-Relational
+	Mapping) engines contain optimizations to minimize the performance
+	impact of retrieving objects from a persistent store, the best of both
+	worlds could be achieved with the automatic translation of OCL into SQL
+	or into EJB3's query language.</li>
+</ul>
+
+Links about these areas and a summary of work in progress can be found
+at the end of this article. For now, we'll focus on the more humble goal
+of depicting OCL ASTs (much like <a
+	href="http://www.eclipse.org/jdt/ui/astview/index.php">ASTView</a>
+depicts the AST of the Java compilation unit that's being edited). For
+example:
+
+<p></p>
+<p></p>
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/tree01.PNG" alt="OCL AST 01"></td>
+	</tr>
+	<caption align="bottom"><b>Figure 1</b> Visual depiction of
+	the AST for the invariant <br />
+	<tt>self.participants->forAll(c1, c2 | c1 <> c2 implies c1.name <>
+	c2.name)</tt></caption>
+</table>
+<p></p>
+<p>It could be argued that, if OCL is human-readable, why is an AST
+view needed at all? The answer is that it comes handy not just for those
+writing OCL-processing algorithms, but for everyone. Consider the
+following unparenthesized invariant:</p>
+<pre>
+currentLevel.name = 'Silver' implies card.color = Color::silver and currentLevel.name = 'Gold' implies card.color = Color::gold
+</pre> How is it to be interpreted?
+
+<p></p>
+<p></p>
+<table border="1" cellpadding="8">
+	<tr>
+		<th>Like this ...</th>
+		<th>... or like this?</th>
+	</tr>
+	<tr>
+		<td><pre>
+  (currentLevel.name = 'Silver' 
+   implies 
+   card.color = Color::silver)
+and 
+  (currentLevel.name = 'Gold' 
+   implies 
+   card.color = Color::gold)
+</pre></td>
+		<td><pre>
+  (  currentLevel.name = 'Silver' 
+     implies 
+     (card.color = Color::silver and currentLevel.name = 'Gold')
+  )
+implies 
+  ( self.card.color = Color::gold )
+</pre></td>
+	</tr>
+</table>
+<p></p>
+<p></p>
+<h3>Software configuration for this article</h3>
+
+<p>This article assumes some familiarity with OCL syntax. The
+examples shown are part of a case study (Royal &amp; Loyal) originally
+discussed in the book <i>&quot;The Object Constraint Language.
+Getting your models ready for MDA&quot;</i> by Warmer and Kleppe, as well as
+in the following course notes:</p>
+<ul>
+	<li><a
+		href="http://www.cse.dmu.ac.uk/~aoc/teaching-notes/Contents/CSCI3007/OCL.htm">CSCI3007
+	OCL Tutorial</a><br />
+	</li>
+	<li><a
+		href="http://www.cse.dmu.ac.uk/~aoc/teaching-notes/Contents/CSCI3007/CSCI3007OCLtutorial.pdf">CSCI3007
+	accompanying case study</a><br />
+	</li>
+</ul>
+<p></p>
+
+<p>Following the tradition of other OCL tools, the Royal & Loyal
+case study is followed (its class diagram can be found in Appendix A).
+Both <a href="./files/RandL.ecore">EMF</a> and <a
+	href="./files/RandL.uml">UML2</a> versions are provided . The R&L model
+contains samples for all OCL language constructs. We'll discuss some of
+them in connection with our viewer. This model can be explored with any
+editor that allows selecting model elements (e.g. the built-in Sample
+Ecore Model Editor, or some graphical editor). The contained OCL
+expressions can thus be modified and new ones added. You won't get
+feedback on syntax checks with those editors (as the OCL annotations are
+opaque to them). For that, installing the <a href="./install/">OCLASTView
+plug-in</a> is needed.</p>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13" alt=""> In
+order to have an <tt>.uml</tt> file initialized with the contents of a
+pre-existing <tt>.ecore</tt> file, you may do one of the following: (a)
+right click on the corresponding Ecore <tt>.genmodel</tt>, select
+&quot;Export Model...&quot; and then &quot;UML model&quot;.
+Alternatively, you can (b) open the Ecore model, select the <tt>EPackage</tt>
+you want to convert, and then from the &quot;Sample Ecore Editor&quot;
+menu (in the main menu bar) choose &quot;Convert to UML Model ...&quot;.
+You will need the <tt>org.eclipse.uml2.examples</tt> plug-ins to see
+those menu options.</p>
+</blockquote>
+
+<p>The interactive evaluation of OCL expressions against a
+particular object population is not the focus of this article. For that,
+the <a
+	href="http://help.eclipse.org/help32/index.jsp?topic=/org.eclipse.emf.ocl.doc/references/examples/oclInterpreterExample.html">OCL
+Interpreter</a> delivered as part of <a
+	href="http://www.eclipse.org/modeling/mdt/downloads/?project=ocl">MDT
+OCL</a> can be used. It accepts ad-hoc OCL expressions provided by the user
+at runtime, also allowing serializing them to <tt>.xmi</tt>. This
+document can be explored with the standard XMI editor provided by EMF,
+however OCLASTView has been designed to display OCL ASTs in a more
+readable format. A comparison can be found in Appendix B.</p>
+
+<h2>Visitors are our friends</h2>
+<p>The occurrences of OCL language constructs are internally
+represented in ASTs as instances of the OCL &quot;metamodel&quot;
+classes (depicted in Figure 2). In the AST shown in Figure 1, the root
+is an <tt>IteratorExp</tt>. This particular iterator (a <tt>forAll</tt>
+with two iterator variables) evaluates whether the boolean condition
+expressed in its body is <tt>true</tt> for all pairs of items in the
+source collection (the source collection being <tt>self.participants</tt>,
+whose type is <tt>OrderedSet(Customer)</tt>). As a whole, this <tt>forAll</tt>
+reports whether items with duplicate names exist. OCLASTView depicts
+iterators with the source collection as first child, the iterator
+variables as second child, and the boolean expression as third child
+(just like the appearance order in the textual syntax). More diagrams of
+the OCL 2.0 metamodel can be found in the latest spec by the OMG, <a
+	href="http://www.omg.org/cgi-bin/doc?formal/2006-05-01">formal/2006-05-01</a>.
+</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/OCLMM.PNG"
+			alt="Fragment of the OCL 2.0 metamodel (only inheritance relationships shown)"></td>
+	</tr>
+	<caption align="bottom"><b>Figure 2</b> Fragment of the OCL
+	2.0 metamodel (only inheritance relationships shown)</caption>
+</table>
+<p>MDT OCL contains great examples of visitors for OCL processing,
+e.g. to obtain the textual representation of an OCL AST (<tt>ToStringVisitor</tt>).
+These visitors can be easily spotted in that they implement interface <tt>org.eclipse.ocl.utilities.Visitor</tt>.
+</p>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13" alt=""> A
+useful starting point for writing your own visitor is the abstract class
+<tt>AbstractVisitor</tt> which shows how to visit children nodes for
+each OCL construct.</p>
+</blockquote>
+
+<p>Let's say we've got a reference <tt>myExp</tt> to an <tt>OCLExpression</tt>
+(the root interface of the OCL metamodel) most probably obtained as a
+result of invoking <tt>OCLHelper#createQuery(String expression)</tt>.
+The <tt>OCLExpression</tt> interface extends <tt>Visitable</tt>,
+therefore we can invoke <tt>myExp.accept(myVisitor)</tt> on it. Assuming
+that <tt>myExp</tt> is the AST for the <tt>forAll</tt> expression in
+Figure 1, and thanks to overriding, the <tt>accept()</tt> method in <tt>IteratorExpImpl</tt>
+will be invoked, which in turn delegates to a handler for that language
+construct in our visitor. Before getting to see the <img
+	src="images/tag_1.gif" height="13" width="24" align="CENTER" alt="">
+default implementation of <tt>AbstractVisitor#visitIteratorExp()</tt>,
+please notice that:</p>
+<ul>
+	<li>the usage of generic types in that method will be explained
+	shortly</li>
+	<li>an OCL iterator expression (e.g. <tt>forAll</tt>) evaluates
+	its body for each item in the source collection. Such body refers to a
+	variable, a variable which takes as value (in each evaluation) one of
+	the items in the source collection. Incidentally, <tt>forAll</tt> is
+	special in that it's the only OCL iterator expression allowing more
+	than one variable, so as to allow Cartesian products. If you really
+	want to know more about what an AST node for the <tt>forAll</tt>
+	construct looks like, you may jump ahead to Figure 3, where its
+	metamodel class is depicted.</li>
+</ul>
+
+<p>Coming back to the source code, first for <img src="images/tag_1.gif"
+	height="13" width="24" align="CENTER" alt=""> the default
+implementation of <tt>AbstractVisitor#visitIteratorExp()</tt> and then
+for <img src="images/tag_2.gif" height="13" width="24" align="CENTER"
+	alt=""> its specialization in <tt>ToStringVisitor</tt> (which
+overrides it to generate the textual syntax for the iterate expression,
+the opposite process to parsing):</p>
+<pre><img src="images/tag_1.gif" height="13" width="24" align="CENTER" alt=""> public T visitIteratorExp(IteratorExp&lt;C, PM&gt; callExp) {
+        T sourceResult = callExp.getSource().accept(this);
+        
+        List&lt;T&gt; variableResults;
+        List&lt;Variable&lt;C, PM&gt;&gt; variables = callExp.getIterator();
+        
+        if (variables.isEmpty()) {
+            variableResults = Collections.emptyList();
+        } else {
+            variableResults = new java.util.ArrayList<t>(variables.size());
+            for (Variable&lt;C, PM&gt; iterVar : variables) {
+                variableResults.add(iterVar.accept(this));
+            }
+        }
+        
+        T bodyResult = callExp.getBody().accept(this);
+        
+        return handleIteratorExp(callExp, sourceResult, variableResults, bodyResult);
+	}
+    
+    protected T handleIteratorExp(IteratorExp&lt;C, PM&gt; callExp,
+            T sourceResult, List&lt;T&gt; variableResults, T bodyResult) {
+        return null;
+    }
+
+</pre>
+
+<p>The above implementation performs no processing at all, it just visits
+all nodes. Instead, the <img src="images/tag_2.gif" height="13"
+	width="24" align="CENTER" alt=""> override in <tt>ToStringVisitor</tt>
+returns a string of the form </p>
+<tt><i>sourceCollection</i>-><i>iteratorName</i>(<i>
+iteratorVariables</i> | <i>iteratorBody </i>)</tt> <br />
+<pre>
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER" alt="">  protected String handleIteratorExp(IteratorExp&lt;C,PM&gt; callExp,
+            String sourceResult, List&lt;String&gt; variableResults, String bodyResult) {
+        
+        StringBuffer result = new StringBuffer();
+
+        String name = callExp.getName();
+        result.append(sourceResult).append(&quot;-&gt;&quot;).append(name).append('('); //$NON-NLS-1$
+        
+        for (Iterator&lt;String&gt; iter = variableResults.iterator(); iter.hasNext();) {
+            result.append(iter.next());
+            if (iter.hasNext()) {
+                result.append(&quot;, &quot;);//$NON-NLS-1$
+            }
+        }
+        
+        result.append(&quot; | &quot;).append(bodyResult).append(')');//$NON-NLS-1$
+
+        return result.toString();
+     }
+
+</pre>
+
+<p><tt>ToStringVisitor</tt> needs only override <tt>handleIteratorExp()</tt>
+to get its job done, as <tt>visitIteratorExp()</tt> takes up the
+recurrent duty of visiting the owned parts, moreover passing such
+results (<tt>String</tt>s in this case) as actual arguments to <tt>handleIteratorExp()</tt>.
+In case the default visit order established by <tt>AbstractVisitorImpl</tt>
+is not deemed appropriate for some particular scenario, its <tt>visit...</tt>
+methods can be overridden. This is necessary for example when evaluating
+an OCL <tt>if-then-else-endif</tt>: the else part is be evaluated only
+in case the condition part evaluates to false. This is precisely what <tt>EvaluationVisitorImpl#visitIfExp()</tt>
+does.</p>
+
+<h2>Generics are our friends, too</h2>
+
+<p>It's a fact of life that MDT OCL makes copius use of Generics.
+However it's a small set of type parameters that's used over and over
+again. With a bit of practice you'll recognize in a flash that <tt>C</tt>
+stands for either an EMF <tt>org.eclipse.emf.ecore.EClassifier</tt> or
+an UML2 <tt>org.eclipse.uml2.uml.Classifier</tt>. The complete list of
+type parameters is described in the Javadoc for the interface <tt>org.eclipse.ocl.Environment</tt>
+(reproduced below for ease of reference while reading this article). In
+fact, there is a method to all this, and the Type Hierarchy helps in
+visualizing it. <tt>Environment</tt> has two subtypes: <tt>EcoreEnvironment</tt>
+and <tt>UMLEnvironment</tt>, where the correct type substitutions appear
+for easy reference. Other types exhibiting the same pattern include <tt>org.eclipse.ocl.OCL</tt>,
+<tt>org.eclipse.ocl.utilities.UMLReflection</tt>, and <tt>org.eclipse.ocl.utilities.ExpressionInOCL</tt>.
+</p>
+
+<p>The intriguing <tt>T</tt> type parameter in the code above stands
+for the result type of visitor methods. For example, the declaration of
+<tt>ToStringVisitor</tt> subclasses <tt>AbstractVisitor</tt> by
+substituting the generic <tt>T</tt> return type with <tt>String</tt>. In
+detail,</p>
+
+<pre>public class ToStringVisitor&lt;C, O, P, EL, PM, S, COA, SSA, CT&gt;
+	extends AbstractVisitor&lt;String, C, O, P, EL, PM, S, COA, SSA, CT&gt; 
+</pre>
+
+<p>Given that some types have specializations providing type
+substitutions for Ecore and for UML2, a natural question is why <tt>AbstractVisitor</tt>
+does not follow the same pattern. After all, one could type:</p>
+
+<pre>public class AbstractVisitorEcore&lt;T&gt; 
+  extends AbstractVisitor&lt;T, EClassifier, EOperation, EStructuralFeature, 
+             EEnumLiteral, EParameter, EObject, 
+             CallOperationAction, SendSignalAction, org.eclipse.ocl.ecore.Constraint&gt; </pre>
+
+<p>(by checking what substitutions are used in <tt>EcoreEnvironment</tt>)
+and then let the Java Development Tools perform auto-completion given
+the start of a method name, for example:</p>
+
+<pre>
+	@Override
+	protected T handleIteratorExp(IteratorExp&lt;EClassifier, EParameter&gt; callExp,
+			T sourceResult, List&lt;T&gt; variableResults, T bodyResult) {
+		// TODO Auto-generated method stub
+		return super.handleIteratorExp(callExp, sourceResult, variableResults,
+				bodyResult);
+	}
+</pre>
+
+<p>This move is not as smart as it might seem at first sight given
+that the very benefits of Generics are lost: any OCL visitor extending <tt>AbstractVisitorEcore</tt>
+will only work on Ecore-based models, although it could have most
+probably worked on UML2-based models as well. Bounded generics allow
+writing algorithms which minimally depend on the types of the input,
+while preserving static type-safety. That's the reason why <tt>EvaluationVisitorImpl</tt>,
+for example, has no specializations: its methods work for models
+expressed in either of Ecore or UML2.</p>
+
+<table border="1">
+	<tr>
+		<td>
+
+		<h3><font SIZE="1"> org.eclipse.ocl</font> <br>
+		Interface Environment&lt;PK,C,O,P,EL,PM,S,COA,SSA,CT,CLS,E&gt;</h3>
+		<dl>
+			<dt></dt>
+			<dt><b>Type Parameters:</b></dt>
+			<dd><code>PK</code> - is substituted by the metaclass
+			representing the metamodel's analogue for the UML 2.x <tt>Package</tt>
+			</dd>
+			<dd><code>C</code> - corresponds to the UML <tt>Classifier</tt>
+			metaclass</dd>
+			<dd><code>O</code> - corresponds to the UML <tt>Operation</tt>
+			metaclass</dd>
+			<dd><code>P</code> - corresponds to the UML <tt>Property</tt>
+			metaclass</dd>
+			<dd><code>EL</code> - corresponds to the UML <tt>EnumerationLiteral</tt>
+			metaclass (<tt>Enumeration</tt>s are simply represented as
+			classifiers)</dd>
+			<dd><code>PM</code> - corresponds to the UML <tt>Parameter</tt>
+			metaclass</dd>
+			<dd><code>S</code> - corresponds to the UML <tt>State</tt>
+			metaclass (for metamodels that describe state machines)</dd>
+			<dd><code>COA</code> - corresponds to the UML <tt>CallOperationAction</tt>
+			metaclass (used in message expressions)</dd>
+			<dd><code>SSA</code> - corresponds to the UML <tt>SendSignalAction</tt>
+			metaclass (used in message expressions)</dd>
+			<dd><code>CT</code> - corresponds to the UML <tt>Constraint</tt>
+			metaclass</dd>
+			<dd><code>CLS</code> - corresponds to the UML <tt>Class</tt>
+			metaclass</dd>
+			<dd><code>E</code> - corresponds to the UML <tt>Element</tt>
+			metaclass</dd>
+		</dl>
+		<dl>
+			<dt><b>All Known Implementing Classes:</b></dt>
+			<dd>AbstractEnvironment, EcoreEnvironment, UMLEnvironment</dd>
+		</dl>
+
+		</td>
+	</tr>
+</table>
+
+
+<p>With this brief exposition to the OCL metamodel and the usage of
+parametric polymorphism in MDT OCL, we set out to build our first OCL
+visitor.</p>
+
+<h2>First visitor: a visualizer of OCL ASTs</h2>
+
+<p>A tree-based visualization of OCL expressions helps big time in
+familiarizing with the structure of the different kinds of nodes in OCL
+ASTs, and thus we will get that visitor to work first (a slightly more
+sophisticate visitor, a simplifier of arithmetic expressions, comes
+next).</p>
+
+<p>We cover first the visitor itself (devoid of UI aspects), leaving
+for the next section the plug-in extension that defines the view to
+display the tree prepared by the visitor. This view mostly consists of
+code generated by a PDE wizard. The remaining bits and pieces (how to
+track the current selection in an Ecore editor, how to parse OCL, how to
+display an XML document in a TreeViewer) are described in detail
+elsewhere.</p>
+
+<h3>What to do in the handler for a leaf node</h3>
+
+<p>It makes sense to consider first what output we want for leaf
+nodes in OCL ASTs. These nodes are recognized because <tt>AbstractVisitor</tt>
+defines their handler to simply <tt>return null;</tt> no owned nodes are
+visited, and thus no <tt>handler...</tt> method is defined for such
+construct. In our case, we want our visitor to prepare an XML element to
+show the node kind and type. Some leaf nodes have additionally a value,
+e.g. all the <tt>...LiteralExp</tt> ones: they stand for literal
+constants of some type. We will also display such literal constants as
+attributes of an XML node. In summary, leaf nodes are handled by:</p>
+<pre>
+	public T visitVariableExp(VariableExp&lt;C, PM&gt; v);
+	public T visitTypeExp(TypeExp&lt;C&gt; t);
+	public T visitUnspecifiedValueExp(UnspecifiedValueExp&lt;C&gt; unspecExp);
+	public T visitStateExp(StateExp&lt;C, S&gt; stateExp);
+	public T visitIntegerLiteralExp(IntegerLiteralExp&lt;C&gt; literalExp);
+	public T visitRealLiteralExp(RealLiteralExp&lt;C&gt; literalExp);
+	public T visitStringLiteralExp(StringLiteralExp&lt;C&gt; literalExp);
+	public T visitBooleanLiteralExp(BooleanLiteralExp&lt;C&gt; literalExp);
+	public T visitNullLiteralExp(NullLiteralExp&lt;C&gt; literalExp);
+	public T visitInvalidLiteralExp(InvalidLiteralExp&lt;C&gt; literalExp);
+	public T visitEnumLiteralExp(EnumLiteralExp&lt;C, EL&gt; literalExp);
+	public T visitUnlimitedNaturalLiteralExp(UnlimitedNaturalLiteralExp<c> literalExp)
+
+</pre>
+
+<p>These are the methods we'll implement first in class <a
+	href="./files/oclastview/XMLforOCL.java.html"><tt>XMLforOCL</tt></a>
+which extends <tt>AbstractVisitor</tt> and that imports classes from the
+MDT OCL plug-in (the plug-ins that OCLASTView depends on are shown in
+Figure 11 below)</p>
+
+<p>Method <img src="images/tag_3.gif" height="13" width="24"
+	align="CENTER" alt=""> <tt>visitVariableExp()</tt> in <tt>XMLforOCL</tt>
+handles usages of variables in OCL. <tt>VariableExp</tt> references the
+declaration of the referred variable, i.e. it references a <tt>org.eclipse.ocl.expressions.Variable&lt;C,
+PM&gt;</tt>:</p>
+<pre>
+     	@Override
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER" alt="">	public Element visitVariableExp(VariableExp&lt;C, PM&gt; v) {
+		Variable&lt;C, PM&gt; vd = v.getReferredVariable();
+		Element res = new Element(&quot;VariableExp&quot;); //$NON-NLS-1$
+		res.setAttribute(&quot;name&quot;, vd.getName()); //$NON-NLS-1$
+		addTypeInfo(res, v);
+		return res;
+	}
+
+	private void addTypeInfo(org.jdom.Element res, TypedElement&lt;C&gt; exp) {
+		C ec = exp.getType();
+		String tName = getName(ec);
+		res.setAttribute(&quot;type&quot;, tName); //$NON-NLS-1$
+	}
+
+
+</pre> An OCL expression may contain literals for primitive datatypes (Real,
+Integer, Boolean, String). A handler for such occurrences of literals in
+an AST node typically looks like: <pre>
+	@Override
+	public Element visitRealLiteralExp(RealLiteralExp&lt;C&gt; literalExp) {
+		Element res = new Element(&quot;RealLiteralExp&quot;); //$NON-NLS-1$
+		res.setAttribute(&quot;symbol&quot;, Double.toString(literalExp.getRealSymbol())); //$NON-NLS-1$
+		return res;
+	}
+
+</pre>
+
+Two novelties of OCL 2.0 are the built-in literal values <tt>null</tt>
+and <tt>OclInvalid</tt> which may appear in the textual syntax. In
+general, an expression any of whose arguments is <tt>OclInvalid</tt>
+evaluates to <tt>OclInvalid</tt>, that value propagates during
+evaluation much like <tt>NULL</tt> does in SQL. By including an
+invocation to <tt>addTypeInfo()</tt> our handlers will reveal what the
+types of those literal values are (and they better have one, as OCL is a
+strongly-typed language). The instances returned are maintained by MDT
+OCL, they are part of the <i>symbol tables</i> (in
+compiler-implementation terminology) and form part of the bookkeeping
+required to parse, validate against <i>static semantics</i>, and
+transform OCL expressions.
+
+<h3>What to do in the handlers for non-leaf nodes</h3>
+
+<p>According to our definition, non-leaf nodes are those whose
+metamodel class defines one or more containment associations, as for
+example <tt>IfExp</tt>, <tt>IterateExp</tt>, and <tt>IteratorExp</tt>:</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/IfExp.PNG"
+			alt=" Containment associations for IfExp and LoopExp "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 3</b> Containment
+	associations for <tt>IfExp</tt> and <tt>LoopExp</tt></caption>
+</table>
+
+<p>The <tt>XMLforOCL</tt> handler of <tt>IfExp</tt> simply pieces
+together the results of visiting the owned parts (just like <tt>ToStringVisitor</tt>
+does). These results (<tt>conditionResult</tt>, <tt>thenResult</tt>, and
+<tt>elseResult</tt>) are never null because according to the
+well-formedness rules of OCL an <tt>IfExp</tt> must have those three
+parts and visitors are coded under the assumption of well-formed input.
+Notice also that had not been <tt>org.jdom.Element</tt> substituted for
+the type parameter <tt>T</tt>, the visitor would have resorted to
+explicit type-casts (downcasts from <tt>Object</tt> to <tt>Element</tt>).
+Generics instead enable compile-time type-checking.</p>
+<pre>
+	@Override
+	protected org.jdom.Element handleIfExp(IfExp<c> ifExp, Element conditionResult,
+			Element thenResult, Element elseResult) {
+		Element res = new Element(&quot;IfExp&quot;); //$NON-NLS-1$
+		Element eConditionPart = new Element(&quot;condition&quot;); //$NON-NLS-1$
+		eConditionPart.addContent(conditionResult);
+		res.addContent(eConditionPart);
+
+		Element eThenPart = new Element(&quot;then&quot;); //$NON-NLS-1$
+		eThenPart.addContent(thenResult);
+		res.addContent(eThenPart);
+
+		Element eElsePart = new Element(&quot;else&quot;); //$NON-NLS-1$
+		eElsePart.addContent(elseResult);
+		res.addContent(eElsePart);
+		return res;
+	}
+</pre>
+
+<h3>What sets <tt>CallExp</tt> and its subtypes apart from the rest</h3>
+
+<p>We've written handlers returning <tt>org.jdom.Element</tt> for
+several OCL constructs by considering them in isolation, without
+worrying about other sub-expressions in the whole OCL expression. This
+we can make for <tt>IfExp</tt>, the <tt>...LiteralExp</tt>, and in
+general for metamodel classes which are not subtypes of <tt>CallExp</tt>,
+as a <tt>CallExp</tt> further evaluates some <i>source expression</i>
+which can be obtained with <tt>getSource()</tt>. For example, the
+metamodel in Figure 2 shows that a <tt>PropertyCallExp</tt> is a subtype
+of <tt>CallExp</tt>. That explains why we can write: <tt>self.age
+>= 18</tt>, where <tt>age</tt> stands for an attribute. (The <tt>VariableExp</tt>
+<tt>self</tt> is its source expression). What EMF calls <tt>EStructuralFeature</tt>
+(an attribute or a reference) OCL calls <i>property</i>, also in
+agreement with UML terminology.</p>
+
+<p>In terms of OCL visitors this means that for each instance of <tt>CallExp</tt>
+its source expression should be visited, and the <tt>visit...</tt>
+methods in <tt>AbstractVisitor</tt> do just that. This behavior was
+already shown in <img src="images/tag_1.gif" height="13" width="24"
+	align="CENTER" alt=""> and <img src="images/tag_2.gif"
+	height="13" width="24" align="CENTER" alt="">, the default AST
+visitor and the serializer into textual representation, respectively.
+The root node in Figure 1 has <tt>&lt;source&gt;</tt> as a subnode only
+because in our overridden <tt>handleIteratorExp</tt> the following was
+done:</p>
+<pre>
+		Element sourceE = new Element(&quot;source&quot;);
+		sourceE.addContent(sourceResult);
+		res.addContent(sourceE);
+</pre>
+
+<p>Other OCL constructs owning sub-expressions occur in connection
+with the initializers of variables and the arguments of operation calls.
+As a sidenote, in programming-language parlance, OCL's
+&quot;source&quot; is usually called &quot;target&quot;, while in OCL <tt>MessageExp</tt>s
+the target is actually named &quot;target&quot;.</p>
+
+<h3>Things we swept under the carpet</h3>
+
+<p>We've overriden so far the methods highlighted in Figure 4. The
+remaining ones follow the same principles and can be found in the
+finished <a href="./files/oclastview/XMLforOCL.java.html"><tt>XMLforOCL</tt></a>.
+</p>
+
+<p>Exploring the list of not-yet-implemented methods reveals a type
+that cannot be found in the fragment of the OCL metamodel depicted in
+Figure 2 (<tt>TupleLiteralPart</tt>). Implementing another method (<tt>visitCollectionLiteralExp()</tt>)
+reveals a containment association to types also not shown in Figure 2 (<tt>CollectionItem</tt>
+and <tt>CollectionRange</tt>, taken together the only subtypes of <tt>CollectionLiteralPart</tt>,
+also not shown in Figure 2). Finally, we've implemented a handler (<tt>visitVariable()</tt>)
+for a type nowhere to be found in Figure 2. What's going on? As Figure 5
+shows, not all OCL constructs have counterparts subtyping <tt>OCLExpression</tt>
+in the metamodel (Figure 2 depicts only the classes branching off from <tt>OCLExpression</tt>).
+</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/overriddenSoFar.PNG" alt="Methos"
+			making up our><tt>XMLforOCL</tt> visitor so far ">
+		<p /><b>Figure 4</b> Public methods overridden in <tt>XMLforOCL</tt>
+		so far
+		</td>
+		<td><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt>
+		</td>
+		<td><img src="images/myPNG/wholeStoryAboutTheOCLMM.PNG"
+			alt=" aa ">
+		<p /><b>Figure 5</b> The whole story about the OCL metamodel: <br />
+		not all OCL language constructs subtype <tt>OCLExpression</tt>
+		</td>
+	</tr>
+</table>
+<p>To complete the picture on visiting <tt>Variable</tt>s, version
+1.1 of MDT OCL introduces the <tt>ExpressionInOcl</tt> metaclass
+(described in Chapter 12 of the <a
+	href="http://www.omg.org/cgi-bin/doc?formal/2006-05-01">OCL spec</a>).
+This metaclass does not subtype <tt>TypedElement</tt> but <tt>Visitable</tt>
+and constitutes the container for context variables (<tt>self</tt>, <tt>result</tt>)
+and for those variables standing for operation parameters (if any). As
+for other OCL constructs, <tt>AbstractVisitor#visitExpressionInOCL()</tt>
+will visit those owned parts, passings the results to <tt>AbstractVisitor#handleExpressionInOCL()</tt>.
+</p>
+
+
+<h3>Variables and environments: how they show up in OCL ASTs</h3>
+
+<p>Navigation in OCL expressions as enabled by <tt>CallExp</tt> is
+very useful. Some constructs however must serve as anchors, i.e. they
+have no source expression themselves. We've met some of them already:
+all the <tt>...LiteralExp</tt> ones, <tt>VariableExp</tt>, <tt>IfExp</tt>,
+and <tt>LetExp</tt>. The remaining constructs without a source share the
+property of being subtypes of <tt>OCLExpression</tt> but not of <tt>CallExp</tt>:
+<tt>TypeExp</tt>, <tt>UnspecifiedValueExp</tt>, <tt>StateExp</tt>, and <tt>MessageExp</tt>.
+</p>
+
+<p>There's a distinction between <tt>VariableExp</tt> and <tt>Variable</tt>,
+the former denotes a usage and the latter a declaration. The declaration
+for a usage is accessible through <tt>VariableExp#getReferredVariable()</tt>.
+The AST builder in MDT OCL makes available as pre-defined some variables
+in some OCL expression contexts:</p>
+<ul>
+	<li><tt>self</tt> in classifier and operation contexts</li>
+	<li>a variable for each formal argument in an operation context</li>
+	<li><tt>result</tt> in the postcondition context of an operation.
+	</li>
+	<li>Additionally, <tt>@pre</tt> may postfix in the postcondition
+	context a property, to indicate the value it had before execution of
+	the operation. More in detail, the <tt>FeatureCallExp</tt> metaclass
+	defines the <tt>isMarkedPre</tt> property. Unfortunately, Section 8.3.2
+	&quot;FeatureCall Expressions&quot; of the <a
+		href="http://www.omg.org/cgi-bin/doc?formal/2006-05-01">OCL spec</a>
+	omits the description of the <tt>FeatureCallExp</tt> metamodel class.
+	More importantly, a <tt>VariableExp</tt> cannot be marked with <tt>@pre</tt>
+	because variables (such as operation parameters or <tt>Let</tt>
+	variables) don't exist before the invocation of the operation (thanks
+	to Christian W. Damus for these observations).</li>
+</ul>
+<p>The constructs <tt>let</tt>, all the iterators (<tt>IteratorExp</tt>)
+and <tt>iterate</tt> (<tt>IterateExp</tt>) allow defining (sometimes
+implicit) variables. For example, Figure 1 shows the <tt>forAll</tt>
+iterator defining two explicit variables (<tt>c1</tt>, <tt>c2</tt>).
+Implicit iterator variables instead are nowhere to be seen in the
+textual syntax, thus contributing to its conciseness, but are revealed
+by the AST builder anyway. For example, Figure 6 depicts the invariant </p>
+<p><tt>participants->forAll(age() <= 70)</tt></p>
+<p>where both <tt>self</tt> and the iterator variable over the <tt>participants</tt>
+collection are implicit. In the AST tree view the explicit declaration
+of the iterator variable (<tt>temp20</tt>) is shown in red, and its
+usage in green (Figure 6).
+</p>
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/implicitIteratorVar.PNG"
+			alt="Implicit iterator variable "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 6</b> Implicit iterator
+	variable (<tt>temp20</tt>)</caption>
+</table>
+<p>Moreover, the OCL syntax allows for a <tt>collect</tt> iterator
+to be elided from the textual syntax, to support the intuitive concept
+of &quot;dot navigation&quot;. This feature can be seen at work in
+Figure 7.</p>
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/elidedCollect.PNG"
+			alt="Elided collect "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 7</b> Elided <tt>collect</tt>
+	</caption>
+</table>
+
+<p>With some more work, the OCL AST visualizer can be extended to
+show the variables available in the current environment of a
+sub-expression.</p>
+
+<p>The following section covers GUI issues, setting the ground for
+covering later our last visitor, a simplifier of arithmetic expressions.</p>
+
+<h2>The UI for OCL visitors</h2>
+
+<p>We'll use the same UI mechanisms for all the visitors in this article: a
+TreeViewer to display an XML document. The only differences will be in
+the document to build and how it's built. As first step, we activate the
+wizard File &gt; New &gt; Plug-in Project, and make the choices shown in
+Figures 8 to 10.</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/PDEwizard.PNG"
+			alt="Step 1 of PDE Wizard to create the OCLASTView plug-in "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 8</b> Step of the PDE
+	Wizard to create the OCLASTView plug-in</caption>
+</table>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/PDEwizard2.PNG"
+			alt="Step of PDE Wizard to create the OCLASTView plug-in "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 9</b> Step of the PDE
+	Wizard to create the OCLASTView plug-in</caption>
+</table>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/PDEwizard3.PNG"
+			alt="Step of PDE Wizard to create the OCLASTView plug-in "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 10</b> Step of the PDE
+	Wizard to create the OCLASTView plug-in</caption>
+</table>
+
+<p>In the just created plugin.xml the dependencies shown in Figure
+11 are added:</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/oclDependency.PNG"
+			alt="Dependencies of the OCLASTView plug-in "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 11</b> Dependencies of the
+	OCLASTView plug-in</caption>
+</table>
+
+<h3>Making OCLASTView track the current editor selection</h3>
+
+<p>In its current state, the view generated by the wizard can be
+shown alongside the Ecore or UML editor we've chosen yet it is unaware
+about the current selection. We want it instead to display the XML tree
+so laboriously built for an OCL-annotated operation or classifier. Some
+classes cherry-picked from other plug-ins save the day (they've been
+placed in the <tt>util</tt> package in the source code of <a
+	href="./install/">OCLASTView</a>):</p>
+<ul>
+	<li><tt>JDomContentProvider</tt> and <tt>JDomLabelProvider</tt>,
+	reproduced from the BSD-licensed <a
+		href="http://octopus.sourceforge.net">Octopus</a></li>
+</ul>
+
+<p>Finally, we make the view implement <tt>ISelectionListener</tt>
+with <tt>selectionChanged()</tt> checking whether a valid context has
+been selected (an operation or a classifier, to later check whether that
+context has a valid OCL annotation. At the XMI level, an OCL annotation
+looks as shown in Figure 12:</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/oclAtXMIlevel.PNG"
+			alt="OCL Annotation "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 12</b> How an OCL
+	annotation really looks in an .ecore file</caption>
+</table>
+
+<p>Using the Sample Ecore editor the same OCL invariant looks as
+shown in Figure 13:</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/oclAtECoreEditorLevel.PNG"
+			alt="OCL Annotation "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 13</b> More human oriented
+	view of an OCL expression in the Ecore Sample Editor</caption>
+</table>
+
+<p>Go ahead and click operations at will, the <a
+	href="./files/oclastview/OCLASTView.java.html"><tt>OCLASTView</tt></a>
+will get notified and will update the view as a result of parsing the
+string containing the OCL expression and visiting it (debug for
+increased thrill)</p>
+<pre>
+	private Element displayOCL(String expression, EObject context, String key) {
+		org.eclipse.ocl.OCL ocl = null;
+		org.eclipse.ocl.helper.OCLHelper helper = null;
+
+		Element res = new Element(key);
+		res.setAttribute(&quot;textualInput&quot;, expression);
+
+		if (context instanceof org.eclipse.uml2.uml.NamedElement) {
+			ocl = org.eclipse.ocl.uml.OCL.newInstance();
+		} else {
+			ocl = org.eclipse.ocl.ecore.OCL.newInstance();
+		}
+
+		helper = ocl.createOCLHelper();
+
+		// set our helper's context object to parse against it
+		if ((context instanceof org.eclipse.emf.ecore.EClass)
+				|| (context instanceof org.eclipse.uml2.uml.Classifier)) {
+			helper.setContext(context);
+		} else if (context instanceof org.eclipse.emf.ecore.EOperation) {
+			EOperation eOp = (EOperation) context;
+			helper.setOperationContext(eOp.getEContainingClass(), eOp);
+		} else if (context instanceof org.eclipse.uml2.uml.Operation) {
+			org.eclipse.uml2.uml.Operation op = (org.eclipse.uml2.uml.Operation) context;
+			helper.setOperationContext(op.getOwner(), op);
+		} else if (context instanceof org.eclipse.emf.ecore.EStructuralFeature) {
+			EStructuralFeature sf = (EStructuralFeature) context;
+			helper.setAttributeContext(sf.getEContainingClass(), sf);
+		} else if (context instanceof org.eclipse.uml2.uml.Property) {
+			org.eclipse.uml2.uml.Property p = (org.eclipse.uml2.uml.Property) context;
+			helper.setAttributeContext(p.getOwner(), p);
+		}
+
+		OCLExpression&lt;EClassifier&gt; oclExp = null;
+		Element xmlAST = null;
+		try {
+			oclExp = helper.createQuery(expression);
+		} catch (Exception e) {
+			xmlAST = reportException(e);
+			res.addContent(xmlAST);
+			return res;
+		}
+
+		XMLforOCL xfo = null;
+		if (context instanceof org.eclipse.uml2.uml.NamedElement) {
+			xfo = XMLforOCL.getUML2Version();
+		} else {
+			xfo = XMLforOCL.getEcoreVersion();
+		}
+		try {
+<img src="images/tag_4.gif" height="13" width="24" align="CENTER" alt="">			xmlAST = (Element) oclExp.accept(xfo);
+		} catch (Exception e) {
+			xmlAST = reportException(e);
+		}
+
+		res.addContent(xmlAST);
+		return res;
+	}
+
+</pre>
+
+<h3>Using OCLASTView with Ecore editors</h3>
+
+<p>Just to show that it's possible, the figure below depicts the example
+Ecore editor provided by GMF triggering an update of OCLASTView:</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/fromGMFEcoreEditor.PNG"
+			alt="Using OCLASTView with GMF's Ecore editor "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 14</b> Using OCLASTView
+	with GMF's Ecore editor</caption>
+</table>
+
+<p><a href="http://www.alphaworks.ibm.com/tech/emfatic">Emfatic</a>
+can also be used to edit an OCL-annotated Ecore model, yet its Outline
+view does not provide an <tt>EOperation</tt> selection. Emfatic makes
+however for quick editing of OCL expressions themselves, as depicted in
+Figure 15. Additionally, a new version of Emfatic is being developed.
+For details check <a
+	href="http://www.sts.tu-harburg.de/%7Emi.garcia/SoC2007/ImprovementsToTheEmfaticEditor.pdf">
+this document</a>. The new features include: syntax to account for EMF
+Generics, folding, hovers displaying the declaration of the element
+under the cursor, hyperlinks, AutoEdits, templates, and Type Hierarchy,
+among others.</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/oclAtEmfaticLevel.PNG"
+			alt="OCL Annotation "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 15</b> OCL expression in
+	Emfatic</caption>
+</table>
+
+<h3>Using OCLASTView with UML editors</h3>
+
+<a
+	href="http://www.eclipse.org/modeling/mdt/?project=uml2tools#uml2tools">UML2
+Tools</a> consists of a set of GMF-based editors for viewing and editing UML
+models. A diagram similar to that shown in Figure 16 can be obtained by
+right-clicking on <a href="./files/RandL.uml">the UML version of
+Royal & Loyal</a> and choosing "Initialize umlclass_diagram".
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/fromUML2ToolsEditors.PNG"
+			alt="Using OCLASTView with UML2 Tools editor "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 16</b> Using OCLASTView
+	with the UML2 Tools editor</caption>
+</table>
+
+<p>OCLASTView also works with the built-in UML Model Editor, as
+shown below:</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/myPNG/fromUMLModelEditor.PNG"
+			alt="Using OCLASTView with the UML Model Editor "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 17</b> Using OCLASTView
+	with the UML Model Editor</caption>
+</table>
+
+<h2>Second visitor: simplification of arithmetic expressions
+involving literal constants only</h2>
+
+<p>Whether an OCL expression is interpreted or compiled, one way to
+make OCL evaluation faster consists in computing at <i>compile-time</i>
+as much as possible of the expression, as a result of analyses such as <i>constant
+folding</i> or <i>strength reduction</i> or <i>common sub-expression
+elimination</i> or <i>partial redundancy elimination</i>
+(compiler-implementation terminology, for an overview see <a
+	href="http://charlotte.gac.edu/+max/courses/S2005/MCS-388/pre.pdf">Max
+Hailperin's course notes</a>) or <i>partial evaluation</i> (functional
+programming terminology). We will tap into this area by showcasing a
+visitor to clone an input OCL expression, except that arithmetic
+sub-expressions involving only literal constants will be reduced to
+their final result.</p>
+
+<p>This is actually the first example involving <i>processing</i>,
+in this case transformation, of an OCL expression. So far we've just
+relied on the AST builder to resolve identifiers to declarations and in
+general provide us with well-formed ASTs. As we output an <i>updated</i>
+AST thanks to an algorithm of our invention, we have to make sure that <i>we</i>
+in turn play by the rules and return a valid AST.</p>
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13" alt="">
+You may want to review the checks for well-formedness embodied in <tt>org.eclipse.ocl.internal.parser.ValidationVisitor</tt>.</p>
+</blockquote>
+
+<p>Moreover, it would be nice if we documented the set of OCL expressions
+that our algorithm has been designed to handle (it's all right to write
+a visitor that covers only a subset of OCL, as long as that visitor
+reports whether it can cope with the input or not).
+</p>
+
+<p>The sketched reduction is not the only possible one, logical
+operations can be simplified according to de Morgan rules, and so on. In
+such visitors one wants to return unmodified AST nodes most of the time
+. In the arithmetic reduction case, a modified AST is returned only from
+the handler for <tt>OperationCallExp</tt> in case both the source
+expression and the argument are any of <tt>RealLiteralExp</tt> or <tt>IntegerLiteralExp</tt>.
+In the resulting OCL expression, the <tt>CallExp</tt> (if any) that was
+referencing the old (unmodified) source expression should be changed to
+point to the freshly instantiated AST node. The behavior we saw in <tt>AbstractVisitor</tt>
+for subtypes of <tt>CallExp</tt> (visiting the source, visiting the
+contained nodes, doing processing, return) hints at how to implement
+this.</p>
+
+<p>It would be cumbersome to duplicate over and over that strategy
+whenever a "reducer" visitor is written. Instead, we'll code <a
+	href="./files/arithmeticSimplification/OCLCloner.java.html"><tt>OCLCloner</tt></a>
+to provide such behavior by default. A new visitor need only override
+those methods where it may detect an opportunity for applying a
+reduction, invoking the non-overridden version in case the preconditions
+for the reduction are not fulfilled. For example, method <tt>visitOperationCallExp()</tt>
+in <a
+	href="./files/arithmeticSimplification/OCLArithSimplifier.java.html"><tt>OCLArithSimplifier</tt></a>
+starts as follows:</p>
+<pre>
+	@Override
+	protected Visitable handleOperationCallExp(
+			OperationCallExp&lt;C, O&gt; callExp, Visitable sourceResult,
+			List&lt;Visitable&gt; argumentResults) {
+		int opcode = callExp.getOperationCode();
+		if (!isArithmeticOp(callExp)) {
+			return super.handleOperationCallExp(callExp, sourceResult, argumentResults);
+		}
+		OCLExpression&lt;C&gt; newSource = (OCLExpression&lt;C&gt;) sourceResult;
+		OCLExpression&lt;C&gt; newArg = (OCLExpression&lt;C&gt;) argumentResults.get(0);
+		if (!(newSource instanceof NumericLiteralExp)
+				|| !(newArg instanceof NumericLiteralExp)) {
+			return super.handleOperationCallExp(callExp, sourceResult, argumentResults);
+		}		
+		/*
+		 * actual reduction comes here
+		 */
+
+</pre>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13" alt=""> A
+visitor is not limited to letting other components know of its
+processing only through return values, it may also update instance
+state. This is frequently the case with <i>chains of visitors</i>: a
+visitor receives as argument in its constructor the previous one.
+However, for reduction-style visitors no instance state has been
+necessary.</p>
+</blockquote>
+
+<blockquote>
+<p><img src="images/tryit.gif" width="61" height="13" alt="">
+You can plug <tt>OCLArithSimplifier</tt> into <tt>OCLASTView#displayOCL()</tt>
+to display as XML the reduced AST. Just let <tt>oclExp</tt> in <tt>OCLASTView#displayOCL()</tt>
+accept an instace of this visitor, right before <img
+	src="images/tag_4.gif" height="13" width="24" align="CENTER" alt="">,
+as follows:</p>
+<pre>
+		XMLforOCL xfo = null;
+		OCLArithSimplifier simplifier = null;  
+
+		if (context instanceof org.eclipse.uml2.uml.NamedElement) {
+			xfo = XMLforOCL.getUML2Version();
+			simplifier = OCLArithSimplifier.getUML2Version();
+		} else {
+			xfo = XMLforOCL.getEcoreVersion();
+			simplifier = OCLArithSimplifier.getEcoreVersion();
+		}
+		try {
+			oclExp = (OCLExpression) oclExp.accept(simplifier);
+<img src="images/tag_4.gif" height="13" width="24" align="CENTER" alt="">		     xmlAST = (Element) oclExp.accept(xfo); // 
+		} catch (Exception e) {
+			xmlAST = reportException(e);
+		}
+</pre>
+</blockquote>
+
+<h2>Conclusion</h2>
+
+<p>In spite of having been around for some years now, the best times
+for OCL are yet to come by leveraging <i>model compilers</i> to map
+declarative specifications into the chosen target software architecture.
+Some projects and prototypes in this field are mentioned for further
+exploration:</p>
+
+<ul>
+	<li>The definition of domain-specific languages goes beyond a
+	grammar specification and includes so-called well-formedness rules to
+	validate ASTs of sentences in that language. OCL has proven successful
+	as a means to specify those rules. Having language metamodels with OCL
+	enables building better tooling for such domain-specific languages.
+	Examples of <i>machine-checked</i> metamodels include <a
+		href="http://www.cs.kent.ac.uk/pubs/2004/2027/index.html">a
+	metamodel for BPEL 1.1</a> by Dave Akehurst and <a
+		href="http://www.sts.tu-harburg.de/~mi.garcia/pubs/atem06/paper/Garcia_ATEM06_Formalizing_the_well-formedness_rules_of_EJB3QL_in_UML_OCL.pdf">a
+	metamodel for EJB3QL</a> (also called JPQL) by this author.</li>
+
+	<li>The phrase “GUI generation” is commonly equated to mean CRUD
+	(Create-Retrieve-Update-Delete). The problem with generators of CRUD
+	GUIs is that the only model-level information they have at their
+	disposal is the class model without OCL. OCL-aware generation of GUIs
+	instead results in warnings at runtime after performing updates that
+	break invariants, and in graying-out actions whose preconditions are
+	not fulfilled. Even without modeling behavior (in this case, user
+	tasks) in the input models, taking OCL into account in code generation
+	contributes to both the productivity and the quality of the software
+	development process.</li>
+
+	<li>More ideas on simplification of OCL (sometimes for improved
+	readability, need not always be for performance!) can be found in <a
+		href="http://www.ricam.oeaw.ac.at/people/page/giese/pub/models05.pdf">this
+	paper</a> and in <a
+		href="http://www.ricam.oeaw.ac.at/people/page/giese/pub/ocl04sim.pdf">this
+	other paper</a>. An OCL tool aiming at supporting the refactoring of OCL
+	expressions is <a href="http://www.roclet.org/">RoclET</a>.</li>
+
+	<li>So far <i>rule engines</i> have been reluctant to adopt OCL as
+	notation for specifying the <i>activation condition</i> that triggers
+	the <i>action part</i> of a reactive rule. We see no major technical
+	difficulty in replacing this proprietary portion of rule languages with
+	standard OCL.</li>
+
+	<li>Detecting broken invariants and detecting when an activation
+	condition should trigger are particular cases of the <i>incremental
+	update of materialized views</i>, a topic of interest in all data models.
+	The most efficient algorithms to detect these situations have been
+	designed for relational DBMSs. Work in this area for OCL includes the
+	PhD thesis by <a
+		href="http://www.lsi.upc.edu/~jcabot/research/IncrementalOCL/index.html">Jordi
+	Cabot</a>, and two master theses: <a
+		href="http://www.sw-labor.fh-ulm.de/Diplomarbeitsdatenbank/_texte/dipl3228.pdf">one</a>
+	about detecting broken invariants in EJB 2.1 for an OCL subset (in
+	German, by Dieter A Mitrik) and <a
+		href="http://www.simula.no/departments/engineering/publications/SE.7.Briand.2004">another</a>
+	on using AspectJ to instrument OCL contracts at runtime (by <a
+		href="http://www.simula.no/portal_memberdata/jamesdz">James Dzidek</a>).
+	</li>
+</ul>
+
+<p>The examples above are just a glimpse of on-going work involving
+processing of Abstract Syntax Trees of OCL (in particular) and of
+software models in general. The availability of OCL infrastructure as
+provided by MDT OCL, together with contributions from the community, is
+a step forward towards the widespread availability of reliable,
+standards-based model-compiler technology. The building blocks for this
+promising area are also at your disposal.</p>
+
+
+<h2>Appendix A: Class model of Royal & Loyal</h2>
+
+<p>The class model of the <a href="./files/RandL.ecore">Royal & Loyal</a>
+case study is shown for reference purposes below:</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/RandL/RandL.PNG"
+			alt="Royal and Loyal class model "></td>
+	</tr>
+	<caption align="bottom"><b>Figure 18</b> Royal & Loyal class
+	model</caption>
+</table>
+
+<h2>Appendix B: Comparison with XMI Tree Visualization</h2>
+
+<p>OCL ASTs can be serialized to <tt>.xmi</tt> format from the OCL
+Interpreter console and then visualized with the EMF-provided XMI
+editor. In detail:</p>
+<ul>
+	<li>type an OCL expression in the OCL Interpreter console</li>
+	<li>save it (“Save last evaluated expression to an XMI file” on
+	the toolbar view)</li>
+	<li>bring that file to the workspace</li>
+	<li>open it with the Sample Reflective Ecore Model Editor</li>
+</ul>
+
+<p>For the invariant shown in Figure 1, the result of the above looks as
+follows (Figure 19):</p>
+
+<table border="0" cellpadding="8">
+	<tr>
+		<td><img
+			src="images/myPNG/savingAnOCLASTasXMIandVisualizingIt.PNG"
+			alt="savingAnOCLASTasXMIandVisualizingIt"></td>
+	</tr>
+	<caption align="bottom"><b>Figure 19</b> Visualization of an
+	<tt>.xmi</tt> prepared with OCL Interpreter</caption>
+</table>
+
+<p>A comparison with Figure 1 shows that:</p>
+<ul>
+	<li>information about typing for the expression elements can be
+	found only in the Properties view, thus forcing to navigate between two
+	screen locations</li>
+	<li>the role played by each sub-expression (be it an argument, a
+	source expression, a new variable that will be visible in sub-scopes)
+	is not clear from the XMI editor. Instead, OCLASTView shows nodes
+	labelled with this OCL-specific information</li>
+	<li>OCLASTView can be easily extended to depict additional
+	information (e.g. which variables constitute the current scope at
+	different AST nodes). To reconstruct this information with an XMI
+	viewer, a cumbersome parsing of XML elements would be necessary
+	(cumbersome because the symbol tables prepared by the OCL parser are
+	not available anymore, and thus have to be in effect reconstructed)</li>
+</ul>
+
+<p>Specially the last item sums up the differences between both data
+structures. </p>
+
+<h2>References</h2>
+
+<ul>
+	<li>MDT OCL: <a
+		href="http://www.eclipse.org/modeling/mdt/downloads/?project=ocl">OCL
+	SDK Download</a> (includes on-line Developer Guide and Interactive OCL
+	Console example)</li>
+</ul>
+
+<ul>
+	<li>OCL 2.0: <a
+		href="http://www.omg.org/cgi-bin/doc?formal/2006-05-01">Specification</a>
+	</li>
+</ul>
+
+<ul>
+	<li><a
+		href="http://www.eclipse.org/modeling/mdt/?project=uml2#uml2">UML2</a>
+	: an EMF-based implementation of the UML<sup>TM</sup> 2.x metamodel for
+	the Eclipse platform.</li>
+</ul>
+
+<ul>
+	<li><a
+		href="http://www.eclipse.org/modeling/mdt/?project=uml2tools#uml2tools">UML2
+	Tools</a> : a set of GMF-based editors for viewing and editing UML models.
+	</li>
+</ul>
+
+<ul>
+	<li>Christian W. Damus shows in his article <a
+		href="http://www.eclipse.org/articles/article.php?file=Article-EMF-Codegen-with-OCL/index.html">Implementing
+	Model Integrity in EMF with MDT OCL</a> how to have Java method bodies
+	generated from OCL constraints (invariants, derived properties and
+	derived operations) specified in an Ecore-based model.</li>
+</ul>
+
+<ul>
+	<li>Ed Merks and Marcelo Paternostro explain in the EclipseCon
+	2007 talk <a
+		href="http://www.eclipsecon.org/2007/index.php?page=sub/&amp;id=3845">Modeling
+	Generics with Ecore</a> the changes in Ecore that allow it to model a
+	generic type system.</li>
+</ul>
+
+<h2>Acknowledgements</h2>
+
+<p>The visitor for simplifying arithmetic expressions presented here
+is based on work by <a href="http://www.avenzo.com ">Veronica
+Tedjasukmana</a> (for another OCL tool) on a family of visitors that cover a
+larger set of simplification rules, for both arithmetic and boolean
+operations.</p>
+
+
+<h2>Source Code</h2>
+
+<p>For running this plug-in, just copy the provided <tt>.jar</tt> of
+the <a href="./install/">OCLASTView plug-in</a> into your <tt>&lt;ECLIPSE_INSTALL&gt;/plugins</tt>
+folder, and restart Eclipse (with <tt>eclipse.exe -clean</tt> to be <i>really
+sure</i> that the just added plug-in will be picked-up in the product
+configuration).</p>
+
+<p>MDT OCL 1.1 is required. Depending on whether you'll want to edit
+Ecore or UML models you'll also need EMF 2.3 or UML2 2.x.</p>
+
+<p>Source code is provided in the plug-in itself. After the plug-in
+has been installed, the source code can be imported into the workspace
+as an Eclipse project with File &gt; Import &gt; Plug-ins and Fragments
+&gt; Projects with source folders &gt; OCLASTView.</p>
+
+<p>If you want to take a look at the source code before actually
+installing the plug-in, unpack the plug-in jar and take a look inside the
+<tt>src</tt> folder.</p>
+
+</div>
+
+<div class="notices">
+<h2>Notices</h2>
+Java and all Java-based trademarks and logos are trademarks or
+registered trademarks of Sun Microsystems, Inc. in the United States,
+other countries, or both.<br>
+IBM is a registered trademark of International Business Machines
+Corporation in the United States, other countries, or both.<br>
+Other company, product, or service names may be trademarks or service
+marks of others.</div>
+
+</body>
+</html>

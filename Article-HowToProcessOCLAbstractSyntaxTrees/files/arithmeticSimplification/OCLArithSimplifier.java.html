@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html><head>
+<title></title>
+  <style type="text/css">
+    <!--code { font-family: Courier New, Courier; font-size: 10pt; margin: 0px; }-->
+  </style>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head><body>
+
+
+<!-- ======================================================== -->
+<!-- = Java Sourcecode to HTML automatically converted code = -->
+<!-- =   Java2Html Converter 5.0 [2006-02-26] by Markus Gebhard  markus@jave.de   = -->
+<!-- =     Further information: http://www.java2html.de     = -->
+<div align="left" class="java">
+<table border="0" cellpadding="3" cellspacing="0" bgcolor="#ffffff">
+   <tr>
+  <!-- start source code -->
+   <td nowrap="nowrap" valign="top" align="left">
+    <code>
+<font color="#7f0055"><b>package&nbsp;</b></font><font color="#000000">oclastview.visitors.arithSimp;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">java.util.List;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EClass;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EClassifier;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EEnumLiteral;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EObject;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EOperation;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EPackage;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EParameter;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.emf.ecore.EStructuralFeature;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.Environment;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.CallOperationAction;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.Constraint;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.EcoreEnvironmentFactory;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.ecore.SendSignalAction;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.ExpressionsFactory;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.IntegerLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.NumericLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.OCLExpression;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.OperationCallExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.expressions.RealLiteralExp;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.utilities.PredefinedType;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.utilities.UtilitiesPackage;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.ocl.utilities.Visitable;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Class;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Classifier;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.EnumerationLiteral;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Operation;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Package;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Parameter;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.Property;</font><br />
+<font color="#7f0055"><b>import&nbsp;</b></font><font color="#000000">org.eclipse.uml2.uml.State;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#7f0055"><b>public&nbsp;class&nbsp;</b></font><font color="#000000">OCLArithSimplifier&lt;C,&nbsp;O,&nbsp;P,&nbsp;EL,&nbsp;PM,&nbsp;S,&nbsp;COA,&nbsp;SSA,&nbsp;CT&gt;&nbsp;</font><font color="#7f0055"><b>extends&nbsp;</b></font><font color="#000000">OCLCloner&lt;C,&nbsp;O,&nbsp;P,&nbsp;EL,&nbsp;PM,&nbsp;S,&nbsp;COA,&nbsp;SSA,&nbsp;CT&gt;&nbsp;</font><font color="#000000">{</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">OCLArithSimplifier</font><font color="#000000">(</font><font color="#000000">Environment&nbsp;env</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>super</b></font><font color="#000000">(</font><font color="#000000">env</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;static&nbsp;</b></font><font color="#000000">OCLArithSimplifier&lt;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint&gt;&nbsp;getEcoreVersion</font><font color="#000000">()&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Environment&lt;EPackage,&nbsp;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint,&nbsp;EClass,&nbsp;EObject&gt;&nbsp;auxEnv&nbsp;=&nbsp;EcoreEnvironmentFactory.INSTANCE</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.createEnvironment</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLArithSimplifier&lt;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#7f0055"><b>new&nbsp;</b></font><font color="#000000">OCLArithSimplifier&lt;EClassifier,&nbsp;EOperation,&nbsp;EStructuralFeature,&nbsp;EEnumLiteral,&nbsp;EParameter,&nbsp;EObject,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;Constraint&gt;</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">auxEnv</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>public&nbsp;static&nbsp;</b></font><font color="#000000">OCLArithSimplifier&lt;Classifier,&nbsp;Operation,&nbsp;Property,&nbsp;EnumerationLiteral,&nbsp;Parameter,&nbsp;State,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;org.eclipse.uml2.uml.Constraint&gt;&nbsp;getUML2Version</font><font color="#000000">()&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">org.eclipse.ocl.uml.OCL&nbsp;umlocl&nbsp;=&nbsp;org.eclipse.ocl.uml.OCL.newInstance</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Environment&lt;Package,&nbsp;Classifier,&nbsp;Operation,&nbsp;Property,&nbsp;EnumerationLiteral,&nbsp;Parameter,&nbsp;State,&nbsp;org.eclipse.uml2.uml.CallOperationAction,&nbsp;org.eclipse.uml2.uml.SendSignalAction,&nbsp;org.eclipse.uml2.uml.Constraint,&nbsp;Class,&nbsp;EObject&gt;&nbsp;auxEnv&nbsp;=&nbsp;umlocl</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.getEnvironment</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLArithSimplifier&lt;Classifier,&nbsp;Operation,&nbsp;Property,&nbsp;EnumerationLiteral,&nbsp;Parameter,&nbsp;State,&nbsp;CallOperationAction,&nbsp;SendSignalAction,&nbsp;org.eclipse.uml2.uml.Constraint&gt;&nbsp;res&nbsp;=&nbsp;</font><font color="#7f0055"><b>new&nbsp;</b></font><font color="#000000">OCLArithSimplifier</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">auxEnv</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#646464">@Override</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>protected&nbsp;</b></font><font color="#000000">Visitable&nbsp;handleOperationCallExp</font><font color="#000000">(</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OperationCallExp&lt;C,&nbsp;O&gt;&nbsp;callExp,&nbsp;Visitable&nbsp;sourceResult,</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">List&lt;Visitable&gt;&nbsp;argumentResults</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>int&nbsp;</b></font><font color="#000000">opcode&nbsp;=&nbsp;callExp.getOperationCode</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">!isArithmeticOp</font><font color="#000000">(</font><font color="#000000">callExp</font><font color="#000000">))&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;super</b></font><font color="#000000">.handleOperationCallExp</font><font color="#000000">(</font><font color="#000000">callExp,&nbsp;sourceResult,&nbsp;argumentResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLExpression&lt;C&gt;&nbsp;newSource&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">sourceResult;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLExpression&lt;C&gt;&nbsp;newArg&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">OCLExpression&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">argumentResults.get</font><font color="#000000">(</font><font color="#990000">0</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">!</font><font color="#000000">(</font><font color="#000000">newSource&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">NumericLiteralExp</font><font color="#000000">)</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">||&nbsp;!</font><font color="#000000">(</font><font color="#000000">newArg&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">NumericLiteralExp</font><font color="#000000">))&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;super</b></font><font color="#000000">.handleOperationCallExp</font><font color="#000000">(</font><font color="#000000">callExp,&nbsp;sourceResult,&nbsp;argumentResults</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">/*</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">*&nbsp;if&nbsp;one&nbsp;of&nbsp;source&nbsp;or&nbsp;arg&nbsp;is&nbsp;not&nbsp;IntegerLiteralExp&nbsp;then&nbsp;promotion&nbsp;to</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">*&nbsp;Real&nbsp;takes&nbsp;place</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">*/</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">newSource&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">IntegerLiteralExp</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">&amp;&amp;&nbsp;newArg&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">IntegerLiteralExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Integer&nbsp;intSource&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">IntegerLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newSource</font><font color="#000000">)</font><font color="#000000">.getIntegerSymbol</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Integer&nbsp;intArg&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">IntegerLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newArg</font><font color="#000000">)</font><font color="#000000">.getIntegerSymbol</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLExpression&lt;C&gt;&nbsp;res&nbsp;=&nbsp;simplifyInteger</font><font color="#000000">(</font><font color="#000000">opcode,&nbsp;intSource,&nbsp;intArg,&nbsp;</font><font color="#000000">((</font><font color="#000000">IntegerLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newSource</font><font color="#000000">)</font><font color="#000000">.getType</font><font color="#000000">())</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">/*&nbsp;promote&nbsp;to&nbsp;Double,&nbsp;compute,&nbsp;and&nbsp;return&nbsp;*/</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Double&nbsp;dSource&nbsp;=&nbsp;</font><font color="#7f0055"><b>null</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Double&nbsp;dArg&nbsp;=&nbsp;</font><font color="#7f0055"><b>null</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">C&nbsp;type&nbsp;=&nbsp;</font><font color="#7f0055"><b>null</b></font><font color="#000000">;&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">newSource&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">IntegerLiteralExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">dSource&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">IntegerLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newSource</font><font color="#000000">)</font><font color="#000000">.getIntegerSymbol</font><font color="#000000">()</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.doubleValue</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}&nbsp;</font><font color="#7f0055"><b>else&nbsp;</b></font><font color="#000000">{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">dSource&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">RealLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newSource</font><font color="#000000">)</font><font color="#000000">.getRealSymbol</font><font color="#000000">()</font><font color="#000000">.doubleValue</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">type&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">RealLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newSource</font><font color="#000000">)</font><font color="#000000">.getType</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">newArg&nbsp;</font><font color="#7f0055"><b>instanceof&nbsp;</b></font><font color="#000000">IntegerLiteralExp</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">dArg&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">IntegerLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newArg</font><font color="#000000">)</font><font color="#000000">.getIntegerSymbol</font><font color="#000000">()</font><font color="#000000">.doubleValue</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}&nbsp;</font><font color="#7f0055"><b>else&nbsp;</b></font><font color="#000000">{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">dArg&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">RealLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newArg</font><font color="#000000">)</font><font color="#000000">.getRealSymbol</font><font color="#000000">()</font><font color="#000000">.doubleValue</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">type&nbsp;=&nbsp;</font><font color="#000000">((</font><font color="#000000">RealLiteralExp&lt;C&gt;</font><font color="#000000">)&nbsp;</font><font color="#000000">newArg</font><font color="#000000">)</font><font color="#000000">.getType</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">OCLExpression&lt;C&gt;&nbsp;res&nbsp;=&nbsp;simplifyDouble</font><font color="#000000">(</font><font color="#000000">opcode,&nbsp;dSource,&nbsp;dArg,&nbsp;type</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#3f5fbf">/**</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;Returns&nbsp;either&nbsp;a&nbsp;RealLiteralExp&nbsp;or&nbsp;InvalidLiteralExp</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><font color="#7f9fbf">@param&nbsp;</font><font color="#3f5fbf">type&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*/</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>private&nbsp;</b></font><font color="#000000">OCLExpression&lt;C&gt;&nbsp;simplifyDouble</font><font color="#000000">(</font><font color="#7f0055"><b>int&nbsp;</b></font><font color="#000000">opcode,&nbsp;Double&nbsp;source,&nbsp;Double&nbsp;arg,&nbsp;C&nbsp;type</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">RealLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;ExpressionsFactory.eINSTANCE</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.createRealLiteralExp</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">((</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.PLUS</font><font color="#000000">)&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.MINUS</font><font color="#000000">)</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.TIMES</font><font color="#000000">))&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>switch&nbsp;</b></font><font color="#000000">(</font><font color="#000000">opcode</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>case&nbsp;</b></font><font color="#000000">PredefinedType.PLUS:</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setRealSymbol</font><font color="#000000">(</font><font color="#000000">source&nbsp;+&nbsp;arg</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>break</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>case&nbsp;</b></font><font color="#000000">PredefinedType.MINUS:</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setRealSymbol</font><font color="#000000">(</font><font color="#000000">source&nbsp;-&nbsp;arg</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>break</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>case&nbsp;</b></font><font color="#000000">PredefinedType.TIMES:</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setRealSymbol</font><font color="#000000">(</font><font color="#000000">source&nbsp;*&nbsp;arg</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>break</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">//&nbsp;denominator&nbsp;of&nbsp;0&nbsp;means&nbsp;undefined</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>double&nbsp;</b></font><font color="#000000">num&nbsp;=&nbsp;source;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>double&nbsp;</b></font><font color="#000000">denom&nbsp;=&nbsp;arg;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Double&nbsp;d&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">denom&nbsp;==&nbsp;</font><font color="#990000">0.0</font><font color="#000000">)&nbsp;</font><font color="#000000">?&nbsp;</font><font color="#7f0055"><b>null&nbsp;</b></font><font color="#000000">:&nbsp;</font><font color="#7f0055"><b>new&nbsp;</b></font><font color="#000000">Double</font><font color="#000000">(</font><font color="#000000">num&nbsp;/&nbsp;denom</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">d&nbsp;==&nbsp;</font><font color="#7f0055"><b>null</b></font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">ExpressionsFactory.eINSTANCE.createInvalidLiteralExp</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setRealSymbol</font><font color="#000000">(</font><font color="#000000">d</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setType</font><font color="#000000">(</font><font color="#000000">type</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#3f5fbf">/**</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;Returns&nbsp;either&nbsp;an&nbsp;IntegerLiteralExp,&nbsp;RealLiteralExp,&nbsp;or&nbsp;InvalidLiteralExp</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><font color="#7f9fbf">@param&nbsp;</font><font color="#3f5fbf">type&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*&nbsp;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;</font><font color="#3f5fbf">*/</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>private&nbsp;</b></font><font color="#000000">OCLExpression&lt;C&gt;&nbsp;simplifyInteger</font><font color="#000000">(</font><font color="#7f0055"><b>int&nbsp;</b></font><font color="#000000">opcode,&nbsp;</font><font color="#7f0055"><b>int&nbsp;</b></font><font color="#000000">intSource,&nbsp;</font><font color="#7f0055"><b>int&nbsp;</b></font><font color="#000000">intArg,&nbsp;C&nbsp;type</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">((</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.PLUS</font><font color="#000000">)&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.MINUS</font><font color="#000000">)</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.TIMES</font><font color="#000000">))&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">IntegerLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;ExpressionsFactory.eINSTANCE</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.createIntegerLiteralExp</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>switch&nbsp;</b></font><font color="#000000">(</font><font color="#000000">opcode</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>case&nbsp;</b></font><font color="#000000">PredefinedType.PLUS:</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setIntegerSymbol</font><font color="#000000">(</font><font color="#000000">intSource&nbsp;+&nbsp;intArg</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>break</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>case&nbsp;</b></font><font color="#000000">PredefinedType.MINUS:</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setIntegerSymbol</font><font color="#000000">(</font><font color="#000000">intSource&nbsp;-&nbsp;intArg</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>break</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>case&nbsp;</b></font><font color="#000000">PredefinedType.TIMES:</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setIntegerSymbol</font><font color="#000000">(</font><font color="#000000">intSource&nbsp;*&nbsp;intArg</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>break</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setType</font><font color="#000000">(</font><font color="#000000">type</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">//&nbsp;denominator&nbsp;of&nbsp;0&nbsp;means&nbsp;undefined</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>double&nbsp;</b></font><font color="#000000">num&nbsp;=&nbsp;intSource;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>double&nbsp;</b></font><font color="#000000">denom&nbsp;=&nbsp;intArg;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">Double&nbsp;d&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">denom&nbsp;==&nbsp;</font><font color="#990000">0.0</font><font color="#000000">)&nbsp;</font><font color="#000000">?&nbsp;</font><font color="#7f0055"><b>null&nbsp;</b></font><font color="#000000">:&nbsp;</font><font color="#7f0055"><b>new&nbsp;</b></font><font color="#000000">Double</font><font color="#000000">(</font><font color="#000000">num&nbsp;/&nbsp;denom</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">d&nbsp;==&nbsp;</font><font color="#7f0055"><b>null</b></font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">ExpressionsFactory.eINSTANCE.createInvalidLiteralExp</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.DIVIDE</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">RealLiteralExp&lt;C&gt;&nbsp;rle&nbsp;=&nbsp;ExpressionsFactory.eINSTANCE</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.createRealLiteralExp</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">rle.setRealSymbol</font><font color="#000000">(</font><font color="#000000">d</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">rle;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>if&nbsp;</b></font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.DIV</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">IntegerLiteralExp&lt;C&gt;&nbsp;res&nbsp;=&nbsp;ExpressionsFactory.eINSTANCE</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">.createIntegerLiteralExp</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">res.setIntegerSymbol</font><font color="#000000">(</font><font color="#000000">intSource&nbsp;/&nbsp;intArg</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#3f7f5f">//&nbsp;we&nbsp;won't&nbsp;get&nbsp;to&nbsp;this&nbsp;point,&nbsp;just&nbsp;to&nbsp;make&nbsp;the&nbsp;compiler&nbsp;happy</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;null</b></font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#7f0055"><b>private&nbsp;</b></font><font color="#7f0055"><b>boolean&nbsp;</b></font><font color="#000000">isArithmeticOp</font><font color="#000000">(</font><font color="#000000">OperationCallExp&lt;C,&nbsp;O&gt;&nbsp;oc</font><font color="#000000">)&nbsp;{</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>int&nbsp;</b></font><font color="#000000">opcode&nbsp;=&nbsp;oc.getOperationCode</font><font color="#000000">()</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>boolean&nbsp;</b></font><font color="#000000">res&nbsp;=&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.PLUS</font><font color="#000000">)</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.MINUS</font><font color="#000000">)</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.TIMES</font><font color="#000000">)</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.DIVIDE</font><font color="#000000">)</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#000000">||&nbsp;</font><font color="#000000">(</font><font color="#000000">opcode&nbsp;==&nbsp;PredefinedType.DIV</font><font color="#000000">)</font><font color="#000000">;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7f0055"><b>return&nbsp;</b></font><font color="#000000">res;</font><br />
+<font color="#ffffff">&nbsp;&nbsp;</font><font color="#000000">}</font><br />
+<font color="#ffffff"></font><br />
+<font color="#ffffff"></font><br />
+<font color="#000000">}</font></code>
+    
+   </td>
+  <!-- end source code -->
+   </tr>
+</table>
+</div>
+<!-- =       END of automatically generated HTML code       = -->
+<!-- ======================================================== -->
+
+
+</body></html>
