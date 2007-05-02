@@ -194,7 +194,7 @@ editor that allows selecting model elements (e.g. the built-in Sample
 Ecore Model Editor, or some graphical editor). The contained OCL
 expressions can thus be modified and new ones added. You won't get
 feedback on syntax checks with those editors (as the OCL annotations are
-opaque to them). For that, installing the <a href="./install/">OCLASTView
+opaque to them). For that, installing the <a href="./install/plugins/OCLASTView_1.0.0.jar">OCLASTView
 plug-in</a> is needed.</p>
 
 <blockquote>
@@ -241,7 +241,7 @@ the OCL 2.0 metamodel can be found in the latest spec by the OMG, <a
 
 <table border="0" cellpadding="8">
 	<tr>
-		<td><img src="images/myPNG/OCLMM.PNG"
+		<td><img src="images/myPNG/OCLMM.png"
 			alt="Fragment of the OCL 2.0 metamodel (only inheritance relationships shown)"></td>
 	</tr>
 	<caption align="bottom"><b>Figure 2</b> Fragment of the OCL
@@ -285,14 +285,15 @@ please notice that:</p>
 	metamodel class is depicted.</li>
 </ul>
 
-<p>Coming back to the source code, first for <img src="images/tag_1.gif"
-	height="13" width="24" align="CENTER" alt=""> the default
-implementation of <tt>AbstractVisitor#visitIteratorExp()</tt> and then
-for <img src="images/tag_2.gif" height="13" width="24" align="CENTER"
-	alt=""> its specialization in <tt>ToStringVisitor</tt> (which
-overrides it to generate the textual syntax for the iterate expression,
-the opposite process to parsing):</p>
-<pre><img src="images/tag_1.gif" height="13" width="24" align="CENTER" alt=""> public T visitIteratorExp(IteratorExp&lt;C, PM&gt; callExp) {
+<p>Coming back to the source code, first for <img
+	src="images/tag_1.gif" height="13" width="24" align="CENTER" alt="">
+the default implementation of <tt>AbstractVisitor#visitIteratorExp()</tt>
+and then for <img src="images/tag_2.gif" height="13" width="24"
+	align="CENTER" alt=""> its specialization in <tt>ToStringVisitor</tt>
+(which overrides it to generate the textual syntax for the iterate
+expression, the opposite process to parsing):</p>
+<pre><img src="images/tag_1.gif" height="13" width="24"
+	align="CENTER" alt=""> public T visitIteratorExp(IteratorExp&lt;C, PM&gt; callExp) {
         T sourceResult = callExp.getSource().accept(this);
         
         List&lt;T&gt; variableResults;
@@ -319,10 +320,10 @@ the opposite process to parsing):</p>
 
 </pre>
 
-<p>The above implementation performs no processing at all, it just visits
-all nodes. Instead, the <img src="images/tag_2.gif" height="13"
+<p>The above implementation performs no processing at all, it just
+visits all nodes. Instead, the <img src="images/tag_2.gif" height="13"
 	width="24" align="CENTER" alt=""> override in <tt>ToStringVisitor</tt>
-returns a string of the form </p>
+returns a string of the form</p>
 <tt><i>sourceCollection</i>-><i>iteratorName</i>(<i>
 iteratorVariables</i> | <i>iteratorBody </i>)</tt> <br />
 <pre>
@@ -548,9 +549,7 @@ an AST node typically looks like: <pre>
 		return res;
 	}
 
-</pre>
-
-Two novelties of OCL 2.0 are the built-in literal values <tt>null</tt>
+</pre> Two novelties of OCL 2.0 are the built-in literal values <tt>null</tt>
 and <tt>OclInvalid</tt> which may appear in the textual syntax. In
 general, an expression any of whose arguments is <tt>OclInvalid</tt>
 evaluates to <tt>OclInvalid</tt>, that value propagates during
@@ -666,7 +665,7 @@ in the metamodel (Figure 2 depicts only the classes branching off from <tt>OCLEx
 
 <table border="0" cellpadding="8">
 	<tr>
-		<td><img src="images/myPNG/overriddenSoFar.PNG" alt="Methos"
+		<td><img src="images/myPNG/overriddenSoFar.PNG" alt="Methods
 			making up our><tt>XMLforOCL</tt> visitor so far ">
 		<p /><b>Figure 4</b> Public methods overridden in <tt>XMLforOCL</tt>
 		so far
@@ -731,13 +730,12 @@ implicit) variables. For example, Figure 1 shows the <tt>forAll</tt>
 iterator defining two explicit variables (<tt>c1</tt>, <tt>c2</tt>).
 Implicit iterator variables instead are nowhere to be seen in the
 textual syntax, thus contributing to its conciseness, but are revealed
-by the AST builder anyway. For example, Figure 6 depicts the invariant </p>
+by the AST builder anyway. For example, Figure 6 depicts the invariant</p>
 <p><tt>participants->forAll(age() <= 70)</tt></p>
 <p>where both <tt>self</tt> and the iterator variable over the <tt>participants</tt>
 collection are implicit. In the AST tree view the explicit declaration
 of the iterator variable (<tt>temp20</tt>) is shown in red, and its
-usage in green (Figure 6).
-</p>
+usage in green (Figure 6).</p>
 <table border="0" cellpadding="8">
 	<tr>
 		<td><img src="images/myPNG/implicitIteratorVar.PNG"
@@ -768,11 +766,11 @@ covering later our last visitor, a simplifier of arithmetic expressions.</p>
 
 <h2>The UI for OCL visitors</h2>
 
-<p>We'll use the same UI mechanisms for all the visitors in this article: a
-TreeViewer to display an XML document. The only differences will be in
-the document to build and how it's built. As first step, we activate the
-wizard File &gt; New &gt; Plug-in Project, and make the choices shown in
-Figures 8 to 10.</p>
+<p>We'll use the same UI mechanisms for all the visitors in this
+article: a TreeViewer to display an XML document. The only differences
+will be in the document to build and how it's built. As first step, we
+activate the wizard File &gt; New &gt; Plug-in Project, and make the
+choices shown in Figures 8 to 10.</p>
 
 <table border="0" cellpadding="8">
 	<tr>
@@ -821,7 +819,7 @@ about the current selection. We want it instead to display the XML tree
 so laboriously built for an OCL-annotated operation or classifier. Some
 classes cherry-picked from other plug-ins save the day (they've been
 placed in the <tt>util</tt> package in the source code of <a
-	href="./install/">OCLASTView</a>):</p>
+	href="./install/plugins/OCLASTView_1.0.0.jar">OCLASTView</a>):</p>
 <ul>
 	<li><tt>JDomContentProvider</tt> and <tt>JDomLabelProvider</tt>,
 	reproduced from the BSD-licensed <a
@@ -924,8 +922,8 @@ increased thrill)</p>
 
 <h3>Using OCLASTView with Ecore editors</h3>
 
-<p>Just to show that it's possible, the figure below depicts the example
-Ecore editor provided by GMF triggering an update of OCLASTView:</p>
+<p>Just to show that it's possible, the figure below depicts the
+example Ecore editor provided by GMF triggering an update of OCLASTView:</p>
 
 <table border="0" cellpadding="8">
 	<tr>
@@ -1014,11 +1012,10 @@ in turn play by the rules and return a valid AST.</p>
 You may want to review the checks for well-formedness embodied in <tt>org.eclipse.ocl.internal.parser.ValidationVisitor</tt>.</p>
 </blockquote>
 
-<p>Moreover, it would be nice if we documented the set of OCL expressions
-that our algorithm has been designed to handle (it's all right to write
-a visitor that covers only a subset of OCL, as long as that visitor
-reports whether it can cope with the input or not).
-</p>
+<p>Moreover, it would be nice if we documented the set of OCL
+expressions that our algorithm has been designed to handle (it's all
+right to write a visitor that covers only a subset of OCL, as long as
+that visitor reports whether it can cope with the input or not).</p>
 
 <p>The sketched reduction is not the only possible one, logical
 operations can be simplified according to de Morgan rules, and so on. In
@@ -1098,8 +1095,7 @@ as follows:</p>
 		} catch (Exception e) {
 			xmlAST = reportException(e);
 		}
-</pre>
-</blockquote>
+</pre></blockquote>
 
 <h2>Conclusion</h2>
 
@@ -1134,9 +1130,9 @@ exploration:</p>
 
 	<li>More ideas on simplification of OCL (sometimes for improved
 	readability, need not always be for performance!) can be found in <a
-		href="http://www.ricam.oeaw.ac.at/people/page/giese/pub/models05.pdf">this
+		href="http://www.risc.uni-linz.ac.at/people/mgiese/pub/models05.pdf">this
 	paper</a> and in <a
-		href="http://www.ricam.oeaw.ac.at/people/page/giese/pub/ocl04sim.pdf">this
+		href="http://www.risc.uni-linz.ac.at/people/mgiese/pub/ocl04sim.pdf">this
 	other paper</a>. An OCL tool aiming at supporting the refactoring of OCL
 	expressions is <a href="http://www.roclet.org/">RoclET</a>.</li>
 
@@ -1153,14 +1149,11 @@ exploration:</p>
 	designed for relational DBMSs. Work in this area for OCL includes the
 	PhD thesis by <a
 		href="http://www.lsi.upc.edu/~jcabot/research/IncrementalOCL/index.html">Jordi
-	Cabot</a>, and two master theses: <a
-		href="http://www.sw-labor.fh-ulm.de/Diplomarbeitsdatenbank/_texte/dipl3228.pdf">one</a>
-	about detecting broken invariants in EJB 2.1 for an OCL subset (in
-	German, by Dieter A Mitrik) and <a
-		href="http://www.simula.no/departments/engineering/publications/SE.7.Briand.2004">another</a>
-	on using AspectJ to instrument OCL contracts at runtime (by <a
-		href="http://www.simula.no/portal_memberdata/jamesdz">James Dzidek</a>).
-	</li>
+	Cabot</a>, and <a
+		href="http://www.simula.no/departments/engineering/publications/SE.7.Briand.2004">a
+	master thesis</a> on using AspectJ to instrument OCL contracts at runtime
+	(by <a href="http://www.simula.no/portal_memberdata/jamesdz">James
+	Dzidek</a>).</li>
 </ul>
 
 <p>The examples above are just a glimpse of on-going work involving
@@ -1174,12 +1167,12 @@ promising area are also at your disposal.</p>
 
 <h2>Appendix A: Class model of Royal & Loyal</h2>
 
-<p>The class model of the <a href="./files/RandL.ecore">Royal & Loyal</a>
-case study is shown for reference purposes below:</p>
+<p>The class model of the <a href="./files/RandL.ecore">Royal &
+Loyal</a> case study is shown for reference purposes below:</p>
 
 <table border="0" cellpadding="8">
 	<tr>
-		<td><img src="images/RandL/RandL.PNG"
+		<td><img src="images/RandL/RandL.png"
 			alt="Royal and Loyal class model "></td>
 	</tr>
 	<caption align="bottom"><b>Figure 18</b> Royal & Loyal class
@@ -1199,8 +1192,8 @@ editor. In detail:</p>
 	<li>open it with the Sample Reflective Ecore Model Editor</li>
 </ul>
 
-<p>For the invariant shown in Figure 1, the result of the above looks as
-follows (Figure 19):</p>
+<p>For the invariant shown in Figure 1, the result of the above
+looks as follows (Figure 19):</p>
 
 <table border="0" cellpadding="8">
 	<tr>
@@ -1230,7 +1223,7 @@ follows (Figure 19):</p>
 </ul>
 
 <p>Specially the last item sums up the differences between both data
-structures. </p>
+structures.</p>
 
 <h2>References</h2>
 
@@ -1289,7 +1282,7 @@ operations.</p>
 <h2>Source Code</h2>
 
 <p>For running this plug-in, just copy the provided <tt>.jar</tt> of
-the <a href="./install/">OCLASTView plug-in</a> into your <tt>&lt;ECLIPSE_INSTALL&gt;/plugins</tt>
+the <a href="./install/plugins/OCLASTView_1.0.0.jar">OCLASTView plug-in</a> into your <tt>&lt;ECLIPSE_INSTALL&gt;/plugins</tt>
 folder, and restart Eclipse (with <tt>eclipse.exe -clean</tt> to be <i>really
 sure</i> that the just added plug-in will be picked-up in the product
 configuration).</p>
@@ -1303,8 +1296,8 @@ as an Eclipse project with File &gt; Import &gt; Plug-ins and Fragments
 &gt; Projects with source folders &gt; OCLASTView.</p>
 
 <p>If you want to take a look at the source code before actually
-installing the plug-in, unpack the plug-in jar and take a look inside the
-<tt>src</tt> folder.</p>
+installing the plug-in, unpack the plug-in jar and take a look inside
+the <tt>src</tt> folder.</p>
 
 </div>
 
