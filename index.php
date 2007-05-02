@@ -102,9 +102,6 @@
  		$articles
 	</div>
 	<div id="rightcolumn">
-		<div class="sideitem" style="border:NONE;text-align:center">
-			<a href="http://www.eclipsecon.org/?tag=eclipse-articles"><img src="http://www.eclipsecon.org/2007/image125x125.gif"/></a>
-		</div>
 		<div class="sideitem">
 			<h6>Categories</h6>
 			$category_cloud
