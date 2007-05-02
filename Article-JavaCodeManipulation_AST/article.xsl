@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-        $Id: article.xsl,v 1.1 2006/11/20 15:03:46 wbeaton Exp $
+        $Id: article.xsl,v 1.2 2007/05/02 01:44:44 wbeaton Exp $
         author: Chris Aniszczyk <zx@us.ibm.com>
         author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -9,7 +9,7 @@
 	<xsl:import href="docbook.xsl" />
 	
 	<xsl:param name="html.stylesheet"
-		select="'default_style.css'" />
+		select="'../article.css'" />
 	<xsl:param name="admon.graphics" select="1" />
 	<xsl:param name="admon.graphics.path">images/</xsl:param>
 	<xsl:param name="admon.graphics.extension">.png</xsl:param>
@@ -25,32 +25,23 @@
 	<xsl:template match="releaseinfo | copyright"
 		mode="titlepage.mode">
 	</xsl:template>
-
-	<xsl:template name="user.header.content">
-		<div align="right">
-			&#160;
-			<span class="copy">
-				Copyright &#x00A9;<xsl:value-of select="//copyright/year[1]" />&#160;<xsl:value-of select="//copyright/holder[1]" />
-			</span>
-		</div>
-	</xsl:template>
 	
 	<xsl:template name="article.titlepage.recto">
 		<h1 align="center"><xsl:value-of select="articleinfo/title"/></h1>
  
-		<blockquote> 
-			<b>Summary</b><br/>
-			<xsl:value-of select="articleinfo/abstract"/> <br/>
+		<div class="summary"> 
+			<h2>Summary</h2>
+			<p><xsl:value-of select="articleinfo/abstract"/></p>
 	
-   			 <p>
-   			 	<b>By 
+   			 <div class="author">
+   			 	By 
     				<xsl:for-each select="articleinfo/authorgroup/author">
   						<xsl:value-of select="firstname"/>&#160;<xsl:value-of select="surname"/>, <xsl:value-of select="affiliation/orgname"/><br/>
     				</xsl:for-each>
-   			 	</b>
-    			<xsl:apply-templates mode="article.titlepage.recto.mode" select="articleinfo/date"/>
-    		</p>
- 		</blockquote>
+   			 </div>
+   			 <div class="copyright">Copyright &#x00A9;<xsl:value-of select="//copyright/year[1]" />&#160;<xsl:value-of select="//copyright/holder[1]" /></div>
+   			 <div class="date"><xsl:apply-templates mode="article.titlepage.recto.mode" select="articleinfo/date"/></div>
+ 		</div>
 	</xsl:template>
 
 	<xsl:template match="legalnotice"
@@ -62,9 +53,10 @@
   	</xsl:template>
   	
   	<xsl:template name="process.footnotes">
-  		<p></p>
+  		<div class="notices">
     	<h3>Trademarks</h3>
     	<xsl:apply-templates select="articleinfo/legalnotice"
       		mode="article.titlepage.recto.auto.mode.footnote"/>
+      	</div>
   	</xsl:template>
 </xsl:stylesheet>
