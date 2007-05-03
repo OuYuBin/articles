@@ -4,83 +4,12 @@
 	# articles.rss
 	#
 	# Author: 		Wayne Beaton
-	# Date:			2006-04-20
+	# Date:			2007-05-03
 	#
 	# Description: This page generates an RSS feed containing articles. 
-	#   An optional parameter (filter) can be provided in the request header
-	#   to specify what the feed will contain. To obtain only recent articles,
-	#   you would specify "/articles/articles.rss?filter=recent". If no filter
-	#   is specified, the recent articles are returned.
 	#****************************************************************************
-	header('Content-type: text/xml');
-	
-	// The next line needs to occur first in the file.
-	echo "<?xml version=\"1.0\"?>";
 
-	include("scripts/articles.php");
-	
-	/* 
-	 * If a filter was provided, get it. Otherwise,
-	 * set the filter to 'recent' so that all recent
-	 * articles are obtained. 
-	 */
-	$filter = $_GET['filter'];
-	if (!$filter) $filter = 'recent';
-	
-	/*
-	 * For backwards compatibility. The categories have
-	 * been changed, but the old ones may still be referenced
-	 */
-	$filter = strtoupper($filter);
-	if ($filter == 'UI') $filter = 'User interface';
-	if ($filter == 'USER INTERFACE') $filter = 'User interface';
-	if ($filter == 'WHITEPAPER') $filter = 'Whitepaper';
-	if ($filter == 'TUTORIAL') $filter = 'Tutorial';
-	
-	/*
-	 * Find the desired category. If no category
-	 * can be found using the specified filter, obtain
-	 * the 'recent' category.
-	 */
-	$listing =& get_listing();
-	$category =& $listing->categories[$filter];
-	if (!$category) {
-		$filter = 'recent';
-		$category =& $listing->categories['recent'];
-	}
-	
-	/*
-	 * Sort the category by date.
-	 */
-	$category->sort_articles();
-	$articles =& $category->articles;
-	
-	echo <<<EORSS
-<rss version="2.0">
-  <channel>
-    <title>Eclipse Corner Articles: $category->title</title>
-    <link>http://www.eclipse.org/articles/index.php?filter=$filter</link>
-    <description>$category->description</description>
-    <image>
-      <url>http://www.eclipse.org/articles/images/eclipse.png</url>
-      <title>eclipse.org</title>
-      <link>http://www.eclipse.org/articles</link>
-    </image>
-EORSS;
-//	$base_date = strtotime('-6 months');
-	foreach ($articles as $article) {
-//		if (!$article->is_more_recent_than($base_date)) break;
-		echo "\n\t<item>";
-		echo "\n\t\t<title><![CDATA[$article->title]]></title>";
-		echo "\n\t\t<link>http://www.eclipse.org$article->root/$article->link</link>";
-		echo "\n\t\t<description><![CDATA[$article->description]]></description>";
-		$date = date("D, j M Y  12:00:00 \G\M\T", $article->most_recent_date());
-		echo "\n\t\t<pubDate>$date</pubDate>";
-		echo "\n\t</item>";
-	}
-	
-	echo <<<EORSS
-	</channel>
-</rss>
-EORSS;
+	$_GET['type']= 'article';
+	$_GET['title']= 'Eclipse Corner Articles';
+	include("../resources/resources.rss");
 ?>
