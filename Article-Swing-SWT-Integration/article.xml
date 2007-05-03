@@ -1,0 +1,971 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+	"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<article id="article">
+	<articleinfo>
+		<title>Swing/SWT Integration</title>
+		<releaseinfo role="SVN"> $Id: article.xml,v 1.1 2007/05/03 13:39:55 wbeaton Exp $ </releaseinfo>
+		<date>April 19, 2007</date>
+		<authorgroup>
+		  <author>
+		    <firstname>Gordon</firstname>
+		    <surname>Hirsch</surname>
+		    <affiliation>
+		      <orgname>SAS Institute Inc.</orgname>
+		    </affiliation>
+		  </author>
+		</authorgroup>
+		<copyright>
+			<year>2007</year>
+			<holder>SAS Institute Inc. Made available under the EPL v1.0 </holder>
+		</copyright>
+		<abstract>
+			<para>
+             Swing and SWT are sometimes seen as strictly competing technologies. Some 
+             people have strong opinions on which UI toolkit to use exclusively for client
+             applications. However, in the real world, ideological extremes are
+             often impractical. Some valid use cases require both technologies
+             to coexist in a single application. While mixing the two toolkits is not a
+             simple task, it can be done, and it can be done such that the two toolkits
+             are smoothly integrated. This article discusses the steps necessary to
+             achieve good Swing/SWT integration. It focuses on the use case of embedding
+             existing Swing components into an SWT-based Rich Client Platform application.
+			</para>
+		</abstract>
+        <legalnotice>
+          <para>Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. in
+            the United States, other countries, or both.</para>
+          <para>Other company, product, or service names may be trademarks or service marks of
+            others.</para>
+        </legalnotice>
+	</articleinfo>
+	<section id="sec-introduction">
+		<title>Introduction</title>
+    
+		<para>
+		  Many existing standalone Java clients represent a large investment in Swing
+		  components. While there are compelling arguments for moving these clients to the Eclipse Rich
+		  Client Platform (RCP), the full migration of a large existing application can be
+		  expensive. By retaining some Swing components, the initial cost of 
+          migration can be reduced. Over time, Swing components may be incrementally converted
+          to SWT if and when it becomes necessary. 
+		</para>
+        <para>
+          For example, at SAS we have extended the standard Swing <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/javax/swing/JTable.html">
+          <code>JTable</code></ulink> component to
+          create an enhanced table that meets the needs of our existing applications. 
+          A large effort will be required to convert this component to SWT. Instead of 
+          waiting for an equivalent SWT table, we are able to use the Swing
+          table component as-is in an RCP application, as shown in the screenshot below. 
+          It shows an RCP application running on the Windows XP platform. 
+          The two tables are Swing components; all other components
+          were created with SWT.
+        </para>
+        <figure id="fig-table-embed">
+          <title>Embedding Swing Table Components</title>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/table-embed.png"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+        <para>
+          We also have a large inventory of complex Swing components to display graphs and charts. 
+          Again, by mixing Swing and SWT, we can consider the conversion of these Swing components separately from 
+          the immediate needs of an application that we'd like to migrate to RCP. 
+          The screenshot below shows another RCP application with a Swing-based graph 
+          component. Everything else in the image is an
+          SWT component. (This application may not look like an RCP application, 
+          but it is. The unusual look is due to extensive use of the Eclipse 
+          presentations API and other advanced workbench features.)
+        </para>
+        <figure id="fig-graph-embed">
+          <title>Embedding Graphical Swing Components</title>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/graph-embed.jpg"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+		<para>
+		  The use of Swing components with the RCP implies that two large UI toolkits will coexist in a
+		  single application and that some amount of integration is necessary to ensure UI
+		  consistency across the entire application.
+		</para>
+		<para>
+		  SWT provides the SWT/AWT Bridge <xref linkend="bib-bridge"/> as the basic infrastructure for Swing/SWT integration.
+          However, the bridge is only the first step along the
+		  path to embedding usable Swing components in RCP applications. Much of
+		  this article is devoted to explaining the additional practices necessary for 
+          effective integration. Without these practices, the
+		  SWT/AWT Bridge is insufficient for production-quality application use.
+		  With them, you can successfully host key Swing components in RCP
+		  applications.
+		</para>
+        <para>
+          Integrating two independent UI toolkits is a complicated task, and it
+          rarely produces perfect results. This article 
+          concentrates on practical techniques (and yes, even some hacks) to make the 
+          integration effective enough for use in real-world applications. 
+        </para>
+		<para>
+		  Despite the complexity, most of the practices described below can be encapsulated 
+          in a single common base class to be used when embedding Swing components. There are additional 
+          helper classes to support the implementation. An example is included with this
+          article. See <xref linkend="app-example-code"/> for more information. 
+		</para>
+	</section>
+	<section id="sec-using-bridge">
+	  <title>Using the SWT/AWT Bridge</title>
+	  <para>
+	    The SWT/AWT Bridge has been part of SWT since version 3.0. It is
+	    a very simple API, located in the package
+        <code>
+	    <ulink
+	      url="http://help.eclipse.org/help32/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/swt/awt/package-summary.html">
+	      org.eclipse.swt.awt</ulink>.
+        </code>
+	  </para>
+      <note>
+        <para>
+          This article focuses on embedding AWT frames inside SWT composites. It demonstrates only
+          one half of the SWT/AWT Bridge. Nevertheless, most of the improvements described below also apply to the
+          other direction: embedding SWT composites inside AWT frames.
+        </para>
+      </note>
+	  <para>Minimally, embedding an AWT frame inside an SWT composite is just two simple lines of code</para>
+      <programlisting>
+    Composite composite = new Composite(parent, SWT.EMBEDDED | SWT.NO_BACKGROUND);
+    Frame frame = SWT_AWT.new_Frame(composite);
+      </programlisting>
+      <para>
+        An instance of <code>org.eclipse.swt.Composite</code> is created with the <code>SWT.EMBEDDED</code> 
+        style. This style signals that an AWT frame is to be embedded inside the Composite. The call to the static <code>new_Frame</code>
+        method creates and returns such a frame. The frame may then be
+        populated with AWT and/or Swing components. 
+      </para>
+      <para>
+        The returned frame is not a standard AWT frame. By default, it is a subclass of <code>java.awt.Frame</code>
+        that is meant to be embedded within native applications. In fact, it is the same frame that is used to 
+        embed <ulink url="http://java.sun.com/applets/">applets</ulink> inside a browser window. 
+      </para>
+      <para>
+        The example code shown above is deceptively simple. While SWT does much under the covers to manage the 
+        integration of the two toolkits, the scope of the bridge's implementation is very narrow. In reality, you must do much
+        more in your application to make the integration more consistent. These additional steps are 
+        described below in <xref linkend="sec-adding-to-bridge"/>.
+      </para>
+      <section id="sec-platform">
+        <title>Platform Considerations</title>
+        <para>
+          There are version constraints for using the SWT/AWT Bridge that differ from platform to
+          platform.
+        </para>
+        <table id="version-table" frame='all'>
+          <title>Minimum Versions</title>
+          <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+            <colspec colname='c1' />
+            <colspec colname='c2' />
+            <colspec colname='c3' />
+            <thead>
+              <row>
+                <entry>Platform</entry>
+                <entry>JRE Version</entry>
+                <entry>Eclipse Version</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>Windows</entry>
+                <entry>1.4</entry>
+                <entry>3.0</entry>
+              </row>
+              <row>
+                <entry>Linux/GTK</entry>
+                <entry>1.5</entry>
+                <entry>3.0</entry>
+              </row>
+              <row>
+                <entry>Mac OS X</entry>
+                <entry>1.5.0 Release 4</entry>
+                <entry>3.2</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <note>
+          <para>
+            Mac OS X also requires installation of the SWT Compatibility
+            Libraries. See the SWT
+            <ulink url="http://www.eclipse.org/swt/faq.php#swtawtosx">FAQ</ulink>
+            for details. Also, as of the writing of this article, the SWT/AWT Bridge on
+            Mac OS X is not yet complete. See bug
+            <ulink url="https://bugs.eclipse.org/bugs/show_bug.cgi?id=145890">
+              145890
+            </ulink>
+            for details.
+          </para>
+        </note>
+        <note>
+          <para>
+            As of the writing of this article, use of the SWT/AWT Bridge causes hangs
+            with Java 6 with the GTK look and feel on the Linux/GTK platform. Refer to
+            Eclipse bug
+            <ulink url="https://bugs.eclipse.org/bugs/show_bug.cgi?id=91157">91157</ulink>
+            and Sun bug
+            <ulink url="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6386791">
+              6386791
+            </ulink>
+            for more information.
+          </para>
+        </note>
+      </section>
+      <section id="sec-event-threads">
+        <title>Multiple Event Threads</title>
+        <para>
+          Swing/SWT integration has important threading implications. Each UI toolkit has its own
+          event queue, and each event queue is processed by a separate thread. Most SWT
+          APIs must be called from the SWT event thread. Swing has similar
+          restrictions though they are not as strictly enforced.
+          This split is the major drawback of mixing the toolkits, and it adds some
+          complexity to the code.
+        </para>
+        <para>
+          Applications must be aware of the current thread, and, where necessary,
+          schedule tasks to run on the appropriate UI toolkit thread. To schedule work on
+          the AWT event thread, use:
+        </para>
+        <itemizedlist>
+          <listitem>
+            <simpara>
+              <code>javax.swing.SwingUtilities.invokeLater()</code>
+            </simpara>
+          </listitem>
+          <listitem>
+            <simpara>
+              <code>javax.swing.SwingUtilities.invokeAndWait()</code>
+            </simpara>
+          </listitem>
+        </itemizedlist>
+        <para>To schedule work on the SWT event thread, use:</para>
+        <itemizedlist>
+          <listitem>
+            <simpara>
+              <code>org.eclipse.swt.widgets.Display.asyncExec()</code>
+            </simpara>
+          </listitem>
+          <listitem>
+            <simpara>
+              <code>org.eclipse.swt.widgets.Display.syncExec()</code>
+            </simpara>
+          </listitem>
+        </itemizedlist>
+        <para>
+          These are the same APIs used in a single-toolkit environment 
+          to keep the UI responsive while offloading long running operations to a worker
+          thread. With Swing/SWT integration they are used for the 
+          additional purpose of moving work from one event thread to another.
+        </para>
+        <para>
+          The use of multiple event threads increases the risk of deadlock. 
+          Whenever possible, try to avoid blocking one event thread while 
+          scheduling work on the other event thread. In other words,
+          avoid calling <code>SwingUtilities.invokeAndWait</code> from the SWT event
+          thread and avoid calling <code>Display.syncExec</code> from the AWT event thread. 
+          Otherwise, if there's ever a case where one blocking call is made while the
+          other thread has made its own blocking call in the other direction, 
+          deadlock will occur. 
+        </para>
+      </section>
+	</section>
+    <section id="sec-adding-to-bridge">
+      <title>Building on the SWT/AWT Bridge</title>
+      <para>
+        If you use the SWT/AWT Bridge API alone, Swing components will integrate poorly
+        into your application. The following sections 
+        describe the integration problems in detail and suggest solutions. All of the solutions 
+        involve additional code to help manage the Swing/SWT integration. The 
+        good news is that this code can be encapsulated in a single custom
+        embedded composite widget (and some support classes), and it can be decoupled from 
+        the rest of the application
+        code. 
+      </para>
+      <section id="sec-look-and-feel">
+        <title>Configuring the Swing Look and Feel</title>
+        <para>
+          Here's an example showing some very basic visual problems that result from 
+          minimal use of the SWT/AWT Bridge on the Windows platform. 
+        </para>
+        <figure id="fig-badembed">
+          <title>Minimal Embedding of a Swing Component</title>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/badembed.jpg"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+        <para>
+          There are some immediately obvious problems here. The header and scrollbars on the Swing
+          <code>JTable</code> (upper right) differ from the SWT-based Error Log view. 
+        </para>
+        <para>
+          In this example, the <code>JTable</code> is displayed with the standard 
+          Swing cross-platform (Metal) 
+            <ulink
+              url="http://java.sun.com/docs/books/tutorial/ui/features/plaf.html">
+          look and feel 
+            </ulink>.
+          On the other hand, the 
+          SWT components use underlying native widgets 
+          which have a native look and feel. Swing's
+          look and feel must be changed to match the 
+          native platform. Since the SWT/AWT Bridge itself does not automatically set 
+          the native look and feel, it's necessary to do it yourself. For
+          example, 
+        </para>
+        <programlisting>
+import javax.swing.UIManager;
+...      
+  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+...  
+        </programlisting>
+        <para>
+          Make this call once, before any 
+          AWT or Swing components are created. 
+        </para>
+        <tip>
+        <para>
+          Linux/GTK developers: depending on the window manager in use, the Swing system 
+          look and feel may not be set to the GTK look and feel. It may be necessary to 
+          set the GTK look and feel more explicitly:
+        <programlisting>
+  UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+        </programlisting>
+        </para>
+        </tip>
+      </section>
+      <section id="sec-root-pane-container">
+        <title>Creating a Root Pane Container</title>
+        <para>
+          The
+          <code>SWT_AWT.new_Frame()</code>
+          method returns an instance of a subclass of <code>java.awt.Frame</code> that has been embedded within an SWT
+          <code>Composite</code>. There are certain rules that must be followed when using
+          an embedded frame in Swing. 
+        </para>
+        <itemizedlist>
+        <listitem>
+        <para>
+          The first child of the embedded frame must be a heavyweight component. The
+          component must fill the entire frame. This heavyweight component allows for correct mouse locations and
+          interactions. See Sun bug <ulink url="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4982522">4982522</ulink>
+          for more information. 
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+          To make the frame viable for use with Swing, you must also create a
+          <ulink
+            url="http://java.sun.com/j2se/1.5.0/docs/api/javax/swing/JRootPane.html">
+            root pane
+          </ulink>container (<code>javax.swing.RootPaneContainer</code>). The root pane is the basis for all Swing windows. It provides the layering
+          capabilities on which all Swing components depend. 
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+          Due to assumptions in the Swing implementation, the root pane container
+          should be an instance of <code>JFrame</code>, <code>JDialog</code>, <code>JWindow</code>, or <code>JApplet</code>. 
+          Of these options,
+          only <code>JApplet</code> is an appropriate choice, since it is the only one that can
+          be embedded.
+        </para>
+        </listitem>
+        </itemizedlist>
+        <para>
+          To satisfy each of these rules, create a <code>JApplet</code> as the only child of the
+          embedded frame. Use of <code>JApplet</code> does not imply that you have created a true
+          applet with an applet's lifecycle; you are simply using the same display
+          container as an applet embedded in a browser.
+        </para>
+      <programlisting>
+    Composite composite = new Composite(parent, SWT.EMBEDDED | SWT.NO_BACKGROUND);
+    Frame frame = SWT_AWT.new_Frame(composite);
+    JApplet applet = new JApplet();
+    frame.add(applet);
+      </programlisting>
+        <note>
+          <para>
+            The embedded frame is a window (a subclass of <code>java.awt.Window</code>). As such,
+            it consumes resources. For this reason we encourage the use of embedded
+            frames as replacements for larger components rather than smaller ones.
+          </para>
+        </note>
+      </section>
+      <section id="sec-reducing-flicker">
+        <title>Reducing Flicker</title>
+        <para>
+          Use of the SWT/AWT Bridge, without additional measures, causes excessive
+          flicker in an embedded AWT frame while the application window is resized. The 
+          reasons include:
+        </para>
+        <itemizedlist>
+        <listitem>
+        <para>
+          A heavyweight component (<code>javax.swing.JApplet</code>, in our case) is present in the component
+          hierarchy. The AWT implementation, by default, clears the component's background on every resize event. 
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+          More resize events are handled by the embedded frame, when compared to the default
+          behavior in a standalone Swing application. This increase is due to the way resize
+          events are passed on to the AWT frame from the enclosing SWT composite.
+        </para>
+        </listitem>
+        </itemizedlist>
+        <para>
+          On Windows, set the property
+          <code>sun.awt.noerasebackground</code> to reduce flicker. This undocumented property 
+          disables much of the repetitive
+          background clearing by the AWT implementation. It should be set before any
+          AWT or Swing components are instantiated.
+        </para>
+        <programlisting>
+  System.setProperty("sun.awt.noerasebackground", "true");
+        </programlisting>
+        <note>
+        <para>
+          The <code>sun.awt.noerasebackground</code> property is not used on non-Windows platforms. 
+          Reducing resize flicker on those platforms remains an open problem.
+        </para>
+        </note>
+        <para>
+          Though it is necessary, setting
+          <code>sun.awt.noerasebackground</code>
+          has negative consequences. Leaving the background uncleared may result in the
+          temporary display of previously drawn pixels (an example of what is sometimes called
+          <ulink url="http://inside-swt.blogspot.com/2006/08/swt-speak-part-1.html">cheese</ulink>)
+          during resize operations and before the initial Swing contents
+          are displayed.
+        </para>
+        <para>
+          These effects are removed by adding a resize listener to the parent
+          SWT composite. When the composite is resized larger, exposing an unpainted
+          region, the listener fills it immediately with the background color. The 
+          cheese is removed immediately, providing a cosmetic improvement during any delay
+          while the embedded Swing component repaints. 
+        </para>
+        <programlisting>
+class CleanResizeListener extends ControlAdapter {
+  private Rectangle oldRect = null;
+  public void controlResized(ControlEvent e) {
+      // Prevent garbage from Swing lags during resize. Fill exposed areas 
+      // with background color. 
+      Composite composite = (Composite)e.widget;
+      Rectangle newRect = composite.getClientArea();
+      if (oldRect != null) {
+          int heightDelta = newRect.height - oldRect.height;
+          int widthDelta = newRect.width - oldRect.width;
+          if ((heightDelta > 0) || (widthDelta > 0)) {
+              GC gc = new GC(composite);
+              try {
+                  gc.fillRectangle(newRect.x, oldRect.height, newRect.width, heightDelta);
+                  gc.fillRectangle(oldRect.width, newRect.y, widthDelta, newRect.height);
+              } finally {
+                  gc.dispose();
+              }
+          }
+      }
+      oldRect = newRect;
+  }
+}
+        </programlisting>
+      </section>
+      <section id="sec-tab-traversal">
+        <title>Tab Traversal</title>
+        <para>
+          Another concern of Swing/SWT integration is the behavior of the tab 
+          key when traversing between components from different toolkits.
+          Additional work is needed on the AWT side of the SWT/AWT
+          bridge to solve this problem. To achieve proper tab traversal, implement a custom 
+          subclass of <code>java.awt.FocusTraversalPolicy</code> for the embedded AWT frame. 
+          The custom policy may delegate to a standard policy when
+          tabbing within the frame, but it must transfer control to an SWT 
+          component when:
+        </para>
+        <orderedlist>
+        <listitem>
+        <simpara>
+          tabbing on the last component in the frame 
+        </simpara>
+        </listitem>
+        <listitem>
+        <simpara>
+          back-tabbing on the first component in the frame
+        </simpara>
+        </listitem>
+        </orderedlist>
+        <para>
+          Implementing the forward and backward traversals in the custom policy is simple. 
+          However, implementing a proper <code>getDefaultComponent</code> method is tricky. It
+          must return null when nothing in the embedded AWT frame has focus. This behavior is a hack based on 
+          assumptions about how AWT will call the method, and it is necessary to avoid an immediate
+          transfer of focus back to AWT after traversing to SWT. For more information, refer to the comments
+          in the class <code>EmbeddedChildFocusTraversalPolicy</code> in <xref linkend="app-example-code"/>.
+        </para>
+        <para>
+          See the Swing documentation for the 
+          <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/java/awt/doc-files/FocusSpec.html">AWT Focus Subsystem</ulink>
+          for more information on focus traversal policies.
+        </para>
+      </section>
+      <section id="sec-modality">
+        <title>Modal Dialogs</title>
+        <para>
+          When a
+          modal dialog is opened from a Swing component, it must be modal across the
+          entire application. Since SWT and AWT have separate event threads,
+          such dialogs are not modal by default. The SWT event thread must
+          be explicitly disabled during the time that a Swing modal dialog is showing.
+          This effect is most easily achieved by opening a modal SWT dialog while the 
+          Swing dialog is showing. 
+        </para>
+        <programlisting>
+  java.awt.Dialog awtDialog = ...        
+  Shell shell = new Shell(parent, SWT.APPLICATION_MODAL | SWT.NO_TRIM);
+  shell.setSize(0, 0);
+  shell.addFocusListener(new FocusAdapter() {
+      public void focusGained(FocusEvent e) {
+          awtDialog.requestFocus();
+          awtDialog.toFront();
+      }
+  });
+        </programlisting>
+        
+        <para>
+          The 0 x 0 size prevents the shell from being seen. The focus listener makes
+          sure that control is restored to the Swing dialog if the SWT window somehow gains focus. 
+          (For example, the SWT window may gain focus when the user navigates to your application
+           through some window managers.)
+        </para>
+        <note>
+          <para>
+            On Linux/GTK, even a zero-sized SWT dialog may appear as a small dot 
+            on the screen. Hide it by adding the following code to 
+            <code>focusGained()</code>. This addition is unnecessary under Windows and 
+            actually causes a flash, so make the call only when required.
+          </para>
+          <programlisting>
+          shell.moveBelow(null);
+          </programlisting>
+        </note>
+        <para>
+          The code shown above ensures correct modal behavior, but how should it be invoked?
+          The easiest approach is to invoke it wherever Swing modal dialogs are created. 
+          However, this solution won't work if your Swing component library cannot be 
+          modified, or if you cannot introduce dependencies on SWT code from
+          the Swing component library. 
+        </para>
+        <para>
+          Alternatively, correct modal behavior is enforced more cleanly by installing a listener for all AWT
+          window events. Whenever it is detected that a Swing modal dialog is open or visible, a
+          SWT modal dialog must be opened. The listener is sketched below and is
+          fully implemented in the example code. See <xref linkend="app-example-code"/> for more
+          information. 
+        </para>
+        <programlisting>
+class AwtDialogListener implements AWTEventListener, ComponentListener {
+    
+    private final Display display;
+    
+    AwtDialogListener(Display display) {
+        this.display = display;
+        Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.WINDOW_EVENT_MASK);
+    }
+    
+    private void handleRemovedDialog(Dialog awtDialog, boolean removeListener) {
+        // An AWT dialog has been closed or set invisible. Close the SWT dialog
+        ...
+    }
+
+    private void handleAddedDialog(final Dialog awtDialog) {
+        // An AWT dialog has been opened or set visible. Open the SWT dialog
+        // and add this as a component listener on the dialog to catch
+        // visibility changes
+        ...
+    }
+
+    private void handleOpenedWindow(WindowEvent event) {
+        Window window = event.getWindow();
+        if (window instanceof Dialog) {
+            handleAddedDialog((Dialog)window);
+        }
+    }
+    
+    private void handleClosedWindow(WindowEvent event) {
+        // Dispose-based close
+        Window window = event.getWindow();
+        if (window instanceof Dialog) {
+            // Remove dialog and component listener
+            handleRemovedDialog((Dialog)window, true);
+        }
+    }
+
+    private void handleClosingWindow(WindowEvent event) {
+        // System-based close 
+        // (see example code for full implementation)
+        ...
+    }
+    
+    public void eventDispatched(AWTEvent event) {
+        switch (event.getID()) {
+        case WindowEvent.WINDOW_OPENED:
+            handleOpenedWindow((WindowEvent)event);
+            break;
+            
+        case WindowEvent.WINDOW_CLOSED:
+            handleClosedWindow((WindowEvent)event);
+            break;
+
+        case WindowEvent.WINDOW_CLOSING:
+            handleClosingWindow((WindowEvent)event);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    public void componentHidden(ComponentEvent e) {
+        Object obj = e.getSource();
+        if (obj instanceof Dialog) {
+            // Remove dialog but keep listener in place so that we know if/when it is set visible
+            handleRemovedDialog((Dialog)obj, false);
+        }
+    }
+
+    public void componentShown(ComponentEvent e) {
+        Object obj = e.getSource();
+        if (obj instanceof Dialog) {
+            handleAddedDialog((Dialog)obj);
+        }
+    }
+  ...
+}
+        </programlisting>
+      </section>
+      <section id="sec-dismissing-popups">
+        <title>Dismissing Pop-up Menus</title>
+        <para>
+          When a context menu is displayed in an embedded AWT frame, the menu does not
+          disappear after clicking outside the frame. This AWT limitation is well known,
+          but it is especially noticeable in embedded frames since it may result in
+          multiple visible pop-ups within the same SWT shell. 
+        </para>
+        <figure id="fig-double-popup">
+          <title>Double Popups</title>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/double-popup.jpg"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+        <para>
+          This issue is documented in Sun bugs 
+          <ulink url="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4311449">4311449</ulink>
+          and <ulink url="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4290715">4290715</ulink>,
+          among others.
+        </para>
+        <para>There are partial workarounds to this problem:</para>
+        <itemizedlist>
+        <listitem>
+        <para>
+          <emphasis>Manually dismiss Swing pop-ups when the user activates other windows.</emphasis> Install a
+          listener for window focus events on the embedded frame. On a focus lost event, the window
+          and component hierarchies of the frame can be searched for instances of
+          <code>javax.swing.JPopupMenu</code>.
+          <note>
+            <para>
+              This workaround applies to JRE version 1.4 and earlier; it should not be
+              necessary if you are using version 1.5 or later.
+            </para>
+          </note>
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+          <emphasis>Manually dismiss Swing pop-ups when the user activates an SWT menu.</emphasis> Install 
+          a display filter to listen for <code>SWT.Show</code> events which are generated whenever an
+          SWT menu is shown. In the filter's event handler, visible Swing pop-ups can be dismissed as described 
+          above. 
+        </para>
+        </listitem>
+        </itemizedlist>
+        <para>
+          Despite these workarounds, some issues remain; for example, Swing pop-ups are not
+          dismissed when the user interacts with the titlebar on the workbench window. 
+        </para>
+      </section>
+      <section id="sec-system-settings">
+        <title>Synchronizing with System Settings</title>
+        <para>
+          When the user changes font settings through the Windows control panel, the
+          changes are not always properly propagated to Swing components. This problem is
+          especially noticeable when integrating with SWT since the SWT components do, in fact,
+          recognize these changes. To work around the problem, manually
+          change the font in the Swing Windows Look and Feel when the system font has changed.
+        </para>
+        <para>
+          Fortunately, in Eclipse 3.2, a new SWT event has been added to allow applications
+          to detect changes to system settings. So, Swing font changes can be triggered
+          as follows
+        </para>
+        <programlisting>
+    Display display = ...
+    Listener settingsListener = new Listener() {
+        public void handleEvent(Event event) {
+            handleSettingsChange();
+        }
+    };
+    display.addListener(SWT.Settings, settingsListener);
+        </programlisting>
+        <para>
+          Font changes for Swing components are best handled through the 
+          look and feel, rather than updating the font for individual components. 
+        </para>        
+        <programlisting>
+    private void handleSettingsChange() {
+            ...
+            org.eclipse.swt.graphics.Font currentSystemFont = ...;
+            FontData fontData = currentSystemFont.getFontData()[0];
+            
+            int resolution = Toolkit.getDefaultToolkit().getScreenResolution();
+            int awtFontSize = (int)Math.round((double)fontData.getHeight() * resolution / 72.0);
+            
+            // The style constants for SWT and AWT map exactly, and since they are int constants, they should
+            // never change. So, the SWT style is passed through as the AWT style. 
+            java.awt.Font awtFont = new java.awt.Font(fontData.getName(), fontData.getStyle(), awtFontSize);
+
+            FontUIResource fontResource = new FontUIResource(awtFont);
+    
+            UIManager.put("Button.font", fontResource); 
+            UIManager.put("CheckBox.font", fontResource); 
+            UIManager.put("ComboBox.font", fontResource); 
+            ...    // many more similar calls
+
+            Container contentPane = ... // content pane from the root pane 
+            SwingUtilities.updateComponentTreeUI(contentPane);
+        }
+    }
+        </programlisting>        
+        <para>
+          First, the SWT font is converted to an equivalent AWT font. 
+          AWT font sizes always assume a 72 dpi resolution. The true screen resolution must be 
+          used to convert the platform font size into an AWT point size that matches when displayed. 
+          Then, the font for various Swing component types is changed via the look and feel's
+          <code>javax.swing.UIManager</code>. 
+        </para>
+        <para>
+          See the example code (<xref linkend="app-example-code"/>) for the complete implementation.
+        </para>
+      </section>
+      <section id="sec-keystroke-contention">
+        <title>Keystroke Contention</title>
+        <para>
+          Unexpected results can occur if you map the same keystroke to a global action
+          in your RCP application and to a handler in an embedded Swing component. 
+          Keystrokes defined through the <code><ulink url="http://help.eclipse.org/help32/index.jsp?topic=/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_ui_bindings.html">
+          org.eclipse.ui.bindings</ulink></code> extension point will take precedence over those
+          defined in the Swing component, even if the Swing component has focus. In this case, the
+          RCP binding is managed through a Display filter, so the keystroke is consumed before
+          it reaches the Swing component at all. As a result, there is no simple, general 
+          workaround to avoid this problem at the level of the embedded composite. Instead, you
+          can avoid these conflicts by:
+          <itemizedlist>
+          <listitem>
+          <para>
+            Using the <code><ulink url="http://help.eclipse.org/help32/index.jsp?topic=/org.eclipse.platform.doc.isv/reference/extension-points/org_eclipse_ui_contexts.html">
+            org.eclipse.ui.contexts</ulink></code> extension point to organize key bindings that should 
+            not be visible when the Swing component is in focus.
+          </para>
+          </listitem>
+          <listitem>
+          <para>
+            Replicate the Swing component's action in an RCP action, bound to the same keystroke. The 
+            binding for RCP action can be introduced through an <code>org.eclipse.ui.contexts</code>
+            extension. The action can be implemented to invoke the underlying the Swing action. This
+            approach may be necessary anyway, if you want the action to be available anywhere outside
+            the Swing component (for example, in the application's main menu).
+          </para>
+          </listitem>
+          </itemizedlist>
+        </para>
+        <para>
+          There are also occasional issues with keystroke contention between the embedded Swing 
+          component and the window system. For example, hitting Shift-F10 from inside many Swing 
+          components opens a context (popup) menu. In Windows, when there is no context menu, the default 
+          processing of the F10 keystroke
+          (with or without shifting) transfers focus to the application's main menu bar.
+          When you have embedded Swing components, these two behaviors conflict. 
+          The Swing component properly handles Shift-F10, showing the popup, but the containing SWT shell does 
+          not know it; therefore, it reports the keystroke to Windows as unhandled. Windows then 
+          transfers focus to the main menu bar, and the popup loses focus.
+        </para>
+        <para>
+          Fortunately, this conflict can be resolved.  Here's some code which exploits the fact that 
+          the default Windows behavior happens when F10 is released, rather than when it is pressed. 
+          The embedded composite can install a KeyListener and consume the release of the 
+          Shift-F10 keystroke so that Windows never sees it. 
+        </para>
+        <programlisting>
+    public void keyReleased(KeyEvent e) {
+        if (e.keyCode == SWT.F10 &amp;&amp; (e.stateMask &amp; SWT.SHIFT) != 0) {
+            e.doit = false;
+        }
+    }
+        </programlisting>
+      </section>
+      <section id="sec-other-workarounds">
+        <title>Other Workarounds</title>
+        <para>
+          Due to Sun bug <ulink url="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6411042">6411042</ulink>,
+          when AWT/Swing components are
+          added to an embedded frame from the SWT event thread, a memory leak occurs. To 
+          avoid the leak, it is best to create and add these components from the AWT event thread 
+          instead. Simply invoke the creation code through
+          <code>javax.swing.SwingUtilities.invokeLater()</code>.
+          As discussed earlier, it is a good general habit to call Swing APIs from the 
+          AWT event thread anyway. 
+        </para>
+      </section>
+    </section>
+      <section id="sec-unresolved-issues">
+        <title>Unresolved Issues</title>
+        <section id="sec-cleartype">
+        <title>ClearType</title>
+        <para>
+          On Windows under JRE 1.5 and earlier, the Swing system look and feel does not 
+          seamlessly support <ulink url="http://www.microsoft.com/typography/ClearTypeInfo.mspx">ClearType</ulink>
+          anti-aliasing. By default, when ClearType is enabled and the same font and font
+          size are chosen for Swing and SWT controls, the fonts appear to be different. A
+          partial solution is available through setting the 
+          property <code>swing.aatext</code> to "true". This undocumented property enables font anti-aliasing
+          in pre-Java 6 environments, but it simply turns anti-aliasing on. It does not synchronize with current 
+          Windows system settings. Also, Swing has its own anti-aliasing algorithm, so  
+          minor differences from natively-displayed fonts remain visible. 
+        </para>
+        <para>
+          This problem has been <ulink url="http://weblogs.java.net/blog/chet/archive/2005/06/phils_font_fixe.html">resolved</ulink>
+          in Java 6 (see bugs <ulink url="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4726365">4726365</ulink>
+          and <ulink url="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4871297">4871297</ulink> 
+          for more information).
+        </para>
+        <para>
+        Below is a screenshot which illustrates the problem. Here, two SWT-based views are on
+        the left, and a Swing table component is on the right.
+        </para>
+        <figure id="fig-cleartype">
+          <title>Font Differences with ClearType</title>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/cleartype.jpg"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+        </section>
+        <section id="sec-cursor-synchronization">
+        <title>Cursor Synchronization</title>
+        <para>
+          SWT cursor changes are not reflected in embedded Swing components. The SWT cursor
+          changes back to the default arrow cursor as the mouse moves over the embedded frame.
+        </para>
+        <para>
+          A solution to this problem may now be possible. As of Eclipse 3.3, new API is 
+          available to query the current cursor (see bug
+          <ulink url="https://bugs.eclipse.org/bugs/show_bug.cgi?id=133943">133943</ulink>
+          ).
+        </para>
+        </section>
+      </section>
+      <section id="sec-conclusion">
+      <title>Conclusion</title>
+      <para>
+        Smooth integration of Swing components into an RCP application is possible. It requires 
+        more than the SWT/AWT Bridge, however. You can implement the techniques described above
+        in a modular fashion to improve the behavior of the SWT/AWT Bridge for 
+        real-world applications. <xref linkend="app-example-code"/> contains example
+        code that demonstrates all of these additional practices. 
+      </para>
+      </section>
+
+      <bibliography id="bin-resources">
+        <title>Resources</title>
+
+        <biblioentry id="bib-example-code">
+          <bibliosource><ulink url="files/swingintegration.example_0.0.1.jar">Example Code</ulink></bibliosource> 
+        </biblioentry>
+
+        <biblioentry id="bib-bridge">
+          <bibliosource>
+            <ulink
+              url="http://help.eclipse.org/help32/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/swt/awt/package-summary.html">
+              SWT/AWT Bridge Javadoc
+            </ulink>
+          </bibliosource>
+        </biblioentry>
+        <biblioentry id="bib-look-and-feel">
+          <bibliosource>
+            <ulink
+              url="http://java.sun.com/docs/books/tutorial/ui/features/plaf.html">
+              Java Look and Feel Information
+            </ulink>
+
+          </bibliosource>
+        </biblioentry>
+        <biblioentry id="bib-root-pane">
+          <bibliosource>
+            <ulink
+              url="http://java.sun.com/j2se/1.5.0/docs/api/javax/swing/JRootPane.html">
+              Swing Root Pane Documentation
+            </ulink>
+
+          </bibliosource>
+        </biblioentry>
+        <biblioentry id="bib-awt-focus">
+          <bibliosource>
+            <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/java/awt/doc-files/FocusSpec.html">AWT Focus Subsystem</ulink>
+          </bibliosource>
+        </biblioentry>
+      </bibliography>
+
+      <appendix id="app-example-code">
+		<title>Example Code</title>
+         <para>
+           The ideas for improving Swing/SWT integration presented in 
+           <xref linkend="sec-adding-to-bridge"/> have been collected into a full
+           example implementation <xref linkend="bib-example-code"/>. The example
+           includes an API that is used to create embedded Swing components
+           simply and cleanly. The example code requires SWT version 3.2 or higher.
+         </para>
+         <para>
+          Import the example with "File -> Import...", selecting "Plug-ins and Fragments". Import the 
+          plug-in as "Projects with Source Folders". Make sure that your
+          compiler settings specify a source compatibility version of at least 1.4 (Preferences -> Java -> Compiler). 
+          Otherwise the <code>assert</code> statements in the example code will not compile.
+         </para>
+         <para>
+           <ulink url="files/example-javadoc/index.html">Javadoc</ulink>
+           is available for the API. To embed Swing components, refer to
+           the javadoc for
+           <code>
+             <ulink
+               url="files/example-javadoc/swingintegration/example/EmbeddedSwingComposite.html">
+               EmbeddedSwingComposite</ulink></code>. To display Swing dialogs without embedding, refer to the javadoc for
+           <code>
+             <ulink url="files/example-javadoc/swingintegration/example/AwtEnvironment.html">
+               AwtEnvironment</ulink></code>.
+         </para>
+      </appendix>
+</article>
+
