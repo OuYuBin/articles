@@ -31,27 +31,27 @@
 	# End: page-specific settings
 	#
 	//include("scripts/articles.php");
-	require_once("../resources/scripts/resources_core.php");
-	require_once("../resources/scripts/resources_html.php");
-	require_once("../resources/scripts/filter_html.php");
+	require_once("../resources/scripts/resources.php");
 	
+	$resources = new Resources();
 	$filter = new Filter();
 	$filter->populate_from_html_request_header();
 	$filter->type = 'article';
 	
-	$resources_list = $Resources->get_resources($filter);
+	$resources_list = $resources->get_resources($filter);
 	
 	$filter_summary = $filter->get_summary();
 	
-	$category_cloud = $Filters_HTML->get_category_cloud($filter, 'article', 0);
+	$category_cloud = $resources->get_category_cloud($filter, 'article', 0);
 	
 	
 	$count = count($resources_list);
 	//get_categories_for_filtering_as_html('/articles/index.php', $filter);
 	$rss = "<a href=\"/resources/resources.rss?type=article&title=Eclipse%20Corner%20Articles\"><img src=\"/images/rss2.gif\"></a>";
-	$articles =  $Resources_HTML->get_resources_table($resources_list, $filter, "$filter_summary ($count articles) $rss");
+	$articles =  $resources->get_resources_table($resources_list, $filter, "$filter_summary ($count articles) $rss");
 	//get_articles_as_html($filter);
-
+	$resources->dispose();
+	
 	# Paste your HTML content between the EOHTML markers!	
 	$html = <<<EOHTML
 	
