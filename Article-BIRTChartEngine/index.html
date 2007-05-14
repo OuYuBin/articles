@@ -1,0 +1,454 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Using The BIRT Chart Engine in Your Plug-in</title>
+<link rel="stylesheet" href="../article.css" type="text/css" />
+</head>
+
+<body>
+<h1>Using the BIRT Chart Engine in Your Plug-in</h1>
+
+<div class="summary">
+<h2>Summary</h2>
+The BIRT Chart Engine is a powerful business chart generation tool that can be used 
+  as a standalone charting component. This article introduces 
+  the basic concepts of BIRT Chart Engine, explains what BIRT Chart Engine is 
+  composed of, and illustrates how to create a chart and use it as widget. 
+
+<div class="author">By Qi Liang, IBM</div>
+<div class="copyright">Copyright &copy; 2007 International Business Machines Corp.</div>
+<div class="date">May 14, 2007</div>
+</div>
+
+<div class="content">
+<h2>Introduction</h2>
+<p>Charts are a common and important way to display data in business intelligence 
+  and other applications. BIRT (Business Intelligence and Reporting Tools), an 
+  Eclipsed based reporting tool, provides not only a nice report designing tool, 
+  but a powerful chart engine, named BIRT Chart Engine, to illustrate data with 
+  pretty charts to end user. If you need to use chart in your plug-in, BIRT Chart 
+  Engine is really a good choice. It supports almost all major chart types, 
+  and can be rendered on SWT/SWING widgets and image file of many formats. Here 
+  I'd like to show you what capabilities BIRT Chart Engine can provide, and how 
+  to use it on SWT widget in your plug-in.</p>
+<h2>What BIRT Chart Engine can provide</h2>
+<p>BIRT Chart Engine supports a variety of chart types. Here, let's have a look 
+  at what they look like. (Note, only basic and important charts are listed here. 
+  You can refer to BIRT document for more details) </p>
+<table width="60%" border="0" align="center" cellpadding="2">
+  <tr> 
+    <td width="33%"><div align="center"><a href="images/bar.png"><img src="images/bar_s.png" width="128" height="96" border="0"></a></div></td>
+    <td width="33%"><div align="center"><a href="images/multibar.png"><img src="images/multibar_s.png" width="128" height="96" border="0"></a></div></td>
+    <td width="33%"><div align="center"><a href="images/line.png"><img src="images/line_s.png" border="0"></a></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center">Bar Chart</div></td>
+    <td><div align="center">Multi-Bar Chart</div></td>
+    <td><div align="center">Line Chart</div></td>
+  </tr>
+  <tr> 
+    <td><div align="center"></div></td>
+    <td><div align="center"></div></td>
+    <td><div align="center"></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center"><a href="images/pie.png"><img src="images/pie_s.png" width="128" height="96" border="0"></a></div></td>
+    <td><div align="center"><a href="images/stacked.png"><img src="images/stacked_s.png" border="0"></a></div></td>
+    <td><div align="center"><a href="images/scatter.png"><img src="images/scatter_s.png" border="0"></a></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center">Pie Chart</div></td>
+    <td><div align="center">Stacked Chart</div></td>
+    <td><div align="center">Scatter Chart</div></td>
+  </tr>
+  <tr> 
+    <td><div align="center"></div></td>
+    <td><div align="center"></div></td>
+    <td><div align="center"></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center"><a href="images/stock.png"><img src="images/stock_s.png" border="0"></a></div></td>
+    <td><div align="center"><a href="images/area.png"><img src="images/area_s.png" border="0"></a></div></td>
+    <td><div align="center"></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center">Stock Chart</div></td>
+    <td><div align="center">Area Chart</div></td>
+    <td><div align="center"></div></td>
+  </tr>
+</table>
+<p align="center"><strong>Figure 1. Chart Samples</strong></p>
+<h2>Preparation</h2>
+<p>This article uses Eclipse SDK 3.2.2 and BIRT 2.1.1. You can use Eclipse Callisto 
+  Discovery Site to install BIRT and its dependency plug-ins by selecting &quot;Help 
+  &gt; Software Updates &gt; Find and Install...&quot; and choosing &quot;Search 
+  for new features to install&quot; in dialog. After selecting mirror update site, 
+  you can see all features under Callisto Discovery Site as follows.</p>
+<p align="center"><img src="images/selectbirt.png" width="640" height="500"></p>
+<p>In this dialog, select &quot;Eclipse BIRT Report Designer Framework 2.1.2&quot; 
+  and click &quot;Select Required&quot;. Now BIRT and all its dependency features 
+  are selected to install. Then click &quot;Next&quot;, and install all these 
+  features. This article also provides sample code, and you can download it at 
+  <a href="com.ibm.examples.chart.zip">com.ibm.examples.chart.zip</a>.</p>
+<p>BIRT contains about fifty plug-ins, but if we just use BIRT Chart in our application, 
+  what you need are only four required plug-ins. They are listed in the following 
+  table. So you just need include these four when distributing your application.</p>
+<table width="60%" border="1" align="center">
+  <tr> 
+    <td><div align="center"><strong>Plug-in Name</strong></div></td>
+    <td><div align="center"><strong>Description</strong></div></td>
+  </tr>
+  <tr> 
+    <td width="37%">org.eclipse.birt.chart.device.extension</td>
+    <td width="59%">Allows third part to extend chart render device</td>
+  </tr>
+  <tr> 
+    <td><p>org.eclipse.birt.chart.engine.extension</p></td>
+    <td>Allows third part to extend chart engine</td>
+  </tr>
+  <tr> 
+    <td>org.eclipse.birt.chart.engine</td>
+    <td>Renders chart</td>
+  </tr>
+  <tr> 
+    <td>org.eclipse.birt.core</td>
+    <td>Provides basic functionalities for all BIRT plug-ins</td>
+  </tr>
+</table>
+<p align="center"><strong>Table 1. BIRT Chart Engine Plug-ins</strong></p>
+<p>Till now, we have set environment to develop chart. Please unzip sample code 
+  (com.ibm.examples.chart.zip), and import it into your workspace. You will find 
+  all code snippets in this article in sample code.</p>
+<h2>Concepts</h2>
+<p>Before we start to use chart engine, let's go through the basic concepts of 
+  chart, which can help to understand chart engine API better. The following is 
+  a simple bar chart, which contains the basic elements, like title, axis, and 
+  so on.</p>
+<p align="center"><img src="images/concepts.png" width="700" height="500"></p>
+<p align="center"><strong>Figure 2. Concepts in One Bar Chart</strong></p>
+<table width="60%" border="1" align="center">
+  <tr> 
+    <td height="21"><div align="center"><strong>Concept</strong></div></td>
+    <td><div align="center"><strong>Description</strong></div></td>
+  </tr>
+  <tr> 
+    <td height="21"><div align="center">Title Area</div></td>
+    <td>The area containing chart title</td>
+  </tr>
+  <tr> 
+    <td height="21"><div align="center">Plot Area</div></td>
+    <td>The area with red border, containing X/Y title, axis, and bars</td>
+  </tr>
+  <tr> 
+    <td height="21"><div align="center">Legend Area</div></td>
+    <td>The area that is reserved to host legend</td>
+  </tr>
+  <tr> 
+    <td height="21"><div align="center">Legend Client Area</div></td>
+    <td>The area containing legend to explain the meaning of bar with different 
+      series</td>
+  </tr>
+  <tr> 
+    <td width="25%" height="21"><div align="center">Title</div></td>
+    <td width="75%">Describes the data that the chart displays for</td>
+  </tr>
+  <tr> 
+    <td><div align="center">Major Grid</div></td>
+    <td>Indicates the major scale (Minor Grid is supported, but not displayed 
+      here)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">X/Y Title</div></td>
+    <td>Describes the meaning of X/Y axis</td>
+  </tr>
+  <tr> 
+    <td><div align="center">X/Y Axis</div></td>
+    <td>Provides the label or scale value of X/Y axis</td>
+  </tr>
+  <tr> 
+    <td><div align="center">Series</div></td>
+    <td>Defines how to display data, bar, line, or pie, for example</td>
+  </tr>
+</table>
+<p>Most charts have axes, but some haven't. One example without axis is pie chart. 
+  The horizontal axis is called base axis. The base axis can be category axis 
+  or value axis. The category axis just contains a sequence of label, while value 
+  axis contains the values. The vertical axis is called orthogonal axis, and it 
+  is always value axis. BIRT Chart Engine only supports one base axis, and more 
+  than one orthogonal axis now, but only one orthogonal axis is primary. Each 
+  axis can have more than one series definition, but at most of time, only one 
+  series definition is used. Series definition defines the color palette, label 
+  displaying format, and the associated series. Similarly, one series definition 
+  can have more than one series. Series determines how to show data. For example, 
+  bar series will show data with bar, and pie series shows data with pie.</p>
+<h2>Create Your First Chart</h2>
+<p>Then, let's see how to create a simple bar chart to understand the above 
+  concepts. This bar chart has one category base axis, and one value orthogonal 
+  axis. It also contains title and legend as follows:</p>
+<p align="center"><img src="images/firstchart.png" width="616" height="501"></p>
+<p align="left">Now, let's do it step by step. (The complete source can be found 
+  in com.ibm.examples.chart.widget.chart.TestChartBuilder)</p>
+<ol>
+  <li> Create chart instance 
+    <pre>
+         chart = ChartWithAxesImpl.create();
+         chart.setDimension(ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL);</pre>
+    <p> Bar chart has two axes, so we call ChartWithAxesImpl.create() to create 
+      it. The second statement sets dimension with ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL, 
+      so that the bar has shade, which looks prettier.</p>
+  </li>
+  <li>Set background color of plot 
+    <pre>        chart.getPlot().setBackground(ColorDefinitionImpl.ORANGE());
+        chart.getPlot().getClientArea().setBackground(ColorDefinitionImpl.YELLOW());
+</pre>
+    <p> You can change the background color of plot or plot's client area. The 
+      above code sets the plot's background to orange, and sets the client area's 
+      background to yellow. </li>
+  <li>Enable legend 
+    <pre>        chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
+        chart.getLegend().setVisible(true);
+</pre>
+    <p> By default, the legend is disabled, so you need use Legend.setVisible(true) 
+      to enable it. There are two legend types, LegendItemType.CATEGORIES_LITERAL 
+      and LegendItemType.SERIES_LITERAL. The former shows different legend icon 
+      for each category, and the later shows different icon for each series.</p>
+  </li>
+  <li>Set chart title 
+    <pre>        chart.getTitle().getLabel().getCaption().setValue(title);
+        chart.getTitle().getLabel().getCaption().getFont().setSize(14);
+        chart.getTitle().getLabel().getCaption().getFont().setName(FONT_NAME);
+</pre>
+    <p>To set chart title is very simple as the first line shows. You can also 
+      set other attributes of title, like font size, font name, font style, and 
+      so on. </p>
+  </li>
+  <li>Create axes 
+    <pre><img src="images/tag_1.gif" height=13 width=24 align=bottom>     xAxis = ((ChartWithAxes) chart).getPrimaryBaseAxes()[0];
+        xAxis.getTitle().setVisible(true);
+
+        xAxis.getTitle().getCaption().setValue(xTitle);
+
+
+<img src="images/tag_2.gif" height=13 width=24>     yAxis = ((ChartWithAxes) chart).getPrimaryOrthogonalAxis(xAxis);
+        yAxis.getTitle().setVisible(true);
+        yAxis.getTitle().getCaption().setValue(yTitle);
+        yAxis.getScale().setStep(1.0);
+</pre>
+    <p>We get <img src="images/tag_1.gif" height=13 width=24 align=bottom> the 
+      first primary base axis as X axis, while <img src="images/tag_2.gif" height=13 width=24> 
+      Y axis is the orthogonal one based on X axis. By default, the title of axis 
+      is not visible, so we enable that for both axes, and set their titles. Finally, 
+      we specify the scale step on Y axis as 1.</p>
+  </li>
+  <li>Create X series 
+    <pre><img src="images/tag_1.gif" height=13 width=24 align=bottom>     TextDataSet categoryValues = TextDataSetImpl.create(dataSet.getCities());
+
+
+<img src="images/tag_2.gif" height=13 width=24>     Series seCategory = SeriesImpl.create();
+        seCategory.setDataSet(categoryValues);
+
+
+<img src="images/tag_3.gif" height=13 width=24>     SeriesDefinition sdX = SeriesDefinitionImpl.create();
+        sdX.getSeriesPalette().update(1);
+
+
+<img src="images/tag_4.gif" height=13 width=24>     xAxisPrimary.getSeriesDefinitions().add(sdX);
+        sdX.getSeries().add(seCategory);
+
+
+</pre>
+    <p>The first thing to create X series is <img src="images/tag_1.gif" height=13 width=24 align=bottom> 
+      to create the data set to bind. There are four types of data set, and they 
+      are DataTimeDataSet, NumberDataSet, StockDataSet, and TextDataSet. In this 
+      example, X axis is a category axis, so we use TextDataSet here. Then, <img src="images/tag_2.gif" height=13 width=24> 
+      create a series, and bind the data set to it. In order to define what the 
+      series looks like, you need <img src="images/tag_3.gif" height=13 width=24> 
+      create a series definition. Here we choose the series palette 1. BIRT Chart 
+      Engine predefines two color palettes. Finally, <img src="images/tag_4.gif" height=13 width=24> 
+      add the series definition to X axis, and add series to series definition.</p>
+  </li>
+  <li>Create Y series 
+    <pre><img src="images/tag_1.gif" height=13 width=24 align=bottom>     NumberDataSet orthoValuesDataSet1 = NumberDataSetImpl.create(dataSet.getTechnitians());
+
+
+        BarSeries bs1 = (BarSeries) BarSeriesImpl.create();
+        bs1.setDataSet(orthoValuesDataSet1);
+
+
+        SeriesDefinition sdY = SeriesDefinitionImpl.create();
+        yAxisPrimary.getSeriesDefinitions().add(sdY);
+        sdY.getSeries().add(bs1);
+</pre>
+    <p>To create Y series is similar to X series. Here, Y axis must be a value 
+      axis, so we use <img src="images/tag_1.gif" height=13 width=24 align=bottom> 
+      <font face="Courier New, Courier, mono">NumberDataSet</font> for Y series.</p>
+  </li>
+</ol>
+<p>Now, you finish creating your first chart. In the next section, we will see 
+  how to make this chart display on your canvas.</p>
+<p align="center">&nbsp; </p>
+<h2>Create Chart Canvas</h2>
+<p>BIRT Chart Engine doesn't provide any SWT chart widget which can be used in 
+  <font face="Courier New, Courier, mono">Composite</font> directly. So you need 
+  create it by yourself, if you want to display chart in one editor or view. In 
+  the following example, we create <font face="Courier New, Courier, mono">ChartCanvas</font>, 
+  which extends from <font face="Courier New, Courier, mono">Canvas. </font></p>
+<pre>        public class ChartCanvas extends Canvas {
+
+            ...
+<br>            public ChartCanvas(Composite parent, int style) {
+                super(parent, style);
+    
+                // initialize the SWT rendering device
+                try {
+<img src="images/tag_1.gif" height=13 width=24 align=bottom>                 PluginSettings ps = PluginSettings.instance();
+                    render = ps.getDevice(&quot;dv.SWT&quot;);
+                } catch (ChartException pex) {
+                    DefaultLoggerImpl.instance().log(pex);
+                }
+                ...</pre>
+<p>In the constructor, <img src="images/tag_1.gif" height=13 width=24 align=CENTER> 
+  we need get the device render for SWT. The device render is responsible to render 
+  chart onto target device. The target device can be an image file or device like 
+  SWT or SWING. BIRT Chart Engine defines 9 device renders in <font face="Courier New, Courier, mono">org.eclipse.birt.chart.util.PluginSettings</font>, 
+  and they are:</p>
+<table width="55%" border="1" align="center">
+  <tr> 
+    <td><div align="center"><strong>Device Name</strong></div></td>
+    <td><div align="center"><strong>Description</strong></div></td>
+  </tr>
+  <tr> 
+    <td width="16%"><div align="center">dv.SWING</div></td>
+    <td width="84%">Renders chart on SWING's <font face="Courier New, Courier, mono">java.awt.Graphics2D</font></td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.SWT</div></td>
+    <td>Renders chart on SWT's <font face="Courier New, Courier, mono">org.eclipse.swt.graphics.GC</font></td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.PNG24</div></td>
+    <td>Renders chart to 24-bit PNG file (deprecated)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.GIF8</div></td>
+    <td>Renders chart to 8-bit GIF file (deprecated)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.PNG</div></td>
+    <td>Renders chart to PNG file</td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.GIF</div></td>
+    <td>Renders chart to GIF file</td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.JPEG/dv.JPG</div></td>
+    <td>Renders chart to JPEG file</td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.BMP</div></td>
+    <td>Renders chart to BMP file</td>
+  </tr>
+  <tr> 
+    <td><div align="center">dv.SVG</div></td>
+    <td>Renders chart to SVG file (Contributed by IBM, and need org.eclipse.birt.chart.device.svg)</td>
+  </tr>
+</table>
+<p>Here we select &quot;dv.SWT&quot; as our device render in <font face="Courier New, Courier, mono">ChartCanvas</font>, 
+  since we will render chart on SWT widget. In this constructor, we add one paint 
+  listener to do actual painting work.</p>
+<pre><img src="images/tag_1.gif" height=13 width=24>         addPaintListener(new PaintListener() {
+
+                public void paintControl(PaintEvent e) {
+                
+                    Composite co = (Composite) e.getSource();
+                    final Rectangle rect = co.getClientArea();
+
+                    if (cachedImage == null) {
+<br><img src="images/tag_2.gif" height=13 width=24>                     buildChart();
+<img src="images/tag_3.gif" height=13 width=24>                     drawToCachedImage(rect);
+                    }
+<br><img src="images/tag_4.gif" height=13 width=24>                 e.gc.drawImage(cachedImage,
+                                   0, 0,
+                                   cachedImage.getBounds().width,
+                                   cachedImage.getBounds().height,
+                                   0, 0,
+                                   rect.width,
+                                   rect.height);
+                }
+            });
+</pre>
+<p> Considering performance, we use double-buffering to draw chart on canvas. 
+  In the paint listener <img src="images/tag_1.gif" height=13 width=24 align=bottom>, 
+  if this is the first time to get paint event, we <img src="images/tag_2.gif" height=13 width=24 align=bottom> 
+  build the chart with given data with <font face="Courier New, Courier, mono">buildChart()</font>, 
+  and then <img src="images/tag_3.gif" height=13 width=24 align=bottom> draw the 
+  chart on one image named cached image with <font face="Courier New, Courier, mono">drawToCachedImage(...)</font>. 
+  So after the cached image is drawn or for the paint events received later, we 
+  can call <font face="Courier New, Courier, mono">GC.drawImage(...) </font><img src="images/tag_4.gif" height=13 width=24 align=bottom> 
+  to draw the cached image to GC. Then, let's have a look at the details of these 
+  two methods: <font face="Courier New, Courier, mono">buildChart()</font>, and 
+  <font face="Courier New, Courier, mono">drawToCachedImage(...)</font>.</p>
+<pre>            private void buildChart() {<br>                Point size = getSize();<br>                Bounds bo = BoundsImpl.create(0, 0, size.x, size.y);<br>                int resolution = render.getDisplayServer().getDpiResolution();<br><img src="images/tag_1.gif" height=13 width=24 align=CENTER>             bo.scale(72d / resolution);<br>                try {<br><img src="images/tag_2.gif" height=13 width=24 align=CENTER>                 Generator gr = Generator.instance();<br><img src="images/tag_3.gif" height=13 width=24 align=CENTER>                 state = gr.build(render.getDisplayServer(),<br>                                     chart,<br>                                     bo,<br>                                     null,<br>                                     null,<br>                                     null);<br>                } catch (ChartException ex) {<br>                    DefaultLoggerImpl.instance().log(ex);<br>                }<br>            }<br></pre>
+<p> The method, <font face="Courier New, Courier, mono">buildChart()</font>, is 
+  responsible to build runtime chart state with the render display server. One 
+  important thing to do is to scale the bounds of chart from pixel to point. SWT 
+  and other screen based renders always use pixel, which is logic unit, for example 
+  the monitor with the resolution (800 pixels * 600 pixels). However, BIRT Chart 
+  Engine uses point, which is the absolute unit (1 point = 1/72 inch). So we need 
+  to <img src="images/tag_1.gif" height=13 width=24 align=CENTER> scale the bounds 
+  of chart from pixel to point. Another one is to <img src="images/tag_2.gif" height=13 width=24> 
+  get a <font face="Courier New, Courier, mono">Generator</font> instance and 
+  <img src="images/tag_3.gif" height=13 width=24 align=CENTER> build runtime chart 
+  state with the given chart model and display server. So the generated runtime 
+  chart state is associated with the <font face="Courier New, Courier, mono">DisplayServer</font> 
+  from render, chart model, and bounds to render. <font face="Courier New, Courier, mono">DisplayServer</font> 
+  provides render related information, like DPI (Dots Per Inch) resolution. Bounds 
+  define the area that the generated chart will be drawn on.</p>
+<pre>            public void drawToCachedImage(Rectangle size) {<br>                GC gc = null;<br>                try {<br>                    if (cachedImage != null)<br>                        cachedImage.dispose();<br>                    cachedImage = new Image(Display.getCurrent(), imageData);<br>
+<img src="images/tag_1.gif" height=13 width=24 align=CENTER>                 gc = new GC(cachedImage);<br><img src="images/tag_2.gif" height=13 width=24 align=CENTER>                 render.setProperty(IDeviceRenderer.GRAPHICS_CONTEXT, gc);
+<br>                    Generator gr = Generator.instance();<br><img src="images/tag_3.gif" height=13 width=24>                 gr.render(render, state);<br>                } catch (ChartException ex) {<br>                    DefaultLoggerImpl.instance().log(ex);<br>                } finally {<br>                    if (gc != null)<br>                       gc.dispose();<br>            }<br></pre>
+<p> In the method, <font face="Courier New, Courier, mono">drawToCachedImage(...)</font>, 
+  we draw the generated runtime chart state on cached image. First, <img src="images/tag_1.gif" height=13 width=24 align=CENTER> 
+  create <font face="Courier New, Courier, mono">GC</font> for cached image, and 
+  <img src="images/tag_2.gif" height=13 width=24 align=CENTER> set it to render 
+  with the property name <font face="Courier New, Courier, mono">IDeviceRenderer.GRAPHICS_CONTEXT</font>. 
+  Then, generator will <img src="images/tag_3.gif" height=13 width=24> ask render 
+  to perform actual rendering with the generated runtime chart state. Finally, 
+  don't forget to dispose <font face="Courier New, Courier, mono">GC</font>, because 
+  <font face="Courier New, Courier, mono">GC</font> represents the underlying 
+  system resource.</p>
+<p>Here, we get a SWT canvas widget to display chart and also go through the process 
+  to render chart to a specific device. Now you can create an instance of <font face="Courier New, Courier, mono">ChartCanvas</font>, 
+  assign chart instance to it, and insert this canvas into your view. After doing 
+  those, you'll get one view displaying BIRT chart.</p>
+<h2>Others</h2>
+<p><strong>1. Render Chart to File</strong></p>
+<p>BIRT Chart Engine also supports to render chart to file directly. The process 
+  is similar to the above. The difference is the render device and you needn't 
+  use cached image. First, get the render device for PNG file. Then, set the render 
+  property, IDeviceRender.FILE_IDENTIFIER, with file name. The other steps are 
+  as same as rendering chart on screen.</p>
+<pre>            try {
+                PluginSettings ps = PluginSettings.instance();
+                render = ps.getDevice(&quot;dv.PNG&quot;);
+                render.setProperty(IDeviceRenderer.FILE_IDENTIFIER, &quot;chart.png&quot;);
+            } catch (ChartException ex) {
+                DefaultLoggerImpl.instance().log(ex);
+            }
+</pre>
+<h2><strong>Conclusion</strong></h2>
+<p>This article introduces the whole process of using BIRT Chart Engine in plug-in 
+  development. BIRT Chart Engine supports almost all types of chart, like bar 
+  chart, pie chart, and so on. It also has good abstraction for rendering device, 
+  and supports many rendering devices, including SWT widget, SWING widget, JPEG, 
+  GIF, PNG, and so far. Although this article focuses on rendering chart on SWT 
+  canvas, the concepts and process to render on other devices are same. </p>
+<p>However, BIRT Chart Engine is not a light-weight chart component. BIRT uses 
+  EMF for modeling, so you have to include four required BIRT plug-ins and several 
+  EMF plug-ins if you use BIRT Chart Engine. Anyway, it is a good tool to display 
+  chart, and enjoy it!<br>
+</p>
+
+</div>
+</body>
+</html>
