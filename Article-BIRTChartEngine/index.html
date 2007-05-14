@@ -22,19 +22,18 @@ The BIRT Chart Engine is a powerful business chart generation tool that can be u
 <div class="content">
 <h2>Introduction</h2>
 <p>Charts are a common and important way to display data in business intelligence 
-  and other applications. BIRT (Business Intelligence and Reporting Tools), an 
-  Eclipsed based reporting tool, provides not only a nice report designing tool, 
-  but a powerful chart engine, named BIRT Chart Engine, to illustrate data with 
-  pretty charts to end user. If you need to use chart in your plug-in, BIRT Chart 
-  Engine is really a good choice. It supports almost all major chart types, 
-  and can be rendered on SWT/SWING widgets and image file of many formats. Here 
-  I'd like to show you what capabilities BIRT Chart Engine can provide, and how 
-  to use it on SWT widget in your plug-in.</p>
-<h2>What BIRT Chart Engine can provide</h2>
-<p>BIRT Chart Engine supports a variety of chart types. Here, let's have a look 
-  at what they look like. (Note, only basic and important charts are listed here. 
-  You can refer to BIRT document for more details) </p>
-<table width="60%" border="0" align="center" cellpadding="2">
+  and other applications. Business Intelligence and Reporting Tools (BIRT), an 
+  Eclipsed-based reporting tool, provides not only a nice report designing tool, 
+  but a powerful charting engine. If you need to use chart in your plug-in, BIRT Chart 
+  Engine is really a good choice. It supports numerous chart types, 
+  and can be rendered on SWT/Swing widgets and image files of many formats. In this
+  article, we show you some of the capabilities the BIRT Chart Engine provides, and how 
+  to use it on an SWT widget in your plug-in.</p>
+<h2>What the BIRT Chart Engine can provide</h2>
+<p>The BIRT Chart Engine supports a variety of chart types. Here, let's have a look 
+  at what they look like (note that only basic and important charts are listed here; 
+  you can refer to BIRT documentation for more details) </p>
+<table class="no-border" width="60%" align="center" cellpadding="2">
   <tr> 
     <td width="33%"><div align="center"><a href="images/bar.png"><img src="images/bar_s.png" width="128" height="96" border="0"></a></div></td>
     <td width="33%"><div align="center"><a href="images/multibar.png"><img src="images/multibar_s.png" width="128" height="96" border="0"></a></div></td>
@@ -78,21 +77,20 @@ The BIRT Chart Engine is a powerful business chart generation tool that can be u
 </table>
 <p align="center"><strong>Figure 1. Chart Samples</strong></p>
 <h2>Preparation</h2>
-<p>This article uses Eclipse SDK 3.2.2 and BIRT 2.1.1. You can use Eclipse Callisto 
-  Discovery Site to install BIRT and its dependency plug-ins by selecting &quot;Help 
+<p>This article uses Eclipse SDK 3.2.2 and BIRT 2.1.1. You can use the Eclipse Callisto 
+  Discovery Site to install BIRT and its prerequisite plug-ins by selecting &quot;Help 
   &gt; Software Updates &gt; Find and Install...&quot; and choosing &quot;Search 
-  for new features to install&quot; in dialog. After selecting mirror update site, 
+  for new features to install&quot; in the update dialog. After selecting a mirror update site, 
   you can see all features under Callisto Discovery Site as follows.</p>
-<p align="center"><img src="images/selectbirt.png" width="640" height="500"></p>
+<p align="center"><img src="images/selectbirt.png"></p>
 <p>In this dialog, select &quot;Eclipse BIRT Report Designer Framework 2.1.2&quot; 
   and click &quot;Select Required&quot;. Now BIRT and all its dependency features 
   are selected to install. Then click &quot;Next&quot;, and install all these 
-  features. This article also provides sample code, and you can download it at 
-  <a href="com.ibm.examples.chart.zip">com.ibm.examples.chart.zip</a>.</p>
-<p>BIRT contains about fifty plug-ins, but if we just use BIRT Chart in our application, 
-  what you need are only four required plug-ins. They are listed in the following 
+  features. 
+<p>BIRT contains about fifty plug-ins, but if you use BIRT Chart Engine in your application, 
+  you only need four of them. They are listed in the following 
   table. So you just need include these four when distributing your application.</p>
-<table width="60%" border="1" align="center">
+<table width="80%" border="1" align="center">
   <tr> 
     <td><div align="center"><strong>Plug-in Name</strong></div></td>
     <td><div align="center"><strong>Description</strong></div></td>
@@ -115,9 +113,9 @@ The BIRT Chart Engine is a powerful business chart generation tool that can be u
   </tr>
 </table>
 <p align="center"><strong>Table 1. BIRT Chart Engine Plug-ins</strong></p>
-<p>Till now, we have set environment to develop chart. Please unzip sample code 
-  (com.ibm.examples.chart.zip), and import it into your workspace. You will find 
-  all code snippets in this article in sample code.</p>
+<p>You will find 
+  all the code snippets shown in this article in the sample code that you can download it at 
+  <a href="com.ibm.examples.chart.zip">com.ibm.examples.chart.zip</a>.</p>
 <h2>Concepts</h2>
 <p>Before we start to use chart engine, let's go through the basic concepts of 
   chart, which can help to understand chart engine API better. The following is 
@@ -127,89 +125,89 @@ The BIRT Chart Engine is a powerful business chart generation tool that can be u
 <p align="center"><strong>Figure 2. Concepts in One Bar Chart</strong></p>
 <table width="60%" border="1" align="center">
   <tr> 
-    <td height="21"><div align="center"><strong>Concept</strong></div></td>
+    <td><div align="center"><strong>Concept</strong></div></td>
     <td><div align="center"><strong>Description</strong></div></td>
   </tr>
   <tr> 
-    <td height="21"><div align="center">Title Area</div></td>
+    <td>Title Area</td>
     <td>The area containing chart title</td>
   </tr>
   <tr> 
-    <td height="21"><div align="center">Plot Area</div></td>
+    <td>Plot Area</td>
     <td>The area with red border, containing X/Y title, axis, and bars</td>
   </tr>
   <tr> 
-    <td height="21"><div align="center">Legend Area</div></td>
+    <td>Legend Area</td>
     <td>The area that is reserved to host legend</td>
   </tr>
   <tr> 
-    <td height="21"><div align="center">Legend Client Area</div></td>
+    <td>Legend Client Area</td>
     <td>The area containing legend to explain the meaning of bar with different 
       series</td>
   </tr>
   <tr> 
-    <td width="25%" height="21"><div align="center">Title</div></td>
-    <td width="75%">Describes the data that the chart displays for</td>
+    <td>Title</td>
+    <td>Describes the data that the chart displays for</td>
   </tr>
   <tr> 
-    <td><div align="center">Major Grid</div></td>
+    <td>Major Grid</td>
     <td>Indicates the major scale (Minor Grid is supported, but not displayed 
       here)</td>
   </tr>
   <tr> 
-    <td><div align="center">X/Y Title</div></td>
+    <td>X/Y Title</td>
     <td>Describes the meaning of X/Y axis</td>
   </tr>
   <tr> 
-    <td><div align="center">X/Y Axis</div></td>
+    <td>X/Y Axis</td>
     <td>Provides the label or scale value of X/Y axis</td>
   </tr>
   <tr> 
-    <td><div align="center">Series</div></td>
+    <td>Series</td>
     <td>Defines how to display data, bar, line, or pie, for example</td>
   </tr>
 </table>
-<p>Most charts have axes, but some haven't. One example without axis is pie chart. 
+<p>Most charts have axes, but some have none. One example without axis is pie chart. 
   The horizontal axis is called base axis. The base axis can be category axis 
-  or value axis. The category axis just contains a sequence of label, while value 
-  axis contains the values. The vertical axis is called orthogonal axis, and it 
-  is always value axis. BIRT Chart Engine only supports one base axis, and more 
-  than one orthogonal axis now, but only one orthogonal axis is primary. Each 
-  axis can have more than one series definition, but at most of time, only one 
+  or value axis. The category axis just contains a sequence of labels, while the value 
+  axis contains the values. The vertical axis is an orthogonal axis, and it 
+  is always a value axis. The BIRT Chart Engine supports one base axis, and one 
+  or more orthogonal axes, but only one orthogonal axis is primary. Each 
+  axis can have more than one series definition, but typically only one 
   series definition is used. Series definition defines the color palette, label 
   displaying format, and the associated series. Similarly, one series definition 
   can have more than one series. Series determines how to show data. For example, 
   bar series will show data with bar, and pie series shows data with pie.</p>
 <h2>Create Your First Chart</h2>
-<p>Then, let's see how to create a simple bar chart to understand the above 
+<p>Let's see how to create a simple bar chart to understand the above 
   concepts. This bar chart has one category base axis, and one value orthogonal 
   axis. It also contains title and legend as follows:</p>
-<p align="center"><img src="images/firstchart.png" width="616" height="501"></p>
+<p align="center"><img src="images/firstchart.png"></p>
 <p align="left">Now, let's do it step by step. (The complete source can be found 
-  in com.ibm.examples.chart.widget.chart.TestChartBuilder)</p>
+  in <code>com.ibm.examples.chart.widget.chart.TestChartBuilder</code>)</p>
 <ol>
   <li> Create chart instance 
     <pre>
          chart = ChartWithAxesImpl.create();
          chart.setDimension(ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL);</pre>
-    <p> Bar chart has two axes, so we call ChartWithAxesImpl.create() to create 
-      it. The second statement sets dimension with ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL, 
-      so that the bar has shade, which looks prettier.</p>
+    <p>Bar chart has two axes, so we call <code>ChartWithAxesImpl.create()</code> to create 
+      it. The second statement sets dimension with <code>ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL</code>, 
+      so that the bar is shaded, which looks prettier.</p>
   </li>
   <li>Set background color of plot 
     <pre>        chart.getPlot().setBackground(ColorDefinitionImpl.ORANGE());
         chart.getPlot().getClientArea().setBackground(ColorDefinitionImpl.YELLOW());
 </pre>
-    <p> You can change the background color of plot or plot's client area. The 
+    <p>You can change the background color of a plot or a plot's client area. The 
       above code sets the plot's background to orange, and sets the client area's 
       background to yellow. </li>
   <li>Enable legend 
     <pre>        chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
         chart.getLegend().setVisible(true);
 </pre>
-    <p> By default, the legend is disabled, so you need use Legend.setVisible(true) 
-      to enable it. There are two legend types, LegendItemType.CATEGORIES_LITERAL 
-      and LegendItemType.SERIES_LITERAL. The former shows different legend icon 
+    <p>By default, the legend is disabled, so you need use <code>Legend.setVisible(true)</code> 
+      to enable it. There are two legend types, <code>LegendItemType.CATEGORIES_LITERAL</code> 
+      and <code>LegendItemType.SERIES_LITERAL</code>. The former shows different legend icon 
       for each category, and the later shows different icon for each series.</p>
   </li>
   <li>Set chart title 
@@ -256,10 +254,10 @@ The BIRT Chart Engine is a powerful business chart generation tool that can be u
 
 
 </pre>
-    <p>The first thing to create X series is <img src="images/tag_1.gif" height=13 width=24 align=bottom> 
+    <p>The first thing to create the X series is <img src="images/tag_1.gif" height=13 width=24 align=bottom> 
       to create the data set to bind. There are four types of data set, and they 
-      are DataTimeDataSet, NumberDataSet, StockDataSet, and TextDataSet. In this 
-      example, X axis is a category axis, so we use TextDataSet here. Then, <img src="images/tag_2.gif" height=13 width=24> 
+      are <code>DataTimeDataSet</code>, <code>NumberDataSet</code>, <code>StockDataSet</code>, and <code>TextDataSet</code>. In this 
+      example, the X axis is a category axis, so we use <code>TextDataSet</code>. Then, <img src="images/tag_2.gif" height=13 width=24> 
       create a series, and bind the data set to it. In order to define what the 
       series looks like, you need <img src="images/tag_3.gif" height=13 width=24> 
       create a series definition. Here we choose the series palette 1. BIRT Chart 
@@ -280,14 +278,14 @@ The BIRT Chart Engine is a powerful business chart generation tool that can be u
 </pre>
     <p>To create Y series is similar to X series. Here, Y axis must be a value 
       axis, so we use <img src="images/tag_1.gif" height=13 width=24 align=bottom> 
-      <font face="Courier New, Courier, mono">NumberDataSet</font> for Y series.</p>
+      <code>NumberDataSet</code> for Y series.</p>
   </li>
 </ol>
 <p>Now, you finish creating your first chart. In the next section, we will see 
   how to make this chart display on your canvas.</p>
 <p align="center">&nbsp; </p>
 <h2>Create Chart Canvas</h2>
-<p>BIRT Chart Engine doesn't provide any SWT chart widget which can be used in 
+<p>The BIRT Chart Engine doesn't provide any SWT chart widget that can be used in 
   <font face="Courier New, Courier, mono">Composite</font> directly. So you need 
   create it by yourself, if you want to display chart in one editor or view. In 
   the following example, we create <font face="Courier New, Courier, mono">ChartCanvas</font>, 
