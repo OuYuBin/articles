@@ -145,6 +145,7 @@ Install...&quot; and choosing &quot;Search for new features to
 install&quot; in the update dialog. After selecting a mirror update
 site, you can see all features under Callisto Discovery Site as follows.</p>
 <p align="center"><img src="images/selectbirt.png"></p>
+<p align="center"><strong>Figure 2. The Callisto Update Site</strong></p>
 <p>In this dialog, select &quot;Eclipse BIRT Report Designer
 Framework 2.1.2&quot; and click &quot;Select Required&quot;. Now BIRT
 and all its dependency features are selected to install. Then click
@@ -195,7 +196,7 @@ better. The following is a simple bar chart, which contains the basic
 elements, like the title, axes, and so on.</p>
 <p align="center"><img src="images/concepts.png" width="700"
 	height="500"></p>
-<p align="center"><strong>Figure 2. Concepts in One Bar
+<p align="center"><strong>Figure 3. Concepts in a Bar
 Chart</strong></p>
 <table width="60%" border="1" align="center">
 	<tr>
@@ -241,7 +242,7 @@ Chart</strong></p>
 		<td>Series</td>
 		<td>Defines how to display data, bar, line, or pie, for example</td>
 	</tr>
-</table>
+</table><p align="center"><strong>Table 2. Some of the Chart Types Available.</strong></p>
 <p>Most charts have two or more axes, but some have none. One
 example of a chart with no axis is pie chart. The horizontal axis is
 called base axis. The base axis can be category axis or value axis. The
@@ -260,6 +261,7 @@ used. A series definition can itself have more than one series.</p>
 above concepts. This bar chart has one category base axis, and one
 orthogonal value axis. It also contains a title and legend as follows:</p>
 <p align="center"><img src="images/firstchart.png"></p>
+<p align="center"><strong>Figure 4. A Sample Bar Chart.</strong></p>
 <p>The complete source can be found in <code>com.ibm.examples.chart.widget.chart.TestChartBuilder</code>.</p>
 <ol>
 	<li>Create chart instance <pre>
@@ -362,7 +364,6 @@ orthogonal value axis. It also contains a title and legend as follows:</p>
 </ol>
 <p>In the next section, we will see how to make this chart display
 on an SWT canvas.</p>
-<p align="center">&nbsp;</p>
 <h2>Create the Chart Canvas</h2>
 <p>The BIRT Chart Engine doesn't provide a SWT chart widget that can
 be used directly, so we need create it by ourselves if we want to
@@ -383,15 +384,16 @@ create the <code>ChartCanvas</code> class, which extends from <code>Canvas</code
                 }
                 ...</pre>
 <p>In the constructor, <img src="images/tag_1.gif" height=13
-	width=24 align=CENTER> we need get the rendering device for SWT.
-The rendering device is responsible for rendering a chart onto a target
-device. The target device can be an image file or widget toolkit like
-SWT or Swing. The BIRT Chart Engine defines nine rendering devices in <code>org.eclipse.birt.chart.util.PluginSettings</code>;
-they are shown below:</p>
+	width=24 align=CENTER> we need to get the device renderer for
+SWT. The device renderer is responsible for rendering a chart onto a
+target device. The target device can be an image file or widget toolkit
+like SWT or Swing. The BIRT Chart Engine defines nine device renderers
+in <code>org.eclipse.birt.chart.util.PluginSettings</code>; they are
+shown below:</p>
 <table width="55%" border="1" align="center">
 	<tr>
-		<td>Device Name</td>
-		<td>Description</td>
+		<th>Device Name</th>
+		<th>Description</th>
 	</tr>
 	<tr>
 		<td>dv.SWING</td>
@@ -431,7 +433,8 @@ they are shown below:</p>
 		plug-in).</td>
 	</tr>
 </table>
-<p>We selected <code>dv.SWT</code> as our rendering device, since we
+<p align="center"><strong>Table 3. Available Device Renderers.</strong></p>
+<p>We selected <code>dv.SWT</code> as our device renderer, since we
 will render chart on an SWT widget. In the constructor, we add one paint
 listener to do the actual painting work.</p>
 <pre><img src="images/tag_1.gif" height=13 width=24>         addPaintListener(new PaintListener() {
@@ -482,13 +485,12 @@ point = 1/72 inch). We need to <img src="images/tag_1.gif" height=13
 points. Another important step is to <img src="images/tag_2.gif"
 	height=13 width=24> get a <code>Generator</code> instance and <img
 	src="images/tag_3.gif" height=13 width=24 align=CENTER> build the
-runtime chart state with the given chart model and display server. <strong>[wtb
-- I don't understand what this is trying to say]</strong>So the generated runtime
-chart state is associated with the <code>DisplayServer</code> from
-render, chart model, and bounds to render.[/wtb] The <code>DisplayServer</code>
-provides rendering-related information, like DPI (Dots Per Inch)
-resolution. The bounds define the area that the generated chart will be
-drawn on.</p>
+runtime chart state with the given chart model and display server. So
+the generated runtime chart state takes all necessary information to
+render, which includes the <code>DisplayServer</code>, chart model, and
+the bounds. The <code>DisplayServer</code> provides rendering-related
+information, like DPI (Dots Per Inch) resolution. The bounds define the
+area that the generated chart will be drawn on.</p>
 <pre>            public void drawToCachedImage(Rectangle size) {<br>                GC gc = null;<br>                try {<br>                    if (cachedImage != null)<br>                        cachedImage.dispose();<br>                    cachedImage = new Image(Display.getCurrent(), imageData);<br>
 <img src="images/tag_1.gif" height=13 width=24 align=CENTER>                 gc = new GC(cachedImage);<br><img
 	src="images/tag_2.gif" height=13 width=24 align=CENTER>                 render.setProperty(IDeviceRenderer.GRAPHICS_CONTEXT, gc);
@@ -528,7 +530,7 @@ screen.</p>
 <p>This article introduces the whole process of using the BIRT Chart
 Engine in plug-in development. BIRT Chart Engine supports almost all
 types of chart, including bar charts, pie charts, and more. It also has
-good abstraction for rendering devices, and supports many rendering
+good abstraction for device renderers, and supports many rendering
 devices, including SWT widgets, SWING components, numerous file formats
 (JPEG, GIF, and PNG), and more. Although this article focuses on
 rendering chart on SWT canvas, the concepts and process to render on
