@@ -1,0 +1,544 @@
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"> <head>  <style>
+BODY, P, DIV, H1, H2, H3, H4, H5, H6, ADDRESS, OL, UL, TITLE, TD, OPTION, SELECT {
+ font-family: Verdana;
+ 
+}
+
+BODY, P, DIV, ADDRESS, OL, UL, LI, TITLE, TD, OPTION, SELECT {  
+  font-size: 10.0pt;
+  margin-top:0pt;  
+  margin-bottom:0pt;  
+} 
+
+BODY, P {
+  margin-left:0pt; 
+  margin-right:0pt;
+}
+
+BODY {
+  line-height: ;
+  background: white;
+  margin: 6px;
+  padding: 0px;
+}
+
+h6 { font-size: 10pt }
+h5 { font-size: 11pt }
+h4 { font-size: 12pt }
+h3 { font-size: 13pt }
+h2 { font-size: 14pt }
+h1 { font-size: 16pt }
+
+blockquote {padding: 10px; border: 1px #DDDDDD dashed }
+
+a img {border: 0}
+
+</style>     </head>   <body revision="dhnnptg2_0d9k6kx:865">  <DIV align=right>
+  <FONT size=-2>Copyright 2003 International Business Machines Corp.</FONT>
+  <TABLE border=0 cellPadding=2 cellSpacing=0 width=100%>
+    <TBODY>
+    <TR>
+      <TD align=left bgColor=#0080c0 colSpan=2 vAlign=top>
+        <B><FONT color=#ffffff face=Arial,Helvetica>Eclipse 文档中心（Eclipse Corner
+        Article）</FONT></B>
+      </TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</DIV>
+<CENTER>
+<P>
+  &nbsp;
+</P>
+<H1>
+  <IMG align=left src="images_cn/dhnnptg2_6g453ppdc.jpg" style="WIDTH:120px; HEIGHT:86px">
+</H1>
+<H1>
+</H1>
+<H1>
+  <A href=mailto:Jaclick@gmail.com></A>
+</H1>
+<H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+  </H1>
+  <H1>
+    图形上下文导论（Introduction to SWT Graphics）
+  </H1>
+</H1>
+</CENTER> <BLOCKQUOTE><STRONG>摘要：</STRONG><BR>
+<CODE><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt>org.eclipse.swt.graphics</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">包（</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">package</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">），包含</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">了管理图形资源的类。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">只要实现了</SPAN><SPAN class=SourceText><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.graphics.Drawable接口，就可在上</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">面</SPAN><SPAN style=FONT-SIZE:10pt>绘画</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">，</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">包括 </SPAN><SPAN class=SourceText><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.widgets.Control</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana"> 和 </SPAN><SPAN class=SourceText><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.graphics.Image</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana"> 。 </SPAN><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt>org.eclipse.swt.graphics.GC</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">封装了全部绘画</SPAN></SPAN><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt>API</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">，包括</SPAN><SPAN style=FONT-SIZE:10pt>如何绘制线条、</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">图形</SPAN><SPAN style=FONT-SIZE:10pt>、如何绘制文本、图像以及填充</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">图形</SPAN><SPAN style=FONT-SIZE:10pt>。 本篇</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">将</SPAN><SPAN style=FONT-SIZE:10pt>展示</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">如何</SPAN><SPAN style=FONT-SIZE:10pt>使用<SPAN lang=EN-US>GC</SPAN>在图像上绘画， </SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">控件的绘画事件（<SPAN lang=EN-US>paintEvent</SPAN>）</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">回调。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">画布（<SPAN lang=EN-US>Canvas</SPAN>）</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">控件</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">，</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">因为不同的绘画操作，拥有</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">很多</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">构造风格常量</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">允许你指定何时以及</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">如何产生绘画</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">，</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">本篇</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">也</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">将展示这些东西。 </SPAN></CODE>
+<P>
+  &nbsp;
+</P>
+<P>
+  <B>作者：&nbsp;Joe Winchester, IBM</B><BR>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2003年7月3日（July 3, 2003）
+</P>
+<P>
+  &nbsp;
+</P>
+<P>
+  英文原文：<FONT size=2><FONT size=1>Graphics Context - Quick on the
+  draw</FONT>&nbsp;&nbsp;
+  <A href=http://www.eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html><FONT size=1>http://www.eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html</FONT></A></FONT><FONT size=1>
+  </FONT>
+</P>
+<P>
+  &nbsp;
+</P>
+<P>
+  催月泪（Jaclick）翻译&nbsp; <A href=mailto:Jaclick@gmail.com>Jaclick@gmail.com</A>
+</P>
+<P>
+  2007.5.30
+</P>
+</BLOCKQUOTE> <HR width=100%> 目录：
+<UL>
+  <LI>
+    <A href="http://eclipse.org/articles/Article-SWT-graphics/SWT_graphics.html#Graphics Context"><FONT color=#3333ff>图形上下文</FONT></A>
+    <UL>
+      <LI>
+        <FONT color=#3333ff>在图像（Image）上绘画 </FONT>
+        <LI>
+          <FONT color=#3333ff>在控件（control）上绘画 </FONT>
+        </LI>
+    </UL>
+    <LI>
+      <FONT color=#3333ff><A href=http://docs.google.com/View?docid=dhnnptg2_0d9k6kx#Clipping title=切割（cliping）>切割（cliping）</A>
+      </FONT>
+      <LI>
+        <FONT color=#3333ff><A href=http://docs.google.com/View?docid=dhnnptg2_0d9k6kx#Canvas title=画布（Canvas）>画布（Canvas）</A>
+        </FONT>
+        <LI>
+          <FONT color=#3333ff><A href=http://docs.google.com/View?docid=dhnnptg2_0d9k6kx#Drawing_lines_and title="绘制线条和形状（Drawing lines and shapes）">绘制线条和形状（Drawing
+          lines and shapes）</A> </FONT>
+          <LI>
+            <FONT color=#3333ff><A href=http://docs.google.com/View?docid=dhnnptg2_0d9k6kx#Filling_shapes title="绘制文本（Drawing text）">绘制文本（Drawing
+            text）</A> </FONT>
+            <LI>
+              <FONT color=#3333ff><A href=http://docs.google.com/View?docid=dhnnptg2_0d9k6kx#Filling_shapes title="填充形状（Filling shapes）">填充形状（Filling
+              shapes）</A> </FONT>
+              <LI>
+                <FONT color=#3333ff><A href=http://docs.google.com/View?docid=dhnnptg2_0d9k6kx#XOR title=异或（XOR）>异或（XOR）</A>
+                </FONT>
+                <LI>
+                  <FONT color=#3333ff><A href=http://docs.google.com/View?docid=dhnnptg2_0d9k6kx#Drawing_Images title="绘制图像（Drawing images）">绘制图像（Drawing
+                  images）</A> </FONT>
+                </LI>
+</UL>
+<P>
+  &nbsp;
+</P>
+<P class=MsoBodyText style="MARGIN:0pt 0pt 14.15pt">
+  <SPAN lang=EN-US>SWT</SPAN>图形系统使用<SPAN style=FONT-FAMILY:宋体>了与</SPAN>控件（<SPAN lang=EN-US>Control</SPAN>）相同的坐标习惯，即客户区最左上角开始的点为原点（<SPAN lang=EN-US>0</SPAN>，<SPAN lang=EN-US>0</SPAN>），<SPAN lang=EN-US>x</SPAN>轴坐标向右增加<SPAN style=FONT-FAMILY:宋体>，</SPAN><SPAN lang=EN-US>y</SPAN>轴坐标向下增加。<SPAN>Point
+  类被用于描述位置（坐标系统中的位置）以及偏移量（SWT中并没有Dimension类，矩形（rectangle）的大小是由Point类捕获的x、y坐标点偏移量到原点坐标来描述的）。
+  </SPAN>
+</P>
+<H1>
+  <A name="Graphics Context"></A><FONT size=5>图形上下文（Graphics Context）</FONT>
+</H1>
+<P class=MsoBodyText style="MARGIN:0pt 0pt 14.15pt">
+  <SPAN style=FONT-FAMILY:宋体>图形能够被画在任何</SPAN>实现了<SPAN class=SourceText><FONT face="Courier New"><SPAN lang=EN-US>org.eclipse.swt.graphics.Drawable</SPAN>接口</FONT></SPAN><SPAN class=SourceText><SPAN style=FONT-FAMILY:宋体>的东西上</SPAN><FONT face="Courier New">，比如</FONT></SPAN>控件（<SPAN lang=EN-US>Control</SPAN>）、图像（<SPAN lang=EN-US>Image</SPAN>）、显示设备或者打印设备。
+  <SPAN class=SourceText><SPAN lang=EN-US><FONT face="Courier New">org.eclipse.swt.graphics.GC</FONT></SPAN></SPAN><SPAN lang=EN-US>
+  </SPAN>就是<SPAN style=FONT-FAMILY:宋体>封装了执行</SPAN>绘画操作的图形上下文（<SPAN lang=EN-US>graphics
+  context</SPAN>）。<SPAN style=FONT-FAMILY:宋体>一般</SPAN><SPAN>有两种使用GC</SPAN><SPAN style=FONT-FAMILY:宋体>的方法</SPAN><SPAN>：一种是</SPAN><SPAN style=FONT-FAMILY:宋体>让</SPAN><SPAN>Drawable
+  实例作为</SPAN><SPAN>GC</SPAN><SPAN>构造</SPAN><SPAN style=FONT-FAMILY:宋体>函数的</SPAN><SPAN>参数</SPAN><SPAN style=FONT-FAMILY:宋体>获取的</SPAN><SPAN>GC，另</SPAN><SPAN style=FONT-FAMILY:宋体>外</SPAN><SPAN>一种是绘画事件（paintEvent）</SPAN><SPAN style=FONT-FAMILY:宋体>回调提供的</SPAN><SPAN>GC。
+  </SPAN>
+</P>
+<H2>
+  在图像（Image）上绘画
+</H2>
+以下代码是把一个图像作为构造参数获取图像的GC，然后在它上面绘制线条。<IMG src="images_cn/dhnnptg2_36cx5jcn8r.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;<SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">从左上角</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">顶点</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">（<SPAN lang=EN-US>0,0</SPAN>）处</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">向</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">右下角</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">顶点</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">画线条</SPAN>
+<IMG src="images_cn/dhnnptg2_37v8f26mfp.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;<SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">从右上角</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">顶点向</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">左下角</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">顶点</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">画线条。</SPAN>
+<P>
+  <CODE>&nbsp;&nbsp;&nbsp; </CODE>
+</P>
+<P>
+  <CODE>&nbsp;&nbsp;&nbsp; Image image = new Image(display,"C:/devEclipse_02/eclipse/plugins/org.eclipse.platform_2.0.2/eclipse_lg.gif");</CODE><BR>
+  <CODE>&nbsp;&nbsp;&nbsp; GC gc = new GC(image);</CODE><BR>
+  <CODE>&nbsp;&nbsp;&nbsp; Rectangle bounds = image.getBounds();</CODE>&nbsp;<BR>
+  <CODE><IMG src="images_cn/dhnnptg2_38dcf6qfct.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;gc.drawLine(0,0,bounds.width,bounds.height);</CODE>&nbsp;<BR>
+  <CODE><IMG src="images_cn/dhnnptg2_39f37r87d9.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;gc.drawLine(0,bounds.height,bounds.width,0);</CODE>&nbsp;<BR>
+  <CODE><IMG src="images_cn/dhnnptg2_40dj4dxjdk.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;gc.dispose();</CODE><BR>
+  <CODE>&nbsp;&nbsp;&nbsp; image.dispose();</CODE>&nbsp;<BR>
+</P>
+<P>
+  <TABLE border=1>
+    <CAPTION> <TBODY></TBODY></CAPTION> <TBODY>
+    <TR>
+      <TD>
+        &nbsp;<FONT face=宋体>原始图像</FONT>
+      </TD>
+      <TD>
+        <FONT face=宋体>绘制线条后的图像</FONT>
+      </TD>
+    </TR>
+    <TR>
+      <TD>
+        <IMG src="images_cn/dhnnptg2_7ccmbkg9h.gif" style="WIDTH:115px; HEIGHT:164px">
+      </TD>
+      <TD>
+        <IMG src="images_cn/dhnnptg2_8grr7dnfb.gif" style="WIDTH:115px; HEIGHT:164px">
+      </TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</P>
+<P>
+  &nbsp;
+  <P>
+    <IMG src="images_cn/dhnnptg2_41dtnnr9fq.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;<FONT color=#3333ff>由你创建的GC，就得由你负责销毁它。</FONT>调用
+    dispose（）方法。关于怎样管理 SWT 资源的更多信息请参见
+    <FONT color=#3333ff><A href=http://www.eclipse.org/articles/swt-design-2/swt-design-2.html target=_blank title="SWT: The Standard Widget Toolkit"><FONT color=#3333ff>SWT:
+    The Standard Widget Toolkit</FONT></A> </FONT>。一个 GC
+    实例应该在使用完后就尽可能快的释放，这是因为每一个GC 都需要占用底层系统平台资源，而在某些操作系统平台中，这些资源是相当匮乏的，例如Windows
+    98仅仅提供了5个GC 对象。
+    <H2>
+      <FONT size=5>在控件（Control）上绘画</FONT>
+    </H2>
+    <CODE><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt>org.eclipse.swt.widgets.Control</SPAN></SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Verdana"> </SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">实现了<SPAN lang=EN-US>Drawable</SPAN>接口，所以你可以在控件（<SPAN lang=EN-US>Control</SPAN>）</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">上绘画，</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">图像<SPAN lang=EN-US>(Image)</SPAN>上</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">绘画方法与控件相同</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">(</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">把控件或图像作为参数传给<SPAN lang=EN-US>GC</SPAN>获取控件或图像的<SPAN lang=EN-US>GC</SPAN>，然后在其上进行绘画<SPAN lang=EN-US>)</SPAN>。但是，图像（<SPAN lang=EN-US>Image</SPAN>）上</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">的</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">绘画</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">与控件</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">有所不同</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">是</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">图像的修改是永恒不变的。如果使用<SPAN lang=EN-US>GC</SPAN>在控件上进行绘画，操作系统自身在绘制控件时会覆盖你所做的绘画操作。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">正确的方法的是为控件添加一个绘画监听器，这个监听器类就是</SPAN><SPAN class=SourceText><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.events.PaintListener，然后在监听器</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">中回调方法参数就是</SPAN><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.events.PaintEvent</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">的一个实例</SPAN><SPAN style=FONT-SIZE:10pt>。</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">PaintEvent 包含了一GC，这样在控件上面或者是指定区域里面进行绘画的环境就准备好了</SPAN></CODE>
+    <P>
+      &nbsp;
+      <P>
+        以下代码
+        <IMG src="images_cn/dhnnptg2_42cg23xchk.gif" style="WIDTH:24px; HEIGHT:13px">
+        给Shell添加了一个绘画监听，<IMG src="images_cn/dhnnptg2_43g9t35hdk.gif" style="WIDTH:24px; HEIGHT:13px">
+        然后在paintControl（）方法中画一条连接原点到底部右下角的直线。
+      </P>
+      <P>
+        &nbsp;
+      </P>
+      <P>
+        <CODE>&nbsp;&nbsp;&nbsp; Shell shell = new Shell(display);</CODE>&nbsp;<BR>
+        <CODE><IMG src="images_cn/dhnnptg2_45fmpmz5dj.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;shell.addPaintListener(new PaintListener(){</CODE><BR>
+        <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public void paintControl(PaintEvent e){</CODE><BR>
+        <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rectangle clientArea = shell.getClientArea();</CODE>&nbsp;<BR>
+        <CODE><IMG src="images_cn/dhnnptg2_46gz68sg36.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.drawLine(0,0,clientArea.width,clientArea.height);</CODE><BR>
+        <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</CODE><BR>
+        <CODE>&nbsp;&nbsp;&nbsp; });</CODE><BR>
+        <CODE>&nbsp;&nbsp;&nbsp; shell.setSize(150,150)</CODE>
+      </P>
+      <P>
+        &nbsp;
+        <P>
+          <IMG src="images_cn/dhnnptg2_98t4bk4h2.gif" style="WIDTH:267px; HEIGHT:215px">
+          <P>
+            &nbsp;&nbsp;
+            <P class=MsoBodyText style="MARGIN:0pt 0pt 14.15pt">
+              虽然<SPAN lang=EN-US>Shell</SPAN>的大小设置为（<SPAN lang=EN-US>150,150</SPAN>）<SPAN lang=EN-US>,
+              </SPAN>但实际上可绘画的区域<SPAN style=FONT-FAMILY:宋体>比这</SPAN>还要再小一些，因为<SPAN lang=EN-US>Shell</SPAN>还包括了边框、工具栏以及菜单栏<SPAN style=FONT-FAMILY:宋体>，</SPAN>这也就是我们所要了解的客户区域。任何面板（<SPAN lang=EN-US>Composite</SPAN>）都是使用<SPAN class=SourceText><FONT face="Courier New"><SPAN lang=EN-US>getClientArea()</SPAN>方法获取客户区域的</FONT></SPAN><SPAN class=SourceText><SPAN style=FONT-FAMILY:宋体>。</SPAN></SPAN>
+            </P>
+            <P>
+              因为应用程序总是在底层OS绘制完控件后才得到绘画事件，所以绘画事件中的GC进行绘画后的效果就可以最终显示在控件上面了。当然也有例外，比如工具栏区域就不能在上面进行绘画。<CODE><A href=http://help.eclipse.org/help32/index.jsp target=_blank title=org.eclipse.swt.widgets.Canvas>org.eclipse.swt.widgets.Canvas</A></CODE>
+              能够用来进行多方面的图形绘画操作。
+              <P>
+                &nbsp;
+                <P>
+                  <A name=Clipping></A><FONT size=5><STRONG>剪切（Clipping）</STRONG></FONT>
+                  <P>
+                    &nbsp;
+                  </P>
+                  <P>
+                    <CODE><SPAN style=FONT-SIZE:10pt>一个</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">GC</SPAN><SPAN style=FONT-SIZE:10pt>的剪切区域就是发生绘画的那部分，这里有个例子，如果你要填充出一个有缺口的三角形形状，一种方法是画出多个三角形和矩形组合出这么一个形状；当然也有另一种方法，就是利用</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">GC</SPAN><SPAN style=FONT-SIZE:10pt>的剪切操作。</SPAN></CODE>
+                  </P>
+                  <P>
+                    <CODE><SPAN style=FONT-SIZE:10pt></SPAN>&nbsp;&nbsp;&nbsp; </CODE>
+                  </P>
+                  <P>
+                    <CODE>&nbsp;&nbsp;&nbsp; shell.addPaintListener(new PaintListener() {</CODE><BR>
+                    <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public void paintControl(PaintEvent e) {</CODE><BR>
+                    <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rectangle clientArea = shell.getClientArea();</CODE><BR>
+                    <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int width = clientArea.width;</CODE><BR>
+                    <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int height = clientArea.height;</CODE>&nbsp;<BR>
+                    <CODE><IMG src="images_cn/dhnnptg2_47gjzwt5ct.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.setClipping(20,20,width - 40, height - 40);</CODE><BR>
+                    <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.setBackground(display.getSystemColor(SWT.COLOR_CYAN));</CODE>&nbsp;<BR>
+                    <CODE><IMG src="images_cn/dhnnptg2_48g6v8fwgm.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.fillPolygon(new int[] {0,0,width,0,width/2,height});</CODE><BR>
+                    <CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</CODE><BR>
+                    <CODE>&nbsp;&nbsp;&nbsp; });</CODE>
+                  </P>
+                  <P>
+                    &nbsp;
+                    <P>
+                      这段代码在Shell上画了一个三角形。<IMG src="images_cn/dhnnptg2_49gxvnqkdk.gif" style="WIDTH:24px; HEIGHT:13px">
+                      左上角和右上角连接到底部边缘的中间。使用一个矩形CG对其进行剪切。<IMG src="images_cn/dhnnptg2_50hcsjspnh.gif" style="WIDTH:24px; HEIGHT:13px">
+                      最后显示出被剪切的矩形区域。&nbsp;
+                      <P>
+                        &nbsp;
+                        <P>
+                          <IMG src="images_cn/dhnnptg2_10gps472d3.gif" style="WIDTH:562px; HEIGHT:191px">
+                          <P>
+                            &nbsp;
+                            <P>
+                              当控件发生绘画事件，GC总是剪切需要重绘的那部分区域。例如，另一个窗口移到了一个SWT
+                              shell的前面，随后又移走。那么需要重新显示的就是GUI被损坏的那部分（shell被覆盖的那部分），一个绘画事件就是事件队列。当绘画事件发生，<CODE>paintControl(PaintEvent evt)</CODE><CODE></CODE> 方法中的参数就包含了控件中需要的重绘区域的x、y坐标字段及宽和高字段。控件的受损部分能够包含若干个相分离的矩形区域，当绘画事件发生，控件的受损部分不止一个时，那么它们就会被合并成一个单一的矩形。这一步是由底层平台来实现的，因为多个绘画事件在单独的一个回调过程中处理有利于执行。 
+<P>&nbsp;
+<P><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">在上面的例子中每当<SPAN lang=EN-US> paintControl(PaintEvent)</SPAN>被调用的时候， 就将在<SPAN lang=EN-US>PaintEvent's area</SPAN>中寻找一个优化</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">绘画事件（<SPAN lang=EN-US>paint event</SPAN>）很可能不交叉在绘画的形状（<SPAN lang=EN-US>shape</SPAN>）中，在这种情况下，就不需要绘画（<SPAN lang=EN-US>painting</SPAN>）或者指使需要一部分重画而已</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">依靠绘画的类型，就可以解决<SPAN lang=EN-US>GC</SPAN>所选择的绘画部分，但事实上这要比<SPAN lang=EN-US>GC</SPAN>剪切花费更多开销，而且在实践中常常忽视这些被损坏的区域让<SPAN lang=EN-US>GC</SPAN>重新绘画全部，只有在刷新操作中才会依赖剪切。</SPAN> 
+<P>&nbsp;
+<P>如果程序需要手工损坏控件的某部分区域，可以使用<CODE>Control.redraw(int x, int y, int width, int height)或者使用</CODE><CODE>Control.redraw()</CODE>损坏整个客户区域。此区域就被打上了标记然后包含在下一个绘画事件中，产生闪屏后，就会立即使用<CODE>Control.update()方法强制处理控件的绘画请求。</CODE>如果无绘画请求（<SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">也就是客户区域无损坏）</SPAN>, <CODE>update()就什么不做。</CODE> 
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE></CODE> 
+<P><CODE>（译者注：此处的Control并不单指Control类，而是指所有继承了Control类的控件类，比如button,canvas,shell等等）</CODE> 
+<H1><A name=Canvas></A><FONT size=5>画布（Canvas）</FONT> </H1>
+<P>虽然任何控件都可以通过绘画事件（paintEvent）在其上进行绘制, 但是org.eclipse.swt.widgets.<CODE>Canvas</CODE><CODE></CODE> 是针对图形操作而特别设计的。可以直接使用Canvas，也可以通过添加绘画事件（paintEvent）使用，还可以创建Canvas的子类来自定义控件重复使用之。画布（Canvas）拥有大量的风格样式来影响绘画的产生。&nbsp; </P>
+<P>&nbsp;</P>
+<P>Canvas的默认行为是使用当前背景色填充自身的整个客户区域。这样会引起屏闪，因为绘画事件也是在GC上绘画，所以用户就会看到被填充的原始背景色和产生绘画之间的闪烁。有一种方法可避免此类情况，在创建Canvas时使用SWT.NO_BACKGROUND样式。这样就防止了绘画背景，意思就是程序要负责绘画客户区域的每一个像素。</P>
+<P>&nbsp;
+<P>当部件调整大小时，客户区域会重复绘画，这就会出现屏幕闪烁。使用<SPAN lang=EN-US>SWT.NO_REDRAW_RESIZE 可减少这样的情况，控件会减少不必要的重绘。比如改变尺寸大小，绘画事件GC只会剪切需要重绘的部分即底部区域和右边区域，就像一个反方向的“L”。</SPAN> 
+<P><SPAN lang=EN-US></SPAN>
+<P>&nbsp;
+<P>在固定大小的GC上绘画NO-REDRAW_RESIZE样式能很好的减少屏闪。但是错误的使用NO_REDRAW_RESIZE 可以导致图形成扁圆形。扁圆形是个大概的说法，事实上是指部件没有随大小的调整而进行正确的更新。下面的例子就演示了这样的情况。<IMG src="images_cn/dhnnptg2_52hscvr6s9.gif" style="WIDTH:24px; HEIGHT:13px"> 填充椭圆形。因为在窗口大小改变时没有产生绘画事件，因为GC只剪切受损的（发生改变的）区域，而上一个绘画又没有被抹去，这就产生了扁圆形状。( 即使用NO_REDRAW_RESIZE 绘画事件只处理扩大的那部分区域，原先部分它就不管了). 
+<P>&nbsp;
+<P><CODE>&nbsp;&nbsp;&nbsp; shell.setLayout(new FillLayout());</CODE>&nbsp;<BR><CODE><IMG src="images_cn/dhnnptg2_53cm3dcjpc.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;final Canvas canvas = new Canvas(shell,SWT.NO_REDRAW_RESIZE);</CODE> 
+<P><CODE>&nbsp;&nbsp;&nbsp; canvas.addPaintListener(new PaintListener() {</CODE><BR><CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public void paintControl(PaintEvent e) {</CODE><BR><CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rectangle clientArea = canvas.getClientArea();</CODE><BR><CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.setBackground(display.getSystemColor(SWT.COLOR_CYAN));</CODE>&nbsp;<BR><CODE><IMG src="images_cn/dhnnptg2_54hpr6f8dg.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; e.gc.fillOval(0,0,clientArea.width,clientArea.height);</CODE><BR><CODE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</CODE><BR><CODE>&nbsp;&nbsp;&nbsp; });</CODE> 
+<P>&nbsp;
+<P>canvas的大小被增大，GC只剪切需要重绘的地方，扁圆形状就产生了。 
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_11d7g9mcg2.gif" style="WIDTH:600px; HEIGHT:550px"> 
+<P>&nbsp;
+<P>问题出在<IMG src="images_cn/dhnnptg2_55gsdp86cj.gif" style="WIDTH:24px; HEIGHT:13px"> ，应该使用SWT.NONE 样式，这样GC就不会只剪切扩大的部分了。所以当Shell大小增大时整个椭圆形都会被重绘。 
+<P>&nbsp;
+<P><CODE><IMG src="images_cn/dhnnptg2_56cwfwz32v.gif" style="WIDTH:24px; HEIGHT:13px">&nbsp;final Canvas canvas = new Canvas(shell,SWT.NONE);</CODE> 
+<P>&nbsp;
+<P>任何SWT部件，如果超过一个矩形区域被“损坏”，平台会把它们合并成一个，也就是说SWT程序只能处理一个绘画事件。在Canvas上使用NO_MERGE_PAINTS 样式可以覆盖这样的行为，可以为每一个被“损坏”的矩形区域调用绘画事件监听。 
+<P>&nbsp;
+<P>风格常量NO_BACKGROUND, NO_REDRAW_RESIZE 以及NO_MERGE_PAINTS 能够被使用在任何面板（Composite）以及子类中, 包括Canvas、Shell以及Group。 虽然这是被SWT允许的（不会由异常抛出），但在Composite 类的Javadoc中关于风格有这样的警告 <EM>"... 如果在其他的<CODE>Composite子类中（除了Canvas）使用其行为是不明确的。</CODE>"</EM>。所以实现图形绘画操作Canvas应该是首选。 
+<P>&nbsp;
+<P>另一种减少屏幕闪烁的方法，就是使用双缓冲技术。你可以先根据Canvas客户区域大小创建Image对象，然后使用<CODE>GC(Image)将其绘画到Canvas上</CODE>;&nbsp; 在绘画事件GC中调用<CODE>drawImage(Image image, int x, int y)。</CODE> 在一些平台上已经为你实现了双缓冲，所以你可以根据情况考虑使用三缓冲。<A name="Drawing lines and"></A> 
+<P>&nbsp;
+<P><STRONG><FONT size=5>绘制线条和形状（Drawing lines and shapes）</FONT></STRONG> 
+<H1></H1>GC 拥有很多绘画线条的方法，比如画连接两个坐标点的直线、连接多个坐标点的直线或者是预先定义好的形状，线条颜色就是GC的前景色，可以通过风格样式常量来决定线条的粗细胖瘦。绘画事件其GC也有很多相同的属性（前景色、背景色、以及颜色），并且线条的默认宽度是1像素。 
+<H2><CODE>GC.drawLine(int x1, int y1, int x2, int y2);</CODE> </H2>画一条从坐标点（x1,y1）到坐标点（x2,y2）的直线，如果两点的坐标值相同就相当于画一个圆点。 
+<H2><CODE>GC.drawPolyline(int[] pointArray);</CODE> </H2>
+<P>画一条连接多个坐标点的直线，int[] 存放着要连接的x、y坐标值。代码如下:<BR><CODE></CODE></P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.drawPolyline(new int[] { 25,5,45,45,5,45 });</CODE><BR></P>
+<P>先是从坐标点25,5到45,45，然后从45,45到5,45。</P>
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_12gkztzm7p.gif" style="WIDTH:161px; HEIGHT:94px"> 
+<H2><CODE>GC.drawPolygon(int[] pointArray);</CODE> </H2>
+<P><CODE>drawPolyline(int[])的使用与</CODE><FONT face="Courier New">gc.drawPolyline很相似，不同的是最后一个点（5,45）连接了第一个点（25,5）。</FONT><BR><CODE></CODE></P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.drawPolygon(new int[] { 25,5,45,45,5,45 });</CODE><BR></P>
+<P>相当于用三条线段链接三角形的单个端点，从而形成了一个三角形区域。 </P>
+<H2><CODE><IMG src="images_cn/dhnnptg2_13fxzpbbfg.gif" style="WIDTH:161px; HEIGHT:94px"></CODE> </H2>
+<H2><CODE>GC.drawRectangle(int x, int y, int width, int height);</CODE> </H2>
+<P>画一个矩形区域，int x,int y是矩形左上角的坐标点，int width,int heighy分别是矩形的宽和高。 </P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.drawRectangle(5,5,90,45);</CODE><BR></P>
+<P>&nbsp;</P>
+<P>左上角坐标点为（5,5），对角坐标点为（95，50）。<BR></P>
+<P><IMG src="images_cn/dhnnptg2_14dppn8cdx.gif" style="WIDTH:174px; HEIGHT:97px"> </P>
+<P>&nbsp;</P>
+<P>你可以将Rectangle作为一个单独的参数传送给绘画方法。<CODE>GC.drawRectangle(Rectangle);</CODE> </P>
+<H2><CODE>GC.drawRoundedRectangle(int x, int y, int width, int height, int arcWidth, int arcHeight);</CODE> </H2>
+<P>圆角矩形不同于标准矩形，它的四角呈圆形。每一个圆角实际上就是一个1/4的椭圆形，其弧宽和弧高就是完整椭圆形的宽和高。 </P>
+<P>&nbsp;</P>
+<P><CODE>gc.drawRoundedRectangle(5,5,90,45,25,15)</CODE> </P>
+<P><CODE></CODE>&nbsp;</P>
+<P>画了一个圆角矩形，左顶角坐标值（5,5）。下面是圆角矩形的右下角放大图，其宽和高分别是25、15。&nbsp;</P>
+<P><IMG src="images_cn/dhnnptg2_15hd4g2qf6.gif" style="WIDTH:449px; HEIGHT:121px"> 
+<P>&nbsp;
+<P>虽然调用4次<CODE>drawArc()和4次drawLine()完全可以</CODE>实现一个圆角矩形。但在一些平台下，例如Windows或者Photon，SWT就可以使用非常优秀的平台API。<CODE></CODE> 
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE><STRONG><FONT size=3></FONT></STRONG></CODE> 
+<P><CODE><STRONG><FONT size=3>GC.drawOval(int x, int y, int width, int height);</FONT></STRONG></CODE> 
+<P>&nbsp;</P>
+<P>一个椭圆形是画在矩形里的，所以由矩形的左顶点坐标以及宽和高来定义。定义一个正圆形同样使用这个方法。 <BR><CODE></CODE></P>
+<P><CODE>gc.drawOval(5,5,90,45);</CODE> </P>
+<P>&nbsp;</P>
+<P><IMG src="images_cn/dhnnptg2_16dh2k6zhc.gif" style="WIDTH:188px; HEIGHT:95px"> 
+<H2><CODE>GC.drawArc(int x, int y, int width, int height, int startAngle, int endAngle);</CODE></H2>
+<P>一个弧形是被画在一个指明了高和宽以及左顶角x,y坐标的矩形区域内。<FONT face="Courier New">int startAngle是个角度，是开始画</FONT>弧形的位置，开始点就是此角度与X轴坐标线相交的那个点。<FONT face="Courier New">int endAngle同样是角度，它是弧形结束的位置，道理和int startAngle相同。</FONT></P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.drawArc(5,5,90,45,90,200);</CODE> <BR></P>
+<P>&nbsp;</P>
+<P>这里画了一个弧形，从90度垂线和X轴坐标相交处开始，然后持续画200度。 </P>
+<P>&nbsp;</P>
+<P><IMG src="images_cn/dhnnptg2_17fbch36hh.gif" style="WIDTH:161px; HEIGHT:87px"> 
+<H2><CODE>GC.setLineStyle(int style);</CODE></H2>线条（Lines）拥有多种风格，<CODE>org.eclipse.swt.SWT中提供了定义线条风格的常量，这些线条风格常量以</CODE>LINE_开头。&nbsp;<BR>
+<TABLE border=1>
+<CAPTION>
+<TBODY></TBODY></CAPTION>
+<TBODY>
+<TR>
+<TD>SWT.LINE_SOLID</TD>
+<TD><IMG src="images_cn/dhnnptg2_63fdqrvjdp.gif" style="WIDTH:292px; HEIGHT:16px"></TD></TR>
+<TR>
+<TD>SWT.LINE_DOT</TD>
+<TD><IMG src="images_cn/dhnnptg2_64z7qftndn.gif" style="WIDTH:292px; HEIGHT:16px"></TD></TR>
+<TR>
+<TD>SWT.LINE_DASH</TD>
+<TD><IMG src="images_cn/dhnnptg2_65d7s375px.gif" style="WIDTH:292px; HEIGHT:16px"></TD></TR>
+<TR>
+<TD>SWT.LINE_DASHDOT</TD>
+<TD><IMG src="images_cn/dhnnptg2_66dtgsd8cs.gif" style="WIDTH:292px; HEIGHT:16px"></TD></TR>
+<TR>
+<TD>SWT.LINE_DASHDOTDOT</TD>
+<TD><IMG src="images_cn/dhnnptg2_67d3vxv2fp.gif" style="WIDTH:292px; HEIGHT:16px"></TD></TR></TBODY></TABLE>
+<H2><CODE>GC.setLineWidth(int width);</CODE></H2>线条的默认宽度是1像素（pixel）, 当然也可以使用GC的lineWidth字段设置线条宽。 
+<TABLE border=1>
+<CAPTION>
+<TBODY></TBODY></CAPTION>
+<TBODY>
+<TR>
+<TD>gc.setLineWidth(2);</TD>
+<TD><IMG src="images_cn/dhnnptg2_68zgs6w5dm.gif" style="WIDTH:292px; HEIGHT:16px"></TD></TR>
+<TR>
+<TD>gc.setLineWidth(4);</TD>
+<TD><IMG src="images_cn/dhnnptg2_69fm36zgfw.gif" style="WIDTH:292px; HEIGHT:16px"></TD></TR></TBODY></TABLE>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P><SPAN style=FONT-FAMILY:宋体>因为线条风格影响着所有的绘画操作，所以这也就使你可以画出不同边线风格的矩形或椭圆等图形。</SPAN></P>
+<P><SPAN style=FONT-FAMILY:宋体></SPAN>&nbsp;</P>
+<P><SPAN style=FONT-FAMILY:宋体></SPAN><CODE>gc.setLineWidth(3);</CODE> <BR><CODE>gc.drawOval(5,5,40,40);</CODE> <BR><CODE>gc.setLineWidth(1);</CODE> <BR><CODE>gc.setLineStyle(SWT.LINE_DOT);</CODE> <BR><CODE>gc.setForeground(display.getSystemColor(SWT.COLOR_BLUE));</CODE> <BR><CODE>gc.drawRectangle(60,5,60,40);</CODE> </P>
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_188q97ffdw.gif" style="WIDTH:172px; HEIGHT:91px"></P>
+<P><BR>当GC的属性被改变，比如像线条的宽度、线条的风格或者是颜色，这些变化都会影响到后续的绘画操作。<SPAN style=FONT-FAMILY:宋体>以上代码片段中，首先设置线条的宽度为</SPAN><SPAN lang=EN-US>3</SPAN><SPAN style=FONT-FAMILY:宋体>画了一个椭圆，随后重新设置线条属性画了一个边线是虚线的矩形。在</SPAN><SPAN lang=EN-US>SWT</SPAN><SPAN style=FONT-FAMILY:宋体>图形编程中，忘记重新设置这些字段属性的值是经常会犯的错误。</SPAN> </P>
+<P><SPAN lang=EN-US><SPAN lang=EN-US></SPAN></SPAN>&nbsp;</P>
+<P><SPAN lang=EN-US><SPAN lang=EN-US><FONT size=5><STRONG>绘制文本（Drawing text）</STRONG></FONT></SPAN></SPAN></P>
+<P>&nbsp;</P>
+<P>GC之上同样可以绘制文本，文字的轮廓可通过GC的foreground color和font确定。你需要定义它的左上角坐标（就是字体的位置）以及字体的高和宽。绘制文本有两种设置方法：第一种是在drawText（）绘制方法里直接输入文本它将处理行分隔符和tabs制表符，常用来模仿一个Label。第二种是在drawString（）绘制方法中输入字符串，没有tab以及回车处理，常用于更加复杂的控件，就像<CODE>StyledText常用于</CODE>Eclipse Java editor那样。 </P>
+<H2><CODE>GC.drawText(String text, int x, int y);</CODE></H2>
+<P><CODE>Font font = new Font(display,"Arial",14,SWT.BOLD | SWT.ITALIC);</CODE> <BR><CODE>// ...</CODE> <BR><CODE>gc.drawText("Hello World",5,5);</CODE> <BR><CODE>gc.setForeground(display.getSystemColor(SWT.COLOR_BLUE));</CODE> <BR><CODE>gc.setFont(font);</CODE> <BR><CODE>gc.drawText("Hello\tThere\nWide\tWorld",5,25);</CODE> <BR><CODE>// ...</CODE> <BR><CODE>font.dispose();</CODE> </P>
+<P>&nbsp;</P>
+<P><IMG src="images_cn/dhnnptg2_20fpbn7scf.gif" style="WIDTH:200px; HEIGHT:108px"> 
+<P>&nbsp;
+<P>&nbsp;
+<P>&nbsp;
+<P>drawText API 支持控制转义字符，<SPAN lang=EN-US>\t </SPAN><SPAN style=FONT-FAMILY:宋体>就是</SPAN><SPAN lang=EN-US>tab</SPAN><SPAN style=FONT-FAMILY:宋体>，</SPAN><SPAN lang=EN-US>\n</SPAN><SPAN style=FONT-FAMILY:宋体>就是回车换行。</SPAN>&nbsp;&nbsp;</P>
+<H2><CODE>GC.drawString(String text, int x, int y);</CODE></H2><CODE>Font font = new Font(display,"Arial",14,SWT.BOLD | SWT.ITALIC);</CODE> <BR><CODE>// ...</CODE> <BR><CODE>gc.drawString("Hello World",5,5);</CODE> <BR><CODE>gc.setForeground(display.getSystemColor(SWT.COLOR_BLUE));</CODE> <BR><CODE>gc.setFont(font);</CODE> <BR><CODE>gc.drawString("Hello\tThere\nWide\tWorld",5,25);</CODE> <BR><CODE>// ...</CODE> <BR><CODE>font.dispose()</CODE> 
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_21hjnhqkhh.gif" style="WIDTH:304px; HEIGHT:106px"> 
+<P><BR>使用drawString时，tab 和回车换行转义字符没有被处理。在GC绘制时字符串所占的大小基于它的内容和GC所设置的字体。获取字符串所占宽度可以分别使用<CODE>GC.stringExtent(String text)和</CODE><CODE>GC.textExtent(String text)这两个方法。 它们所返回的Point的x,y坐标值分别就是宽和高。</CODE></P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE></CODE><CODE><STRONG><FONT size=4>GC.drawText(String text, int x, int y, boolean isTransparent);</FONT></STRONG></CODE></P>
+<P>&nbsp;</P>
+<P>drawText(String text, int x, int y)绘制的文本使用的是GC的当前foreground color。当你希望文本透过背景色在最顶层显示的画，你可设置它的isTransparent这个布尔型的参数为true。此方法在图像（image）上绘制时特别有用。</P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>Font font = new Font(display,"Arial",12,SWT.BOLD | SWT.ITALIC);</CODE> <BR><CODE>Image image = new Image(display,"C:/devEclipse_02/eclipse/plugins/org.eclipse.platform_2.0.2/eclipse_lg.gif");</CODE> <BR><CODE>GC gc = new GC(image);</CODE> <BR><CODE>gc.drawText("Hello World",5,5);</CODE> <BR><CODE>gc.setFont(font);</CODE> <BR><CODE>gc.setForeground(display.getSystemColor(SWT.COLOR_WHITE));</CODE> <BR><CODE>gc.drawText("Hello World",5,25,<FONT color=#3333ff>true</FONT>);</CODE> <BR><CODE>gc.dispose();</CODE> <BR><CODE>image.dispose();</CODE> <BR><CODE>font.dispose();</CODE> </P>
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_22c3rg9vgx.gif" style="WIDTH:159px; HEIGHT:182px"><BR>&nbsp; 
+<H2><CODE>GC.drawText(String text, int x, int y, int flags);</CODE></H2><FONT face="Courier New">int flags指的是</FONT>SWT.DRAW_DELIMITER, SWT.DRAW_TAB, SWT.DRAW_TRANSPARENT 以及 SWT.DRAW_MNEMONIC&nbsp;样式常量。这些常量用来确定是否处理 \n , \t&nbsp;， 是否使用背景色透明，是否处理 &amp;。 
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.drawImage(image,0,0);</CODE> <BR><CODE>gc.drawText("Hello\t&amp;There\nWide\tWorld",5,5,SWT.DRAW_TRANSPARENT);</CODE> <BR><CODE>gc.drawText("Hello\t&amp;There\nWide\tWorld",5,25,SWT.DRAW_DELIMITER | SWT.DRAW_TAB | SWT.DRAW_MNEMONIC );</CODE> </P>
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_23gz4vntc2.gif" style="WIDTH:192px; HEIGHT:166px"> 
+<H1><A name="Filling shapes"></A><FONT size=5>填充形状（Filling shapes）</FONT></H1>使用GC的foreground color画线条（边线）, 使用GC的background color填充形状。 
+<H2><CODE>GC.fillPolygon(int[]);</CODE></H2><CODE>gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));</CODE> <BR><CODE>gc.fillPolygon(new int[] { 25,5,45,45,5,45 })</CODE> <BR>
+<H2><CODE><IMG src="images_cn/dhnnptg2_24fcfsspfk.gif" style="WIDTH:164px; HEIGHT:96px"></CODE></H2>
+<H2><CODE>GC.fillRectangle(int x, int y, int width, int height);</CODE></H2><CODE>gc.fillRectangle(5,5,90,45);</CODE> 
+<P>&nbsp;
+<P>&nbsp;<IMG src="images_cn/dhnnptg2_25c8pcc7gd.gif" style="WIDTH:165px; HEIGHT:98px"> 
+<P>&nbsp;
+<P>填充矩形的时候，底部边线和右边线是不包含在内的。虽然点（5,5）被包含在填充矩形的代码中，但右下角点&nbsp;95,50 (5+90 , 45+5) 不在填充区域的范围里，右下角的填充点是94,49。这不同于<CODE>drawRectangle(5,5,90,45)，drawRectangle指的是整个形状，所以其右下角点是</CODE>95,50。 
+<P>&nbsp;
+<P>举例说明一下，下面的代码填充了一个矩形，但是填充的颜色并没有覆盖边线。填充区域的右上角点坐标以及宽和高都减小了1像素。 
+<P><CODE></CODE>
+<P><CODE>gc.drawRectangle(5,5,90,45);</CODE> <BR><CODE>gc.setBackground(display.getSystemColor(SWT.COLOR_CYAN));</CODE> <BR><CODE>gc.fillRectangle(6,6,89,44);</CODE> </P>
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_26cjdtptd8.gif" style="WIDTH:195px; HEIGHT:111px">&nbsp; 
+<H2><CODE>GC.fillRoundedRectangle(int x, int y, int width, int height, int arcWidth, int arcHeight);</CODE></H2><CODE>gc.fillRoundRectangle(5,5,90,45,25,15);</CODE> 
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_27d9cxs2dh.gif" style="WIDTH:166px; HEIGHT:95px"> 
+<P>&nbsp;
+<P>有点像&nbsp;<CODE>GC.fillRectangle(...)方法。<SPAN style=FONT-FAMILY:宋体>底部边框和右边框都被排除在填充范围之内，所以底部右下角坐标变成了（</SPAN><SPAN lang=EN-US>94</SPAN><SPAN style=FONT-FAMILY:宋体>，</SPAN><SPAN lang=EN-US>49</SPAN><SPAN style=FONT-FAMILY:宋体>）而不是（</SPAN><SPAN lang=EN-US>95</SPAN><SPAN style=FONT-FAMILY:宋体>，</SPAN><SPAN lang=EN-US>50）</SPAN></CODE> 
+<P><CODE><SPAN style=FONT-FAMILY:宋体></SPAN></CODE>
+<P><CODE><STRONG><FONT size=3></FONT></STRONG></CODE>&nbsp;</P>
+<P><CODE><STRONG><FONT size=3>GC.fillOval(int x, int y, int width, int height);</FONT></STRONG></CODE></P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.fillOval(5,5,90,45);</CODE> </P>
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_28cgs9b92j.gif" style="WIDTH:167px; HEIGHT:93px"> 
+<P>&nbsp;
+<P>与其他的填充APIs相似 
+<P>&nbsp;
+<P><CODE><FONT size=4><STRONG>GC.fillArc(int x, int y, int widt4h., int height, int startAngle, int endAngle);</STRONG></FONT></CODE> 
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.fillArc(5,5,90,45,90,200);</CODE> </P>
+<P>&nbsp;</P>
+<P><IMG src="images_cn/dhnnptg2_29fwgsn9fq.gif" style="WIDTH:196px; HEIGHT:97px"></P>
+<P><BR><CODE>fillArc(...)</CODE>&nbsp;方法中的参数和<CODE>drawArc(...)中的参数很相似。<SPAN class=SourceText><SPAN lang=EN-US><FONT face="Courier New">fillArc(...)</FONT></SPAN></SPAN><SPAN class=SourceText><SPAN style=FONT-FAMILY:宋体>遵守着和其他填充方法一样的模式，底部边框和右边框不在填充范围之内。</SPAN></SPAN><SPAN lang=EN-US>&nbsp;</SPAN><SPAN lang=EN-US></SPAN></P></CODE>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE></CODE><CODE><FONT size=4><STRONG>GC.fillGradientRectangle(int x, int y, int width. int height, vertical boolean);</STRONG></FONT></CODE></P>
+<P><CODE><SPAN style=FONT-SIZE:10pt></SPAN></CODE>&nbsp;</P>
+<P><CODE><SPAN style=FONT-SIZE:10pt>对矩形进行由前景色到背景色的渐变填充。</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">Vertical</SPAN><SPAN style=FONT-SIZE:10pt>为</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">true</SPAN><SPAN style=FONT-SIZE:10pt>表示垂直渐变，反之则表示水平渐变。</SPAN></CODE></P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.setBackgrouind(display,getSystemColor(SWT.COLOR_BLUE));</CODE> <BR><CODE>gc.fillGradientRectangle(5,5,90,45,false);</CODE> </P>
+<P>&nbsp;
+<P><SPAN style=FONT-FAMILY:宋体>水平渐变从左边的黑色前景色开始向右边蓝色背景色变化。正如其他的填充方法，底部和右边框是被排除在外的，所以底部右下角会由</SPAN><SPAN lang=EN-US>1</SPAN><SPAN style=FONT-FAMILY:宋体>像素插入。</SPAN>&nbsp; 
+<P><IMG src="images_cn/dhnnptg2_30fdqc9zd9.gif" style="WIDTH:166px; HEIGHT:97px"> 
+<P>&nbsp;
+<P><CODE>gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));</CODE> <BR><CODE>gc.setForeground(display.getSystemColor(SWT.COLOR_CYAN));</CODE> <BR><CODE>gc.fillGradientRectangle(5,5,90,45,true);</CODE> 
+<P>&nbsp;
+<P>垂直渐变从上而下，由前景色向背景色变化。&nbsp; 
+<P><IMG src="images_cn/dhnnptg2_31xc5f938k.gif" style="WIDTH:166px; HEIGHT:100px"> 
+<H1><A name=XOR></A><FONT size=5>异或（XOR）</FONT></H1><SPAN style=FONT-SIZE:10pt>当</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">GC</SPAN><SPAN style=FONT-SIZE:10pt><SPAN style=FONT-SIZE:10pt>的绘画发生时你可以在绘画表面上编辑图形的像素值，</SPAN><SPAN style=FONT-SIZE:10pt></SPAN>设置</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">GC</SPAN><SPAN style=FONT-SIZE:10pt>的异或（</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">XOR</SPAN><SPAN style=FONT-SIZE:10pt>）模式为</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">true，<SPAN style=FONT-SIZE:10pt>每种颜色都是三原色红、绿、蓝经过异或（</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">XOR</SPAN><SPAN style=FONT-SIZE:10pt>）操作后的结果，</SPAN><SPAN style=FONT-SIZE:10pt>那么你就可以将几种颜色经过异或（</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">XOR</SPAN><SPAN style=FONT-SIZE:10pt>）操作后得到新的颜色。</SPAN></SPAN> 
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>shell.setBackground(display.getSystemColor(SWT.COLOR_WHITE));</CODE> <BR><CODE>// ...</CODE> <BR><CODE>gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));</CODE> <BR><CODE>gc.fillRectangle(5,5,90,45);</CODE> <BR><CODE>gc.setXORMode(true);</CODE> <BR><CODE>gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));</CODE> <BR><CODE>gc.fillRectangle(20,20,50,50);</CODE> <BR><CODE>gc.setBackground(display.getSystemColor(SWT.COLOR_RED));</CODE> <BR><CODE>gc.fillOval(80,20,50,50);</CODE> </P>
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_326nd3q9hd.gif" style="WIDTH:276px; HEIGHT:117px"> 
+<P>&nbsp;
+<P><SPAN style=FONT-FAMILY:宋体>被填充的背景色是白色的（</SPAN><SPAN lang=EN-US>255,255,255</SPAN><SPAN style=FONT-FAMILY:宋体>）矩形，当在上面覆盖一层蓝色（</SPAN><SPAN lang=EN-US>0,0,255</SPAN><SPAN style=FONT-FAMILY:宋体>），或（</SPAN><SPAN lang=EN-US>XOR</SPAN><SPAN style=FONT-FAMILY:宋体>）后的颜色就是黄色（</SPAN><SPAN lang=EN-US>25,255,0</SPAN><SPAN style=FONT-FAMILY:宋体>）。<SPAN style=FONT-FAMILY:宋体>白背景的部分和黄色异或后就成了黑色（</SPAN><SPAN lang=EN-US>0,0,0</SPAN><SPAN style=FONT-FAMILY:宋体>）。<SPAN style=FONT-FAMILY:宋体>一个红色背景的圆，它覆盖在蓝色上面异或（</SPAN><SPAN lang=EN-US>XOR</SPAN><SPAN style=FONT-FAMILY:宋体>）后就成了紫色（</SPAN><SPAN lang=EN-US>255,0,255</SPAN><SPAN style=FONT-FAMILY:宋体>）。<SPAN style=FONT-FAMILY:宋体>盖在白色上面异或（</SPAN><SPAN lang=EN-US>XOR</SPAN><SPAN style=FONT-FAMILY:宋体>）后就成了青色（</SPAN><SPAN lang=EN-US>0,255,255</SPAN><SPAN style=FONT-FAMILY:宋体>）。</SPAN></SPAN></SPAN></SPAN> 
+<P>&nbsp;
+<P><SPAN style=FONT-FAMILY:宋体>（译者注：</SPAN> <SPAN lang=EN-US>SWT API</SPAN><SPAN style=FONT-FAMILY:宋体>帮助文档中对</SPAN><SPAN class=SpellE><SPAN lang=EN-US>setXORMode</SPAN></SPAN><SPAN style=FONT-FAMILY:宋体>（）方法是这样描述的“此方法在某些平台下是不被支持的，显著表现的有</SPAN><SPAN lang=EN-US>Mac OS X</SPAN><SPAN style=FONT-FAMILY:宋体>，如果你希望你的代码可运行在所有平台，应该尽量避免使用此方法。”）</SPAN></P>
+<H1><A name="Drawing Images"></A><FONT size=5>绘制图像（Drawing Images）</FONT></H1><CODE>org.eclipse.swt.graphics.Image</CODE><CODE></CODE> 表示一个已经准备好在显示设备或打印设备上显示的图像。创建一个image对象最简单的方式就是从经过验证的文件格式中加载文件。支持的文件格式有 GIF, BMP （Windows 位图）, JPG, PNG, 新的Eclipse releases版还支持TIFF格式。 
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE></CODE> 
+<P><CODE>Image image = new Image(display,"C:/eclipse/eclipse/plugins/org.eclipse.platform_2.0.2/eclipse_lg.gif");</CODE> 
+<H2><CODE>GC.drawImage(Image image, int x, int y);</CODE></H2>每一个图像（image）都有一个由它自身范围所决定的大小。例如图像<CODE>eclipse_lg.gif的大小就是</CODE>115,164 ，可以使用<CODE>image.getBounds()获取。当绘画了一个图像，此图像就会以它自身范围的宽度和高度显示出来。</CODE> 
+<P><CODE><FONT face=Verdana></FONT></CODE>&nbsp;</P>
+<P><CODE>gc.drawImage(image,5,5);</CODE> <BR></P>
+<P><IMG src="images_cn/dhnnptg2_33c5mr3j6s.jpg" style="WIDTH:175px; HEIGHT:221px"> 
+<H2><CODE>GC.drawImage(Image image, int srcX, int srcY, int srcWidth, int srcHeight, int dstX, int dstY, int dstWidth, int dstHeight);</CODE></H2>
+<P class=MsoNormal style="MARGIN:0pt 0pt 0pt"><SPAN style=FONT-SIZE:10pt>根据原始图像的宽度和高度，不但可以绘画出不同大小的图像还可以只绘画原始图像的局部。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Arial"> <SPAN lang=EN-US></SPAN></SPAN></P>
+<P><SPAN class=SpellE><SPAN lang=EN-US>src</SPAN></SPAN><SPAN lang=EN-US> </SPAN><SPAN style=FONT-FAMILY:宋体>参数联系图像本身，要画完整的图像，</SPAN><SPAN class=SpellE><SPAN lang=EN-US>srcX</SPAN></SPAN><SPAN style=FONT-FAMILY:宋体>、</SPAN><SPAN class=SpellE><SPAN lang=EN-US>srcY</SPAN></SPAN><SPAN lang=EN-US> </SPAN><SPAN style=FONT-FAMILY:宋体>使用</SPAN><SPAN lang=EN-US>0,0</SPAN><SPAN style=FONT-FAMILY:宋体>，宽高就使用图像的宽高。</SPAN><SPAN class=SpellE><SPAN lang=EN-US>dst</SPAN></SPAN><SPAN lang=EN-US> </SPAN><SPAN style=FONT-FAMILY:宋体>参数表示图像被画在哪里以及画成多大。原始图像的大小是</SPAN><SPAN lang=EN-US>115,164</SPAN><SPAN style=FONT-FAMILY:宋体>，若要把图像宽度增加</SPAN><SPAN lang=EN-US>2</SPAN><SPAN style=FONT-FAMILY:宋体>倍，高度减低一半，可以使用下面的语句：</SPAN> </P>
+<P><CODE></CODE>&nbsp;</P>
+<P><CODE>gc.drawImage(image,0,0,115,164,5,5,230,82);</CODE> </P>
+<P><BR>&nbsp;</P>
+<P><IMG src="images_cn/dhnnptg2_34d92r45dz.jpg" style="WIDTH:289px; HEIGHT:136px"> 
+<P>&nbsp;
+<P><SPAN style=FONT-FAMILY:宋体>使用</SPAN><SPAN class=SpellE><SPAN lang=EN-US>src</SPAN></SPAN><SPAN style=FONT-FAMILY:宋体>坐标可以使你只画出图像的局部。例如，如果你只想画出图像的右上角部分，你可以设定</SPAN><SPAN class=SpellE><SPAN lang=EN-US>src</SPAN></SPAN><SPAN style=FONT-FAMILY:宋体>坐标为</SPAN><SPAN lang=EN-US>20,0</SPAN><SPAN style=FONT-FAMILY:宋体>，宽度和高度为</SPAN><SPAN lang=EN-US>95</SPAN><SPAN style=FONT-FAMILY:宋体>，</SPAN><SPAN lang=EN-US>82</SPAN><SPAN style=FONT-FAMILY:宋体>。下面的代码中</SPAN><SPAN class=SpellE><SPAN lang=EN-US>dst</SPAN></SPAN><SPAN lang=EN-US> </SPAN><SPAN style=FONT-FAMILY:宋体>宽度和高度同样使用</SPAN><SPAN lang=EN-US>95,82</SPAN><SPAN style=FONT-FAMILY:宋体>。通过指定不同大小就可以对图像进行拉长或收缩操作。</SPAN> 
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE></CODE>
+<P><CODE></CODE> 
+<P><CODE>gc.drawImage(image,20,0,95,82,5,5,95,82);</CODE> 
+<P>&nbsp;
+<P><IMG src="images_cn/dhnnptg2_35fntchnfm.jpg" style="WIDTH:405px; HEIGHT:219px"> 
+<P>&nbsp;
+<P>还能完成一些其他的图像效果，比如图像透明度、<SPAN lang=EN-US><SPAN lang=EN-US>animation</SPAN><SPAN lang=EN-US></SPAN>以及alpha通道。但这些不属于本篇的讨论范围，我希望在以后的文章中能够涉及到这些东西。</SPAN> 
+<H1><FONT size=5>总结（Conclusion）</FONT></H1>
+<H1></H1><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">本</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">文已经展示了如何使用<SPAN lang=EN-US>GC</SPAN>画线条、文本和填充形状。给构造器传入一个<SPAN lang=EN-US>drawable</SPAN>参数就能够创建其<SPAN lang=EN-US>GC</SPAN>，例如一个图像、</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">或者给控件（</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">control</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">）</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">使用</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">绘画事件（</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">paintEvent</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">）回调</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">。<SPAN lang=EN-US> GC </SPAN>的<SPAN lang=EN-US>API</SPAN>允许设置前景色绘画出线条并使用背景色填充。</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">Canvas </SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">控件允许通过绘画事件</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">（</SPAN><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt><FONT face="Courier New">paintEvent</FONT></SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">）</SPAN><SPAN style=FONT-SIZE:10pt><FONT face="Courier New">绘画</FONT></SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">，并且当绘画事件发生时它有很多的构造常量可以使用。</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Arial">GC </SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">的剪切操作允许你控制只想显示的部分，还有如何绘画出不同风格的线条以及显示文本和图像。</SPAN></body>
+</html>
