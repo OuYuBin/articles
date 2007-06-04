@@ -1,4 +1,8 @@
-<meta content="text/html; charset=utf-8" http-equiv="Content-Type"> <head>  <style>
+<html>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"> 
+<head>  
+<title>图形上下文导论（Introduction to SWT Graphics）</title>
+<style>
 BODY, P, DIV, H1, H2, H3, H4, H5, H6, ADDRESS, OL, UL, TITLE, TD, OPTION, SELECT {
  font-family: Verdana;
  
@@ -50,47 +54,14 @@ a img {border: 0}
 <P>
   &nbsp;
 </P>
-<H1>
-  <IMG align=left src="images_cn/dhnnptg2_6g453ppdc.jpg" style="WIDTH:120px; HEIGHT:86px">
-</H1>
-<H1>
-</H1>
+
 <H1>
   <A href=mailto:Jaclick@gmail.com></A>
 </H1>
-<H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
-  <H1>
-  </H1>
+
   <H1>
     图形上下文导论（Introduction to SWT Graphics）
   </H1>
-</H1>
 </CENTER> <BLOCKQUOTE><STRONG>摘要：</STRONG><BR>
 <CODE><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt>org.eclipse.swt.graphics</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">包（</SPAN><SPAN lang=EN-US style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">package</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">），包含</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">了管理图形资源的类。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">只要实现了</SPAN><SPAN class=SourceText><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.graphics.Drawable接口，就可在上</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">面</SPAN><SPAN style=FONT-SIZE:10pt>绘画</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">，</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">包括 </SPAN><SPAN class=SourceText><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.widgets.Control</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana"> 和 </SPAN><SPAN class=SourceText><SPAN style=FONT-SIZE:10pt>org.eclipse.swt.graphics.Image</SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana"> 。 </SPAN><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt>org.eclipse.swt.graphics.GC</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">封装了全部绘画</SPAN></SPAN><SPAN class=SourceText><SPAN lang=EN-US style=FONT-SIZE:10pt>API</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">，包括</SPAN><SPAN style=FONT-SIZE:10pt>如何绘制线条、</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">图形</SPAN><SPAN style=FONT-SIZE:10pt>、如何绘制文本、图像以及填充</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">图形</SPAN><SPAN style=FONT-SIZE:10pt>。 本篇</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">将</SPAN><SPAN style=FONT-SIZE:10pt>展示</SPAN></SPAN><SPAN class=SourceText><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">如何</SPAN><SPAN style=FONT-SIZE:10pt>使用<SPAN lang=EN-US>GC</SPAN>在图像上绘画， </SPAN></SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">控件的绘画事件（<SPAN lang=EN-US>paintEvent</SPAN>）</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">回调。</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">画布（<SPAN lang=EN-US>Canvas</SPAN>）</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">控件</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">，</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">因为不同的绘画操作，拥有</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">很多</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">构造风格常量</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">允许你指定何时以及</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">如何产生绘画</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">，</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">本篇</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:宋体">也</SPAN><SPAN style="FONT-SIZE:10pt; FONT-FAMILY:Verdana">将展示这些东西。 </SPAN></CODE>
 <P>
