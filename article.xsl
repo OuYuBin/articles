@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-	$Id: article.xsl,v 1.3 2007/02/13 17:46:07 wbeaton Exp $
+	$Id: article.xsl,v 1.4 2007/06/20 15:30:14 wbeaton Exp $
 	author: Chris Aniszczyk <zx@us.ibm.com>
 	author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -59,6 +59,8 @@
 
 		<div class="content">
 			<xsl:apply-templates select="section" />
+			<xsl:apply-templates select="appendix" />
+			<xsl:apply-templates select="bibliography" />
 			<div class="notices">
 				<h3>Legal Notices</h3>
 				<xsl:apply-templates select="articleinfo/legalnotice/*" />
