@@ -30,7 +30,7 @@ is summarized, to ease jump-starting your own OCL processing project.</p>
 Technische Universität Hamburg-Harburg (Germany)</div>
 <div class="copyright">Copyright &copy; 2007 Miguel Garcia. Made
 available under the EPL v1.0</div>
-<div class="date">April 30th, 2007</div>
+<div class="date">June 28th, 2007</div>
 </div>
 
 <div class="content">
@@ -187,7 +187,7 @@ in the following course notes:</p>
 <p>Following the tradition of other OCL tools, the Royal & Loyal
 case study is followed (its class diagram can be found in Appendix A).
 Both <a href="./files/RandL.ecore">EMF</a> and <a
-	href="./files/RandL.uml">UML2</a> versions are provided . The R&L model
+	href="./files/RandL.uml">UML2</a> versions are provided . The R&amp;L model
 contains samples for all OCL language constructs. We'll discuss some of
 them in connection with our viewer. This model can be explored with any
 editor that allows selecting model elements (e.g. the built-in Sample
@@ -324,7 +324,7 @@ expression, the opposite process to parsing):</p>
 visits all nodes. Instead, the <img src="images/tag_2.gif" height="13"
 	width="24" align="CENTER" alt=""> override in <tt>ToStringVisitor</tt>
 returns a string of the form</p>
-<tt><i>sourceCollection</i>-><i>iteratorName</i>(<i>
+<tt><i>sourceCollection</i>-&gt;<i>iteratorName</i>(<i>
 iteratorVariables</i> | <i>iteratorBody </i>)</tt> <br />
 <pre>
 <img src="images/tag_2.gif" height="13" width="24" align="CENTER" alt="">  protected String handleIteratorExp(IteratorExp&lt;C,PM&gt; callExp,
@@ -473,7 +473,7 @@ visitor.</p>
 <p>A tree-based visualization of OCL expressions helps big time in
 familiarizing with the structure of the different kinds of nodes in OCL
 ASTs, and thus we will get that visitor to work first (a slightly more
-sophisticate visitor, a simplifier of arithmetic expressions, comes
+sophisticated visitor, a simplifier of arithmetic expressions, comes
 next).</p>
 
 <p>We cover first the visitor itself (devoid of UI aspects), leaving
@@ -647,7 +647,7 @@ the target is actually named &quot;target&quot;.</p>
 
 <h3>Things we swept under the carpet</h3>
 
-<p>We've overriden so far the methods highlighted in Figure 4. The
+<p>We've overridden so far the methods highlighted in Figure 4. The
 remaining ones follow the same principles and can be found in the
 finished <a href="./files/oclastview/XMLforOCL.java.html"><tt>XMLforOCL</tt></a>.
 </p>
@@ -729,7 +729,7 @@ iterator defining two explicit variables (<tt>c1</tt>, <tt>c2</tt>).
 Implicit iterator variables instead are nowhere to be seen in the
 textual syntax, thus contributing to its conciseness, but are revealed
 by the AST builder anyway. For example, Figure 6 depicts the invariant</p>
-<p><tt>participants->forAll(age() <= 70)</tt></p>
+<p><tt>participants-&gt;forAll(age() <= 70)</tt></p>
 <p>where both <tt>self</tt> and the iterator variable over the <tt>participants</tt>
 collection are implicit. In the AST tree view the explicit declaration
 of the iterator variable (<tt>temp20</tt>) is shown in red, and its
@@ -960,7 +960,7 @@ among others.</p>
 Tools</a> consists of a set of GMF-based editors for viewing and editing UML
 models. A diagram similar to that shown in Figure 16 can be obtained by
 right-clicking on <a href="./files/RandL.uml">the UML version of
-Royal & Loyal</a> and choosing "Initialize umlclass_diagram".
+Royal &amp; Loyal</a> and choosing &quot;Initialize umlclass_diagram&quot;.
 
 <table border="0" cellpadding="8">
 	<tr>
@@ -1073,7 +1073,7 @@ necessary.</p>
 <p><img src="images/tryit.gif" width="61" height="13" alt="">
 You can plug <tt>OCLArithSimplifier</tt> into <tt>OCLASTView#displayOCL()</tt>
 to display as XML the reduced AST. Just let <tt>oclExp</tt> in <tt>OCLASTView#displayOCL()</tt>
-accept an instace of this visitor, right before <img
+accept an instance of this visitor, right before <img
 	src="images/tag_4.gif" height="13" width="24" align="CENTER" alt="">,
 as follows:</p>
 <pre>
@@ -1163,9 +1163,9 @@ standards-based model-compiler technology. The building blocks for this
 promising area are also at your disposal.</p>
 
 
-<h2>Appendix A: Class model of Royal & Loyal</h2>
+<h2>Appendix A: Class model of Royal &amp; Loyal</h2>
 
-<p>The class model of the <a href="./files/RandL.ecore">Royal &
+<p>The class model of the <a href="./files/RandL.ecore">Royal &amp;
 Loyal</a> case study is shown for reference purposes below:</p>
 
 <table border="0" cellpadding="8">
@@ -1173,7 +1173,7 @@ Loyal</a> case study is shown for reference purposes below:</p>
 		<td><img src="images/RandL/RandL.png"
 			alt="Royal and Loyal class model "></td>
 	</tr>
-	<caption align="bottom"><b>Figure 18</b> Royal & Loyal class
+	<caption align="bottom"><b>Figure 18</b> Royal &amp; Loyal class
 	model</caption>
 </table>
 
