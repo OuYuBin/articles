@@ -40,9 +40,8 @@ define how their memory monitors are to be presented in the user interface.  Thi
 will discuss this framework and will show how one can add memory view support in
 a debugger.
 </p>
-<img src="images/memoryView.gif" align=CENTER
-	title="Figure 1 - Memory View">
-<p>Figure 1 - Memory Vew</p>
+<img src="images/memoryView.gif" align="center"	title="Figure 1 - Memory View">
+<p>Figure 1 - Memory View</p>
 <p>Figure 1 shows the Memory View. The
 Memory View consists of three panes. The pane on the left is called the
 <i>Monitors</i> pane and lists all of the memory monitors that are 
@@ -51,7 +50,7 @@ called the <i>Renderings</i> panes. They show renderings of the selected
 memory monitor from the Monitors pane. A memory rendering is a user interface
 representation of a memory monitor. It shows the content of a memory
 monitor in a display format. In Figure 1, the Memory View is currently
-displaying two renderings for the memory monitor "&str". The <i>Hex</i>
+displaying two renderings for the memory monitor "&amp;str". The <i>Hex</i>
 rendering displays the memory monitor in the traditional table format. The
 <i>Hex Tree</i> rendering displays the same memory monitor in a tree.</p>
 <p>How can you, as a debug provider, use the Memory View? You
@@ -100,12 +99,12 @@ an address and allow you to add memory renderings to the view.</p>
 <p>In order to add memory monitor support in your debugger, you must
 first have a basic understanding of the Memory View framework. Figure 2
 shows the Memory View framework.</p>
-<img src="images/framework.gif" aligh="CENTER"
+<img src="images/framework.gif" align="CENTER"
 	title="Figure 2 - Memory View Framework">
 <p>Figure 2 - Memory View Framework</p>
 <dl>
 	<dt><i>Memory Block</i></dt>
-	<dd>A memory block represents a block of memory allocated in your debuggee.
+	<dd>A memory block represents a block of memory allocated in your debugger.
 	It is a debug model object that implements IMemoryBlock or
 	IMemoryBlockExtension. We will talk about the differences between
 	IMemoryBlock and IMemoryBlockExtension in the following sections.</dd>
@@ -182,7 +181,7 @@ supports memory block retrieval. If it returns true, then the "Add
 Memory Monitor" actions in the Memory View will be enabled. Otherwise,
 the actions will be permanently disabled.</p>
 <p>The getMemoryBlock() method <img src="images/tag_2.gif" height=13 width=24
-	align=CENTER> allows the user inteface to request a memory
+	align=CENTER> allows the user interface to request a memory
 block from your debug target. When called, your debug target must create and return a memory
 block based on the given start address and length. If there is any
 problem creating the memory block,  your debug target
@@ -246,7 +245,7 @@ successfully, the debug target throws a debug exception. <img
 	src="images/tag_7.gif" height=13 width=24 align=CENTER></p>
 
 <h3>So, what should I implement? <br>
-IMemoryBlockRetrieval vs IMemoryBlockRetrievalExtension</h3>
+IMemoryBlockRetrieval vs. IMemoryBlockRetrievalExtension</h3>
 <p>IMemoryBlockRetrieval and IMemoryBlock interfaces were created in
 Eclipse 2.0. They are a set of simple APIs that allows a debug target to
 create a simple memory block based on a given address and length. The
@@ -254,7 +253,7 @@ resulting memory block is static, and only allows its caller to retrieve
 memory from the memory block as a whole. As a result, when an
 IMemoryBlock is displayed in a rendering, users will not be able to
 examine memory beyond the range defined by the memory block. Since
-these interfaces require the implementaion of a small number of simple
+these interfaces require the implementation of a small number of simple
 methods, using them is the easier option. However,
 this option poses some limitations on your users.</p>
 <p>IMemoryBlockRetrievalExtension and IMemoryBlockExtension were
@@ -413,7 +412,7 @@ The getBigBaseAddress() method is implemented in SampleMemoryBlock as:</p>
 &nbsp;&nbsp;&nbsp;&nbsp;}
 </pre>
 <p>When it is asked to return the base address of the memory block,
-<img src="images/tag_1.gif"> SampleMemoryBlock re-evaulates its
+<img src="images/tag_1.gif"> SampleMemoryBlock re-evaluates its
 expression and returns the new base address. If there is an error with
 the evaluation, the memory block throws a debug exception. To optimize
 this code and avoid interfactions with your debug engine, it is desirable
