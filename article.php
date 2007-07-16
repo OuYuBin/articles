@@ -34,6 +34,9 @@
 	# End: page-specific settings
 	#
 	$App->ExtraHtmlHeaders = "<link rel=\"stylesheet\" type=\"text/css\" href=\"layout.css\" media=\"screen\" />\n<base href=\"http://$host/articles/$file\"/>\n";
+
+	$charset = $App->getHTTPParameter('charset');
+	if ($charset) header("Content-Type: text/html; charset=$charset");
 	
 	ob_start();
 ?>
