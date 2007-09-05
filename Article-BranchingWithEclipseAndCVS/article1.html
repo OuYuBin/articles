@@ -1,12 +1,12 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-  <meta http-equiv="Content-Type"
- content="text/html; charset=windows-1252">
-  <title>Branching with Eclipse and CVS - Part 1</title>
+<meta http-equiv="Content-Type"
+	content="text/html; charset=windows-1252">
+<title>Branching with Eclipse and CVS - Part 1</title>
 <link rel="stylesheet" href="../article.css" type="text/css" />
-  <meta name="keywords"
- content="eclipse, CVS, branching, merge, merging, synchronise, conflict, tagging, version">
+<meta name="keywords"
+	content="eclipse, CVS, branching, merge, merging, synchronise, conflict, tagging, version">
 </head>
 <body>
 
@@ -14,17 +14,16 @@
 
 <div class="summary">
 <h2>Summary</h2>
-<p>This article presents a brief branch-and-merge scenario designed to
-quickly illustrate some branch-and-merge features of Eclipse's CVS
-support. We assume the reader already appreciates the value of
-branching and merging in a source control environment. This article
-walks through a step-by-step scenario illustrating simple 
-branch-and-merge operations using Eclipse-based IDEs with CVS as
-the source control mechanism.</p>
-<p>For a branch-and-merge scenario that incorporates rebasing, please
-refer to <a href="article2.html">Part 2</a> of this article.  This 
-article is <b>not</b> a prerequisite for Part 2.
-Rather, Part 1 provides simpler branch-and-merge techniques.</p>
+<p>This article presents a brief branch-and-merge scenario designed
+to quickly illustrate some branch-and-merge features of Eclipse's CVS
+support. We assume the reader already appreciates the value of branching
+and merging in a source control environment. This article walks through
+a step-by-step scenario illustrating simple branch-and-merge operations
+using Eclipse-based IDEs with CVS as the source control mechanism.</p>
+<p>For a branch-and-merge scenario that incorporates rebasing,
+please refer to <a href="article2.html">Part 2</a> of this article. This
+article is <b>not</b> a prerequisite for Part 2. Rather, Part 1 provides
+simpler branch-and-merge techniques.</p>
 
 <div class="author">By Paul Glezen, IBM and James Neethling</div>
 <div class="copyright">Copyright &copy; 2007 IBM</div>
@@ -36,110 +35,93 @@ Rather, Part 1 provides simpler branch-and-merge techniques.</p>
 In any source control management (SCM) environment, branching is a
 powerful mechanism for controlled isolation. Despite being a simple
 concept, controlled isolation is often avoided in practice because of
-its implementation complexities. 
-This article demonstrates how to perform branching
-with Eclipse's CVS support. 
-The Eclipse on-line documentation covers this topic, but does not
-provide an end-to-end scenario.
-The intended audience is software
-development professionals with an appreciation for the roles of branch
-and merge techniques in SCM.
-<p>
-This article will employ a scenario of two programmers, Paul and Wing, 
-working on separate branches of the same project. Paul will branch 
-off main and
-modify some files while Wing continues to work on the main branch,
-also modifying files. Paul will then merge his branch back to the
-main branch. In doing so, Paul will address the resulting merge
-conflicts.  This flow is diagrammed below in the 
-<a href="#scenario">Scenario Diagram</a>.
-<p>
-The process is repeated for a second iteration to demonstrate the
-so-called <b>merge-again</b> scenario.  Work continues on the branch
-after the first merge; then the branch is merged again later.  The
+its implementation complexities. This article demonstrates how to
+perform branching with Eclipse's CVS support. The Eclipse on-line
+documentation covers this topic, but does not provide an end-to-end
+scenario. The intended audience is software development professionals
+with an appreciation for the roles of branch and merge techniques in
+SCM.
+<p>This article will employ a scenario of two programmers, Paul and
+Wing, working on separate branches of the same project. Paul will branch
+off main and modify some files while Wing continues to work on the main
+branch, also modifying files. Paul will then merge his branch back to
+the main branch. In doing so, Paul will address the resulting merge
+conflicts. This flow is diagrammed below in the <a href="#scenario">Scenario
+Diagram</a>.</p>
+<p>The process is repeated for a second iteration to demonstrate the
+so-called <b>merge-again</b> scenario. Work continues on the branch
+after the first merge; then the branch is merged again later. The
 merge-again scenario requires that you keep track of when you last
-merged via tags.  This will be demonstrated later in this article.
-<p>
-The <i><a name="scenario">Scenario Diagram</a></i> below will be referenced throughout
-this article.
-<p>
-<center><img src="images/scenario1.jpg" alt="Elementary Branch Concept">
-</center>
-<p>
-<a href="article2.html">Part 2</a> of this article adds the <i>rebase</i> operation 
-to the scenario.
-<p>
+merged via tags. This will be demonstrated later in this article.</p>
+<p>The <i><a name="scenario">Scenario Diagram</a></i> below will be
+referenced throughout this article.</p>
+
+<center><img src="images/scenario1.jpg"
+	alt="Elementary Branch Concept"></center>
+<p><a href="article2.html">Part 2</a> of this article adds the <i>rebase</i>
+operation to the scenario.</p>
+
 <h2>Setup</h2>
-The sample will use a few text files inside a simple project. 
-In order to carry out the sample yourself, you should already 
-have a working connection to a CVS repository in your Eclipse 
-workspace.
-<p>
-If possible, you should considering creating a new repository for
-this scenario.  That's because tags and branches are the central
-theme  of this article.  And unlike files in a CVS repository, the
-tag and branch metadata are difficult to selectively remove if you 
-want to start over.  It's much easier to just wipe-out the
-repository and start with a new one.  If you do create your own CVS
-repository for this article, see the 
-<a href="article2.html#trouble">Troubleshooting section
-in Part 2</a> for setting the necessary permissions on a new
-CVS repository.
-<p>
-The setup instructions below can be expedited through importing
-the <a href="brtest.zip">brtest.zip</a> into a simple project
-<b>brtest</b>.
-<p>
+The sample will use a few text files inside a simple project. In order
+to carry out the sample yourself, you should already have a working
+connection to a CVS repository in your Eclipse workspace.
+<p>If possible, you should considering creating a new repository for
+this scenario. That's because tags and branches are the central theme of
+this article. And unlike files in a CVS repository, the tag and branch
+metadata are difficult to selectively remove if you want to start over.
+It's much easier to just wipe-out the repository and start with a new
+one. If you do create your own CVS repository for this article, see the
+<a href="article2.html#trouble">Troubleshooting section in Part 2</a>
+for setting the necessary permissions on a new CVS repository.</p>
+<p>The setup instructions below can be expedited through importing
+the <a href="brtest.zip">brtest.zip</a> into a simple project <b>brtest</b>.
+</p>
+
 <ol type="1">
-  <li>Create a new simple project called <b>brtest</b>. </li>
-  <li>Add a new file called <code>f1.txt</code>. Add the following
-contents.
-    <p>
-    <table border="1">
-      <tbody>
-        <tr>
-          <td>
-          <pre>This file will only be edited by Paul
+	<li>Create a new simple project called <b>brtest</b>.</li>
+	<li>Add a new file called <code>f1.txt</code>. Add the following
+	contents.
+	
+	<table border="1">
+		<tbody>
+			<tr>
+				<td><pre>This file will only be edited by Paul
 
 This line will be changed later.
 
 This line will be changed after the first merge.
 
-The rest of this file will remain the same.<br></pre>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    </p>
-  </li>
-  <li>Add a file called <code>f2.txt</code> with the following
-contents.
-    <p>
-    <table border="1">
-      <tbody>
-        <tr>
-          <td>
-          <pre>This file will only be edited by Wing. 
+The rest of this file will remain the same.<br></pre></td>
+			</tr>
+		</tbody>
+	</table>
+	
+	</li>
+	<li>Add a file called <code>f2.txt</code> with the following
+	contents.
+	
+	<table border="1">
+		<tbody>
+			<tr>
+				<td><pre>This file will only be edited by Wing. 
 
 This line will be changed later.
 
 This line will be changed after the first merge.
 
-The rest of this file will remain the same.</pre>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    </p>
-  </li>
-  <li>Add a file called <code>f3trivial.txt</code> with the following
-contents.
-    <p>
-    <table border="1">
-      <tbody>
-        <tr>
-          <td>
-          <pre>This file will be edited by Paul and Wing.
+The rest of this file will remain the same.</pre></td>
+			</tr>
+		</tbody>
+	</table>
+	
+	</li>
+	<li>Add a file called <code>f3trivial.txt</code> with the
+	following contents.
+	
+	<table border="1">
+		<tbody>
+			<tr>
+				<td><pre>This file will be edited by Paul and Wing.
 
 This line will be changed by Paul only.
 
@@ -151,585 +133,590 @@ This line will be changed by Wing only.
 
 This line will be changed by Wing only after the first merge.
 
-The rest of this file will remain the same.</pre>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    </p>
-  </li>
-  <li>Add a file called <code>f4conflict.txt</code> with the
-following contents.
-    <p>
-    <table border="1">
-      <tbody>
-        <tr>
-          <td>
-          <pre>This file will be edited by Paul and Wing.
+The rest of this file will remain the same.</pre></td>
+			</tr>
+		</tbody>
+	</table>
+	
+	</li>
+	<li>Add a file called <code>f4conflict.txt</code> with the
+	following contents.
+	
+	<table border="1">
+		<tbody>
+			<tr>
+				<td><pre>This file will be edited by Paul and Wing.
 
 This line will be changed by both Paul and Wing.
 
 This line will be changed by both Paul and Wing after the first merge.
 
-The rest of this file will remain the same.</pre>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    </p>
-    <p>
-    After adding the above files to your project and checking them
-    into CVS, your resource view should look something
-    like the screen shot below. </p>
-    <br>
-    <img alt="Checked in project" src="images/checked_in_project.jpg"><br>
-  </li>
+The rest of this file will remain the same.</pre></td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<p>After adding the above files to your project and checking them
+	into CVS, your resource view should look something like the screen shot
+	below.</p>
+	<br>
+	<img alt="Checked in project" src="images/checked_in_project.jpg"><br>
+	</li>
 </ol>
-This sets up the environment for Paul. Wing will work
-in her own workspace by retrieving the files from source control.
-For steps on setting up a new project with source control, see the
-following section in the Eclipse documentation: <b>Workbench User's
-Guide &rarr; Tasks &rarr; Working in the team environment with CVS 
-&rarr; Working with projects shared with CVS</b>.
+This sets up the environment for Paul. Wing will work in her own
+workspace by retrieving the files from source control. For steps on
+setting up a new project with source control, see the following section
+in the Eclipse documentation: <b>Workbench User's Guide &rarr; Tasks
+&rarr; Working in the team environment with CVS &rarr; Working with
+projects shared with CVS</b>.
 
 <h2>Merge Method</h2>
-When branching off a development stream, it is often advisable to
-rebase before merging the subbranch back to the main branch. To
-<b>rebase</b> means to merge the contents of the main branch to
-the subbranch. If any conflicts are to be resolved, they are done
-on the subbranch rather than the main branch. If the merge goes
-well, the subbranch is merged to the main branch. After having
-previously resolved all merge conflicts, this last merge would be
-a trivial one. The advantages of taking the extra rebase step is
-that it avoids having conflicts on the main branch and it keeps
-the subbranch synchronized with the main branch.
-This is the approach taken in <a href="article2.html">Part 2</a>.
-<p>
-In this article, our primary focus is the merge mechanism of
-Eclipse's CVS support, not the particular branching strategy.
-So here in Part 1, we stick with the branch method illustrated 
-in the <a href="#scenario">Scenario Diagram</a>.
-
+When branching off a development stream, it is often advisable to rebase
+before merging the subbranch back to the main branch. To <b>rebase</b>
+means to merge the contents of the main branch to the subbranch. If any
+conflicts are to be resolved, they are done on the subbranch rather than
+the main branch. If the merge goes well, the subbranch is merged to the
+main branch. After having previously resolved all merge conflicts, this
+last merge would be a trivial one. The advantages of taking the extra
+rebase step is that it avoids having conflicts on the main branch and it
+keeps the subbranch synchronized with the main branch. This is the
+approach taken in <a href="article2.html">Part 2</a>.
+<p>In this article, our primary focus is the merge mechanism of
+Eclipse's CVS support, not the particular branching strategy. So here in
+Part 1, we stick with the branch method illustrated in the <a
+	href="#scenario">Scenario Diagram</a>.</p>
 <h2>Creating the Branch</h2>
-At this point, Paul and Wing have the same version of all files. It
-is now time for Paul to create an independent branch on which to work.
+At this point, Paul and Wing have the same version of all files. It is
+now time for Paul to create an independent branch on which to work.
 <ol>
-  <li>Right-click on the <b>brtest</b> project and select <b>Team
-     &rarr; Branch ...</b>. A dialog is displayed for creating the branch
-  and marking the start-point with a tag (also called a 
-  <i>Version Name</i>).  Enter a branch name like <b>p1test</b>. Leave 
-  the check box checked for <b>Start working in the branch</b>. Notice 
-  that a start tag is automatically filled in for you called 
-  <b>Root_p1test</b>.  This is the first tag labeled in the 
-  <a href="#scenario">Scenario Diagram</a>.
-  You may choose a different name so long as it doesn't conflict 
-  with an existing CVS tag. This will mark where the branch was 
-  created. It will be used later by the merge editor to determine 
-  what has changed since branch creation. Click <b>OK</b>.
-  <p> 
-  <img src="images/makebranch.jpg" alt="Dialog for creating a new branch"/>
-  <p> 
-  Since you checked the box to start working in the branch, your
-  workspace should already be configured to work in the branch.
-  You can verify this in two ways.  By right-clicking the project 
-  and selecting <b>Properties</b> and then <b>CVS</b>, you should 
-  see the <i>p1test</i> in the tag field. If you have the CVS label 
-  decorations enabled, you'll see the branch tag in the navigator 
-  view (see below).
-  <p>
-  <img src="images/branchlist.jpg" alt="CVS labels indicating new branch"/> 
-  
-  
-  <div class="note""><table class="note-table"><tbody><tr><td><img alt="[Note]" src="images/tip.gif"></td>
-      <td>To enable CVS label decorations, go to <b>Window &rarr;
-          Preferences</b> and navigate to <b>General &rarr; Appearance &rarr; 
-          Label Decorations</b>.  Check the 'CVS' box. </td>
-      </tr>
-  </table>
-  </div>
-  <p>
-  </li>
-  <li>This step begins the work represented as the blue box labeled
-  <b>PD1</b> in the <a href="#scenario">Scenario Diagram</a>.
-  Paul will modify the first file using the <i>p1test</i> branch.
-  Open the editor for <code>f1.txt</code>. Change line 3 from "This line
-  will be changed later" to "This line changed in iter1." Save the
-  change.
-  <p>
-  <li>Open the editor for <code>f3trivial.txt</code>. Change line 3
-  from "This line will be changed by Paul only" to "This line changed 
-  by Paul in iter1." Save the change.
-  <p>
-  <li>Open the editor for <code>f4conflict.txt</code>. Change line 3 
-  from "This line will be changed by both Paul and Wing" to "This
-  line changed by Paul in iter1." Save the change.
-  <p>
-  <li>Right-click on the <b>brtest</b> project and select <b>Team
-  &rarr; Synchronize with Repository</b>. In the <b>Outgoing Mode</b>
-  view, right-click the <b>brtest</b> project folder and select 
-  <b>Commit</b>.  Enter a comment such as "First iteration changes 
-  made by Paul." Note that for files that have changed, the revision 
-  numbers are four digits. This is a CVS convention for branched revisions.
-  <p>
-  <img src="images/p1commit.jpg" alt="Paul's CVS label decorations after commit"/>
-  <p>
-  This commit is represented by the first red circle on the <i>p1test</i>
-  branch of the Scenario Diagram.
-  <p>
-  <li>(<i>Optional <a name="howtotag">tag step</a>, only required 
-  for the merge-again scenario</i>)  
-  Paul is finished development for this iteration.  So he will
-  <a name="howtotag">tag</a> this milestone with <b>P1</b>.  This
-  tag will represent the base-point for the merge-again scenario.
-  Right-click the 
-  <b>brtest</b> project and select <b>Team &rarr; Tag as 
-  Version ...</b>.
-  In the dialog that arises, enter <b>P1</b> for the tag name
-  and click <b>OK</b>.  This corresponds to the <b>P1</b> tag
-  in the <a href="#scenario">Scenario Diagram</a>.
-  <p>
- <div class="note">
- <table class="note-table"><tbody><tr><td><img alt="[Note]" src="images/tip.gif"></td>
-      <td>To to verify a tag was created, change to the CVS Repository
-           view and expand <b>Versions &rarr; brtest.</b>  The <b>P1</b>
-           tag should be visible.</td>
-    </tr>
-  </table>
-  </div>
-  <p>
-  Now it is Wing's turn.  Her work is represented in the 
-  <a href="#scenario">Scenario Diagram</a>
-  by the blue box labeled <b>WD1</b>.
-  <p>
-  <li>Wing will make her changes in the main branch.  In her
-  workspace she connects to CVS as "wing" to checkout the 
-  <b>brtest</b> project from CVS.
-  <p><img src="images/wingcheckout.jpg"/></p>
-  She chooses the <b>brtest</b> under <b>HEAD</b>, the moniker
-  CVS uses to designate the main branch.
-  <p>
-  Since Wing has the main branch loaded into her workspace, 
-  she doesn't need to perform a branch change. As Wing, begin
-  editing <code>f2.txt</code>. Change "This line will be changed later"
-  to "This line changed by Wing in iter1." Save the change.
-  <p>
-  <li>Edit <code>f3trivial.txt</code> in Wing's workspace. Change
-  line 9 from "This line will be changed by Wing only" to "This
-  line changed by Wing in iter1." Save the change.
-  <p>
-  <li>Edit <code>f4conflict.txt</code> in Wing's workspace. Change
-  line 3 from "This line will be changed by Paul and Wing" to
-  "This line changed by Wing in iter1." Save the change.
-  <p>
-  <li>Commit Wing's changes with a comment like "First iteration 
-  changes by Wing". Note her revisions numbers are all two
-  digits (e.g. 1.2). That's because her new revisions occur on the main
-  branch.  This commit is represented by the first red circle on the
-  main branch in the <a href="#scenario">Scenario Diagram</a>.
-  <p>
-  <li>(<i>Optional tag step, not required anywhere.</i>) Since it is
-  a good practice to tag a milestone or a recovery point, Wing tags
-  this point with <b>W1</b> in the same manner as the in the
-  <a href="#howtotag">previous tag</a>.  It's a good idea to tag 
-  right before merging something into your branch so you can 
-  recover it more easily even after a commit.
-  <p>
- 
- <div class="note">
- <table class="note-table"><tbody><tr><td><img alt="[Note]" src="images/tip.gif"></td>
-      <td>To to verify a tag was created, change to the CVS Repository
-          view and expand <b>Versions &rarr; brtest.</b>  The <b>W1</b>
-          tag should be visible.</td>
-    </tr>
-  </table> 
-  </div>
+	<li>Right-click on the <b>brtest</b> project and select <b>Team
+	&rarr; Branch ...</b>. A dialog is displayed for creating the branch and
+	marking the start-point with a tag (also called a <i>Version Name</i>).
+	Enter a branch name like <b>p1test</b>. Leave the check box checked for
+	<b>Start working in the branch</b>. Notice that a start tag is
+	automatically filled in for you called <b>Root_p1test</b>. This is the
+	first tag labeled in the <a href="#scenario">Scenario Diagram</a>. You
+	may choose a different name so long as it doesn't conflict with an
+	existing CVS tag. This will mark where the branch was created. It will
+	be used later by the merge editor to determine what has changed since
+	branch creation. Click <b>OK</b>.
+	<p><img src="images/makebranch.jpg"
+		alt="Dialog for creating a new branch" /></p>
+	<p>Since you checked the box to start working in the branch, your
+	workspace should already be configured to work in the branch. You can
+	verify this in two ways. By right-clicking the project and selecting <b>Properties</b>
+	and then <b>CVS</b>, you should see the <i>p1test</i> in the tag field.
+	If you have the CVS label decorations enabled, you'll see the branch
+	tag in the navigator view (see below).</p>
+	<p><img src="images/branchlist.jpg"
+		alt="CVS labels indicating new branch" /></p>
+	<div class="note"">
+	<table class="note-table">
+		<tbody>
+			<tr>
+				<td><img alt="[Note]" src="images/tip.gif"></td>
+				<td>To enable CVS label decorations, go to <b>Window &rarr;
+				Preferences</b> and navigate to <b>General &rarr; Appearance &rarr;
+				Label Decorations</b>. Check the 'CVS' box.</td>
+			</tr>
+		</tbody>
+	</table>
+	</div>
+	
+	</li>
+	<li>This step begins the work represented as the blue box labeled
+	<b>PD1</b> in the <a href="#scenario">Scenario Diagram</a>. Paul will
+	modify the first file using the <i>p1test</i> branch. Open the editor
+	for <code>f1.txt</code>. Change line 3 from "This line will be changed
+	later" to "This line changed in iter1." Save the change.
+	
+	</li>
+	<li>Open the editor for <code>f3trivial.txt</code>. Change line 3
+	from "This line will be changed by Paul only" to "This line changed by
+	Paul in iter1." Save the change.
+	
+	</li>
+	<li>Open the editor for <code>f4conflict.txt</code>. Change line 3
+	from "This line will be changed by both Paul and Wing" to "This line
+	changed by Paul in iter1." Save the change.
+	
+	</li>
+	<li>Right-click on the <b>brtest</b> project and select <b>Team
+	&rarr; Synchronize with Repository</b>. In the <b>Outgoing Mode</b> view,
+	right-click the <b>brtest</b> project folder and select <b>Commit</b>.
+	Enter a comment such as "First iteration changes made by Paul." Note
+	that for files that have changed, the revision numbers are four digits.
+	This is a CVS convention for branched revisions.
+	<p><img src="images/p1commit.jpg"
+		alt="Paul's CVS label decorations after commit" /></p>
+	<p>This commit is represented by the first red circle on the <i>p1test</i>
+	branch of the Scenario Diagram.</p>
+	
+	</li>
+	<li>(<i>Optional <a name="howtotag">tag step</a>, only
+	required for the merge-again scenario</i>) Paul is finished development for
+	this iteration. So he will <a name="howtotag">tag</a> this milestone
+	with <b>P1</b>. This tag will represent the base-point for the
+	merge-again scenario. Right-click the <b>brtest</b> project and select
+	<b>Team &rarr; Tag as Version ...</b>. In the dialog that arises, enter
+	<b>P1</b> for the tag name and click <b>OK</b>. This corresponds to the
+	<b>P1</b> tag in the <a href="#scenario">Scenario Diagram</a>.
+	
+	<div class="note">
+	<table class="note-table">
+		<tbody>
+			<tr>
+				<td><img alt="[Note]" src="images/tip.gif"></td>
+				<td>To to verify a tag was created, change to the CVS
+				Repository view and expand <b>Versions &rarr; brtest.</b> The <b>P1</b>
+				tag should be visible.</td>
+			</tr>
+		</tbody>
+	</table>
+	</div>
+	<p>Now it is Wing's turn. Her work is represented in the <a
+		href="#scenario">Scenario Diagram</a> by the blue box labeled <b>WD1</b>.
+	</p>
+	
+	</li>
+	<li>Wing will make her changes in the main branch. In her
+	workspace she connects to CVS as "wing" to checkout the <b>brtest</b>
+	project from CVS.
+	<p><img src="images/wingcheckout.jpg" alt="" /></p>
+	She chooses the <b>brtest</b> under <b>HEAD</b>, the moniker CVS uses
+	to designate the main branch.
+	<p>Since Wing has the main branch loaded into her workspace, she
+	doesn't need to perform a branch change. As Wing, begin editing <code>f2.txt</code>.
+	Change "This line will be changed later" to "This line changed by Wing
+	in iter1." Save the change.</p>
+	
+	</li>
+	<li>Edit <code>f3trivial.txt</code> in Wing's workspace. Change
+	line 9 from "This line will be changed by Wing only" to "This line
+	changed by Wing in iter1." Save the change.
+	
+	</li>
+	<li>Edit <code>f4conflict.txt</code> in Wing's workspace. Change
+	line 3 from "This line will be changed by Paul and Wing" to "This line
+	changed by Wing in iter1." Save the change.
+	
+	</li>
+	<li>Commit Wing's changes with a comment like "First iteration
+	changes by Wing". Note her revisions numbers are all two digits (e.g.
+	1.2). That's because her new revisions occur on the main branch. This
+	commit is represented by the first red circle on the main branch in the
+	<a href="#scenario">Scenario Diagram</a>.
+	
+	</li>
+	<li>(<i>Optional tag step, not required anywhere.</i>) Since it is
+	a good practice to tag a milestone or a recovery point, Wing tags this
+	point with <b>W1</b> in the same manner as the in the <a
+		href="#howtotag">previous tag</a>. It's a good idea to tag right
+	before merging something into your branch so you can recover it more
+	easily even after a commit.
+	
+	<div class="note">
+	<table class="note-table">
+		<tbody>
+			<tr>
+				<td><img alt="[Note]" src="images/tip.gif"></td>
+				<td>To to verify a tag was created, change to the CVS
+				Repository view and expand <b>Versions &rarr; brtest.</b> The <b>W1</b>
+				tag should be visible.</td>
+			</tr>
+		</tbody>
+	</table>
+	</div>
 
+	</li>
 </ol>
 
 <h2>The Merge</h2>
-Now it is time for Paul to merge his changes into the main branch
-where Wing's work resides.  This is designated with the <b>M1</b>
-diamond in the <a href="#scenario">Scenario Diagram</a>.
-<p>
-<ol start="12">
-  <li>The first step of the merge is to point the workspace to the
-  target branch.  In our case, the target of the merge is the main 
-  branch.  To switch the project contents to that of the main branch, 
-  right-click on the <b>brtest</b> project in the Navigator view and 
-  select <b>Replace with --&gt; Branch or Version ...</b>. You should 
-  see a branch selection similar to the one below.  (If you performed 
-  the optional tagging steps, you may see some of those under 
-  <i>Versions</i>.  You may have to click <b>Refresh Tags</b> to see
-  them all.)
-  <p>
-  <img src="images/branchswitch2.jpg" alt="Dialog for selecting new branch or version"/> 
-  <p>
-  <li>The <i>p1test</i> branch is the one Paul was working on. To
-  switch back to the main branch, select <b>HEAD</b>. This is the CVS
-  name for the main branch. Then click <b>OK</b>.
-  <p>
-  The resource view should look like the one below. Notice the version 
-  numbers correspond to what Wing committed. All the version numbers 
-  are two digits. The branch name is gone which implies the <i>HEAD</i>
-  branch (or main).
-  <p>
-  <img src="images/afterswitch.jpg" alt="Resource view after switching back to main branch"/>
-  <p>
-  <li>Right-click on the <b>brtest</b> project and select <b>Team
-  &rarr; Merge ...</b>.  Click the <b>Browse</b> button next to
-  the <b>Branch or version to be merged</b> field.  Choose the
-  <b>p1test</b> branch from the <b>Choose End Tag</b> dialog box.
-  If you don't see the branch, you may have to click <b>Refresh
-  tags</b>. Click <b>OK</b>.
-  <p>
-  <img src="images/mergestartpoint2.jpg" alt="Dialog for choosing a merge start point"/>
-  <p>
-  <li>The start tag should be filled automatically with
-  <b>Root_p1test</b>.  In this case, the dialog anticipated
-  correctly.  For this merge, we have elected <b>not</b> to 
-  check the <b>Merge non-conflicting changes</b> checkbox.
-  In the merge-again scenario, we will check it and compare
-  the difference.  Click <b>Finish</b>.
-  <p>
-  <img src="images/mergewhat3.jpg" alt="Dialog for selecting choosing a branch to merge"/>
-  
- <div class="note">
- <table class="note-table"><tbody><tr><td><img alt="[Note]" src="images/tip.gif"></td>
-      <td>Instead of browsing for the end tag, you could have
-      taken advantage of Content Assist (through Ctrl + Space 
-      Bar) as indicated by the tiny light bulb next to the field.
-    </tr>
-  </table> 
-  </div>
-  <p>
-  <li>This is where the fun begins. You will be presented with the 
-  <i>Synchronize</i> view with the following merge results:
-  <p>
-  <img src="images/conflict1.jpg" alt="Merge tasks."/>
-  <p> 
-  <code>f1.txt</code> was not changed by Wing, so it will be
-  locally updated without a problem.  But <code>f3trivial.txt</code> 
-  and <code>f4conflict.txt</code> were each modified by both Paul and 
-  Wing and are indicated with the red double-headed arrows.
-  <p>
-  <li>Right-click on the <b>brtest</b> folder and select <b>Merge</b>.
-  CVS will attempt to work out if there are any changes that are in
-  conflict between Paul's local version and the repository. In our
-  example, it updates <code>f1.txt</code> as well as 
-  <code>f3trivial.txt</code> as it was able to resolve the conflicts 
-  there.  However, <code>f4trivial.txt </code>presents
-  it with a challenge and Eclipse will alert you that it was not able 
-  to automatically merge the changes.
-  <p><center><img src="images/threat1.jpg"/></center><p>
-  As ominous as this appears, it's merely a reminder that we have
-  to resolve some merge conflicts because they were not auto-mergeable.
-  We could have avoided the spectacle of this message if we had
-  simply checked the <b>Merge non-conflicting changes</b> checkbox.
-  <p>
-  Now lets resolve the conflicts.
-  <p>
-  <li>Double-click <code>f4conflict.txt</code> in the <i>Synchronize</i> 
-  view to open the <i>Compare</i> editor of the merge tool. The left side 
-  of the <i>Text Compare</i> panel is the local copy of the main branch 
-  contents. The right side is the <b>brtest</b> branch contents. Since 
-  this is not a trivial merge, the color red is used to delineate the 
-  scope of each merge conflict. Blue would be used to denote trivial merges.
-  <p>
-  <img src="images/conflict8.jpg" alt="Resolving conflicts with merge editor"/>
-  <p>
-  We can't resolve this conflict by simply using one side or the
-  other. For this case, we edit the text in the left side (local file) to
-  say "This line changed by Paul and Wing in iter1." Right-click in 
-  this same text window and select <b>Save</b>.
-  <p> 
-  <li>Even after the save, the entry in the conflict editor remains
-  red.  That's because from the Eclipse SCM perspective, there is
-  still a conflict.  It's just a conflict with some extra changes.
-  We have to explicitly inform the Eclipse SCM that we have indeed
-  resolved the conflict and that from this point onward, the changes
-  to the local copy should be interpreted relative to the contents
-  of the left-side.
-  <p><center>
-  <img src="images/markmerged.jpg"/>
-  </center><p>
-  This is done by right-clicking the file in the <i>Synchronize</i> 
-  view and selecting <b>Mark as Merged</b>.  Do this now and notice
-  there are no more conflicts.
-  <p>
+Now it is time for Paul to merge his changes into the main branch where
+Wing's work resides. This is designated with the <b>M1</b> diamond in
+the <a href="#scenario">Scenario Diagram</a>.
 
- <div class="note">
- <table class="note-table"><tbody><tr><td><img alt="[Note]" src="images/tip.gif"></td>
-      <td>In Eclipse 3.3, the <b>Mark as Merged</b> action is also
-          available from the context menu of the compare editor.</td>
-    </tr>
-  </table>
-  </div>
-  <p>
-  We have now completed merging the changes.
-  <p> 
-  <li>At this point, the merged copy only exists in our workspace. We
-  still need to commit it to the CVS repository. Select the <b>brtest</b>
-  project in the <i>Navigator</i> view and select <b>Team &rarr;
-  Synchronize with Repository</b>.  These changes should not present any
-  conflicts. Right-click on the <b>brtest</b> folder in the <i>Synchronize</i>
-  view and select <b>Commit</b>. A suitable comment would be
-  "Merged p1test branch up to P1 into main."
-  <p> 
-  <li>Tag the result as <b>WM1</b>.  This corresponds to the <b>WM1</b>
-  tag in the <a href="#scenario">Scenario Diagram</a>.
-  <p>
-  <li>Be sure to update Wing's workspace with the results of the merge.
+<ol start="12">
+	<li>The first step of the merge is to point the workspace to the
+	target branch. In our case, the target of the merge is the main branch.
+	To switch the project contents to that of the main branch, right-click
+	on the <b>brtest</b> project in the Navigator view and select <b>Replace
+	with --&gt; Branch or Version ...</b>. You should see a branch selection
+	similar to the one below. (If you performed the optional tagging steps,
+	you may see some of those under <i>Versions</i>. You may have to click
+	<b>Refresh Tags</b> to see them all.)
+	<p><img src="images/branchswitch2.jpg"
+		alt="Dialog for selecting new branch or version" /></p>
+	
+	</li>
+	<li>The <i>p1test</i> branch is the one Paul was working on. To
+	switch back to the main branch, select <b>HEAD</b>. This is the CVS
+	name for the main branch. Then click <b>OK</b>.
+	<p>The resource view should look like the one below. Notice the
+	version numbers correspond to what Wing committed. All the version
+	numbers are two digits. The branch name is gone which implies the <i>HEAD</i>
+	branch (or main).</p>
+	<p><img src="images/afterswitch.jpg"
+		alt="Resource view after switching back to main branch" /></p>
+	
+	</li>
+	<li>Right-click on the <b>brtest</b> project and select <b>Team
+	&rarr; Merge ...</b>. Click the <b>Browse</b> button next to the <b>Branch
+	or version to be merged</b> field. Choose the <b>p1test</b> branch from the
+	<b>Choose End Tag</b> dialog box. If you don't see the branch, you may
+	have to click <b>Refresh tags</b>. Click <b>OK</b>.
+	<p><img src="images/mergestartpoint2.jpg"
+		alt="Dialog for choosing a merge start point" /></p>
+	
+	</li>
+	<li>The start tag should be filled automatically with <b>Root_p1test</b>.
+	In this case, the dialog anticipated correctly. For this merge, we have
+	elected <b>not</b> to check the <b>Merge non-conflicting changes</b>
+	checkbox. In the merge-again scenario, we will check it and compare the
+	difference. Click <b>Finish</b>.
+	<p><img src="images/mergewhat3.jpg"
+		alt="Dialog for selecting choosing a branch to merge" /></p>
+	<div class="note">
+	<table class="note-table">
+		<tbody>
+			<tr>
+				<td><img alt="[Note]" src="images/tip.gif"></td>
+				<td>Instead of browsing for the end tag, you could have taken
+				advantage of Content Assist (through Ctrl + Space Bar) as indicated
+				by the tiny light bulb next to the field.</td>
+			</tr>
+		</tbody>
+	</table>
+	</div>
+	
+	</li>
+	<li>This is where the fun begins. You will be presented with the <i>Synchronize</i>
+	view with the following merge results:
+	<p><img src="images/conflict1.jpg" alt="Merge tasks." /></p>
+	<p><code>f1.txt</code> was not changed by Wing, so it will be
+	locally updated without a problem. But <code>f3trivial.txt</code> and <code>f4conflict.txt</code>
+	were each modified by both Paul and Wing and are indicated with the red
+	double-headed arrows.</p>
+	
+	</li>
+	<li>Right-click on the <b>brtest</b> folder and select <b>Merge</b>.
+	CVS will attempt to work out if there are any changes that are in
+	conflict between Paul's local version and the repository. In our
+	example, it updates <code>f1.txt</code> as well as <code>f3trivial.txt</code>
+	as it was able to resolve the conflicts there. However, <code>f4trivial.txt
+	</code>presents it with a challenge and Eclipse will alert you that it was not
+	able to automatically merge the changes.
+	
+	<center><img src="images/threat1.jpg" alt="" /></center>
+	<p>As ominous as this appears, it's merely a reminder that we have
+	to resolve some merge conflicts because they were not auto-mergeable.
+	We could have avoided the spectacle of this message if we had simply
+	checked the <b>Merge non-conflicting changes</b> checkbox.</p>
+	<p>Now lets resolve the conflicts.</p>
+	
+	</li>
+	<li>Double-click <code>f4conflict.txt</code> in the <i>Synchronize</i>
+	view to open the <i>Compare</i> editor of the merge tool. The left side
+	of the <i>Text Compare</i> panel is the local copy of the main branch
+	contents. The right side is the <b>brtest</b> branch contents. Since
+	this is not a trivial merge, the color red is used to delineate the
+	scope of each merge conflict. Blue would be used to denote trivial
+	merges.
+	<p><img src="images/conflict8.jpg"
+		alt="Resolving conflicts with merge editor" /></p>
+	<p>We can't resolve this conflict by simply using one side or the
+	other. For this case, we edit the text in the left side (local file) to
+	say "This line changed by Paul and Wing in iter1." Right-click in this
+	same text window and select <b>Save</b>.</p>
+	
+	</li>
+	<li>Even after the save, the entry in the conflict editor remains
+	red. That's because from the Eclipse SCM perspective, there is still a
+	conflict. It's just a conflict with some extra changes. We have to
+	explicitly inform the Eclipse SCM that we have indeed resolved the
+	conflict and that from this point onward, the changes to the local copy
+	should be interpreted relative to the contents of the left-side.
+	
+	<center><img src="images/markmerged.jpg" alt="" /></center>
+	<p>This is done by right-clicking the file in the <i>Synchronize</i>
+	view and selecting <b>Mark as Merged</b>. Do this now and notice there
+	are no more conflicts.</p>
+	
+	<div class="note">
+	<table class="note-table">
+		<tbody>
+			<tr>
+				<td><img alt="[Note]" src="images/tip.gif"></td>
+				<td>In Eclipse 3.3, the <b>Mark as Merged</b> action is also
+				available from the context menu of the compare editor.</td>
+			</tr>
+		</tbody>
+	</table>
+	</div>
+	<p>We have now completed merging the changes.</p>
+	
+	</li>
+	<li>At this point, the merged copy only exists in our workspace.
+	We still need to commit it to the CVS repository. Select the <b>brtest</b>
+	project in the <i>Navigator</i> view and select <b>Team &rarr;
+	Synchronize with Repository</b>. These changes should not present any
+	conflicts. Right-click on the <b>brtest</b> folder in the <i>Synchronize</i>
+	view and select <b>Commit</b>. A suitable comment would be "Merged
+	p1test branch up to P1 into main."
+	
+	</li>
+	<li>Tag the result as <b>WM1</b>. This corresponds to the <b>WM1</b>
+	tag in the <a href="#scenario">Scenario Diagram</a>.
+	
+	</li>
+	<li>Be sure to update Wing's workspace with the results of the
+	merge.</li>
 </ol>
 
 <h2>Check Point</h2>
 
-This completes the branch-and-merge scenario for Iteration 1.
-The next section continues with a merge-again example.  But
-let's pause for a moment to review what we have done.
-<p>
-Several files were used to
-demonstrate different types of conflicts that arise during merge
-activity. In cases where two developers edited the same file, we saw
-that CVS was able to automatically merge trivial changes. Where manual
-intervention was required, we saw how to use the merge editor to
-manually resolve these conflicts.
-<p> 
-After the merge task was complete, we tagged the results to create
-a release. Others can then refer to this release using the name
+This completes the branch-and-merge scenario for Iteration 1. The next
+section continues with a merge-again example. But let's pause for a
+moment to review what we have done.
+<p>Several files were used to demonstrate different types of
+conflicts that arise during merge activity. In cases where two
+developers edited the same file, we saw that CVS was able to
+automatically merge trivial changes. Where manual intervention was
+required, we saw how to use the merge editor to manually resolve these
+conflicts.</p>
+<p>After the merge task was complete, we tagged the results to
+create a release. Others can then refer to this release using the name
 "p12merge." A summary of our actions for a single file is obtained by
-right-clicking on the file in the <i>Navigator</i> view and selecting 
-<b>Team &rarr; Show History</b>. The history for 
-<code>f4conflict.txt</code> is shown below.
-<p>
-<img src="images/f4history2.jpg" alt="f4conflict.txt revision history">
-<p> 
-We can see that the <i>Root_p1test</i> tag is assigned to revision
-1.1, the initial version. We see that Paul made changes that were
-committed to a branch while Wing made changes that were committed to
-main. Finally, the merge resulted in revision 1.3, which was tagged for
-posterity with the label <b>WM1</b>. 
-<p>
-For many cases, this may be the only merge scenario you need.
-It is certainly sufficient for short-lived branches that
-introduce a new feature, test it, and then merge it into the
-main branch.  For longer running branches where multiple
-merges are required, the following merge-again scenario is
-useful.
-
+right-clicking on the file in the <i>Navigator</i> view and selecting <b>Team
+&rarr; Show History</b>. The history for <code>f4conflict.txt</code> is
+shown below.</p>
+<p><img src="images/f4history2.jpg"
+	alt="f4conflict.txt revision history"></p>
+<p>We can see that the <i>Root_p1test</i> tag is assigned to
+revision 1.1, the initial version. We see that Paul made changes that
+were committed to a branch while Wing made changes that were committed
+to main. Finally, the merge resulted in revision 1.3, which was tagged
+for posterity with the label <b>WM1</b>.</p>
+<p>For many cases, this may be the only merge scenario you need. It
+is certainly sufficient for short-lived branches that introduce a new
+feature, test it, and then merge it into the main branch. For longer
+running branches where multiple merges are required, the following
+merge-again scenario is useful.</p>
 <h2>Merge Again</h2>
 
-This is where Paul and Wing each continue to work on their 
-own branch and synchronize again at a later time.  These
-steps are part of <i>Iteration 2</i> in the
-<a href="#scenario">Scenario Diagram</a>.  The file
-editing is very similar to <i>Iteration 1</i>.  More emphasis
-will be placed on the merging.
-<p>
-The following steps begin in Paul's workspace, which should 
-still be pointing to the <b>p1test</b> branch.  If this is
-not the case, switch to the <b>p1test</b> branch through the
-usual method of right-clicking the project and selecting
-<b>Replace with &rarr; Another Branch or Version</b>.
+This is where Paul and Wing each continue to work on their own branch
+and synchronize again at a later time. These steps are part of <i>Iteration
+2</i> in the <a href="#scenario">Scenario Diagram</a>. The file editing is
+very similar to <i>Iteration 1</i>. More emphasis will be placed on the
+merging.
+<p>The following steps begin in Paul's workspace, which should still
+be pointing to the <b>p1test</b> branch. If this is not the case, switch
+to the <b>p1test</b> branch through the usual method of right-clicking
+the project and selecting <b>Replace with &rarr; Another Branch or
+Version</b>.</p>
 
-<p><ol>
-   <li>Open <tt>f1.txt</tt>.  Change
-   line 5 to read "This line changed in iter2."
-   <p>
-   <li>Open <tt>f3trivial.txt</tt> and change line 5 to read
-   "This line changed by Paul in iter2."
-   <p>
-   <li>Open <tt>f4conflict.txt</tt> and change line 5 to
-   read "This line changed by Paul in iter2.".
-   <p>
-   <li>Save the changes.  This completes the work represented
-   by <b>PD2</b> in the <a href="#scenario">Scenario Diagram</a>.
-   Commit these changes using a comment such
-   as "Second iteration changes made by Paul."
-   <p>
-   <li>Tag this state of the project with <b>P2</b> using
-   <b>Team &rarr; Tag as Version</b>.  This corresponds to
-   the <b>P2</b> tag in the <a href="#scenario">Scenario Diagram</a>.
-   <p>
-   Wing will continue her work in her own workspace.  It should
-   already be pointing to the main branch.  This work is 
-   denoted by <b>WD2</b> on the scenario diagram.
-   <p>
-   <li>In Wing's workspace, open <tt>f2.txt</tt> and edit line
-   5 to read "This line changed by Wing in iter2.".
-   <p>
-   <li>Open <tt>f3trivial.txt</tt> and change line 11 to read
-   "This line changed by Wing in iter2."
-   <p>
-   <li>Open <tt>f4conflict.txt</tt> and change line 5 to read
-   "This line changed by Wing in iter2."
-   <p>
-   <li>Save the changes.  This completes the work represented
-   by <b>WD2</b> in the <a href="#scenario">Scenario Diagram</a>.
-   Commit these changes using a comment such as "Second iteration
-   changes made by Wing."
-   <p>
-   <li>Tag this state of the project with <b>W2</b>, referring
-   a <a href="#howtotag">previous tag step</a> if needed.
-   <p>
-   Paul and Wing have both finished their <i>Iteration 2</i> 
-   work.  This time Wing will perform the merge herself from
-   within her own workspace.
-   <p>
-   <li>As Wing, in her workspace, click the <b>brtest</b>
-   project and select <b>Team &rarr; Merge</b>.
-   <p>
-   <li>Click <b>Browse</b> next to the <b>end tag</b> field.
-   Under <b>Branches</b>, select <b>p1test</b>.  If the branch
-   is not visible yet, select <b>Refresh Tags</b>.  (Or you
-   can simply use Content Assist.)  Click <b>OK</b>.
-   <p>
-   Notice that the <b>start tag</b> is populated already.
-   But this is not the value we want.  Upon review of the
-   <a href="#scenario">Scenario Diagram</a> we see that all
-   we want to merge into main are the changes in the blue
-   box labeled <b>PD2</b>.  But if we specify <b>Root_p1test</b>
-   in the <b>start tag</b> field, we would also be merging
-   in changes from the blue box labeled <b>PD1</b>.  The
-   <b>PD1</b> changes were already merged during Iteration 1.
-   Using this default start tag would cause the same changes
-   to be applied twice.  This should be avoided even though
-   it still works in many cases.
-   <p>
-   To apply only the changes since the last merge, we want
-   to specify the <b>P1</b> tag.  This encapsulates 
-   precisely the <b>PD2</b> development work.
-   <p>
-   <li>Click <b>Browse</b> next to the <b>start tag</b> field
-   and select <b>P1</b> from the list of tags.  Click <b>OK</b>.
-   <p>
-   <li>Be sure to check <b>Merge non-conflicting changes</b> so
-   that the auto-mergeable differences are applied automatically.
-   <p>
-   <img src="images/mergeDialog11.jpg"/>
-   <p>
-   Click <b>Finish</b>.
-   <p>
-   You should see the usual <b>Merge Failure</b> dialog indicating
-   that a non-auto-mergeable conflict was encountered.  Click
-   <b>OK</b> so we can get to work on resolving the conflict.
-   <p>
-   <li>The <i>Synchronize</i> view shows that, like before, 
-   <code>f4conflict.txt</code> is the only file with a conflict.
-   Double-click it to view the conflict in the Text Compare
-   editor.  Shown below is the most important screen-shot of
-   the merge-again scenario.
-   <p>
-   <img src="images/conflict4.jpg"/>
-   <p>
-   Notice there are two differences, but only one conflict.  The
-   first difference is not marked in red.    That's because this
-   line 3 <b>was not changed since the P1 tag</b>.  If we had
-   allowed the start tag of the merge dialog to remain at
-   <b>Root_p1test</b>, this would have been interpreted as a change and
-   hence a conflict.  If we had not had the conflict in the second
-   change of line 5, this would have auto-merged successfully.
-   <p>
-   Another point to note is that the reason there is even any
-   difference at all in line 3 is that we are not rebasing in
-   this scenario.  This is why line 3 of the branch is not in
-   sync with line3 of main, even though it line 3 hasn't been
-   changed since Iteration 1.  Rebasing is addressed in 
-   <a href="article2.html">Part 2</a> of this article.
-   <p>
-   The following steps simply repeat the conflict resolution
-   of Iteration 1.  This is represented by yellow diamond labeled
-   <b>M2</b> in the scenario diagram. They are recounted here briefly.
-   <p>
-   <li>Edit line 5 of the local file to say, "This line changed
-   by Paul and Wing in iter2."
-   <p>
-   <li>Right-click in the local file area and select <b>Save</b>.
-   <p>
-   <li>Right-click the <code>f4conflict.txt</code> entry in the
-   <i>Synchronize</i> view and select <b>Mark as Merged</b>.
-   <p>
-   <li>Commit the merge with comment "Merged p1test branch from
-   P1 to P2."
-   <p>
-   <li>Tag the result <b>WM2</b> as indicated in the
-   <a href="#scenario">Scenario Diagram</a>.
-
+<ol>
+	<li>Open <tt>f1.txt</tt>. Change line 5 to read "This line changed
+	in iter2."
+	
+	</li>
+	<li>Open <tt>f3trivial.txt</tt> and change line 5 to read "This
+	line changed by Paul in iter2."
+	
+	</li>
+	<li>Open <tt>f4conflict.txt</tt> and change line 5 to read "This
+	line changed by Paul in iter2.".
+	
+	</li>
+	<li>Save the changes. This completes the work represented by <b>PD2</b>
+	in the <a href="#scenario">Scenario Diagram</a>. Commit these changes
+	using a comment such as "Second iteration changes made by Paul."
+	
+	</li>
+	<li>Tag this state of the project with <b>P2</b> using <b>Team
+	&rarr; Tag as Version</b>. This corresponds to the <b>P2</b> tag in the <a
+		href="#scenario">Scenario Diagram</a>.
+	<p>Wing will continue her work in her own workspace. It should
+	already be pointing to the main branch. This work is denoted by <b>WD2</b>
+	on the scenario diagram.</p>
+	
+	</li>
+	<li>In Wing's workspace, open <tt>f2.txt</tt> and edit line 5 to
+	read "This line changed by Wing in iter2.".
+	
+	</li>
+	<li>Open <tt>f3trivial.txt</tt> and change line 11 to read "This
+	line changed by Wing in iter2."
+	
+	</li>
+	<li>Open <tt>f4conflict.txt</tt> and change line 5 to read "This
+	line changed by Wing in iter2."
+	
+	</li>
+	<li>Save the changes. This completes the work represented by <b>WD2</b>
+	in the <a href="#scenario">Scenario Diagram</a>. Commit these changes
+	using a comment such as "Second iteration changes made by Wing."
+	
+	</li>
+	<li>Tag this state of the project with <b>W2</b>, referring a <a
+		href="#howtotag">previous tag step</a> if needed.
+	<p>Paul and Wing have both finished their <i>Iteration 2</i> work.
+	This time Wing will perform the merge herself from within her own
+	workspace.</p>
+	
+	</li>
+	<li>As Wing, in her workspace, click the <b>brtest</b> project and
+	select <b>Team &rarr; Merge</b>.
+	
+	</li>
+	<li>Click <b>Browse</b> next to the <b>end tag</b> field. Under <b>Branches</b>,
+	select <b>p1test</b>. If the branch is not visible yet, select <b>Refresh
+	Tags</b>. (Or you can simply use Content Assist.) Click <b>OK</b>.
+	<p>Notice that the <b>start tag</b> is populated already. But this
+	is not the value we want. Upon review of the <a href="#scenario">Scenario
+	Diagram</a> we see that all we want to merge into main are the changes in
+	the blue box labeled <b>PD2</b>. But if we specify <b>Root_p1test</b>
+	in the <b>start tag</b> field, we would also be merging in changes from
+	the blue box labeled <b>PD1</b>. The <b>PD1</b> changes were already
+	merged during Iteration 1. Using this default start tag would cause the
+	same changes to be applied twice. This should be avoided even though it
+	still works in many cases.</p>
+	<p>To apply only the changes since the last merge, we want to
+	specify the <b>P1</b> tag. This encapsulates precisely the <b>PD2</b>
+	development work.</p>
+	
+	</li>
+	<li>Click <b>Browse</b> next to the <b>start tag</b> field and
+	select <b>P1</b> from the list of tags. Click <b>OK</b>.
+	
+	</li>
+	<li>Be sure to check <b>Merge non-conflicting changes</b> so that
+	the auto-mergeable differences are applied automatically.
+	<p><img src="images/mergeDialog11.jpg" alt="" /></p>
+	<p>Click <b>Finish</b>.</p>
+	<p>You should see the usual <b>Merge Failure</b> dialog indicating
+	that a non-auto-mergeable conflict was encountered. Click <b>OK</b> so
+	we can get to work on resolving the conflict.</p>
+	
+	</li>
+	<li>The <i>Synchronize</i> view shows that, like before, <code>f4conflict.txt</code>
+	is the only file with a conflict. Double-click it to view the conflict
+	in the Text Compare editor. Shown below is the most important
+	screen-shot of the merge-again scenario.
+	<p><img src="images/conflict4.jpg" alt="" /></p>
+	<p>Notice there are two differences, but only one conflict. The
+	first difference is not marked in red. That's because this line 3 <b>was
+	not changed since the P1 tag</b>. If we had allowed the start tag of the
+	merge dialog to remain at <b>Root_p1test</b>, this would have been
+	interpreted as a change and hence a conflict. If we had not had the
+	conflict in the second change of line 5, this would have auto-merged
+	successfully.</p>
+	<p>Another point to note is that the reason there is even any
+	difference at all in line 3 is that we are not rebasing in this
+	scenario. This is why line 3 of the branch is not in sync with line3 of
+	main, even though it line 3 hasn't been changed since Iteration 1.
+	Rebasing is addressed in <a href="article2.html">Part 2</a> of this
+	article.</p>
+	<p>The following steps simply repeat the conflict resolution of
+	Iteration 1. This is represented by yellow diamond labeled <b>M2</b> in
+	the scenario diagram. They are recounted here briefly.</p>
+	
+	</li>
+	<li>Edit line 5 of the local file to say, "This line changed by
+	Paul and Wing in iter2."
+	
+	</li>
+	<li>Right-click in the local file area and select <b>Save</b>.
+	
+	</li>
+	<li>Right-click the <code>f4conflict.txt</code> entry in the <i>Synchronize</i>
+	view and select <b>Mark as Merged</b>.
+	
+	</li>
+	<li>Commit the merge with comment "Merged p1test branch from P1 to
+	P2."
+	
+	</li>
+	<li>Tag the result <b>WM2</b> as indicated in the <a
+		href="#scenario">Scenario Diagram</a>.</li>
 </ol>
 
 <h2>Summary</h2>
-In this tutorial we illustrated the implementation steps for a
-simple branch and merge scenario.  We then extended it with
-a merge-again scenario.  We saw how tagging milestones and
-merge results assist with future merges.  We also saw a subtle
-effect of using these milestone tags for a base point rather
-than simply falling back on the original branch point.
-<p>
-One consequence of the merge tactic chosen for this article
-is that the <b>p1test</b> branch was never refreshed with
-changes on the main branch.  This may be fine in some
-circumstances.  To keep the <b>p1test</b> branch synchronized
-with changes in the main, a rebase technique must be employed.
-This is the tactic discussed in 
-<a href="article2.html">Part 2</a> of this article.
-
+In this tutorial we illustrated the implementation steps for a simple
+branch and merge scenario. We then extended it with a merge-again
+scenario. We saw how tagging milestones and merge results assist with
+future merges. We also saw a subtle effect of using these milestone tags
+for a base point rather than simply falling back on the original branch
+point.
+<p>One consequence of the merge tactic chosen for this article is
+that the <b>p1test</b> branch was never refreshed with changes on the
+main branch. This may be fine in some circumstances. To keep the <b>p1test</b>
+branch synchronized with changes in the main, a rebase technique must be
+employed. This is the tactic discussed in <a href="article2.html">Part
+2</a> of this article.</p>
 <h2>An Alternative - Ongoing Merges</h2>
-The Eclipse <i>CVS Merge Synchronization</i> view provides support
-for <i>Ongoing Merges</i>.  This works by pinning the Merge
-Synchronization view so that it continues to be present (behind
-the scenes) and remembers what has already been merged.  So
-in the merge-again scenario, if we had had the Merge Synchronization
-view pinned since the first merge, then we could have left the
-start tag with the default <b>Root_p1test</b>.  The CVS Merge
-Synchronization view would have remembered the earlier merge
-between <b>Root_p1test</b> and <b>P1</b> and not tried to re-apply
-those changes.
-<p>
-The <i>Ongoing Merge</i> support works well, but has its
-limitations.  In the scenario for this article, Paul did the
-first merge while Wing did the second.  Unless the same
-workspace is involved throughout the merge scenario, Ongoing 
-Merge support is not feasible.  But in practice, one generally
-does use the same workspace for merges, and so Ongoing Merge
-support is a great help.  It provides these additional features.
-<p><ol>
-<li>Multiple Merge Synchronization views can be pinned.  This
-   enables one to coordinate deliveries from multiple branches.<p>
-<li>Merge Synchronization may be scheduled.  You can obtain the
-   following configuration panel by clicking the Merge Synchronization
-   menu button (the down arrow) and selecting <b>Schedule ...</b>.
-   <p><img src="images/configMergeSync.jpg"/><p>
-   So you become aware of work committed to other branches on
-   a regular basis.
-</ol><p>
-The Ongoing Merge support should not entirely supplant tagging.
-The merge points should still be tagged for milestone purposes
-and in case the pinned Merge Synchronization view somehow becomes
-unavailable.
-The Ongoing Merge support is mentioned in the Eclipse Help under
-<b>Workbench User's Guide &rarr; Reference &rarr; Team Support
-with CVS &rarr; CVS Merge Synchronization</b>.
+The Eclipse <i>CVS Merge Synchronization</i> view provides support for <i>Ongoing
+Merges</i>. This works by pinning the Merge Synchronization view so that it
+continues to be present (behind the scenes) and remembers what has
+already been merged. So in the merge-again scenario, if we had had the
+Merge Synchronization view pinned since the first merge, then we could
+have left the start tag with the default <b>Root_p1test</b>. The CVS
+Merge Synchronization view would have remembered the earlier merge
+between <b>Root_p1test</b> and <b>P1</b> and not tried to re-apply those
+changes.
+<p>The <i>Ongoing Merge</i> support works well, but has its
+limitations. In the scenario for this article, Paul did the first merge
+while Wing did the second. Unless the same workspace is involved
+throughout the merge scenario, Ongoing Merge support is not feasible.
+But in practice, one generally does use the same workspace for merges,
+and so Ongoing Merge support is a great help. It provides these
+additional features.</p>
 
+<ol>
+	<li>Multiple Merge Synchronization views can be pinned. This
+	enables one to coordinate deliveries from multiple branches.
+	
+	</li>
+	<li>Merge Synchronization may be scheduled. You can obtain the
+	following configuration panel by clicking the Merge Synchronization
+	menu button (the down arrow) and selecting <b>Schedule ...</b>.
+	<p><img src="images/configMergeSync.jpg" alt="" /></p>
+	<p>So you become aware of work committed to other branches on a
+	regular basis.</p>
+	</li>
+</ol>
+<p>The Ongoing Merge support should not entirely supplant tagging.
+The merge points should still be tagged for milestone purposes and in
+case the pinned Merge Synchronization view somehow becomes unavailable.
+The Ongoing Merge support is mentioned in the Eclipse Help under <b>Workbench
+User's Guide &rarr; Reference &rarr; Team Support with CVS &rarr; CVS
+Merge Synchronization</b>.</p>
 <h2>References</h2>
-Listed below is the standard reference to which one can refer 
-in addition to the Eclipse documentation.
-<p>
+Listed below is the standard reference to which one can refer in
+addition to the Eclipse documentation.
+
 <ul>
-  <li><i>Version Management with CVS</i>, Per Cederqvist et al. 
-  <a href="http://ximbiot.com/cvs/manual"> http://ximbiot.com/cvs/manual</a>. 
-  This manual is the standard CVS reference.
-  <p>
-  <li><i>CVS Best Practices</i>, Vivek Venugopalan 2002 
-  <a href="http://www.tldp.org/REF/CVS-BestPractices/html/">html</a>, 
-  <a href="http://www.tldp.org/REF/CVS-BestPractices/CVS-BestPractices.pdf">pdf</a>(75k)
+	<li><i>Version Management with CVS</i>, Per Cederqvist et al. <a
+		href="http://ximbiot.com/cvs/manual">
+	http://ximbiot.com/cvs/manual</a>. This manual is the standard CVS
+	reference.
+	
+	</li>
+	<li><i>CVS Best Practices</i>, Vivek Venugopalan 2002 <a
+		href="http://www.tldp.org/REF/CVS-BestPractices/html/">html</a>, <a
+		href="http://www.tldp.org/REF/CVS-BestPractices/CVS-BestPractices.pdf">pdf</a>(75k)
+	</li>
 </ul>
 
 <h2>Useful Plug-ins</h2>
 <ul>
-  <li>Version Trees provides a graphical view of the versions, branches
-  and tags for a file. 
-  <a href="http://versiontree.sourceforge.net/">http://versiontree.sourceforge.net/</a>
-  <li>TortoiseCVS provides a Windows Explorer extension for working
-  with CVS.  <a href="http://www.tortoisecvs.org">http://www.tortoisecvs.org</a>
+	<li>Version Trees provides a graphical view of the versions,
+	branches and tags for a file. <a
+		href="http://versiontree.sourceforge.net/">http://versiontree.sourceforge.net/</a>
+	</li>
+	<li>TortoiseCVS provides a Windows Explorer extension for working
+	with CVS. <a href="http://www.tortoisecvs.org">http://www.tortoisecvs.org</a>
+	</li>
 </ul>
 </div>
 </body>
