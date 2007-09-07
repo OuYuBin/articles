@@ -1,0 +1,378 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Adding Help Support to a Rich Client Application</title>
+<meta http-equiv="Content-Type"
+	content="text/html; charset=windows-1252">
+<link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<h1>Adding Help Support to a Rich Client Application</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>In this article we show you how you can incorporate the Eclipse help
+system into your Rich Client Application in a series of easy to follow steps. We
+will also show you how to set up context help and how to fine tune your help
+settings.</p>
+<div class="author">By Chris Goldthorpe, IBM Corporation and Adam Archer, IBM
+  Corporation</div>
+<div class="copyright">Copyright &copy; 2007 IBM Corporation, Source code in
+  this article is made available under the EPL, v1.0, remainder of the
+  presentation is licensed under Creative Commons Att. Nc Nd 2.5 license <br>
+&nbsp;</div>
+<div class="date">September 6, 2007</div>
+</div>
+<div class="content">
+<h2>Introduction</h2>
+<p>Online help can be added to an Eclipse Rich Client Platform (RCP) application with a modest amount of 
+effort by adding the plug-ins that comprise the Eclipse help system. The first 
+section of this article discusses the benefits of integrating the help system 
+into your application. This is followed by a tutorial which describes in detail 
+the steps required to add help system support to a newly created RCP application 
+while avoiding commonly encountered pitfalls. Finally we describe how to 
+add context help and how to fine tune the settings of your help system.</p>
+
+<h2>Why include the Eclipse Help System in your Application?</h2>
+
+<p>Very few applications are self explanatory to the point where they require no 
+documentation. For an RCP application the easiest way to add that documentation 
+support is to use the Eclipse help system. The Eclipse help system is supported 
+on all of the same platforms as Eclipse and has developed over years into a 
+robust, feature rich and extensible component, which continues to grow in terms 
+of both quality and features.</p>
+
+<p>The Eclipse help system uses a browser-based presentation and therefore has 
+full support for HTML. Search is automatically included in the help system; 
+context help and keyword index are supported if you provide the appropriate 
+content files. If you want to allow the same help pages that you provide in 
+your application to be accessed from the Internet you can host them on 
+an InfoCenter: a web server which serves help pages. Localization is 
+supported so that you can provide documentation in additional languages.</p>
+
+<p>The help system (since 3.3) has extension points for content producers that 
+programmatically generate help content including a table of 
+contents, keyword index, and content pages. This can be useful when converting 
+documentation from some other format into HTML.</p>
+
+<h2>Tutorial </h2>
+
+<p>The next sections walk through the process of adding help support to a newly 
+created RCP application. You may already have an RCP application but we 
+recommend that you create a new application for this exercise. That way you can 
+experiment on a sample before modifying your application. </p>
+
+<h3>Create a Rich Client Application</h3>
+
+<p>The Plug-in Development Environment (PDE) has some templates for
+creating RCP applications. For this article we will use the Mail Template as it already has some
+menus in place.</p>
+
+<p>From the workbench select the menu item &quot;<strong>File &gt; New &gt; Project...</strong>&quot; and select the
+&quot;<strong>Plug-in Project</strong>&quot; template.</p>
+
+<p>Enter &quot;<strong>org.eclipse.helprcp</strong>&quot; in the &quot;<strong>Project name</strong>&quot; field and hit &quot;<strong>Next</strong>&quot;.</p>
+
+<div class="figure">
+<img border="0" src="images/pde_wizard1.png" width="500" height="500" >
+</div>
+
+<p>On the second screen be sure to select the &quot;<strong>Yes</strong>&quot; option
+in the
+&quot;<strong>Rich Client Application</strong>&quot; section.</p>
+
+<div class="figure"><img border="0" src="images/pde_wizard2.png" width="500" height="500"></div>
+
+<p>And on the final screen select the &quot;<strong>RCP Mail Template</strong>&quot;.</p>
+
+<div class="figure"><img border="0" src="images/pde_wizard3.png" width="500" height="500"></div>
+
+<p>Hit &quot;<strong>Finish</strong>&quot; and your project will be created. You can test your
+application by opening the &quot;<strong>Plug-in Manifest Editor</strong>&quot; and, in the &quot;<strong>Overview</strong>&quot; tab,
+clicking on &quot;<strong>Launch an Eclipse Application</strong>&quot;. You will see an application start
+which already has a &quot;<strong>Help</strong>&quot; menu with an &quot;<strong>About RCP Product</strong>&quot; submenu. Click on the &quot;<strong>About RCP Product</strong>&quot;
+submenu and this is what you will see.</p>
+
+<p class = "figure"><img border="0" src="images/rcp1.png" width="600" height="400"></p>
+
+<h3>Create a Product Configuration</h3>
+
+<div class="note"><p><img border="0" src="images/tip.gif" width="62" height="13"> Adding the help
+system is easiest if you have a plug-in based product configuration. </p></div>
+
+<p>To create the product configuration, perform the following steps:</p>
+
+<ol>
+  <li>Switch to the <strong>Plug-in Development</strong> perspective if you are not already there
+  (Use the <strong>Window &gt; Open Perspective</strong> menu option).</li>
+  <li>Select &quot;<strong>File &gt; New &gt; Product Configuration</strong>&quot; from the main menu.</li>
+  <li>Select &quot;<strong>org.eclipse.helprcp</strong>&quot; in the resulting &quot;<strong>New Product Configuration</strong>&quot;
+  wizard page.</li>
+  <li>Input &quot;<strong>helprcp.product</strong>&quot; into the &quot;<strong>File name</strong>&quot; text box.</li>
+  <li>Select the &quot;<strong>Use an existing product</strong>&quot; radio button inside the &quot;<strong>Initialize
+  the file content</strong>&quot; group and click &quot;<strong>Finish</strong>&quot;. The &quot;<strong>Product Configuration Editor</strong>&quot;
+  will open.</li>
+  <li>Input &quot;<strong>Help RCP Application</strong>&quot; into the &quot;<strong>Product Name</strong>&quot; text box.</li>
+  <li>Verify &quot;<strong>org.eclipse.helprcp.product</strong>&quot; is the default value in the &quot;<strong>Product ID</strong>&quot; drop down menu.</li>
+  <li>Select &quot;<strong>File &gt; Save</strong>&quot; from the main menu.</li>
+  <li>From the &quot;<strong>Overview</strong>&quot; tab of the &quot;<strong>Product Configuration Editor</strong>&quot; click on
+  &quot;<strong>Launch an Eclipse Application</strong>&quot; and verify that the application launches.</li>
+</ol>
+
+<h3>Add Source Code</h3>
+
+<p>In your rich client plug-in project you will find a class called
+&quot;<strong>ApplicationActionBarAdvisor</strong>&quot;. Open this in an editor. You will make a few source
+changes to add the help actions to the menu. Add the lines marked &quot;<strong>// NEW</strong>&quot; to the
+class as follows:</p>
+
+<pre>public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
+
+    // Actions - important to allocate these only in makeActions, and then use them
+    // in the fill methods.  This ensures that the actions aren't recreated
+    // when fillActionBars is called with FILL_PROXY.
+    private IWorkbenchAction exitAction;
+    private IWorkbenchAction aboutAction;
+    private IWorkbenchAction showHelpAction; <strong>// NEW</strong>
+    private IWorkbenchAction searchHelpAction; <strong>// NEW</strong>
+    private IWorkbenchAction dynamicHelpAction; <strong>// NEW</strong></pre>
+
+<p>Add the lines marked &quot;<strong>// NEW</strong>&quot; to function
+&quot;<strong>ApplicationActionBarAdvisor.makeActions()</strong>&quot; as follows:</p>
+
+<pre> protected void makeActions(final IWorkbenchWindow window) {
+    // Creates the actions and registers them.
+    // Registering is needed to ensure that key bindings work.
+    // The corresponding commands keybindings are defined in the plugin.xml file.
+    // Registering also provides automatic disposal of the actions when
+    // the window is closed.
+
+    exitAction = ActionFactory.QUIT.create(window);
+    register(exitAction);
+
+    aboutAction = ActionFactory.ABOUT.create(window);
+    register(aboutAction);
+
+    showHelpAction = ActionFactory.HELP_CONTENTS.create(window); <strong>// NEW</strong>
+    register(showHelpAction); <strong>// NEW</strong>
+
+    searchHelpAction = ActionFactory.HELP_SEARCH.create(window); <strong>// NEW</strong>
+    register(searchHelpAction); <strong>// NEW</strong>
+
+    dynamicHelpAction = ActionFactory.DYNAMIC_HELP.create(window); <strong>// NEW</strong>
+    register(dynamicHelpAction); <strong>// NEW</strong></pre>
+
+<p>And add the lines marked &quot;<strong>// NEW</strong>&quot; to function
+&quot;<strong>ApplicationActionBarAdvisor.fillMenuBar()</strong>&quot; as follows:</p>
+
+<pre>protected void fillMenuBar(IMenuManager menuBar) {
+   MenuManager fileMenu = new MenuManager(&quot;&amp;File&quot;, IWorkbenchActionConstants.M_FILE);
+   MenuManager helpMenu = new MenuManager(&quot;&amp;Help&quot;, IWorkbenchActionConstants.M_HELP);
+
+   menuBar.add(fileMenu);
+   // Add a group marker indicating where action set menus will appear.
+   menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+   menuBar.add(helpMenu);
+
+   // File
+   fileMenu.add(newWindowAction);
+   fileMenu.add(new Separator());
+   fileMenu.add(messagePopupAction);
+   fileMenu.add(openViewAction);
+   fileMenu.add(new Separator());
+   fileMenu.add(exitAction);
+
+   // Help
+   helpMenu.add(aboutAction);
+   helpMenu.add(showHelpAction); <strong>// NEW</strong>
+   helpMenu.add(searchHelpAction); <strong>// NEW</strong>
+   helpMenu.add(dynamicHelpAction); <strong>// NEW</strong></pre>
+
+<h3>Test</h3>
+
+<p>Launch the application from the &quot;<strong>Product Configuration Editor</strong>&quot; and see what
+happens. You will notice that the help menu now has additional entries for &quot;<strong>Help
+Contents</strong>&quot; and &quot;<strong>Search</strong>&quot; but neither of them does anything. This is because we
+still need to import the plug-ins that comprise the Eclipse help system.</p>
+
+<h3>Add Required Plug-ins</h3>
+
+<ol>
+  <li>In the &quot;<strong>Configuration</strong>&quot; tab of the &quot;<strong>Product Configuration Editor</strong>&quot; add &quot;<strong>org.eclipse.help.webapp</strong>&quot;
+  and &quot;<strong>org.eclipse.help.ui</strong>&quot; to the list in the &quot;<strong>Plug-ins and Fragments</strong>&quot; section.</li>
+  <li>Select the checkbox to &quot;<strong>Include optional dependencies when computing required
+  plug-ins</strong>&quot;. <img border="0" src="images/tip.gif" width="62" height="13"> If you
+  omit this step the help system will not have all the plug-ins it needs and you
+  will see an exception at startup.</li>
+  <li>Click the &quot;<strong>Add Required Plug-ins</strong>&quot; button.</li>
+  <li>Select &quot;<strong>File &gt; Save</strong>&quot; from the main menu.</li>
+</ol>
+
+<h3>Test Again</h3>
+
+<p>Launch the application from the &quot;<strong>Product Configuration Editor</strong>&quot; again. Now
+&quot;<strong>Help &gt; Help Contents</strong>&quot; will open a new window to display help.</p>
+
+<p class = "figure"><img border="0" src="images/emptyHelp.png" width="689" height="550"></p>
+
+<h3>Add Sample Help Content</h3>
+
+<p>You can create a plug-in with help content as follows:</p>
+
+<ol>
+  <li>Select &quot;<strong>File &gt; New &gt; Project &gt; Plug-in project</strong>&quot;.</li>
+  <li>On the first screen uncheck &quot;<strong>Create a Java Project</strong>&quot;</li>
+  <li>Enter &quot;<strong>org.eclipse.helprcp.content</strong>&quot; in the &quot;<strong>Project name</strong>&quot; field and hit &quot;<strong>Next</strong>&quot; twice.</li>
+  <li>From the templates page select &quot;<strong>Plug-in with sample help content</strong>&quot; and hit
+  &quot;<strong>Finish</strong>&quot;.</li>
+  <li>In the &quot;<strong>Product Configuration Editor</strong>&quot; add your new plug-in to the list in
+  the &quot;<strong>Plug-ins and Fragments</strong>&quot; section.</li>
+  <li>Launch the application from the &quot;<strong>Product Configuration Editor</strong>&quot;. It will look
+  like this after you expand the nodes in the tree.</li>
+</ol>
+
+<p class = "figure"><img border="0" src="images/help.png" width="689" height="550"></p>
+
+<p>&quot;<strong>Help &gt; Search</strong>&quot; is also enabled and looks like this. You will want to increase
+the size of the help view.</p>
+
+<p class = "figure"><img border="0" src="images/search.png" width="600" height="400"></p>
+
+<h3>Add Context Help Support</h3>
+
+<p>In this section you will add context help to the &quot;<strong>Message</strong>&quot; view included in the application.</p>
+
+<p>The first thing you will need to do is create a context id for the view. To do this you
+will need to modify the code for the &quot;<strong>View</strong>&quot; class in the
+&quot;<strong>org.eclipse.helprcp</strong>&quot; project. Open it in an editor and add the
+line marked &quot;<strong>// NEW</strong>&quot; to the &quot;<strong>View.createPartControl(Composite parent)</strong>&quot;
+as follows:</p>
+
+<pre>public void createPartControl(Composite parent) {
+   Composite top = new Composite(parent, SWT.NONE);
+   GridLayout layout = new GridLayout();
+   layout.marginHeight = 0;
+   layout.marginWidth = 0;
+   top.setLayout(layout);
+   PlatformUI.getWorkbench().getHelpSystem().setHelp(top, "org.eclipse.helprcp.message"); <strong>// NEW</strong></pre>
+
+<p>After adding the code, you will have an error. To resolve it select &quot;<strong>Source &gt; Organize Imports</strong>&quot;
+from the main menu. Save your changes when you are done.</p>
+
+<p>Once the context id is created you need to create content to associate to it.
+We will put the content in the &quot;<strong>org.eclipse.helprcp.content</strong>&quot; plug-in.
+Add a new file to the root directory for the project called &quot;<strong>contexts.xml</strong>&quot;.
+Open the new file in an editor, input the following text and save your changes:</p>
+
+<pre>&lt;contexts&gt;
+   &lt;context id="message"&gt;
+      &lt;description&gt;This is the sample context-sensitive help. There is a link to the help content below.&lt;/description&gt;
+      &lt;topic href="html/subtopic.html" label="Subtopic" /&gt;
+   &lt;/context&gt;
+&lt;/contexts&gt;</pre>
+
+<p>Next you will need to link the content to the context id. This can be done as follows:</p>
+
+<ol>
+  <li>Open the &quot;<strong>Plug-in Manifest Editor</strong>&quot; for the
+  &quot;<strong>org.eclipse.helprcp.content</strong>&quot; plug-in.</li>
+  <li>Switch to the &quot;<strong>Extensions</strong>&quot; tab and click
+  the &quot;<strong>Add...</strong>&quot; button.</li>
+  <li>In the &quot;<strong>New Extension</strong>&quot; wizard select the
+  &quot;<strong>org.eclipse.help.context</strong>&quot; extension point and click &quot;<strong>Finish</strong>&quot;.
+  <img border="0" src="images/tip.gif" width="62" height="13"> You will need to uncheck the
+  &quot;<strong>Show only extension points from the required plug-ins</strong>&quot; checkbox to select the extension point.</li>
+  <li>You will be asked if you want to add a dependency to the &quot;<strong>org.eclipse.help</strong>&quot;
+  plug-in. Click &quot;<strong>No</strong>&quot;.</li>
+  <li>Right-click your new extension in the list and select &quot;<strong>New &gt; contexts</strong>&quot;</li>
+  <li>In the &quot;<strong>file</strong>&quot; field enter &quot;<strong>contexts.xml</strong>&quot;.</li>
+  <li>In the &quot;<strong>plug-in</strong>&quot; field enter &quot;<strong>org.eclipse.helprcp</strong>&quot;.</li>
+  <li>Select &quot;<strong>File &gt; Save</strong>&quot; from the main menu.</li>
+</ol>
+
+<p>The last step required to ensure that the correct context is sent to the help system
+is to forward focus to the view's composite when its &quot;<strong>setFocus()</strong>&quot; method is called.
+To do this you will first have to make the composite a private variable. In
+class &quot;<b>View</b>&quot; add the line marked &quot;<strong>// NEW</strong>&quot;
+in the code segment below and update the line marked &quot;<strong>// MODIFIED</strong>&quot; as indicated:</p>
+
+<pre>public static final String ID = "org.eclipse.helprcp.view";
+private Composite top; <strong>// NEW</strong>
+
+public void createPartControl(Composite parent) {
+   top = new Composite(parent, SWT.NONE); <strong>// MODIFIED</strong>
+   GridLayout layout = new GridLayout();</pre>
+
+<p>Next add content to the &quot;<strong>View.setFocus()</strong>&quot; method as follows:</p>
+
+<pre>public void setFocus() {
+   if(top != null) <strong>// NEW</strong>
+      top.setFocus(); <strong>// NEW</strong>
+}</pre>
+
+<h3>Test context help</h3>
+
+<p>Context-sensitive help should now be configured for the Message view. To test it, run your application again,
+select the view titled &quot;<strong>Message</strong>&quot; and choose &quot;<strong>Help &gt; Dynamic Help</strong>&quot; from the main menu. When you do this,
+you should see the following:</p>
+
+<p class = "figure"><img border="0" src="images/context.png" width="600" height="400"></p>
+
+<h3>Setting Help Preferences</h3>
+
+<p>Any eclipse based product has the option to customize the default preferences of the plug-ins it ships with.
+This is no different for your RCP application. To customize the help system settings you will first need to create
+a &quot;<strong>plugin_customization.ini</strong>&quot; file and reference it from your product plug-in's
+&quot;<strong>plugin.xml</strong>&quot;. To setup the file, perform the following steps:</p>
+
+<ol>
+ <li>Create a new file called &quot;<strong>plugin_customization.ini</strong>&quot; in the root of
+ the &quot;<strong>org.eclipse.helprcp</strong>&quot; project. Leave it empty for now.</li>
+ <li>Open the &quot;<strong>Plug-in Manifest Editor</strong>&quot; for the
+ &quot;<strong>org.eclipse.helprcp.content</strong>&quot; plug-in.</li>
+ <li>Switch to the &quot;<strong>Extensions</strong>&quot; tab and expand the
+ &quot;<strong>org.eclipse.core.runtime.products</strong>&quot; node.</li>
+ <li>Right click on &quot;<strong>Help RCP Application (product)</strong>&quot; and select
+ &quot;<strong>New &gt; property</strong>&quot; from the context menu.</li>
+ <li>Enter &quot;<strong>preferenceCustomization</strong>&quot; in the &quot;<strong>name</strong>&quot;
+ field and &quot;<strong>plugin_customization.ini</strong>&quot; in the &quot;<strong>value</strong>&quot; field.</li>
+ <li>Select &quot;<strong>File &gt; Save</strong>&quot; from the main menu.</li>
+</ol>
+
+<p>Once the file is configured for the product, you can place name/value pairs as specified in the following
+help document to customize the help system:</p>
+
+<p><a href="http://help.eclipse.org/help33/topic/org.eclipse.platform.doc.isv/guide/ua_help_setup_preferences.htm">
+http://help.eclipse.org/help33/topic/org.eclipse.platform.doc.isv/guide/ua_help_setup_preferences.htm</a></p>
+
+<p>The most common usage of this functionality is to control the order in which contributed parts of the table of contents are
+ displayed for your product
+or to hide parts of the table of contents that some of your plug-ins contribute. Both of these can be done with the
+&quot;<strong>HELP_DATA</strong>&quot; property. This property references a plug-in relative path to an xml file that
+contains the toc ordering and hiding information. For instance, if you created
+&quot;<strong>helpData.xml</strong>&quot; in the root of your product plug-in you would put a line reading
+&quot;<strong>org.eclipse.help/HELP_DATA=helpData.xml</strong>&quot; in your &quot;<strong>plugin_customization.ini</strong>&quot; file.
+Here is a small sample of the xml file format:</p>
+
+<pre>&lt;extensions&gt;
+ &lt;tocOrder&gt;
+  &lt;toc id="/org.eclipse.helprcp.content/testToc.xml"/&gt;
+  &lt;toc id="/org.eclipse.other.content/toc.xml"/&gt;
+ &lt;/tocOrder&gt;
+ &lt;hidden&gt;
+  &lt;toc id="/org.eclipse.third.content/toc.xml"/&gt;
+ &lt;/hidden&gt;
+&lt;/extensions&gt;</pre>
+
+<p>This sample would display your table of contents from the &quot;<strong>org.eclipse.helprcp.content</strong>&quot;
+plug-in first followed by the referenced book from the &quot;<strong>org.eclipse.other.content</strong>&quot; plug-in.
+It would also hide the contents of the toc referenced from the &quot;<strong>org.eclipse.third.content</strong>&quot;
+plug-in. Note that the &quot;<strong>org.eclipse.other.content</strong>&quot; and &quot;<strong>org.eclipse.third.content</strong>&quot;
+plug-ins do not exist and are simply used as an example. For more information on the format of the xml file, see it's schema
+from the help documentation:</p>
+
+<p><a href="http://help.eclipse.org/help33/topic/org.eclipse.platform.doc.isv/guide/ua_help_setup_help_data.htm">
+http://help.eclipse.org/help33/topic/org.eclipse.platform.doc.isv/guide/ua_help_setup_help_data.htm</a></p>
+
+</body>
+</html>
