@@ -46,5 +46,5 @@
 	<title>Eclipse Corner Article</title>
 </head>
 <body onLoad="window.print();">
-	<?php include "$file" ?>	
+	<?php readfile("$root/$file"); ?>	
 </body>

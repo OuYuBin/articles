@@ -62,7 +62,7 @@
  	<? } ?>
 	<br/>
 	<div class="article">
-		<?php include "$file" ?>		
+		<?php readfile("$root/$file"); ?>		
 	</div>
 
 <?php
