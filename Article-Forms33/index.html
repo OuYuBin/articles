@@ -1,0 +1,317 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Eclipse Forms: New in 3.3</title>
+<meta http-equiv="Content-Type"
+	content="text/html; charset=windows-1252">
+<link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<h1>Eclipse Forms: New in 3.3</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>In this article, the new features added to Eclipse Forms in version 3.3 are
+discussed. Readers are expected to be familiar with Eclipse Forms and its concepts.
+If that is not the case, a good starting point would be the article,
+<a href="http://www.eclipse.org/articles/Article-Forms/article.html">
+Eclipse Forms: Rich UI for Rich Client Applications</a>. Another valuable resource is
+the <a href="http://help.eclipse.org/help33/topic/org.eclipse.platform.doc.isv/guide/forms.htm">
+online documentation</a>.</p>
+<div class="author">By Adam Archer, IBM Canada Ltd.</div>
+<div class="copyright">Copyright &copy; 2007 IBM Canada Ltd.</div>
+<div class="date">November 5, 2007</div>
+</div>
+
+<div class="content">
+<h2>Introduction</h2>
+<p>As the clients of forms grew in numbers, so too did the complexity of their
+implementations. Developers are using forms to represent more complex resources
+and perform more in depth task than ever before. This requires a much higher level
+of interaction and more control over the layout and functionality of forms. One
+area that was lacking in previous versions was the variety of ways a developer could
+customize and make use of the form heading.</p>
+
+<p>For this reason, the majority of the new features provided in 3.3 are related to forms headings.
+Clients of forms now have many more options at their disposal regarding what they
+can do with their headings. In addition, there have been some improvements to sections
+and some useful new APIs have been added.</p>
+
+<h2>Setup</h2>
+<p>Throughout this article code examples will be given to be added to an Eclipse view.
+To prepare for the remainder of the article, you can setup a plug-in project as follows:</p>
+
+<ol>
+ <li>Open Eclipse 3.3 or later in a fresh workspace and close the welcome</li>
+ <li>Select <strong>File > New > Project... > Plug-in Project</strong></li>
+ <li>Give the project a name and click <strong>Next</strong> twice</li>
+ <li>Select <strong>Plug-in with a view</strong> and click <strong>Finish</strong></li>
+ <li>In the plug-in manifest editor, add a dependency to <code>org.eclipse.ui.forms</code></li>
+ <li>Open the class defining the view and overwrite its code as follows:</li>
+</ol>
+
+<pre>	public class SampleView extends ViewPart {
+		private FormToolkit toolkit;
+		private Form form;
+
+		/**
+		 * The constructor.
+		 */
+		public SampleView() {
+		}
+
+		/**
+		 * This is a callback that will allow us to create the viewer and
+		 * initialize it.
+		 */
+		public void createPartControl(Composite parent) {
+			toolkit = new FormToolkit(parent.getDisplay());
+			form = toolkit.createForm(parent);
+			form.setText("Hello, Eclipse Forms");
+		}
+
+		/**
+		 * Passing the focus request to the form.
+		 */
+		public void setFocus() {
+			form.setFocus();
+		}
+
+		/**
+		 * Disposes the toolkit
+		 */
+		public void dispose() {
+			toolkit.dispose();
+			super.dispose();
+		}
+	}</pre>
+
+<p>To test your view perform the following steps:</p>
+
+<ol>
+ <li>Switch to the overview page of the plug-in manifest editor for your project</li>
+ <li>Click the <strong>Launch an Eclipse application</strong> link</li>
+ <li>When the new instance of Eclipse appears, select <strong>Window > Show View > Other... > Sample Category > Sample View</strong></li>
+</ol>
+
+<p>The view should look something like this:</p>
+
+<p><img src="images/form-start.png"/><br/><strong>Figure 1</strong>:
+A basic form in a view</p>
+
+<h2>Form Heading Improvements</h2>
+<p>As mentioned above, form headings have become much more powerful in 3.3. This
+portion of the article outlines all the new features and options that are available.</p>
+
+<h3>Title Rendering</h3>
+<p>By default, forms headings are rendered with the same background colour as the form, as seen in Figure 1.
+This does not make them stand out as a distinct area of the form and is also generally not very attractive.
+Previous to 3.3, two mutually exclusive alternatives were available to customize the background. Clients could either
+specify a background image to be tiled across the entire heading or an array of colours to generate a gradient
+background. The difficulty with this approach is that designers need to take into account the different
+platforms and system settings that may be present in a user's environment. The design must be appealing under all configurations.
+Since Eclipse supports so many different platforms, this was no easy task.</p>
+
+<p>In 3.3, forms provides a simple mechanism to delegate painting a gradient on the heading to the FormToolkit. The toolkit
+provides a colour combination designed to work well under all supported configurations. Clients can access the colours directly
+through the following constants:</p>
+
+<ul>
+ <li>H_GRADIENT_START</li>
+ <li>H_GRADIENT_END</li>
+ <li>H_BOTTOM_KEYLINE1</li>
+ <li>H_BOTTOM_KEYLINE2</li>
+</ul>
+
+<p>Although the colours are available as constants, you can have forms paint your heading with this configuration by modifying
+your form code as follows:</p>
+
+<pre>	public void createPartControl(Composite parent) {
+		toolkit = new FormToolkit(parent.getDisplay());
+		form = toolkit.createForm(parent);
+		form.setText("Hello, Eclipse Forms");
+		toolkit.decorateFormHeading(form);	<strong>// NEW LINE</strong>
+	}</pre>
+
+<p>Using the code above, the form will appear as follows:</p>
+
+<p><img src="images/form-decorated.PNG"/><br/><strong>Figure 2</strong>: A basic form with a decorated heading</p>
+
+<h3>Toolbar Layout Changes</h3>
+
+<p>As developers started using forms to achieve more and more complex goals, the variety of content placed in the head
+client grew exponentially. Previous to 3.3 the head client on the <code>FormHeading</code> was added to the same row as the title.
+This approach severely limited the space that developers had to work with and limited the usefulness of the feature.</p>
+
+<p>In 3.3 the head client has been moved to the second row of
+the heading. The toolbar, by default will remain on the first row with the title, although the option is available to move it
+to the second row using the following line of code: <code>form.setToolBarVerticalAlignment(SWT.BOTTOM);</code></p>
+
+<p>To see the effects for yourself you can add a simple head client and toolbar by modifying your code as follows:</p>
+
+<pre>	public void createPartControl(Composite parent) {
+		toolkit = new FormToolkit(parent.getDisplay());
+		form = toolkit.createForm(parent);
+		form.setText("Hello, Eclipse Forms");
+		toolkit.decorateFormHeading(form);
+		form.setHeadClient(toolkit.createButton(form.getHead(), "This is the head client", SWT.PUSH));	<strong>// NEW LINE</strong>
+		form.getToolBarManager().add(new Action("This is the toolbar") { });	<strong>// NEW LINE</strong>
+		form.getToolBarManager().update(true);	<strong>// NEW LINE</strong>
+		form.setToolBarVerticalAlignment(SWT.BOTTOM); <strong>// NEW LINE</strong>
+	}</pre>
+
+<p>With this code the form will appear as follows:</p>
+
+<p><img src="images/form-toolbar1.png"/><br/><strong>Figure 3</strong>: A form with a head client and the toolbar aligned to the bottom</p>
+
+<p>If the last line from the sample above is commented out, then the default alignment will be used for the toolbar and the form
+will render like this:</p>
+
+<p><img src="images/form-toolbar2.png"/><br/><strong>Figure 4</strong>: A form with a head client and default toolbar alignment</p>
+
+<h3>Message Handling</h3>
+
+<p>One very important aspect of rich user interface design is ensuring that when a user makes a mistake, they are notified immediately
+and assisted in correcting it. In large, complex forms it may be difficult to determine what is wrong without obvious
+visual cues.</p>
+
+<p>For this reason, in 3.3 the error message handling framework has been improved. Messages of types defined in
+<code>org.eclipse.jface.dialogs.IMessageProvider</code> will now be represented with text between the title and the toolbar
+on the form heading (or in place of the toolbar if it is not used). In addition to displaying a textual representation of the message,
+an appropriate image will be displayed in the header in place of the form's image until the message is resolved.</p>
+
+<p>By default, the message will be displayed as static text, but an <code>IHyperlinkListener</code> can be added to the form to
+turn the message into a hyperlink that will inform the listener of any clicks.</p>
+
+<p>Here is a code sample demonstrating how to add a message to your form and register a hyperlink listener:</p>
+
+<pre>		toolkit.decorateFormHeading(form);
+		form.setHeadClient(toolkit.createButton(form.getHead(), "This is the head client", SWT.PUSH));
+		form.getToolBarManager().add(new Action("This is the toolbar") { });
+		form.getToolBarManager().update(true);
+		form.addMessageHyperlinkListener(new HyperlinkAdapter());	<strong>// NEW LINE</strong>
+		form.setMessage("This is an error message", IMessageProvider.ERROR);	<strong>// NEW LINE</strong></pre>
+
+<p>With these changes, the form will appear as follows:</p>
+
+<p><img src="images/form-message.png"/><br/><strong>Figure 5</strong>: A form with an error message and a message hyperlink listener</p>
+
+<h3>Drop-Down Menus</h3>
+
+<p>With the development of more complicated forms comes a wider variety of interactions that may be required. To help developers make
+useful functions quickly accessible, a new menu manager is now available. It can be retrieved and used to populate a menu which
+will be rendered next to the form's title when it is not empty.</p>
+
+<p>Below is a code snippet demonstrating how to add a menu to your form heading (note that the changes from the message handling section
+have been removed):</p>
+
+<pre>		toolkit.decorateFormHeading(form);
+		form.setHeadClient(toolkit.createButton(form.getHead(), "This is the head client", SWT.PUSH));
+		form.getToolBarManager().add(new Action("This is the toolbar") { });
+		form.getToolBarManager().update(true);
+		form.getMenuManager().add(new Action("This is the menu") { });	<strong>// NEW LINE</strong></pre>
+
+<p>When the menu button is clicked, the menu will appear at the cursor as shown below:</p>
+
+<p><img src="images/form-menu.png"/><br/><strong>Figure 6</strong>: A form with a menu</p>
+
+<p>The menu can also be accessed by right-clicking on the title or title image.</p>
+
+<h3>Drag and Drop Support</h3>
+
+<p>In some cases, forms represent objects that have meaning to other workbench components. For instance, you could have a form based
+editor that allows you to edit the contents of a proprietary file type that will be referenced elsewhere. In 3.3, API has been created
+to add drag and drop support to your forms. This support allows you to drag your forms so they can be dropped into other areas. With
+this feature you would be able to, for instance, drag your form into other files to quickly and easily create references to the associated
+object. This saves the user from having to remember a URL or browse back to the item from a different editor.</p>
+
+<p>Due to the complex nature of SWT's drag and drop functionality, a programmatic example will not be given here. The methods that can
+be used to add the support to your form are <code>Form.addTitleDragSupport(int operations, Transfer[] transferTypes, DragSourceListener listener)</code>
+and <code>Form.addTitleDropSupport(int operations, Transfer[] transferTypes, DropTargetListener listener)</code>. For more information
+on using these methods, see the
+<a href="http://help.eclipse.org/help33/index.jsp?topic=/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/forms/widgets/Form.html">Form class javadoc</a> or the
+<a href="http://www.eclipse.org/articles/Article-SWT-DND/DND-in-SWT.html">Adding Drag and Drop to an SWT Application</a> article from
+<a href="http://www.eclipse.org/articles">Eclipse Corner</a>.</p>
+
+<p>Once drag support has been properly added to the form, the title will change colours as the cursor nears and enters the draggable area.
+This effect is shown below.</p>
+
+<p><img src="images/form-drag1.png"/><br/><strong>Figure 7</strong>: A draggable form with the cursor near the title</p>
+
+<p><img src="images/form-drag2.png"/><br/><strong>Figure 8</strong>: A draggable form with the cursor over the title</p>
+
+<h2>Section Improvements</h2>
+
+<p>Sections have become the fundamental building blocks of most forms created today. A common approach to form design is to have several columns
+of adjacent sections. However, when sections are given text clients that are taller than their title text, the title area grows accordingly to accommodate the client.
+Unfortunately, this means that adjacent sections with similar content will not line up properly and may look sloppy.</p>
+
+<p>In 3.3, new API has been added to <code>ExpandableComposite</code> to allow designers to account for this limitation. There is a method,
+<code>ExpandableComposite.getTextClientHeightDifference()</code> that will return the number of pixels the title area was increased
+by to accommodate the text client. This can be used to set the <code>ExpandableComposite.descriptionVerticalSpacing</code> field (default is 0)
+or the <code>ExpandableComposite.clientVerticalSpacing</code> field (default is 3). These fields specify the padding to place above the
+description and the client area respectively. Note that if there is no description, then the <code>descriptionVerticalSpacing</code>
+field will have no affect.</p>
+
+<p>Here is a code snippet from the <code>org.eclipse.ui.forms.examples.internal.rcp.SecondPage</code> class from the
+<code>org.eclipse.ui.forms.examples</code> plug-in that demonstrates usage of this feature:</p>
+
+<pre>		Section s1 = createTableSection(form, toolkit, "First Table Section", true);
+		Section s2 = createTableSection(form, toolkit, "Second Table Section", false);
+		s2.descriptionVerticalSpacing = s1.getTextClientHeightDifference();</pre>
+
+<p>Below is a pair of images to demonstrate the different this makes. These screenshots were both created using the Form Examples plug-in:</p>
+
+<p><img src="images/section-aligned.png"/><br/><strong>Figure 9</strong>: A pair of sections aligned using <code>getTextClientHeightDifference()</code></p>
+
+<p><img src="images/section-unaligned.png"/><br/><strong>Figure 10</strong>: A pair of sections without custom alignment</p>
+
+<h2>Shared-Header Form Editor</h2>
+
+<p>The <code>org.eclipse.ui.forms.editor.FormEditor</code> class provides a starting point for creating multi-page editors with form pages.
+One common use case of this class is to use form pages that all have the same titles, head clients and toolbar items. To achieve this
+prior to 3.3, implementers had to have all of their child pages create the headers in the same way. This not only meant
+that there was a lot of overhead and code duplication involved in achieving a consistent look, but also that the editor was using
+system resources excessively to create copies of all the same controls.</p>
+
+<p>In 3.3 the <code>org.eclipse.ui.forms.editor.SharedHeaderFormEditor</code> class has been added to allow the header area to be shared
+among all the pages. In order to implement this properly, subclasses must override the <code>createHeaderContents(IManagedForm headerForm)</code>
+class to populate the header. In addition, any header controls that require life cycle management should be wrapped with the
+<code>IFormPart</code> interface. Also, child pages of the <code>SharedHeaderFormEditor</code> should not have their own header or else
+two headers will be displayed.</p>
+
+<h2>Message Manager</h2>
+
+<p>As discussed above, support has been added to show messages in the form heading. To make the handling of multiple messages within
+a form easier, a message manager has been made available in 3.3 through the <code>IManagedForm</code> interface. The manager is provided
+as an interface (<code>IMessageManager</code>).</p>
+
+<p>The message manager will track multiple messages for the user at a time and will show text-based on the most severe message present
+at any given time (<code>ERROR</code> &gt; <code>WARNING</code> &gt; <code>INFO</code>). It also provides the ability, when adding a
+message, to associate a control with it. If this is done, the message manager will decorate the specified control with an image appropriate
+to the message type.</p>
+
+<p>If the message label in the form heading is configured to be a hyperlink (as discussed earlier in this article), the <code>href</code>
+attribute of the <code>HyperlinkEvent</code> will be an array of <code>IMessage</code> objects. This array is used internally by the message
+manager to create a tooltip for the hyperlink. It is also available for clients to do whatever they like with the information once the
+link is clicked.</p>
+
+<p>The advantages of this API are, first, that it inherently allows many messages to be retained on a form at once
+and, second, that it hides the details of how control decoration is performed.</p>
+
+<p>A good example implementation of this API is in the <code>org.eclipse.ui.forms.examples.internal.rcp.ErrorMessagesPage</code>
+class from the <code>org.eclipse.ui.forms.examples</code> plug-in. Below are two screenshots of the implementation:</p>
+
+<p><img src="images/msgman-tooltip.png"/><br/><strong>Figure 11</strong>: An example implementation of the message manager showing its tooltip</p>
+
+<p><img src="images/msgman-widget.png"/><br/><strong>Figure 12</strong>: An example of what can be done with a HyperlinkListener using the message manager</p>
+
+<h2>Conclusion</h2>
+
+<p>This article has outlined the new features added to Eclipse Forms in version 3.3. Its goal was to pick up where the previous
+<a href="http://www.eclipse.org/articles/Article-Forms/article.html">forms article</a> left off and to help clients of the plug-in
+make better use of the tools at their disposal to increase the quality of the Rich UIs. Feedback can be sent to
+<a href="http://dev.eclipse.org/mailman/listinfo/platform-ua-dev">platform-ua-dev@eclipse.org</a>.
+
+</body>
+</html>
