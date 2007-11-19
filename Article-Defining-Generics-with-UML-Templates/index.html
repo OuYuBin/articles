@@ -11,12 +11,20 @@
 <h1>Defining Generics with UML Templates</h1>
 <div class="summary">
 <h2>Summary</h2>
-<p>    Generics in Java have been around for a while but support for mapping generically specified artifacts in UML to their Ecore representation is new to UML2 2.1.  This article will walk the reader through the details of the mapping process with the end goal of producing generically specified code. This article assumes some level of familiarity with generics and is not intended as a tutorial in Java generics. 
-</p><p>
-    This article might also be useful to readers who are only interested in how generics can be specified with UML.  In such cases, the reader can simply ignore the Ecore mapping and focus on the UML and Java representations.
-</p>
-<div class="author">By James Bruck, IBM]</div>
-<div class="copyright">Copyright © 2007 International Business Machines Corp.</div>
+<p>Generics in Java have been around for a while but support for
+mapping generically specified artifacts in UML to their Ecore
+representation is new to UML2 2.1. This article will walk the reader
+through the details of the mapping process with the end goal of
+producing generically specified code. This article assumes some level of
+familiarity with generics and is not intended as a tutorial in Java
+generics.</p>
+<p>This article might also be useful to readers who are only
+interested in how generics can be specified with UML. In such cases, the
+reader can simply ignore the Ecore mapping and focus on the UML and Java
+representations.</p>
+<div class="author">By James Bruck, IBM</div>
+<div class="copyright">Copyright &copy; 2007 International
+Business Machines Corp.</div>
 <div class="date">November 19, 2007</div>
 </div>
 
@@ -27,113 +35,206 @@
 A few terms and abbreviations will be used throughout this document.
 
 <h2>UML specification</h2>
-	
 
-<p>UML2 2.1. This refers to the latest version of the UML API which is based on the UML 2.1.1 specification defined by OMG.
 
-The latest draft of the UML Superstructure Specification can be found at: <a href="http://www.omg.org/docs/formal/07-02-05.pdf">http://www.omg.org/docs/formal/07-02-05.pdf</a></p>
+<p>UML2 2.1. This refers to the latest version of the UML API which
+is based on the UML 2.1.1 specification defined by OMG. The latest draft
+of the UML Superstructure Specification can be found at: <a
+	href="http://www.omg.org/docs/formal/07-02-05.pdf">http://www.omg.org/docs/formal/07-02-05.pdf</a></p>
 
- 
+
 <h1>Introduction</h1>
-<p>
-There are two main benefits in familiarizing yourself with UML templates: firstly, you can express and communicate your ideas more accurately, and secondly, code generated via conversion through Ecore will result in generically specified Java.  Through a series of examples, this article attempts to explain how templates in UML map to generics in Ecore and Java. 
-</p><p>
-Some concepts involving generics in UML do not map directly to Java (or Ecore).   In general, UML is more verbose and requires a modeler to create more constructs to convey ideas that would otherwise be more simply described in Java (or Ecore).
-</p><p>
-Consider template bindings for example: template bindings are constructs that do not explicitly exist in Java (or Ecore).   The template binding concept in UML can be considered to be a “merging” of templateable items into the bound item where actual parameters are substituted for formal parameters.  More about this in the section entitled “Some UML Basics”.
-</p><p>
-Concrete classifiers that result from applying template bindings to a templated classifier can also be considered an “artificial” construct required by UML.  Such additional classifiers are not needed when describing generics in Java (or Ecore).  The examples listed later in this document will explain these ideas in detail.
-</p>
- 
+<p>There are two main benefits in familiarizing yourself with UML
+templates: firstly, you can express and communicate your ideas more
+accurately, and secondly, code generated via conversion through Ecore
+will result in generically specified Java. Through a series of examples,
+this article attempts to explain how templates in UML map to generics in
+Ecore and Java.</p>
+<p>Some concepts involving generics in UML do not map directly to
+Java (or Ecore). In general, UML is more verbose and requires a modeler
+to create more constructs to convey ideas that would otherwise be more
+simply described in Java (or Ecore).</p>
+<p>Consider template bindings for example: template bindings are
+constructs that do not explicitly exist in Java (or Ecore). The template
+binding concept in UML can be considered to be a &quot;merging&quot; of
+templateable items into the bound item where actual parameters are
+substituted for formal parameters. More about this in the section
+entitled &quot;<a
+	href="../Article-Defining-Generics-with-UML-Templates/article.html#_Some_UML_Basics">Some
+UML Basics</a>&quot;.</p>
+<p>Concrete classifiers that result from applying template bindings
+to a templated classifier can also be considered an
+&quot;artificial&quot; construct required by UML. Such additional
+classifiers are not needed when describing generics in Java (or Ecore).
+The examples listed later in this document will explain these ideas in
+detail.</p>
+
 <h1>Enhanced Ecore Profile</h1>
-<p>
-The mapping from UML to Ecore as implemented in the UML2 2.1 API is intended to be a lossless conversion.  Round tripping from UML to Ecore and back again should produce the original UML model.  To achieve this lossless conversion, concepts present in Ecore, but not in UML have been added to an enhanced Ecore profile.   The information added to stereotyped items will be reapplied when converting back.
-</p><p>
-What UML does not capture that Ecore does:
-</p><ul>
-<li>Multiple bounds on ETypeParameters.  The &lt;&lt;eTypeParameter&gt;&gt; stereotype has been created for this purpose.</li>
+<p>The mapping from UML to Ecore as implemented in the UML2 2.1 API
+is intended to be a lossless conversion. Round tripping from UML to
+Ecore and back again should produce the original UML model. To achieve
+this lossless conversion, concepts present in Ecore, but not in UML have
+been added to an enhanced Ecore profile. The information added to
+stereotyped items will be reapplied when converting back.</p>
+<p>What UML does not capture that Ecore does:</p>
+<ul>
+	<li>Multiple bounds on <span class="code-inline">ETypeParameter</span>s. The
+	&lt;&lt;<span class="code-inline">eTypeParameter</span>&gt;&gt; stereotype has been created for this
+	purpose.</li>
 
-<li>Upper and lower bounds on EGenericTypes. (It should be pointed out that it is possible to specify a single bound on type parameters in UML via the ClassifierTemplateParameter::constrainingClassifier property but this is currently a scalar value).  The &lt;&lt;eGenericType&gt;&gt; stereotype has been created for this purpose.</li>
+	<li>Upper and lower bounds on <span class="code-inline">EGenericType</span>s. (It should be pointed
+	out that it is possible to specify a single bound on type parameters in
+	UML via the ClassifierTemplateParameter::constrainingClassifier
+	property but this is currently a scalar value). The
+	&lt;&lt;<span class="code-inline">EGenericType</span>&gt;&gt; stereotype has been created for this
+	purpose.</li>
 
-<li>UML requires “additional” classifiers to specify bound generic types.  These need to be marked in order to remove them when converting from UML to Ecore.  The &lt;&lt;eGenericType&gt;&gt; stereotype is used as a marker so that conversion from UML to Ecore will result in dropping elements with such stereotypes.</li>
+	<li>UML requires &quot;additional&quot; classifiers to specify
+	bound generic types. These need to be marked in order to remove them
+	when converting from UML to Ecore. The &lt;&lt;<span class="code-inline">eGenericType</span>&gt;&gt;
+	stereotype is used as a marker so that conversion from UML to Ecore
+	will result in dropping elements with such stereotypes.</li>
 </ul>
-<p>The subset of newly added stereotypes to the Ecore profile is shown in the following diagram:</p>
+<p>The subset of newly added stereotypes to the Ecore profile is
+shown in the following diagram:</p>
 
 <div class="figure"><img src="images/image001.png"/></div>
 
-<p>While we are on the topic of differences between Ecore and UML we should mention that UML has some ‘quirkiness’ in the area of templates.  In the current version of the UML specification, UML has multiple actual parameters per formal parameter.   It is unclear how multiple parameters could be substituted for one formal parameter.  The conversion process therefore considers only one actual per formal parameter.  An issue for this has been raised at OMG and should be resolved by the next revision of the UML specification.</p>
+<p>While we are on the topic of differences between Ecore and UML we
+should mention that UML has some 'quirkiness' in the area of templates.
+In the current version of the UML specification, UML has multiple actual
+parameters per formal parameter. It is unclear how multiple parameters
+could be substituted for one formal parameter. The conversion process
+therefore considers only one actual per formal parameter. An <a
+	href="http://www.omg.org/issues/uml2-rtf.open.html#Issue9398">issue</a>
+for this has been raised at OMG and should be resolved by the next
+revision of the UML specification.</p>
 
- 
+
 <h1>Some UML Basics</h1>
 
-<p>UML allows users to model generics via templates and template bindings.   Section 17.5 of the UML superstructure specification describes all the constructs required to describe templates.</p>
+<p>UML allows users to model generics via templates and template
+bindings. Section 17.5 of the UML superstructure specification describes
+all the constructs required to describe templates.</p>
 
 <p>Quoting from the UML superstructure specification...</p>
 
-<blockquote><p>A TemplateableElement that has a template signature is a specification of a template.  A template is a parameterized element that can be used to generate other model elements using TemplateBinding relationships.   TemplateableElements can have template signatures and template bindings.  Thus a templateable element may be both a template and a bound element.    The template parameters for the template signature specify the formal parameters that will be substituted by actual parameters in a binding.
-</p><p>
-A template cannot be used in the same manner as a non-template element of the same kind.   The template element can only be used to generate bound elements or as part of the specification of another template.  A bound element is an ordinary element and can be used in the same manner as a non-bound element of the same kind.  This is an important point since it means that a template class cannot be used as the type of a typed element.
-</p><p>
-ParameterableElement is an element that can be exposed as a formal template parameter for a template or specified as an actual parameter in a binding of a template.  A ParameterableElement may be part of the definition of a template parameter.  In an element bound to the template, any use of the template parameter will be substituted by the use of the actual parameter.  If a ParameterableElement is exposed as a template parameter, then parameterable element is only meaningful within the template.
-</p><p>
-A TemplateBinding represents a relationship between a templateable element and a template.   A template binding specifies the substitutions of actual parameters for the formal parameters of the template.  The presence of a template binding relationship implies the same semantics as if the contents of the template owning the target template signature were copied into the bound element, substituting and elements exposed as formal template parameters by the corresponding elements specified as actual parameters in the binding.
-</p></blockquote>
-<p>The kinds of UML metatypes that can be templateable are Classifier (Class, Component etc.), Operation, Package and less commonly, Property, and StringExpression.
-</p><p>
-Neither Ecore nor Java has this template binding concept so having a firm grasp of the UML metamodel is important if you are only familiar with generics in Java.
-</p>
- 
+<div class="quote">
+<p>A TemplateableElement that has a template signature is a
+specification of a template. A template is a parameterized element that
+can be used to generate other model elements using TemplateBinding
+relationships. TemplateableElements can have template signatures and
+template bindings. Thus a templateable element may be both a template
+and a bound element. The template parameters for the template signature
+specify the formal parameters that will be substituted by actual
+parameters in a binding.</p>
+<p>A template cannot be used in the same manner as a non-template
+element of the same kind. The template element can only be used to
+generate bound elements or as part of the specification of another
+template. A bound element is an ordinary element and can be used in the
+same manner as a non-bound element of the same kind. This is an
+important point since it means that a template class cannot be used as
+the type of a typed element.</p>
+<p>ParameterableElement is an element that can be exposed as a
+formal template parameter for a template or specified as an actual
+parameter in a binding of a template. A ParameterableElement may be part
+of the definition of a template parameter. In an element bound to the
+template, any use of the template parameter will be substituted by the
+use of the actual parameter. If a ParameterableElement is exposed as a
+template parameter, then parameterable element is only meaningful within
+the template.</p>
+<p>A TemplateBinding represents a relationship between a
+templateable element and a template. A template binding specifies the
+substitutions of actual parameters for the formal parameters of the
+template. The presence of a template binding relationship implies the
+same semantics as if the contents of the template owning the target
+template signature were copied into the bound element, substituting and
+elements exposed as formal template parameters by the corresponding
+elements specified as actual parameters in the binding.</p>
+</div>
+<p>The kinds of UML metatypes that can be templateable are
+Classifier (Class, Component etc.), Operation, Package and less
+commonly, Property, and StringExpression.</p>
+<p>Neither Ecore nor Java has this template binding concept so
+having a firm grasp of the UML metamodel is important if you are only
+familiar with generics in Java.</p>
+
 <h1>The Ecore Meta-Model</h1>
 
-<p>The following diagram showing a subset of the Ecore metamodel (highlighting generics) will be used as a reference when describing the UML to Ecore mapping.  
-</p>
-<div class="figure"><img src="images/image003.png"/><br/>Figure 1: Ecore meta-model</div>
+<p>The following diagram showing a subset of the Ecore metamodel
+(highlighting generics) will be used as a reference when describing the
+UML to Ecore mapping.</p>
+<div class="figure"><img src="images/image003.png" /><br />
+Figure 1: Ecore meta-model</div>
 
-<p>With this metamodel in mind, we can mention several interesting points:</p>
+<p>With this metamodel in mind, we can mention several interesting
+points:</p>
 
 <ul>
-<li>ETypeParameter correspond roughly to TemplateParameter in UML.</li>
-<li>EGenericType has no direct mapping to UML</li>
-<li>EGenericType can be specified by setting its eClassifier or eTypeParameter property.</li>
-<li>EOperation and EClassifier can be parameterized with ETypeParameter.   Similarly, Operation and Classifier in UML can have a template signature with parameters.</li>
-<li>EClass can have eGenericSuperTypes.  That is, supertypes of some EClass can be represented by some EGenericType.</li>
-<li>ETypedElement can have some EGenericType as a type.</li>
-<li>ETypeParameter can have bounds which are of type EGenericType.</li>
+	<li><span class="code-inline">ETypeParameter</span>s correspond roughly to TemplateParameter in UML.</li>
+	<li><span class="code-inline">EGenericType</span> has no direct mapping to UML</li>
+	<li><span class="code-inline">EGenericType</span> can be specified by setting its <span class="code-inline">eClassifier</span> or
+	<span class="code-inline">eTypeParameter</span> property.</li>
+	<li><span class="code-inline">EOperation</span> and <span class="code-inline">EClassifier</span> can be parameterized with
+	<span class="code-inline">ETypeParameter</span>. Similarly, Operation and Classifier in UML can have a
+	template signature with parameters.</li>
+	<li><span class="code-inline">EClass</span> can have <span class="code-inline">eGenericSuperTypes</span>. That is, supertypes of
+	some <span class="code-inline">EClass</span> can be represented by some <span class="code-inline">EGenericType</span>.</li>
+	<li><span class="code-inline">ETypedElement</span> can have some <span class="code-inline">EGenericType</span> as a type.</li>
+	<li><span class="code-inline">ETypeParameter</span> can have bounds which are of type <span class="code-inline">EGenericType</span>.</li>
 </ul>
-<p>If you wish to follow along with the examples and experiment on your own, you should first enable the showing of generics for your Ecore model.</p>
+<p>If you wish to follow along with the examples and experiment on
+your own, you should first enable the showing of generics for your Ecore
+model.</p>
 
-<p>Showing of generics is enabled from the &quot;Sample Ecore Editor&quot; menu when the Ecore editor is being used:  From the toolbar, select &quot;Sample Ecore Editor &gt; Show Generics&quot;.</p>
-<div class="figure"><img src="images/image005.png"></div>  
+<p>Showing of generics is enabled from the &quot;Sample Ecore
+Editor&quot; menu when the Ecore editor is being used: From the toolbar,
+select &quot;Sample Ecore Editor &gt; Show Generics&quot;.</p>
+<div class="figure"><img src="images/image005.png"></div>
 
-<p>Further details on working with generics in EMF can be found at <a href="http://wiki.eclipse.org/EMF_2.3_Generics">http://wiki.eclipse.org/EMF_2.3_Generics</a>.</p>
+<p>Further details on working with generics in EMF can be found at <a
+	href="http://wiki.eclipse.org/EMF_2.3_Generics">http://wiki.eclipse.org/EMF_2.3_Generics</a>.</p>
 
- 
-Case Studies
+
+<h1>Case Studies</h1>
 
 <div class="note">
-	<table class="note-table">
+<table class="note-table">
 
-		<tbody>
-			<tr>
-				<td><img alt="[Note]" src="../images/tip.gif"></td>
-				<td>
-				<p>If you are familiar with generics in Java and you just want to discover how to create the equivalent UML representation, I would recommend starting with the Ecore representation of your generically specified model.   Then, convert your Ecore model to UML.  The resulting UML model will have expanded all bindings, and any required stereotypes will be applied.  The reason for starting with Ecore is that it is much easier to specify generics using Ecore and requires fewer constructs.</p>
-<ol>
-<li>In your development environment, ensure you have the UML examples plug-ins installed.</li>
-<li>Create an Ecore model using generics in Ecore.  The resulting Ecore model should closely match the Java representation.</li>
-<li>From the sample Ecore editor, select the root package of your Ecore model.</li>
-<li>From the toolbar select &quot;Sample Ecore Editor &gt; Convert to UML Model...&quot;</li></td>
-			</tr>
+	<tbody>
+		<tr>
+			<td><img alt="[Note]" src="../images/tip.gif"></td>
+			<td>
+			<p>If you are familiar with generics in Java and you just want to
+			discover how to create the equivalent UML representation, I would
+			recommend starting with the Ecore representation of your generically
+			specified model. Then, convert your Ecore model to UML. The resulting
+			UML model will have expanded all bindings, and any required
+			stereotypes will be applied. The reason for starting with Ecore is
+			that it is much easier to specify generics using Ecore and requires
+			fewer constructs.</p>
+			<ol>
+				<li>In your development environment, ensure you have the UML
+				examples plug-ins installed.</li>
+				<li>Create an Ecore model using generics in Ecore. The
+				resulting Ecore model should closely match the Java representation.</li>
+				<li>From the sample Ecore editor, select the root package of
+				your Ecore model.</li>
+				<li>From the toolbar select &quot;Sample Ecore Editor &gt;
+				Convert to UML Model...&quot;</li>
+			</td>
+		</tr>
 
-		</tbody>
-	</table>
-	</div>
- 
+	</tbody>
+</table>
+</div>
 
- 
+
+
 <h2>Baby steps: Simple type parameter</h2>
 
-<p>Consider a simple case where we define a generic class with one property of some generic type.</p>
+<p>Consider a simple case where we define a generic class with one
+property of some generic type.</p>
 <h3>Visually</h3>
 <div class="figure"><img src="images/image007.png"></div>
 <h3>Java</h3>
@@ -151,37 +252,57 @@ Case Studies
 
 <p>The Ecore representation would look like the following:</p>
 <table>
-<tbody>
-<tr>
-<td><img src="images/image009.png"/></td>
-<td><ol>	
-<li>We create a simple EClass with an ETypeParameter E.</li>
-<li>We create an EReference whose type is an EGenericType with eTypeParameter set to E.</li>
-</ol>
-</td></tr></tbody></table> 
+	<tbody>
+		<tr>
+			<td><img src="images/image009.png" /></td>
+			<td>
+			<ol>
+				<li>We create a simple <span class="code-inline">EClass</span> with an <span class="code-inline">ETypeParameter</span> E.</li>
+				<li>We create an EReference whose type is an <span class="code-inline">EGenericType</span> with
+				<span class="code-inline">eTypeParameter</span> set to E.</li>
+			</ol>
+			</td>
+		</tr>
+	</tbody>
+</table>
 <h3>UML</h3>
 
-<p>As you can see, the UML representation is more verbose than the Ecore representation.</p>
+<p>As you can see, the UML representation is more verbose than the
+Ecore representation.</p>
 
 <ul>
-<li>The UML representation creates a template by constructing a template signature owned by MyClass.</li> 
-<li>The signature in this case has one template parameter E. </li>
-<li>The template parameter directly owns another class E and uses that class as its parametered element. </li>
+	<li>The UML representation creates a template by constructing a
+	template signature owned by <span class="code-inline">MyClass</span>.</li>
+	<li>The signature in this case has one template parameter E.</li>
+	<li>The template parameter directly owns another class E and uses
+	that class as its parametered element.</li>
 </ul>
-    
-<div class="figure"><img src="images/image011.gif"/></div> 
 
-<p>The class E is the parametered element that will be the focus of bindings when we replace formal parameters with actual parameters.    We can say that the template parameter ‘exposes’ the parametered element (E in this case) as a formal parameter.</p> 
+<div class="figure"><img src="images/image011.gif" /></div>
 
-<p>You may have also noticed the &lt;&lt;eTypeParameter&gt;&gt; stereotype.  The &lt;&lt;eTypeParameter&gt;&gt; stereotype contributes the concept of “bounds” to UML template parameters.  In Ecore, generic bound types allow one to place constraints on the types of allowable substitutions.   For example, one could express that substitutions for the template parameter must extend some particular classifier such as MyClass&lt;? extends MyOtherClass&gt;. This will be explored more in the following examples.</p>
+<p>The class E is the parametered element that will be the focus of
+bindings when we replace formal parameters with actual parameters. We
+can say that the template parameter 'exposes' the parametered element (E
+in this case) as a formal parameter.</p>
+
+<p>You may have also noticed the &lt;&lt;<span class="code-inline">eTypeParameter</span>&gt;&gt;
+stereotype. The &lt;&lt;<span class="code-inline">eTypeParameter</span>&gt;&gt; stereotype contributes
+the concept of &quot;bounds&quot; to UML template parameters. In Ecore,
+generic bound types allow one to place constraints on the types of
+allowable substitutions. For example, one could express that
+substitutions for the template parameter must extend some particular
+classifier such as <span class="code-inline">MyClass&lt;? extends MyOtherClass&gt;</span>. This will be
+explored more in the following examples.</p>
 
 <h2>Baby steps: Creating a generic type</h2>
 
-<p>In a little more realistic example, we might have something like the following.</p>
+<p>In a little more realistic example, we might have something like
+the following.</p>
 <h3>Visually</h3>
 
-<div class="figure"><img src="images/image012.png"/>&nbsp;<img src="images/image014.png"/></div>
- 
+<div class="figure"><img src="images/image012.png" />&nbsp;<img
+	src="images/image014.png" /></div>
+
 <h3>Java</h3>
 
 <div class="code-block">1 public interface List<E> extends EObject {
@@ -194,44 +315,67 @@ Case Studies
 3   boolean hasNext();
 4 } </div>
 
- 
+
 <h3>Ecore</h3>
 
 <table>
-<tbody>
-<tr>
-<td><img src="images/image016.png"/></td>
-<td><ol>
+	<tbody>
+		<tr>
+			<td><img src="images/image016.png" /></td>
+			<td>
+			<ol>
 
- <li>We create an ETypeParameter for the EClass List</li>
-<li>We create an EOperation add() with a parameter x of EGenericType E.</li>
-  <li> 3. We create another EOperation iterator() of return type Iterator&lt;E&gt;.  Here the return type is an EGenericType whose eClassifier is set to Iterator&lt;E&gt;.  The EGenericType has an eTypeAgrument (EGenericType) whose eTypeParameter is set to E.</li>
- <li>  4. The Iterator is similarly specified.</li>
-</ol></td></tr></tbody></table>
- 
+				<li>We create an <span class="code-inline">ETypeParameter</span> for the <span class="code-inline">EClass</span> <span class="code-inline">List</span></li>
+				<li>We create an <span class="code-inline">EOperation add()</span> with a parameter x of
+				<span class="code-inline">EGenericType</span> E.</li>
+				<li>We create another <span class="code-inline">EOperation iterator()</span> of return type
+				<span class="code-inline">Iterator&lt;E&gt;</span>. Here the return type is an <span class="code-inline">EGenericType</span> whose
+				<span class="code-inline">eClassifier</span> is set to <span class="code-inline">Iterator&lt;E&gt;</span>. The <span class="code-inline">EGenericType</span> has an
+				eTypeAgrument (<span class="code-inline">EGenericType</span>) whose <span class="code-inline">eTypeParameter</span> is set to E.</li>
+				<li>The <span class="code-inline">Iterator</span> is similarly specified.</li>
+			</ol>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
 <h3>UML</h3>
 
-<p>The main elements in the UML representation are: a class called List, a class called Iterator and a newly introduced class called Iterator_E, see below.
-</p>
-<div class="figure"><img src="images/image018.gif"/></div>
-<p>You might be scratching your head about Iterator_E.    This construct is required because the class List has an operation that returns an iterator that is bound to the same element passed as an argument to “List” itself.   UML does not allow us to use templates as the type of an element, therefore we need to create a new bound class: Iterator_E.</p>
+<p>The main elements in the UML representation are: a class called
+<span class="code-inline">List</span>, a class called <span class="code-inline">Iterator</span> and a newly introduced class called
+<span class="code-inline">Iterator_E</span>, see below.</p>
+<div class="figure"><img src="images/image018.gif" /></div>
+<p>You might be scratching your head about <span class="code-inline">Iterator_E</span>. This
+construct is required because the class <span class="code-inline">List</span> has an operation that
+returns an iterator that is bound to the same element passed as an
+argument to &quot;List&quot; itself. UML does not allow us to use
+templates as the type of an element, therefore we need to create a new
+bound class: <span class="code-inline">Iterator_E</span>.</p>
 
-<p>The template parameter substitution for Iterator_E  above has the following binding:</p>
-<div class="figure"><img src="images/image019.gif"/></div>
+<p>The template parameter substitution for <span class="code-inline">Iterator_E</span> above has the
+following binding:</p>
+<div class="figure"><img src="images/image019.gif" /></div>
 
 
-<p>The formal template parameter for Iterator&lt;E&gt; is bound to the actual parameter E of List.</p>
+<p>The formal template parameter for <span class="code-inline">Iterator&lt;E&gt;</span> is bound to
+the actual parameter E of <span class="code-inline">List</span>.</p>
 
- 
+
 <h2>Basics: Binding to a generic class</h2>
 
-<p>Let’s put together some of the basic ideas we have already explored.  In this example, ArrayList&lt;E&gt; is a generic array list whose super type is the generic List&lt;E&gt;.  In UML we require the creation of the concrete type List_E with its bindings set up.  In addition, TestClass has a property which is an ArrayList of Cars.   Again, we create a new class ArrayList_Car with bindings set up to the class Car.</p>
+<p>Let's put together some of the basic ideas we have already
+explored. In this example, <span class="code-inline">ArrayList&lt;E&gt;</span> is a generic array list
+whose super type is the generic <span class="code-inline">List&lt;E&gt;</span>. In UML we require the
+creation of the concrete type <span class="code-inline">List_E</span> with its bindings set up. In
+addition, <span class="code-inline">TestClass</span> has a property which is an <span class="code-inline">ArrayList</span> of <span class="code-inline">Car</span>s. Again,
+we create a new class <span class="code-inline">ArrayList</span> with bindings set up to the class
+<span class="code-inline">Car</span>.</p>
 <h3>Visually</h3>
-<div class="figure"><img src="images/image021.png"/></div>
+<div class="figure"><img src="images/image021.png" /></div>
 
 <h3>Java</h3>
 
-<p>The TestClass class:</p>
+<p>The <span class="code-inline">TestClass</span> class:</p>
 
 <div class="code-block">1 public interface TestClass extends EObject {
 2   ArrayList<Car> getMyCars();
@@ -244,49 +388,56 @@ Case Studies
 
  
 
-<p>The ArrayList class:</p>
+<p>The <span class="code-inline">ArrayList</span> class:</p>
 
-<div class="code-block">1 public interface ArrayList<E> extends List<E> {
+<div class="code-block">1 public interface ArrayList&lt;E&gt; extends List&lt;E&gt; {
 2 } </div>
 
  
 
-<div class="code-block">1 public class ArrayListImpl<E> extends ListImpl<E> implements ArrayList<E> {
+<div class="code-block">1 public class ArrayListImpl&lt;E&gt; extends ListImpl&lt;E&gt; implements ArrayList&lt;E&gt; {
 2   protected ArrayListImpl() {
 3     super();
 4   }
 5 } </div>
 
- 
+
 <h3>Ecore</h3>
-<div class="figure">
-<img style="margin:10px" src="images/image022.png"/> 
-<img style="margin:10px" src="images/image024.png"/> 
-<img style="margin:10px" src="images/image026.png"/> 
-<img style="margin:10px" src="images/image028.png"/> 
-<img style="margin:10px" src="images/image030.png"/>
-</div>
- 
+<div class="figure"><img style="margin: 10px"
+	src="images/image022.png" /> <img style="margin: 10px"
+	src="images/image024.png" /> <img style="margin: 10px"
+	src="images/image026.png" /> <img style="margin: 10px"
+	src="images/image028.png" /> <img style="margin: 10px"
+	src="images/image030.png" /></div>
+
 <h3>UML</h3>
 
-<div class="figure">
-<img style="margin:10px" src="images/image032.png"/> 
-<img style="margin:10px" src="images/image034.png"/> 
-<img style="margin:10px" src="images/image036.png"/> 
-<img style="margin:10px" src="images/image038.png"/> 
-<img style="margin:10px" src="images/image040.png"/>
-</div>
+<div class="figure"><img style="margin: 10px"
+	src="images/image032.png" /> <img style="margin: 10px"
+	src="images/image034.png" /> <img style="margin: 10px"
+	src="images/image036.png" /> <img style="margin: 10px"
+	src="images/image038.png" /> <img style="margin: 10px"
+	src="images/image040.png" /></div>
 
-<p>ArrayList is the specialization of the concrete List_E class where the formal template parameter E of List is substituted for the actual parameterable element E of ArrayList.  These are the substitutions for the binding of List_E:</p>
-<div class="figure"><img src="images/image042.png"/></div>
-<p>The class ArrayList_Car substitutes the actual parameter Car for the exposed template parameter of E of ArrayList.  These are the substitutions for the ArrayList_Car:</p>
-<div class="figure"><img src="images/image044.png"/></div>
- 
+<p><span class="code-inline">ArrayList</span> is the specialization of the concrete <span class="code-inline">List_E</span> class
+where the formal template parameter E of <span class="code-inline">List</span> is substituted for the
+actual parameterable element E of <span class="code-inline">ArrayList</span>. These are the substitutions
+for the binding of <span class="code-inline">List_E</span>:</p>
+<div class="figure"><img src="images/image042.png" /></div>
+<p>The class <span class="code-inline">ArrayList_Car</span> substitutes the actual parameter <span class="code-inline">Car</span> for
+the exposed template parameter of E of <span class="code-inline">ArrayList</span>. These are the
+substitutions for the <span class="code-inline">ArrayList</span>:</p>
+<div class="figure"><img src="images/image044.png" /></div>
+
 <h2>Basics: Operation with Template Parameter</h2>
 
-<p>In UML, operations are templateable elements.   In this next example we will have a look at adding template parameters to an operation.  The operation will have a template parameter T, and will return elements of type T.  The operation will also have a parameter p1 of type T.</p>
+<p>In UML, operations are templateable elements. In this next
+example we will have a look at adding template parameters to an
+operation. The operation will have a template parameter T, and will
+return elements of type T. The operation will also have a parameter p1
+of type T.</p>
 <h3>Visually</h3>
-<div class="figure"><img src="images/image046.png"/></div>
+<div class="figure"><img src="images/image046.png" /></div>
 <h3>Java</h3>
 <div class="code-block">1 public interface MyClass extends EObject {
 2   &lt;T&gt; T someOperation(T p1);
@@ -298,40 +449,47 @@ Case Studies
 4   }
 5 }</div>
 
- 
+
 <h3>Ecore</h3>
 
- <table>
- <tbody>
- <tr>
- <td><img src="images/image048.png"/></td>
- <td><ol>
+<table>
+	<tbody>
+		<tr>
+			<td><img src="images/image048.png" /></td>
+			<td>
+			<ol>
+				<li><span class="code-inline">MyClass</span> has an <span
+					class="code-inline">EOperation</span> called <span
+					class="code-inline">someOperation</span>.</li>
+				<li>The EOperation someOperation has an <span class="code-inline">ETypeParameter</span> T.</li>
+				<li>The EOperation has a parameter p1 whose type is an
+				<span class="code-inline">EGenericType</span> whose <span class="code-inline">eTypeParameter</span> is T.</li>
+				<li>The EOperation has an <span class="code-inline">EGenericType</span> as its type, whose
+				<span class="code-inline">eTypeParameter</span> is T.</li>
+			</ol>
+			</td>
+		</tr>
+	</tbody>
+</table>
 
-	
 
-<li>MyClass has an EOperation called someOperation.</li>
-<li> The EOperation someOperation has an ETypeParameter T.</li>
-<li>The EOperation has a parameter p1 whose type is an EGenericType whose eTypeParameter is T.</li>
-<li>The EOperation  has an EGenericType as its type, whose eTypeParameter is T.</li>
-</ol>
-</td></tr></tbody></table>
-
- 
 <h3>UML</h3>
-<div class="figure"><img src="images/image050.png"/></div>
- 
+<div class="figure"><img src="images/image050.png" /></div>
 
- 
+
 <h2>Basics: Bound Operation Parameters</h2>
 
-<p>In this example we show an operation with two parameters that are lists of cars.  As you might have guessed, the UML version will require an extra bound class.</p>
+<p>In this example we show an operation with two parameters that are
+lists of cars. As you might have guessed, the UML version will require
+an extra bound class.</p>
+
 <h3>Visually</h3>
-<div class="figure"><img src="images/image052.png"/></div>
+<div class="figure"><img src="images/image052.png" /></div>
+
 <h3>Java</h3>
 <div class="code-block">1 public interface MyClass2 extends EObject {
 2   void op1(List<Car> p1, List<Car> p2);
 3 }</div>
- 
 
 <div class="code-block">1 public class MyClass2Impl extends EObjectImpl implements MyClass2 {
 2   public void op1(List<Car> p1, List<Car> p2) {
@@ -341,113 +499,170 @@ Case Studies
 
 <h3>Ecore</h3>
 <table>
-<tbody>
-<tr>
-<td><div class="figure"><img src="images/image054.png"/></div></td>
-<td><ol>
-	
+	<tbody>
+		<tr>
+			<td>
+			<div class="figure"><img src="images/image054.png" /></div>
+			</td>
+			<td>
+			<ol>
 
-<li>We create an operation with parameter p1.</li>
-<li>Parameter p1 has as its type an EGenericType whose eClassifier is List&lt;E&gt;.</li>
-<li>The EGenericType of p1 has a type argument (EGenericType) whose eClassifier is set to Car</li>.
-</ol></td></tr></tbody></table>
- 
+
+				<li>We create an operation with parameter p1.</li>
+				<li>Parameter p1 has as its type an <span class="code-inline">EGenericType</span> whose
+				<span class="code-inline">eClassifier</span> is <span class="code-inline">List&lt;E&gt;</span>.</li>
+				<li>The <span class="code-inline">EGenericType</span> of p1 has a type argument (<span class="code-inline">EGenericType</span>)
+				whose <span class="code-inline">eClassifier</span> is set to <span class="code-inline">Car</span></li>
+				.
+			</ol>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
 <h3>UML</h3>
-<div class="figure"><img src="images/image056.png"/></div>
-<p>The only important thing to point out here is that the bound List_Car is not duplicated in the UML representation. The bound List_Car is used in the context of MyClass2.</p>
+<div class="figure"><img src="images/image056.png" /></div>
+<p>The only important thing to point out here is that the bound
+<span class="code-inline">List_Car</span> is not duplicated in the UML representation. The bound <span class="code-inline">List_Car</span>
+is used in the context of <span class="code-inline">MyClass2</span>.</p>
 
-<h2>Advanced: Wildcards (specifying upper and lower bounds on parameters)</h2>
+<h2>Advanced: Wildcards (specifying upper and lower bounds on
+parameters)</h2>
 
-<p>It is possible to specify wildcards when using parameters in Ecore and Java.   Wildcards are represented by ?.   The ? stands for an unknown type.  It is possible to specify upper and lower bounds on such wildcards.   When we talk about bounds, we refer to the ability to specify that bindings to a generic type parameter must either be the super type of some classifier or extend some classifier.   In this way, tighter restrictions can be placed on acceptable bindings.  In addition to tightening restrictions, upper bounds (extends) are particularly useful for ensuring that substitutions will have features that are required by the template for its behavior.  For example, one might have List&lt;E extends Comparable&gt; because the list actually needs to be able to compare E’s using the Comparable::compareTo(...) operation</p>
+<p>It is possible to specify wildcards when using parameters in
+Ecore and Java. Wildcards are represented by &quot;?&quot;. The &quot;?&quot; stands for an
+unknown type. It is possible to specify upper and lower bounds on such
+wildcards. When we talk about bounds, we refer to the ability to specify
+that bindings to a generic type parameter must either be the super type
+of some classifier or extend some classifier. In this way, tighter
+restrictions can be placed on acceptable bindings. In addition to
+tightening restrictions, upper bounds (extends) are particularly useful
+for ensuring that substitutions will have features that are required by
+the template for its behavior. For example, one might have <span class="code-inline">List&lt;E
+extends Comparable&gt;</span> because the list actually needs to be able to
+compare E's using the <span class="code-inline">Comparable::compareTo(...)</span> operation</p>
+
 <h3>Visually</h3>
-<div class="figure"><img src="images/image058.png"/></div>
-<h3>Java</h3>
+<div class="figure"><img src="images/image058.png" /></div>
 
- 
+<h3>Java</h3>
 
 <div class="code-block">1 public class MyClass3Impl extends EObjectImpl implements MyClass3 {
 2   protected List&lt;? extends Car&gt; someReference;
 3   protected List&lt;? super Car&gt; anotherReference;
 4 }</div>
+
 <h3>Ecore</h3>
 <table>
-<tbody>
-<tr>
-<td><div class="figure"><img src="images/image060.png"/></div></td>
-<td><ol>
+	<tbody>
+		<tr>
+			<td>
+			<div class="figure"><img src="images/image060.png" /></div>
+			</td>
+			<td>
+			<ol>
+				<li>We create an EReference for someReference.</li>
+				<li>We create an <span class="code-inline">EGenericType</span> for the type of someReference
+				whose <span class="code-inline">eClassifier</span> is set to <span class="code-inline">List&lt;E&gt;</span></li>
+				<li>The generic type of someReference has an eTypeArgument (an
+				<span class="code-inline">EGenericType</span>) whose upper bound is set to <span class="code-inline">Car</span>.</li>
+			</ol>
+			</td>
+		</tr>
+	</tbody>
+</table>
 
-<li>We create an EReference for someReference.</li>
-<li>We create an EGenericType for the type of someReference whose eClassifier is set to List&lt;E&gt;</li>
-<li>The generic type of someReference has an eTypeArgument (an EGenericType) whose upper bound is set to Car.</li>
-</ol></td></tr></tbody></table>
- 
 <h3>UML</h3>
-<div class="figure"><img src="images/image062.png"/></div>
- 
+<div class="figure"><img src="images/image062.png" /></div>
 
-<p>If we focus on the “someReference” property, we see that we need to create a new class called “Wildcard_extends_Car”.   This particular class has its stereotype property for the upper bound set to Car:</p>
-<div class="figure"><img src="images/image064.png"/></div>
-<p>Next, we see that another new class is created in order to bind the formal parameter of the generic List to classes of Wildcard_extends_Car:</p>
-<div class="figure"><img src="images/image066.png"/></div>
- 
+<p>If we focus on the &quot;someReference&quot; property, we see
+that we need to create a new class called
+&quot;<span class="code-inline">Wildcard_extends_Car</span>&quot;. This particular class has its
+stereotype property for the upper bound set to <span class="code-inline">Car</span>:</p>
+<div class="figure"><img src="images/image064.png" /></div>
+<p>Next, we see that another new class is created in order to bind
+the formal parameter of the generic <span class="code-inline">List</span> to classes of
+<span class="code-inline">Wildcard_extends_Car</span>:</p>
+<div class="figure"><img src="images/image066.png" /></div>
+
 <h2>Advanced: Type Parameters That Extend Multiple Classifiers</h2>
 
-<p>Type parameters in Ecore can also have bounds and in such cases it is possible to specify multiple upper bounds.</p>
+<p>Type parameters in Ecore can also have bounds and in such cases
+it is possible to specify multiple upper bounds.</p>
+
 <h3>Visually</h3>
-<div class="figure"><img src="images/image068.png"/></div>
-<p>The interesting part is the bounds information stored in the stereotype (see below).</p>
+<div class="figure"><img src="images/image068.png" /></div>
+<p>The interesting part is the bounds information stored in the
+stereotype (see below).</p>
+
 <h3>Java</h3>
-
- 
-
 <div class="code-block">1 public interface MyClass4&lt;P1 extends A &amp; B&gt; extends EObject {
-2 }</div>
-
- 
+2 }</div> 
 
 <div class="code-block">1 public class MyClass4Impl&lt;P1 extends A &amp; B&gt; extends EObjectImpl implements MyClass4&lt;P1&gt; {
 2 }</div>
+
 <h3>Ecore</h3>
 <table>
-<tbody>
-<tr>
-<td><div class="figure"><img src="images/image070.png"/></div></td>
-<td><ul>
- 
-<li>MyClass4 has an ETypeParameter P1.</li>
-<li>The ETypeParameter of P1 has its eBounds set to an EGenericType whose eClassifer is A and another EGenericType whose eClassifier is set to B.</li>
-</ul></td></tr></tbody></table>
- 
+	<tbody>
+		<tr>
+			<td>
+			<div class="figure"><img src="images/image070.png" /></div>
+			</td>
+			<td>
+			<ul>
+
+				<li><span class="code-inline">MyClass4</span> has an <span class="code-inline">ETypeParameter</span> P1.</li>
+				<li>The <span class="code-inline">ETypeParameter</span> of P1 has its eBounds set to an
+				<span class="code-inline">EGenericType</span> whose eClassifer is A and another <span class="code-inline">EGenericType</span> whose
+				<span class="code-inline">eClassifier</span> is set to B.</li>
+			</ul>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
 <h3>UML</h3>
-<div class="figure"><img src="images/image072.png"/></div>
- 
+<div class="figure"><img src="images/image072.png" /></div>
+<p>For the template parameter P1 we have to specify the bounds using
+the stereotype since multiple bounds on such parameters are not possible
+using UML:</p>
+<div class="figure"><img src="images/image074.png" /></div>
 
-<p>For the template parameter P1 we have to specify the bounds using the stereotype since multiple bounds on such parameters are not possible using UML:</p>
-
-<div class="figure"><img src="images/image074.png"/></div>
-
- 
 <h1>Conclusion</h1>
 
-<p>Congratulations! You’ve made it this far, if you’ve followed through the examples, you will no doubt have discovered that the UML representation is verbose and intricate in comparison to Ecore or Java.   Hopefully, with a bit of practice, the UML representation will become second nature.   This article really only scratches the surface of the intricate possible scenarios one may create when working with generics.   By using templates in UML you can express and communicate your ideas more accurately, and code generated via conversion through Ecore will result in generically specified Java.</p>
+<p>Congratulations! You've made it this far, if you've followed
+through the examples, you will no doubt have discovered that the UML
+representation is verbose and intricate in comparison to Ecore or Java.
+Hopefully, with a bit of practice, the UML representation will become
+second nature. This article really only scratches the surface of the
+intricate possible scenarios one may create when working with generics.
+By using templates in UML you can express and communicate your ideas
+more accurately, and code generated via conversion through Ecore will
+result in generically specified Java.</p>
 
-<p>For more information on UML2, visit the <a href="http://www.eclipse.org/modeling/mdt/?project=uml2">home page</a> or join the <a href="news://news.eclipse.org/eclipse.modeling.mdt.uml2">newsgroup</a>.</p>
+<p>For more information on UML2, visit the <a
+	href="http://www.eclipse.org/modeling/mdt/?project=uml2">home page</a>
+or join the <a href="news://news.eclipse.org/eclipse.modeling.mdt.uml2">newsgroup</a>.</p>
 
- 
+
 <h1>Acknowledgements</h1>
 
-<p>Thanks to Kenn Hussey, Ed Merks and Christian Damus for their thorough and careful reviews.</p>
+<p>Thanks to Kenn Hussey, Ed Merks and Christian Damus for their
+thorough and careful reviews.</p>
 
- 
+
 <h1>References</h1>
 
- <p>[1] Unified Modeling Language: Superstructure, version 2.1.1; formal/2007-02-05. OMG.</p>
+<p>[1] Unified Modeling Language: Superstructure, version 2.1.1;
+formal/2007-02-05. OMG.</p>
 
- <p>[2] RTF Issue <a href="http://www.omg.org/issues/uml2-rtf.open.html#Issue9398">9398</a></p>
+<p>[2] RTF Issue <a
+	href="http://www.omg.org/issues/uml2-rtf.open.html#Issue9398">9398</a></p>
 
 </div>
-<div class="notices">
-Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States, other countries, or both.
-</div>
+<div class="notices">Java and all Java-based trademarks and logos
+are trademarks or registered trademarks of Sun Microsystems, Inc. in the
+United States, other countries, or both.</div>
 </body>
 </html>
