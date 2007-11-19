@@ -1,0 +1,2616 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:st1="urn:schemas-microsoft-com:office:smarttags"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List href="article_files/filelist.xml">
+<link rel=Edit-Time-Data href="article_files/editdata.mso">
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
+<title>Generics in UML</title>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="country-region"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="place"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="date"/>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>jbruck</o:Author>
+  <o:Template>Normal</o:Template>
+  <o:LastAuthor>jbruck</o:LastAuthor>
+  <o:Revision>741</o:Revision>
+  <o:TotalTime>24748</o:TotalTime>
+  <o:LastPrinted>2006-09-12T15:08:00Z</o:LastPrinted>
+  <o:Created>2004-07-06T14:17:00Z</o:Created>
+  <o:LastSaved>2007-09-18T13:14:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>2888</o:Words>
+  <o:Characters>16463</o:Characters>
+  <o:Company>IBM</o:Company>
+  <o:Lines>137</o:Lines>
+  <o:Paragraphs>38</o:Paragraphs>
+  <o:CharactersWithSpaces>19313</o:CharactersWithSpaces>
+  <o:Version>10.6830</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:ActiveWritingStyle Lang="EN-US" VendorID="64" DLLVersion="131078"
+   NLCheck="1">1</w:ActiveWritingStyle>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:Compatibility>
+   <w:ApplyBreakingRules/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]-->
+<link rel=Stylesheet type="text/css" media=all href="default_style.css">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Tms Rmn";
+	panose-1:2 2 6 3 4 5 5 2 3 4;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-format:other;
+	mso-font-pitch:variable;
+	mso-font-signature:3 0 0 0 1 0;}
+@font-face
+	{font-family:"MS Mincho";
+	panose-1:2 2 6 9 4 2 5 8 3 4;
+	mso-font-alt:"\FF2D\FF33 \660E\671D";
+	mso-font-charset:128;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
+@font-face
+	{font-family:"Arial Unicode MS";
+	panose-1:2 11 6 4 2 2 2 2 2 4;
+	mso-font-charset:128;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:-1 -369098753 63 0 4129279 0;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:1627421319 -2147483648 8 0 66047 0;}
+@font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+@font-face
+	{font-family:"\@MS Mincho";
+	panose-1:2 2 6 9 4 2 5 8 3 4;
+	mso-font-charset:128;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
+@font-face
+	{font-family:"\@Arial Unicode MS";
+	panose-1:2 11 6 4 2 2 2 2 2 4;
+	mso-font-charset:128;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:-1 -369098753 63 0 4129279 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	mso-believe-normal-left:yes;}
+h1
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:1;
+	font-size:21.0pt;
+	mso-fareast-font-family:"MS Mincho";
+	font-weight:bold;}
+h2
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-line-height-alt:10.5pt;
+	mso-pagination:widow-orphan;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	mso-fareast-font-family:"MS Mincho";
+	font-weight:bold;}
+h3
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	mso-fareast-font-family:"MS Mincho";
+	font-weight:bold;}
+h4
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	font-size:12.0pt;
+	mso-bidi-font-size:14.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:bold;}
+p.MsoCaption, li.MsoCaption, div.MsoCaption
+	{mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	font-weight:bold;}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+p.MsoDocumentMap, li.MsoDocumentMap, div.MsoDocumentMap
+	{mso-style-noshow:yes;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	background:navy;
+	font-size:12.0pt;
+	font-family:Tahoma;
+	mso-fareast-font-family:"Times New Roman";}
+p
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	mso-fareast-font-family:"Times New Roman";}
+code
+	{mso-fareast-font-family:"Times New Roman";}
+pre
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt;
+	font-size:10.0pt;
+	mso-fareast-font-family:"Times New Roman";}
+tt
+	{font-family:"Arial Unicode MS";
+	mso-ascii-font-family:"Arial Unicode MS";
+	mso-fareast-font-family:"Arial Unicode MS";
+	mso-hansi-font-family:"Arial Unicode MS";
+	mso-bidi-font-family:"Arial Unicode MS";}
+p.indextop, li.indextop, div.indextop
+	{mso-style-name:indextop;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:24.0pt;
+	mso-fareast-font-family:"Times New Roman";
+	font-weight:bold;}
+p.indexsub, li.indexsub, div.indexsub
+	{mso-style-name:indexsub;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:7.5pt;
+	mso-fareast-font-family:"Times New Roman";}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:80419148;
+	mso-list-type:hybrid;
+	mso-list-template-ids:998395232 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l0:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1
+	{mso-list-id:208495485;
+	mso-list-template-ids:-242176900;}
+@list l2
+	{mso-list-id:297878226;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1290409668 67698691 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l2:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3
+	{mso-list-id:430931506;
+	mso-list-template-ids:294030604;}
+@list l4
+	{mso-list-id:475949724;
+	mso-list-template-ids:-2070641944;}
+@list l5
+	{mso-list-id:568467414;
+	mso-list-template-ids:922619548;}
+@list l6
+	{mso-list-id:600528354;
+	mso-list-template-ids:-228821042;}
+@list l7
+	{mso-list-id:865020290;
+	mso-list-template-ids:335202748;}
+@list l8
+	{mso-list-id:985623800;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1387151514 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l8:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l8:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9
+	{mso-list-id:1184899670;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-45207776 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l9:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l9:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10
+	{mso-list-id:1224634209;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1234604792 67698691 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l10:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l10:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l10:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11
+	{mso-list-id:1356535618;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-556531444 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l11:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l11:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12
+	{mso-list-id:1490828746;
+	mso-list-type:hybrid;
+	mso-list-template-ids:2099921038 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l12:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l12:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13
+	{mso-list-id:1969629405;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1313463162 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l13:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l13:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14
+	{mso-list-id:1975402694;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1530842176 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l14:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l14:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15
+	{mso-list-id:2054108931;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1688889934 67698691 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l15:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l15:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l15:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableSimple2
+	{mso-style-name:"Table Simple 2";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableSimple2FirstRow
+	{mso-style-name:"Table Simple 2";
+	mso-table-condition:first-row;
+	mso-tstyle-border-bottom:1.5pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableSimple2LastRow
+	{mso-style-name:"Table Simple 2";
+	mso-table-condition:last-row;
+	mso-tstyle-border-top:.75pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:windowtext;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableSimple2FirstCol
+	{mso-style-name:"Table Simple 2";
+	mso-table-condition:first-column;
+	mso-tstyle-border-right:1.5pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableSimple2LastCol
+	{mso-style-name:"Table Simple 2";
+	mso-table-condition:last-column;
+	mso-tstyle-border-left:.75pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableSimple2NECell
+	{mso-style-name:"Table Simple 2";
+	mso-table-condition:ne-cell;
+	mso-tstyle-border-left:0in none windowtext;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableSimple2SWCell
+	{mso-style-name:"Table Simple 2";
+	mso-table-condition:sw-cell;
+	mso-tstyle-border-top:0in none windowtext;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableClassic1
+	{mso-style-name:"Table Classic 1";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border-top:solid black 1.5pt;
+	border-left:none;
+	border-bottom:solid black 1.5pt;
+	border-right:none;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableClassic1FirstRow
+	{mso-style-name:"Table Classic 1";
+	mso-table-condition:first-row;
+	mso-tstyle-border-bottom:.75pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-style:italic;
+	mso-bidi-font-style:italic;}
+table.MsoTableClassic1LastRow
+	{mso-style-name:"Table Classic 1";
+	mso-table-condition:last-row;
+	mso-tstyle-border-top:.75pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:windowtext;}
+table.MsoTableClassic1FirstCol
+	{mso-style-name:"Table Classic 1";
+	mso-table-condition:first-column;
+	mso-tstyle-border-right:.75pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;}
+table.MsoTableClassic1NECell
+	{mso-style-name:"Table Classic 1";
+	mso-table-condition:ne-cell;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;
+	mso-ansi-font-style:normal;
+	mso-bidi-font-style:normal;}
+table.MsoTableClassic1SWCell
+	{mso-style-name:"Table Classic 1";
+	mso-table-condition:sw-cell;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableList1
+	{mso-style-name:"Table List 1";
+	mso-tstyle-rowband-size:1;
+	mso-tstyle-colband-size:0;
+	border-top:1.5pt;
+	border-left:1.0pt;
+	border-bottom:1.5pt;
+	border-right:1.0pt;
+	border-color:teal;
+	border-style:solid;
+	mso-border-top-alt:1.5pt;
+	mso-border-left-alt:.75pt;
+	mso-border-bottom-alt:1.5pt;
+	mso-border-right-alt:.75pt;
+	mso-border-color-alt:teal;
+	mso-border-style-alt:solid;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableList1FirstRow
+	{mso-style-name:"Table List 1";
+	mso-table-condition:first-row;
+	mso-tstyle-shading:white;
+	mso-tstyle-pattern:solid silver;
+	mso-tstyle-border-bottom:.75pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:maroon;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;
+	mso-ansi-font-style:italic;
+	mso-bidi-font-style:italic;}
+table.MsoTableList1LastRow
+	{mso-style-name:"Table List 1";
+	mso-table-condition:last-row;
+	mso-tstyle-border-top:.75pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;}
+table.MsoTableList1OddRow
+	{mso-style-name:"Table List 1";
+	mso-table-condition:odd-row;
+	mso-tstyle-shading:white;
+	mso-tstyle-pattern:solid silver;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:windowtext;}
+table.MsoTableList1EvenRow
+	{mso-style-name:"Table List 1";
+	mso-table-condition:even-row;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:windowtext;}
+table.MsoTableList1SWCell
+	{mso-style-name:"Table List 1";
+	mso-table-condition:sw-cell;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableList4
+	{mso-style-name:"Table List 4";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid black 1.5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.75pt solid black;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableList4FirstRow
+	{mso-style-name:"Table List 4";
+	mso-table-condition:first-row;
+	mso-tstyle-shading:white;
+	mso-tstyle-pattern:solid gray;
+	mso-tstyle-border-bottom:1.5pt solid black;
+	mso-tstyle-diagonal-down:0in none windowtext;
+	mso-tstyle-diagonal-up:0in none windowtext;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:white;
+	mso-ansi-font-weight:bold;
+	mso-bidi-font-weight:bold;}
+table.MsoTableGrid
+	{mso-style-name:"Table Grid";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid windowtext 1.0pt;
+	mso-border-alt:solid windowtext .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid windowtext;
+	mso-border-insidev:.5pt solid windowtext;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><![if mso 9]>
+<style>
+p.MsoNormal
+	{margin-left:8.5pt;}
+</style>
+<![endif]><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="65538"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in;margin-left:
+8.5pt;margin-top:14.2pt'>
+
+<div class=Section1>
+
+<p class=MsoNormal align=right style='text-align:right'><span style='font-size:
+10.0pt'>Copyright © 2007 International Business Machines Corp.</span><span
+style='font-size:10.0pt;font-family:Arial'><o:p></o:p></span></p>
+
+<div align=right>
+
+<table class=MsoNormalTable border=0 cellspacing=0 cellpadding=0 width="100%"
+ style='width:100.0%;mso-cellspacing:0in;mso-padding-alt:1.5pt 1.5pt 1.5pt 1.5pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td valign=top style='background:#0080C0;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Arial;
+  color:white'>&nbsp;</span></b><span style='font-size:10.0pt;font-family:Arial'><o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<h1><img width=120 height=86 id="_x0000_i1025" src="../../../../images/Idea.jpg"
+align=CENTER></h1>
+
+<p>&nbsp;</p>
+
+<h1 align=center style='text-align:center'>Defining Generics with UML Templates</h1>
+
+<h1 align=center style='text-align:center'><o:p>&nbsp;</o:p></h1>
+
+<blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Arial'>Summary</span></b><span
+style='font-size:10.0pt;font-family:Arial'><br style='mso-special-character:
+line-break'>
+<![if !supportLineBreakNewLine]><br style='mso-special-character:line-break'>
+<![endif]><o:p></o:p></span></p>
+
+<p>Generics in Java have been around for a while but support for mapping
+generically specified artifacts in UML to their Ecore representation is new to
+UML2 2.1.<span style='mso-spacerun:yes'>  </span>This article will walk the
+reader through the details of the mapping process with the end goal of
+producing generically specified code. This article assumes some level of
+familiarity with generics and is not intended as a tutorial in Java
+generics.<span style='mso-spacerun:yes'>  </span></p>
+
+<p>This article might also be useful to readers who are only interested in how
+generics can be specified with UML.<span style='mso-spacerun:yes'>  </span>In
+such cases, the reader can simply ignore the Ecore mapping and focus on the UML
+and Java representations.</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial'><o:p>&nbsp;</o:p></span></p>
+
+<p><b>By James Bruck, IBM </b><br>
+<st1:date Year="2007" Day="12" Month="9">September 12, 2007</st1:date> </p>
+
+</blockquote>
+
+<div class=MsoNormal align=center style='text-align:center'><span
+style='font-size:10.0pt;font-family:Arial'>
+
+<hr size=2 width="100%" align=center>
+
+</span></div>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h2>Glossary</h2>
+
+<p>A few terms and abbreviations will be used throughout this document.</p>
+
+<table class=MsoTableList4 border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none;mso-border-alt:solid black 1.5pt;
+ mso-yfti-tbllook:160;mso-padding-alt:0in 5.4pt 0in 5.4pt;mso-border-insideh:
+ .75pt solid black'>
+ <tr style='mso-yfti-irow:-1'>
+  <td width=168 valign=top style='width:125.75pt;border:solid black 1.5pt;
+  border-right:none;background:gray;mso-shading:white;mso-pattern:solid gray;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p style='mso-yfti-cnfc:1'><b><span style='color:white'>Term<o:p></o:p></span></b></p>
+  </td>
+  <td width=684 valign=top style='width:513.0pt;border:solid black 1.5pt;
+  border-left:none;background:gray;mso-shading:white;mso-pattern:solid gray;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p style='mso-yfti-cnfc:1'><b><span style='color:white'>Definition<o:p></o:p></span></b></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=168 valign=top style='width:125.75pt;border-top:none;border-left:
+  solid black 1.5pt;border-bottom:solid black 1.5pt;border-right:none;
+  mso-border-top-alt:solid black .75pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p><b style='mso-bidi-font-weight:normal'>UML specification<o:p></o:p></b></p>
+  </td>
+  <td width=684 valign=top style='width:513.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.5pt;border-right:solid black 1.5pt;
+  mso-border-top-alt:solid black .75pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p>UML2 2.1. This refers to the latest version of the UML API which is based
+  on the UML 2.1.1 specification defined by OMG</p>
+  <p>The latest draft of the UML Superstructure Specification can be found at: <a
+  href="http://www.omg.org/docs/formal/07-02-05.pdf">http://www.omg.org/docs/formal/07-02-05.pdf</a></p>
+  <p><o:p>&nbsp;</o:p></p>
+  </td>
+ </tr>
+</table>
+
+<h2>Introduction</h2>
+
+<p>There are two main benefits in familiarizing yourself with UML templates: firstly,
+you can express and communicate your ideas more accurately, and secondly, code
+generated via conversion through Ecore will result in generically specified
+Java.<span style='mso-spacerun:yes'>  </span>Through a series of examples, this
+article attempts to explain how templates in UML map to generics in Ecore and
+Java.<span style='mso-spacerun:yes'>  </span></p>
+
+<p>Some concepts involving generics in UML do not map directly to Java (or
+Ecore).<span style='mso-spacerun:yes'>   </span>In general, UML is more verbose
+and requires a modeler to create more constructs to convey ideas that would
+otherwise be more simply described in Java (or Ecore).</p>
+
+<p>Consider template bindings for example: template bindings are constructs
+that do not explicitly exist in Java (or Ecore).<span
+style='mso-spacerun:yes'>   </span>The template binding concept in UML can be
+considered to be a “merging” of <span class=SpellE>templateable</span> items
+into the bound item where actual parameters are substituted for formal
+parameters.<span style='mso-spacerun:yes'>  </span>More about this in the
+section entitled “<a href="#_Some_UML_Basics">Some UML Basics</a>”.</p>
+
+<p>Concrete classifiers that result from applying template bindings to a <span
+class=SpellE>templated</span> classifier can also be considered an “artificial”
+construct required by UML.<span style='mso-spacerun:yes'>  </span>Such
+additional classifiers are not needed when describing generics in Java (or
+Ecore).<span style='mso-spacerun:yes'>  </span>The examples listed later in
+this document will explain these ideas in detail.</p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h2>Enhanced Ecore Profile</h2>
+
+<p>The mapping from UML to Ecore as implemented in the UML2 2.1 API is intended
+to be a lossless conversion.<span style='mso-spacerun:yes'>  </span>Round
+tripping from UML to Ecore and back again should produce the original UML
+model.<span style='mso-spacerun:yes'>  </span>To achieve this lossless
+conversion, concepts present in Ecore, but not in UML have been added to an
+enhanced Ecore profile.<span style='mso-spacerun:yes'>   </span>The information
+added to stereotyped items will be reapplied when converting back.</p>
+
+<p>What UML does not capture that Ecore does:</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l10 level1 lfo2;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]>Multiple
+bounds on <span class=SpellE>ETypeParameters</span>.<span
+style='mso-spacerun:yes'>  </span>The &lt;&lt;<span class=SpellE>eTypeParameter</span>&gt;&gt;
+stereotype has been created for this purpose.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l10 level1 lfo2;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]>Upper
+and lower bounds on <span class=SpellE>EGenericTypes</span>. (It should be
+pointed out that it is possible to specify a single bound on type parameters in
+UML via the <span class=SpellE>ClassifierTemplateParameter::constrainingClassifier</span>
+property but this is currently a scalar value).<span style='mso-spacerun:yes'> 
+</span>The &lt;&lt;<span class=SpellE>eGenericType</span>&gt;&gt; stereotype
+has been created for this purpose.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l10 level1 lfo2;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]>UML
+requires “additional” classifiers to specify bound generic types.<span
+style='mso-spacerun:yes'>  </span>These need to be marked in order to remove
+them when converting from UML to Ecore.<span style='mso-spacerun:yes'> 
+</span>The &lt;&lt;<span class=SpellE>eGenericType</span>&gt;&gt; stereotype is
+used as a marker so that conversion from UML to Ecore will result in dropping
+elements with such stereotypes.</p>
+
+<p>The subset of newly added stereotypes to the Ecore profile is shown in the
+following diagram:</p>
+
+<p><!--[if gte vml 1]><v:shapetype id="_x0000_t75" coordsize="21600,21600"
+ o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe" filled="f"
+ stroked="f">
+ <v:stroke joinstyle="miter"/>
+ <v:formulas>
+  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+  <v:f eqn="sum @0 1 0"/>
+  <v:f eqn="sum 0 0 @1"/>
+  <v:f eqn="prod @2 1 2"/>
+  <v:f eqn="prod @3 21600 pixelWidth"/>
+  <v:f eqn="prod @3 21600 pixelHeight"/>
+  <v:f eqn="sum @0 0 1"/>
+  <v:f eqn="prod @6 1 2"/>
+  <v:f eqn="prod @7 21600 pixelWidth"/>
+  <v:f eqn="sum @8 21600 0"/>
+  <v:f eqn="prod @7 21600 pixelHeight"/>
+  <v:f eqn="sum @10 21600 0"/>
+ </v:formulas>
+ <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+ <o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype><v:shape id="_x0000_i1027" type="#_x0000_t75" style='width:573.75pt;
+ height:230.25pt'>
+ <v:imagedata src="article_files/image001.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=765 height=307
+src="article_files/image002.jpg" v:shapes="_x0000_i1027"><![endif]></p>
+
+<p>While we are on the topic of differences between Ecore and UML we should
+mention that UML has some ‘quirkiness’ in the area of templates.<span
+style='mso-spacerun:yes'>  </span>In the current version of the UML
+specification, UML has multiple actual parameters per formal parameter.<span
+style='mso-spacerun:yes'>   </span>It is unclear how multiple parameters could
+be substituted for one formal parameter.<span style='mso-spacerun:yes'> 
+</span>The conversion process therefore considers only one actual per formal
+parameter.<span style='mso-spacerun:yes'>  </span>An <a
+href="http://www.omg.org/issues/uml2-rtf.open.html#Issue9398">issue</a> for
+this has been raised at OMG and should be resolved by the next revision of the
+UML specification.</p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h2><a name="_Some_UML_Basics"></a>Some UML Basics</h2>
+
+<p>UML allows users to model generics via templates and template bindings.<span
+style='mso-spacerun:yes'>   </span>Section 17.5 of the UML superstructure specification
+describes all the constructs required to describe templates.</p>
+
+<p>Quoting from the UML superstructure specification…</p>
+
+<p><i style='mso-bidi-font-style:normal'>A <span class=SpellE>TemplateableElement</span>
+that has a template signature is a specification of a template.<span
+style='mso-spacerun:yes'>  </span>A template is a parameterized element that can
+be used to generate other model elements using <span class=SpellE>TemplateBinding</span>
+relationships.<span style='mso-spacerun:yes'>   </span><span class=SpellE>TemplateableElements</span>
+can have template signatures and template bindings.<span
+style='mso-spacerun:yes'>  </span>Thus a <span class=SpellE>templateable</span>
+element may be both a template and a bound element.<span
+style='mso-spacerun:yes'>    </span>The template parameters for the template
+signature specify the formal parameters that will be substituted by actual
+parameters in a binding.<o:p></o:p></i></p>
+
+<p><i style='mso-bidi-font-style:normal'>A template cannot be used in the same
+manner as a non-template element of the same kind.<span
+style='mso-spacerun:yes'>   </span>The template element can only be used to
+generate bound elements or as part of the specification of another
+template.<span style='mso-spacerun:yes'>  </span>A bound element is an ordinary
+element and can be used in the same manner as a non-bound element of the same
+kind.<span style='mso-spacerun:yes'>  </span></i>This is an important point
+since it means that a template class cannot be used as the type of a typed
+element.</p>
+
+<p><span class=SpellE><i style='mso-bidi-font-style:normal'>ParameterableElement</i></span><i
+style='mso-bidi-font-style:normal'> is an element that can be exposed as a
+formal template parameter for a template or specified as an actual parameter in
+a binding of a template.<span style='mso-spacerun:yes'>  </span>A <span
+class=SpellE>ParameterableElement</span> may be part of the definition of a
+template parameter.<span style='mso-spacerun:yes'>  </span>In an element bound
+to the template, any use of the template parameter will be substituted by the
+use of the actual parameter.<span style='mso-spacerun:yes'>  </span>If a <span
+class=SpellE>ParameterableElement</span> is exposed as a template parameter,
+then <span class=SpellE>parameterable</span> element is only meaningful within
+the template.<o:p></o:p></i></p>
+
+<p><i style='mso-bidi-font-style:normal'>A <span class=SpellE>TemplateBinding</span>
+represents a relationship between a <span class=SpellE>templateable</span>
+element and a template.<span style='mso-spacerun:yes'>   </span>A template
+binding specifies the substitutions of actual parameters for the formal
+parameters of the template.<span style='mso-spacerun:yes'>  </span>The presence
+of a template binding relationship implies the same semantics as if the
+contents of the template owning the target template signature were copied into
+the bound element, substituting and elements exposed as formal template
+parameters by the corresponding elements specified as actual parameters in the
+binding.<o:p></o:p></i></p>
+
+<p>The kinds of UML metatypes that can be <span class=SpellE>templateable</span>
+are Classifier (Class, Component etc.), Operation, Package and less commonly,
+Property, and <span class=SpellE>StringExpression</span>.</p>
+
+<p>Neither Ecore nor Java has this template binding concept so having a firm
+grasp of the UML metamodel is important if you are only familiar with generics
+in Java.</p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h2>The Ecore Meta-Model</h2>
+
+<p>The following diagram showing a subset of the Ecore metamodel (highlighting
+generics) will be used as a reference when describing the UML to Ecore
+mapping.<span style='mso-spacerun:yes'>   </span></p>
+
+<h2 style='margin-left:8.5pt;page-break-after:avoid'><span style='font-size:
+10.0pt;mso-bidi-font-size:18.0pt;font-family:"Tms Rmn"'><!--[if gte vml 1]><v:shape
+ id="_x0000_i1028" type="#_x0000_t75" style='width:420.75pt;height:411pt'>
+ <v:imagedata src="article_files/image003.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=561 height=548
+src="article_files/image004.jpg" v:shapes="_x0000_i1028"><![endif]></span></h2>
+
+<p class=MsoCaption>Figure <!--[if supportFields]><span style='mso-element:
+field-begin'></span><span style='mso-spacerun:yes'> </span>SEQ Figure \* ARABIC
+<span style='mso-element:field-separator'></span><![endif]--><span
+style='mso-no-proof:yes'>1</span><!--[if supportFields]><span style='mso-element:
+field-end'></span><![endif]-->: Ecore meta-model</p>
+
+<p>With this metamodel in mind, we can mention several interesting points:</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l2 level1 lfo4;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+class=SpellE>ETypeParameter</span> correspond roughly to <span class=SpellE>TemplateParameter</span>
+in UML.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l2 level1 lfo4;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+class=SpellE>EGenericType</span> has no direct mapping to UML</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l2 level1 lfo4;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+class=SpellE>EGenericType</span> can be specified by setting its <span
+class=SpellE>eClassifier</span> or <span class=SpellE>eTypeParameter</span>
+property.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l2 level1 lfo4;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+class=SpellE>EOperation</span> and <span class=SpellE>EClassifier</span> can be
+parameterized with <span class=SpellE>ETypeParameter</span>.<span
+style='mso-spacerun:yes'>   </span>Similarly, Operation and Classifier in UML
+can have a template signature with parameters.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l2 level1 lfo4;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+class=SpellE>EClass</span> can have <span class=SpellE>eGenericSuperTypes</span>.<span
+style='mso-spacerun:yes'>  </span>That is, <span class=SpellE>supertypes</span>
+of some <span class=SpellE>EClass</span> can be represented by some <span
+class=SpellE>EGenericType</span>.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l2 level1 lfo4;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+class=SpellE>ETypedElement</span> can have some <span class=SpellE>EGenericType</span>
+as a type.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l2 level1 lfo4;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+class=SpellE>ETypeParameter</span> can have bounds which are of type <span
+class=SpellE>EGenericType</span>.</p>
+
+<p>If you wish to follow along with the examples and experiment on your own,
+you should first enable the showing of generics for your Ecore model.</p>
+
+<p>Showing of generics is enabled from the “Sample Ecore Editor” menu when the
+Ecore editor is being used:<span style='mso-spacerun:yes'>  </span>From the
+toolbar, select “<b style='mso-bidi-font-weight:normal'>Sample Ecore Editor
+&gt; Show Generics</b>”.</p>
+
+<p><span style='mso-tab-count:1'>         </span><!--[if gte vml 1]><v:shape
+ id="_x0000_i1029" type="#_x0000_t75" style='width:110.25pt;height:114pt'>
+ <v:imagedata src="article_files/image005.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=147 height=152
+src="article_files/image006.jpg" v:shapes="_x0000_i1029"><![endif]></p>
+
+<p>Further details on working with generics in EMF can be found at <a
+href="http://wiki.eclipse.org/EMF_2.3_Generics">http://wiki.eclipse.org/EMF_2.3_Generics</a>.</p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h2>Case Studies</h2>
+
+<p><img border=0 width=63 height=14 id="_x0000_i1030"
+src="../../../../images/tip.gif"><span style='mso-spacerun:yes'> </span>If you
+are familiar with generics in Java and you just want to discover how to create
+the equivalent UML representation, I would recommend starting with the Ecore
+representation of your generically specified model.<span
+style='mso-spacerun:yes'>   </span>Then, convert your Ecore model to UML.<span
+style='mso-spacerun:yes'>  </span>The resulting UML model will have expanded
+all bindings, and any required stereotypes will be applied.<span
+style='mso-spacerun:yes'>  </span>The reason for starting with Ecore is that it
+is much easier to specify generics using Ecore and requires fewer constructs.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l12 level1 lfo6;
+tab-stops:list .5in'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial'><span style='mso-list:Ignore'>1.<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><![endif]>In your development environment, ensure you have
+the UML examples plug-ins installed.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l12 level1 lfo6;
+tab-stops:list .5in'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial'><span style='mso-list:Ignore'>2.<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><![endif]>Create an Ecore model using generics in
+Ecore.<span style='mso-spacerun:yes'>  </span>The resulting Ecore model should
+closely match the Java representation.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l12 level1 lfo6;
+tab-stops:list .5in'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial'><span style='mso-list:Ignore'>3.<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><![endif]>From the sample Ecore editor, select the root
+package of your Ecore model.</p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l12 level1 lfo6;
+tab-stops:list .5in'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial'><span style='mso-list:Ignore'>4.<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><![endif]>From the toolbar select “<b style='mso-bidi-font-weight:
+normal'>Sample Ecore Editor &gt; Convert to UML Model …”</b></p>
+
+<p><span style='mso-spacerun:yes'>  </span></p>
+
+<div style='border:none;border-bottom:solid windowtext 1.5pt;padding:0in 0in 1.0pt 0in'>
+
+<h3 style='border:none;mso-border-bottom-alt:solid windowtext 1.5pt;padding:
+0in;mso-padding-alt:0in 0in 1.0pt 0in'>Baby steps: Simple type parameter</h3>
+
+</div>
+
+<p>Consider a simple case where we define a generic class with one property of
+some generic type.</p>
+
+<h4>Visually</h4>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1031" type="#_x0000_t75" style='width:132.75pt;
+ height:60pt'>
+ <v:imagedata src="article_files/image007.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=177 height=80
+src="article_files/image008.jpg" v:shapes="_x0000_i1031"><![endif]></p>
+
+<h4>Java</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>MyClass</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObject</span></span><span
+  style='color:black'>&nbsp;{</span></code><span style='font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  style='color:black'>E&nbsp;<span class=SpellE>getMyProperty</span>();</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>void&nbsp;</span></b><span class=SpellE><span
+  style='color:black'>setMyProperty</span></span><span style='color:black'>(E&nbsp;value);</span></code><br>
+  <code><span style='color:gray'>4</span>&nbsp;<span style='color:black'>}</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=598 valign=top style='width:448.8pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><code><span style='font-size:10.0pt;color:gray'>1</span></code><code><span
+  style='font-size:10.0pt'>&nbsp;<b><span style='color:#7F0055'>public&nbsp;class&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>MyClassImpl</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObjectImpl</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>implements&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>MyClass</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;{</span></span></code><span
+  style='font-size:10.0pt;font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>protected&nbsp;</span></b><span style='color:black'>E&nbsp;<span
+  class=SpellE>myProperty</span>;</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:black'>}</span></code></span>
+  </p>
+  </td>
+<!-- end source code -->
+ </tr>
+</table>
+
+<h4>Ecore</h4>
+
+<p>The Ecore representation would look like the following:</p>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none;mso-border-alt:solid windowtext .5pt;
+ mso-yfti-tbllook:480;mso-padding-alt:0in 5.4pt 0in 5.4pt;mso-border-insideh:
+ .5pt solid windowtext;mso-border-insidev:.5pt solid windowtext'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=216 valign=top style='width:162.1pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1032" type="#_x0000_t75"
+   style='width:138pt;height:80.25pt;mso-position-horizontal:left;
+   mso-position-horizontal-relative:text;mso-position-vertical:top;
+   mso-position-vertical-relative:line' o:allowoverlap="f">
+   <v:imagedata src="article_files/image009.png" o:title=""/>
+  </v:shape><![endif]--><![if !vml]><img border=0 width=184 height=107
+  src="article_files/image010.jpg" v:shapes="_x0000_i1032"><![endif]></p>
+  </td>
+  <td width=612 style='width:459.0pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <ol style='margin-top:0in' start=1 type=1>
+   <li class=MsoNormal style='mso-list:l11 level1 lfo9;tab-stops:list .5in'>We
+       create a simple <span class=SpellE>EClass</span> with an <span
+       class=SpellE>ETypeParameter</span> <i style='mso-bidi-font-style:normal'>E</i>.</li>
+   <li class=MsoNormal style='mso-list:l11 level1 lfo9;tab-stops:list .5in'>We
+       create an <span class=SpellE>EReference</span> whose type is an <span
+       class=SpellE>EGenericType</span> with <span class=SpellE>eTypeParameter</span>
+       set to <i style='mso-bidi-font-style:normal'>E</i>.</li>
+  </ol>
+  <p class=MsoNormal style='margin-left:.25in'><o:p>&nbsp;</o:p></p>
+  </td>
+ </tr>
+</table>
+
+<h4>UML</h4>
+
+<p>As you can see, the UML representation is more verbose than the Ecore
+representation. </p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l15 level1 lfo11;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]>The
+UML representation creates a template by constructing a template signature
+owned by <span class=SpellE><i style='mso-bidi-font-style:normal'>MyClass</i></span>.<span
+style='mso-spacerun:yes'>  </span></p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l15 level1 lfo11;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]>The
+signature in this case has one template parameter <i style='mso-bidi-font-style:
+normal'>E</i>.<span style='mso-spacerun:yes'>  </span></p>
+
+<p style='margin-left:.5in;text-indent:-.25in;mso-list:l15 level1 lfo11;
+tab-stops:list .5in'><![if !supportLists]><span style='font-family:"Courier New";
+mso-fareast-font-family:"Courier New"'><span style='mso-list:Ignore'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]>The
+template parameter directly owns another class <i style='mso-bidi-font-style:
+normal'>E</i> and uses that class as its <span class=SpellE>parametered</span>
+element.<span style='mso-spacerun:yes'>  </span></p>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1033" type="#_x0000_t75" style='width:294.75pt;
+ height:90.75pt'>
+ <v:imagedata src="article_files/image011.gif" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=393 height=121
+src="article_files/image011.gif" v:shapes="_x0000_i1033"><![endif]><span
+style='mso-spacerun:yes'>      </span></p>
+
+<p>The class <i style='mso-bidi-font-style:normal'>E</i> is the <span
+class=SpellE>parametered</span> element that will be the focus of bindings when
+we replace formal parameters with actual parameters.<span
+style='mso-spacerun:yes'>    </span>We can say that the template parameter
+‘exposes’ the <span class=SpellE>parametered</span> element (<i
+style='mso-bidi-font-style:normal'>E</i> in this case) as a formal
+parameter.<span style='mso-spacerun:yes'>  </span></p>
+
+<p>You may have also noticed the &lt;&lt;<span class=SpellE><i
+style='mso-bidi-font-style:normal'>eTypeParameter</i></span>&gt;&gt;
+stereotype.<span style='mso-spacerun:yes'>  </span>The &lt;&lt;<span
+class=SpellE><i style='mso-bidi-font-style:normal'>eTypeParameter</i></span>&gt;&gt;
+stereotype contributes the concept of “bounds” to UML template parameters.<span
+style='mso-spacerun:yes'>  </span>In Ecore, generic bound types allow one to
+place constraints on the types of allowable substitutions.<span
+style='mso-spacerun:yes'>   </span>For example, one could express that
+substitutions for the template parameter must extend some particular classifier
+such as <span class=SpellE><i style='mso-bidi-font-style:normal'>MyClass</i></span><i
+style='mso-bidi-font-style:normal'>&lt;? <span class=GramE>extends</span> <span
+class=SpellE>MyOtherClass</span>&gt;.</i><span style='mso-spacerun:yes'>  
+</span>This will be explored more in the following examples.</p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<div style='border:none;border-bottom:solid windowtext 1.5pt;padding:0in 0in 1.0pt 0in'>
+
+<h3 style='border:none;mso-border-bottom-alt:solid windowtext 1.5pt;padding:
+0in;mso-padding-alt:0in 0in 1.0pt 0in'>Baby steps: Creating a generic type</h3>
+
+</div>
+
+<p>In a little more realistic example, we might have something like the
+following.</p>
+
+<h4>Visually</h4>
+
+<p><span style='mso-bidi-font-size:14.0pt'><!--[if gte vml 1]><v:shape id="_x0000_i1034"
+ type="#_x0000_t75" style='width:279pt;height:88.5pt'>
+ <v:imagedata src="article_files/image012.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=372 height=118
+src="article_files/image013.jpg" v:shapes="_x0000_i1034"><![endif]></span><span
+style='mso-spacerun:yes'>  </span><span style='mso-bidi-font-size:14.0pt'><!--[if gte vml 1]><v:shape
+ id="_x0000_i1035" type="#_x0000_t75" style='width:255.75pt;height:93pt'>
+ <v:imagedata src="article_files/image014.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=341 height=124
+src="article_files/image015.jpg" v:shapes="_x0000_i1035"><![endif]></span></p>
+
+<h4><span lang=FR style='mso-ansi-language:FR'>Java<o:p></o:p></span></h4>
+
+<p class=MsoNormal><span lang=FR style='mso-ansi-language:FR'><o:p>&nbsp;</o:p></span></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><code><span style='font-size:10.0pt;color:gray'>1</span></code><code><span
+  style='font-size:10.0pt'>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  style='color:black'>List&lt;E&gt;&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObject</span></span><span
+  style='color:black'>&nbsp;{</span></span></code><span style='font-size:10.0pt;
+  font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>void&nbsp;</span></b><span style='color:black'>add(E&nbsp;x);</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  class=SpellE><span style='color:black'>Iterator</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;<span class=SpellE>iterator</span>();</span></code><br>
+  <code><span style='color:gray'>4</span>&nbsp;<span style='color:black'>}&nbsp;</span></code></span>
+  </p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><code><span style='font-size:10.0pt;color:gray'>1</span></code><code><span
+  style='font-size:10.0pt'>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>Iterator</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObject</span></span><span
+  style='color:black'>&nbsp;{</span></span></code><span style='font-size:10.0pt;
+  font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  style='color:black'>E&nbsp;next();</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  class=SpellE><b><span style='color:#7F0055'>boolean</span></b></span><b><span
+  style='color:#7F0055'>&nbsp;</span></b><span class=SpellE><span
+  style='color:black'>hasNext</span></span><span style='color:black'>();</span></code><br>
+  <code><span style='color:gray'>4</span>&nbsp;<span style='color:black'>}&nbsp;</span></code></span>
+  </p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h4>Ecore</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none;mso-border-alt:solid windowtext .5pt;
+ mso-yfti-tbllook:480;mso-padding-alt:0in 5.4pt 0in 5.4pt;mso-border-insideh:
+ .5pt solid windowtext;mso-border-insidev:.5pt solid windowtext'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=216 valign=top style='width:162.1pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1036" type="#_x0000_t75"
+   style='width:139.5pt;height:182.25pt'>
+   <v:imagedata src="article_files/image016.png" o:title=""/>
+  </v:shape><![endif]--><![if !vml]><img border=0 width=186 height=243
+  src="article_files/image017.jpg" v:shapes="_x0000_i1036"><![endif]></p>
+  </td>
+  <td width=612 style='width:459.0pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <ol style='margin-top:0in' start=1 type=1>
+   <li class=MsoNormal style='mso-list:l14 level1 lfo14;tab-stops:list .5in'>We
+       create an <span class=SpellE>ETypeParameter</span> for the <span
+       class=SpellE>EClass</span> <i style='mso-bidi-font-style:normal'>List</i></li>
+   <li class=MsoNormal style='mso-list:l14 level1 lfo14;tab-stops:list .5in'>We
+       create an <span class=SpellE>EOperation</span> <span class=GramE><i
+       style='mso-bidi-font-style:normal'>add(</i></span><i style='mso-bidi-font-style:
+       normal'>)</i> with a parameter <i style='mso-bidi-font-style:normal'>x</i>
+       of <span class=SpellE>EGenericType</span> <i style='mso-bidi-font-style:
+       normal'>E</i>.</li>
+   <li class=MsoNormal style='mso-list:l14 level1 lfo14;tab-stops:list .5in'>We
+       create another <span class=SpellE>EOperation</span> <span class=SpellE><span
+       class=GramE><i style='mso-bidi-font-style:normal'>iterator</i></span></span><span
+       class=GramE><i style='mso-bidi-font-style:normal'>(</i></span><i
+       style='mso-bidi-font-style:normal'>) </i>of return type <span
+       class=SpellE><i style='mso-bidi-font-style:normal'>Iterator</i></span><i
+       style='mso-bidi-font-style:normal'>&lt;E&gt;.<span
+       style='mso-spacerun:yes'>  </span></i>Here the return type is an <span
+       class=SpellE>EGenericType</span> whose <span class=SpellE>eClassifier</span>
+       is set to <span class=SpellE><i style='mso-bidi-font-style:normal'>Iterator</i></span><i
+       style='mso-bidi-font-style:normal'>&lt;E&gt;.</i><span
+       style='mso-spacerun:yes'>  </span>The <span class=SpellE>EGenericType</span>
+       has an <span class=SpellE>eTypeAgrument</span> (<span class=SpellE>EGenericType</span>)
+       whose <span class=SpellE>eTypeParameter</span> is set to <i
+       style='mso-bidi-font-style:normal'>E</i>.</li>
+   <li class=MsoNormal style='mso-list:l14 level1 lfo14;tab-stops:list .5in'>The
+       <span class=SpellE><i style='mso-bidi-font-style:normal'>Iterator</i></span>
+       is similarly specified.</li>
+  </ol>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h4>UML</h4>
+
+<p>The main elements in the UML representation are: a class called <i
+style='mso-bidi-font-style:normal'>List</i>, a class called <span class=SpellE><i
+style='mso-bidi-font-style:normal'>Iterator</i></span> and a newly introduced
+class called <span class=SpellE><i style='mso-bidi-font-style:normal'>Iterator_E</i></span>,
+see below.</p>
+
+<h4><!--[if gte vml 1]><v:shape id="_x0000_i1037" type="#_x0000_t75" style='width:297pt;
+ height:267.75pt'>
+ <v:imagedata src="article_files/image018.gif" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=396 height=357
+src="article_files/image018.gif" v:shapes="_x0000_i1037"><![endif]></h4>
+
+<p>You might be scratching your head about <span class=SpellE><i
+style='mso-bidi-font-style:normal'>Iterator_E</i></span>.<span
+style='mso-spacerun:yes'>    </span>This construct is required because the
+class <i style='mso-bidi-font-style:normal'>List</i> has an operation that
+returns an <span class=SpellE>iterator</span> that is bound to the same element
+passed as an argument to “List” itself.<span style='mso-spacerun:yes'>  
+</span>UML does not allow us to use templates as the type of an <span
+class=GramE>element,</span> therefore we need to create a new bound class: <span
+class=SpellE><i style='mso-bidi-font-style:normal'>Iterator_E</i></span>.</p>
+
+<p>The template parameter substitution for <span class=SpellE><i
+style='mso-bidi-font-style:normal'>Iterator_<span class=GramE>E</span></i></span><span
+class=GramE><span style='mso-spacerun:yes'>  </span>above</span> has the
+following binding:</p>
+
+<p><span style='mso-spacerun:yes'> </span><!--[if gte vml 1]><v:shape id="_x0000_i1038"
+ type="#_x0000_t75" style='width:288.75pt;height:24.75pt'>
+ <v:imagedata src="article_files/image019.gif" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=385 height=33
+src="article_files/image019.gif" v:shapes="_x0000_i1038"><![endif]>.<span
+style='mso-spacerun:yes'>  </span></p>
+
+<p>The formal template parameter for <span class=SpellE><i style='mso-bidi-font-style:
+normal'>Iterator</i></span><i style='mso-bidi-font-style:normal'>&lt;E&gt;</i> is
+bound to the actual parameter <i style='mso-bidi-font-style:normal'>E</i> of <i
+style='mso-bidi-font-style:normal'>List</i>.</p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<div style='border:none;border-bottom:solid windowtext 1.5pt;padding:0in 0in 1.0pt 0in'>
+
+<h3 style='border:none;mso-border-bottom-alt:solid windowtext 1.5pt;padding:
+0in;mso-padding-alt:0in 0in 1.0pt 0in'>Basics: Binding to a generic class</h3>
+
+</div>
+
+<p>Let’s put together some of the basic ideas we have already explored.<span
+style='mso-spacerun:yes'>  </span>In this example, <span class=SpellE><i
+style='mso-bidi-font-style:normal'>ArrayList</i></span><i style='mso-bidi-font-style:
+normal'>&lt;E&gt;</i> is a generic array list whose super type is the generic <i
+style='mso-bidi-font-style:normal'>List&lt;E&gt;.</i><span
+style='mso-spacerun:yes'>  </span>In UML we require the creation of the
+concrete type <span class=SpellE><i style='mso-bidi-font-style:normal'>List_E</i></span>
+with its bindings set up.<span style='mso-spacerun:yes'>  </span>In addition, <span
+class=SpellE><i style='mso-bidi-font-style:normal'>TestClass</i></span> has a
+property which is an <span class=SpellE><i style='mso-bidi-font-style:normal'>ArrayList</i></span>
+of Cars.<span style='mso-spacerun:yes'>   </span>Again, we create a new class <span
+class=SpellE><i style='mso-bidi-font-style:normal'>ArrayList</i>_<i
+style='mso-bidi-font-style:normal'>Car</i></span> with bindings set up to the
+class <i style='mso-bidi-font-style:normal'>Car</i>.</p>
+
+<h4>Visually</h4>
+
+<h4><span style='font-weight:normal'><!--[if gte vml 1]><v:shape id="_x0000_i1039"
+ type="#_x0000_t75" style='width:740.25pt;height:221.25pt'>
+ <v:imagedata src="article_files/image020.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=987 height=295
+src="article_files/image021.jpg" v:shapes="_x0000_i1039"><![endif]></span></h4>
+
+<h4>Java</h4>
+
+<p>The <span class=SpellE><i style='mso-bidi-font-style:normal'>TestClass</i></span>
+class:</p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><code><span style='font-size:10.0pt;color:gray'>1</span></code><code><span
+  style='font-size:10.0pt'>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>TestClass</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObject</span></span><span
+  style='color:black'>&nbsp;{</span></span></code><span style='font-size:10.0pt;
+  font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  class=SpellE><span style='color:black'>ArrayList</span></span><span
+  style='color:black'>&lt;Car&gt;&nbsp;<span class=SpellE>getMyCars</span>();</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:black'>}&nbsp;</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;class&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>TestClassImpl</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObjectImpl</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>implements&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>TestClass</span></span><span
+  style='color:black'>&nbsp;{</span></code><span style='font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>protected&nbsp;</span></b><span class=SpellE><span
+  style='color:black'>ArrayList</span></span><span style='color:black'>&lt;Car&gt;&nbsp;<span
+  class=SpellE>myCars</span>;</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:black'>}</span></code></span>
+  </p>
+  </td>
+<!-- end source code -->
+ </tr>
+<!-- start Java2Html link -->
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<p>The <span class=SpellE><i style='mso-bidi-font-style:normal'>ArrayList</i></span>
+class:</p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>ArrayList</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  style='color:black'>List&lt;E&gt;&nbsp;{</span></code><span style='font-family:
+  "Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:black'>}&nbsp;</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;class&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>ArrayListImpl</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>ListImpl</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;</span><b><span style='color:#7F0055'>implements&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>ArrayList</span></span><span
+  style='color:black'>&lt;E&gt;&nbsp;{</span></code><span style='font-family:
+  "Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>protected&nbsp;</span></b><span class=SpellE><span
+  style='color:black'>ArrayListImpl</span></span><span style='color:black'>()&nbsp;{</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>super</span></b><span style='color:black'>();</span></code><br>
+  <code><span style='color:gray'>4</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  style='color:black'>}</span></code><br>
+  <code><span style='color:gray'>5</span>&nbsp;<span style='color:black'>}&nbsp;</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h4>Ecore</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1040" type="#_x0000_t75"
+ style='width:137.25pt;height:101.25pt' o:bordertopcolor="this"
+ o:borderleftcolor="this" o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image022.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=183 height=135
+src="article_files/image023.jpg" v:shapes="_x0000_i1040"><![endif]><span
+style='mso-spacerun:yes'>      </span><!--[if gte vml 1]><v:shape id="_x0000_i1041"
+ type="#_x0000_t75" style='width:127.5pt;height:76.5pt' o:bordertopcolor="this"
+ o:borderleftcolor="this" o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image024.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=170 height=102
+src="article_files/image025.jpg" v:shapes="_x0000_i1041"><![endif]><span
+style='mso-spacerun:yes'>        </span><!--[if gte vml 1]><v:shape id="_x0000_i1042"
+ type="#_x0000_t75" style='width:124.5pt;height:51pt' o:bordertopcolor="this"
+ o:borderleftcolor="this" o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image026.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=166 height=68
+src="article_files/image027.jpg" v:shapes="_x0000_i1042"><![endif]><span
+style='mso-spacerun:yes'>        </span><!--[if gte vml 1]><v:shape id="_x0000_i1043"
+ type="#_x0000_t75" style='width:146.25pt;height:53.25pt' o:bordertopcolor="this"
+ o:borderleftcolor="this" o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image028.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=195 height=71
+src="article_files/image029.jpg" v:shapes="_x0000_i1043"><![endif]><span
+style='mso-spacerun:yes'>     </span><!--[if gte vml 1]><v:shape id="_x0000_i1044"
+ type="#_x0000_t75" style='width:69pt;height:14.25pt' o:bordertopcolor="this"
+ o:borderleftcolor="this" o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image030.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=92 height=19
+src="article_files/image031.jpg" v:shapes="_x0000_i1044"><![endif]></p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h4>UML</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1045" type="#_x0000_t75"
+ style='width:279.75pt;height:78pt' o:bordertopcolor="this" o:borderleftcolor="this"
+ o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image032.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=373 height=104
+src="article_files/image033.jpg" v:shapes="_x0000_i1045"><![endif]><span
+style='mso-spacerun:yes'>             </span><span
+style='mso-spacerun:yes'>  </span><!--[if gte vml 1]><v:shape id="_x0000_i1046"
+ type="#_x0000_t75" style='width:280.5pt;height:65.25pt' o:bordertopcolor="this"
+ o:borderleftcolor="this" o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image034.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=374 height=87
+src="article_files/image035.jpg" v:shapes="_x0000_i1046"><![endif]></p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1047" type="#_x0000_t75"
+ style='width:281.25pt;height:102pt'>
+ <v:imagedata src="article_files/image036.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=375 height=136
+src="article_files/image037.jpg" v:shapes="_x0000_i1047"><![endif]><span
+style='mso-spacerun:yes'>                </span><!--[if gte vml 1]><v:shape
+ id="_x0000_i1048" type="#_x0000_t75" style='width:273pt;height:65.25pt'>
+ <v:imagedata src="article_files/image038.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=364 height=87
+src="article_files/image039.jpg" v:shapes="_x0000_i1048"><![endif]><span
+style='mso-spacerun:yes'>     </span><!--[if gte vml 1]><v:shape id="_x0000_i1049"
+ type="#_x0000_t75" style='width:118.5pt;height:15pt' o:bordertopcolor="this"
+ o:borderleftcolor="this" o:borderbottomcolor="this" o:borderrightcolor="this">
+ <v:imagedata src="article_files/image040.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=158 height=20
+src="article_files/image041.jpg" v:shapes="_x0000_i1049"><![endif]></p>
+
+<p><span class=SpellE><i style='mso-bidi-font-style:normal'>ArrayList</i></span>
+is the specialization of the concrete <span class=SpellE><i style='mso-bidi-font-style:
+normal'>List_E</i></span> class where the formal template parameter <i
+style='mso-bidi-font-style:normal'>E</i> of <i style='mso-bidi-font-style:normal'>List</i>
+is substituted for the actual <span class=SpellE>parameterable</span> element <i
+style='mso-bidi-font-style:normal'>E</i> of <span class=SpellE><i
+style='mso-bidi-font-style:normal'>ArrayList</i></span>.<span
+style='mso-spacerun:yes'>  </span>These are the substitutions for the binding
+of <span class=SpellE><i style='mso-bidi-font-style:normal'>List_E</i></span>: </p>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1050" type="#_x0000_t75" style='width:292.5pt;
+ height:28.5pt'>
+ <v:imagedata src="article_files/image042.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=390 height=38
+src="article_files/image043.jpg" v:shapes="_x0000_i1050"><![endif]></p>
+
+<p>The class <span class=SpellE><i style='mso-bidi-font-style:normal'>ArrayList_Car</i></span>
+substitutes the actual parameter Car for the exposed template parameter of <i
+style='mso-bidi-font-style:normal'>E</i> of <span class=SpellE><i
+style='mso-bidi-font-style:normal'>ArrayList</i></span>.<span
+style='mso-spacerun:yes'>  </span>These are the substitutions for the <span
+class=SpellE><i style='mso-bidi-font-style:normal'>ArrayList_Car</i></span>:</p>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1051" type="#_x0000_t75" style='width:289.5pt;
+ height:33pt'>
+ <v:imagedata src="article_files/image044.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=386 height=44
+src="article_files/image045.jpg" v:shapes="_x0000_i1051"><![endif]></p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<div style='border:none;border-bottom:solid windowtext 1.5pt;padding:0in 0in 1.0pt 0in'>
+
+<h3 style='border:none;mso-border-bottom-alt:solid windowtext 1.5pt;padding:
+0in;mso-padding-alt:0in 0in 1.0pt 0in'>Basics: Operation with template
+parameter </h3>
+
+</div>
+
+<p>In UML, operations are <span class=SpellE>templateable</span> elements.<span
+style='mso-spacerun:yes'>   </span>In this next example we will have a look at
+adding template parameters to an operation.<span style='mso-spacerun:yes'> 
+</span>The operation will have a template parameter <i style='mso-bidi-font-style:
+normal'>T</i>, and will return elements of type <i style='mso-bidi-font-style:
+normal'>T</i>.<span style='mso-spacerun:yes'>  </span>The operation will also
+have a parameter <i style='mso-bidi-font-style:normal'>p1</i> of type <i
+style='mso-bidi-font-style:normal'>T</i>.</p>
+
+<h4>Visually</h4>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1052" type="#_x0000_t75"
+ style='width:226.5pt;height:78pt'>
+ <v:imagedata src="article_files/image046.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=302 height=104
+src="article_files/image047.jpg" v:shapes="_x0000_i1052"><![endif]></p>
+
+<h4>Java</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>MyClass</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObject</span></span><span
+  style='color:black'>&nbsp;{</span></code><span style='font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  style='color:black'>&lt;T&gt;&nbsp;T&nbsp;<span class=SpellE>someOperation</span>(T&nbsp;p1);</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:black'>}</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><code><span style='font-size:10.0pt;color:gray'>1</span></code><code><span
+  style='font-size:10.0pt'>&nbsp;<b><span style='color:#7F0055'>public&nbsp;class&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>MyClassImpl</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObjectImpl</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>implements&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>MyClass</span></span><span
+  style='color:black'>&nbsp;{</span></span></code><span style='font-size:10.0pt;
+  font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>public&nbsp;</span></b><span style='color:black'>&lt;T&gt;&nbsp;T&nbsp;<span
+  class=SpellE>someOperation</span>(T&nbsp;p1)&nbsp;{</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span
+  style='color:#3F7F5F'>//...</span></code><br>
+  <code><span style='color:gray'>4</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  style='color:black'>}</span></code><br>
+  <code><span style='color:gray'>5</span>&nbsp;<span style='color:black'>}</span></code></span><tt><span
+  style='font-size:10.0pt'><o:p></o:p></span></tt></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h4>Ecore</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none;mso-border-alt:solid windowtext .5pt;
+ mso-yfti-tbllook:480;mso-padding-alt:0in 5.4pt 0in 5.4pt;mso-border-insideh:
+ .5pt solid windowtext;mso-border-insidev:.5pt solid windowtext'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=240 valign=top style='width:180.1pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1053" type="#_x0000_t75"
+   style='width:153pt;height:79.5pt'>
+   <v:imagedata src="article_files/image048.png" o:title=""/>
+  </v:shape><![endif]--><![if !vml]><img border=0 width=204 height=106
+  src="article_files/image049.jpg" v:shapes="_x0000_i1053"><![endif]></p>
+  </td>
+  <td width=767 style='width:575.1pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <ol style='margin-top:0in' start=1 type=1>
+   <li class=MsoNormal style='mso-list:l13 level1 lfo17;tab-stops:list .5in'><span
+       class=SpellE><i style='mso-bidi-font-style:normal'>MyClass</i></span>
+       has an <span class=SpellE>EOperation</span> called <span class=SpellE><i
+       style='mso-bidi-font-style:normal'>someOperation</i></span>.</li>
+   <li class=MsoNormal style='mso-list:l13 level1 lfo17;tab-stops:list .5in'>The
+       <span class=SpellE>EOperation</span> <span class=SpellE>someOperation</span>
+       has an <span class=SpellE>ETypeParameter</span> <i style='mso-bidi-font-style:
+       normal'>T</i>.</li>
+   <li class=MsoNormal style='mso-list:l13 level1 lfo17;tab-stops:list .5in'>The
+       <span class=SpellE>EOperation</span> has a parameter <i
+       style='mso-bidi-font-style:normal'>p1</i> whose type is an <span
+       class=SpellE>EGenericType</span> whose <span class=SpellE>eTypeParameter</span>
+       is <i style='mso-bidi-font-style:normal'>T</i>.</li>
+   <li class=MsoNormal style='mso-list:l13 level1 lfo17;tab-stops:list .5in'>The
+       <span class=SpellE>EOperation</span><span style='mso-spacerun:yes'> 
+       </span>has an <span class=SpellE>EGenericType</span> as its type, whose <span
+       class=SpellE>eTypeParameter</span> is <i style='mso-bidi-font-style:
+       normal'>T</i>.</li>
+  </ol>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h4>UML</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Arial Unicode MS"'><!--[if gte vml 1]><v:shape
+ id="_x0000_i1054" type="#_x0000_t75" style='width:311.25pt;height:90.75pt'>
+ <v:imagedata src="article_files/image050.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=415 height=121
+src="article_files/image051.jpg" v:shapes="_x0000_i1054"><![endif]></span></p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<div style='border:none;border-bottom:solid windowtext 1.5pt;padding:0in 0in 1.0pt 0in'>
+
+<h3 style='border:none;mso-border-bottom-alt:solid windowtext 1.5pt;padding:
+0in;mso-padding-alt:0in 0in 1.0pt 0in'>Basics: Bound operation parameters </h3>
+
+</div>
+
+<p>In this example we show an operation with two parameters that are lists of
+cars.<span style='mso-spacerun:yes'>  </span>As you might have guessed, the UML
+version will require an extra bound class.</p>
+
+<h4>Visually</h4>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1055" type="#_x0000_t75"
+ style='width:450.75pt;height:255pt'>
+ <v:imagedata src="article_files/image052.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=601 height=340
+src="article_files/image053.jpg" v:shapes="_x0000_i1055"><![endif]></p>
+
+<h4>Java</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  style='color:black'>MyClass2&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObject</span></span><span
+  style='color:black'>&nbsp;{</span></code><span style='font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>void&nbsp;</span></b><span style='color:black'>op1(List&lt;Car&gt;&nbsp;p1,&nbsp;List&lt;Car&gt;&nbsp;p2);</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:black'>}</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><code><span style='font-size:10.0pt;color:gray'>1</span></code><code><span
+  style='font-size:10.0pt'>&nbsp;<b><span style='color:#7F0055'>public&nbsp;class&nbsp;</span></b><span
+  style='color:black'>MyClass2Impl&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObjectImpl</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>implements&nbsp;</span></b><span
+  style='color:black'>MyClass2&nbsp;{</span></span></code><span
+  style='font-size:10.0pt;font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>public&nbsp;void&nbsp;</span></b><span
+  style='color:black'>op1(List&lt;Car&gt;&nbsp;p1,&nbsp;List&lt;Car&gt;&nbsp;p2)&nbsp;{</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;&nbsp;&nbsp;</span><span
+  style='color:#3F7F5F'>//...&nbsp;&nbsp;&nbsp;&nbsp;</span></code><br>
+  <code><span style='color:gray'>4</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><span
+  style='color:black'>}</span></code><br>
+  <code><span style='color:gray'>5</span>&nbsp;<span style='color:black'>}</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Ecore</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none;mso-border-alt:solid windowtext .5pt;
+ mso-yfti-tbllook:480;mso-padding-alt:0in 5.4pt 0in 5.4pt;mso-border-insideh:
+ .5pt solid windowtext;mso-border-insidev:.5pt solid windowtext'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=228 valign=top style='width:171.1pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1056" type="#_x0000_t75"
+   style='width:154.5pt;height:102.75pt'>
+   <v:imagedata src="article_files/image054.png" o:title=""/>
+  </v:shape><![endif]--><![if !vml]><img border=0 width=206 height=137
+  src="article_files/image055.jpg" v:shapes="_x0000_i1056"><![endif]></p>
+  </td>
+  <td width=779 style='width:584.1pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <ol style='margin-top:0in' start=1 type=1>
+   <li class=MsoNormal style='mso-list:l0 level1 lfo20;tab-stops:list .5in'>We create
+       an operation with parameter <i style='mso-bidi-font-style:normal'>p1</i>.</li>
+   <li class=MsoNormal style='mso-list:l0 level1 lfo20;tab-stops:list .5in'>Parameter<i
+       style='mso-bidi-font-style:normal'> p1</i> has as its type an <span
+       class=SpellE>EGenericType</span> whose <span class=SpellE>eClassifier</span>
+       is <i style='mso-bidi-font-style:normal'>List&lt;E&gt;.</i></li>
+   <li class=MsoNormal style='mso-list:l0 level1 lfo20;tab-stops:list .5in'>The
+       <span class=SpellE>EGenericType</span> of <i style='mso-bidi-font-style:
+       normal'>p1</i> has a type argument (<span class=SpellE>EGenericType</span>)
+       whose <span class=SpellE>eClassifier</span> is set to <i
+       style='mso-bidi-font-style:normal'>Car</i>.</li>
+  </ol>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h4>UML</h4>
+
+<h4><!--[if gte vml 1]><v:shape id="_x0000_i1057" type="#_x0000_t75" style='width:5in;
+ height:102.75pt'>
+ <v:imagedata src="article_files/image056.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=480 height=137
+src="article_files/image057.jpg" v:shapes="_x0000_i1057"><![endif]></h4>
+
+<p>The only important thing to point out here is that the bound <span
+class=SpellE><i style='mso-bidi-font-style:normal'>List_Car</i></span> is not
+duplicated in the UML representation. The bound <span class=SpellE><i
+style='mso-bidi-font-style:normal'>List_Car</i></span> is used in the context
+of MyClass2.</p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<div style='border:none;border-bottom:solid windowtext 1.5pt;padding:0in 0in 1.0pt 0in'>
+
+<h3 style='border:none;mso-border-bottom-alt:solid windowtext 1.5pt;padding:
+0in;mso-padding-alt:0in 0in 1.0pt 0in'>Advanced: Wildcards (specifying upper
+and lower bounds on parameters)</h3>
+
+</div>
+
+<p>It is possible to specify wildcards when using parameters in Ecore and
+Java.<span style='mso-spacerun:yes'>   </span>Wildcards are represented <span
+class=GramE>by <b style='mso-bidi-font-weight:normal'>?</b>.</span><span
+style='mso-spacerun:yes'>   </span><span class=GramE>The <b style='mso-bidi-font-weight:
+normal'>?</b></span><b style='mso-bidi-font-weight:normal'> </b><span
+class=GramE>stands</span> for an unknown type.<span style='mso-spacerun:yes'> 
+</span>It is possible to specify upper and lower bounds on such wildcards.<span
+style='mso-spacerun:yes'>   </span>When we talk about bounds, we refer to the
+ability to specify that bindings to a generic type parameter must either be the
+super type of some classifier or extend some classifier.<span
+style='mso-spacerun:yes'>   </span>In this way, tighter restrictions can be
+placed on acceptable bindings.<span style='mso-spacerun:yes'>  </span>In
+addition to tightening restrictions, upper bounds (extends) are particularly
+useful for ensuring that substitutions will have features that are required by
+the template for its behavior.<span style='mso-spacerun:yes'>  </span>For
+example, one might have <i style='mso-bidi-font-style:normal'>List&lt;E extends
+Comparable&gt;</i> because the list actually needs to be able to compare E’s
+using the <span class=SpellE><i style='mso-bidi-font-style:normal'>Comparable::<span
+class=GramE>compareTo</span></i></span><span class=GramE><i style='mso-bidi-font-style:
+normal'>(</i></span><i style='mso-bidi-font-style:normal'>…)</i> operation.</p>
+
+<h4>Visually</h4>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1058" type="#_x0000_t75"
+ style='width:471pt;height:405.75pt'>
+ <v:imagedata src="article_files/image058.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=628 height=541
+src="article_files/image059.jpg" v:shapes="_x0000_i1058"><![endif]></p>
+
+<h4>Java</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;class&nbsp;</span></b><span
+  style='color:black'>MyClass3Impl&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  class=SpellE><span style='color:black'>EObjectImpl</span></span><span
+  style='color:black'>&nbsp;</span><b><span style='color:#7F0055'>implements&nbsp;</span></b><span
+  style='color:black'>MyClass3&nbsp;{</span></code><span style='font-family:
+  "Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>protected&nbsp;</span></b><span style='color:black'>List&lt;?&nbsp;</span><b><span
+  style='color:#7F0055'>extends&nbsp;</span></b><span style='color:black'>Car&gt;&nbsp;<span
+  class=SpellE>someReference</span>;</span></code><br>
+  <code><span style='color:gray'>3</span>&nbsp;<span style='color:white'>&nbsp;&nbsp;</span><b><span
+  style='color:#7F0055'>protected&nbsp;</span></b><span style='color:black'>List&lt;?&nbsp;</span><b><span
+  style='color:#7F0055'>super&nbsp;</span></b><span style='color:black'>Car&gt;&nbsp;<span
+  class=SpellE>anotherReference</span>;</span></code><br>
+  <code><span style='color:gray'>4</span>&nbsp;<span style='color:black'>}</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Ecore</h4>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none;mso-border-alt:solid windowtext .5pt;
+ mso-yfti-tbllook:480;mso-padding-alt:0in 5.4pt 0in 5.4pt;mso-border-insideh:
+ .5pt solid windowtext;mso-border-insidev:.5pt solid windowtext'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=276 valign=top style='width:207.1pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1059" type="#_x0000_t75"
+   style='width:194.25pt;height:114.75pt'>
+   <v:imagedata src="article_files/image060.png" o:title=""/>
+  </v:shape><![endif]--><![if !vml]><img border=0 width=259 height=153
+  src="article_files/image061.jpg" v:shapes="_x0000_i1059"><![endif]></p>
+  </td>
+  <td width=576 style='width:6.0in;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <ol style='margin-top:0in' start=1 type=1>
+   <li class=MsoNormal style='mso-list:l8 level1 lfo23;tab-stops:list .5in'>We
+       create an <span class=SpellE>EReference</span> for <span class=SpellE><i
+       style='mso-bidi-font-style:normal'>someReference</i></span><i
+       style='mso-bidi-font-style:normal'>.</i></li>
+   <li class=MsoNormal style='mso-list:l8 level1 lfo23;tab-stops:list .5in'>We
+       create an <span class=SpellE>EGenericType</span> for the type of <span
+       class=SpellE><i style='mso-bidi-font-style:normal'>someReference</i></span>
+       whose <span class=SpellE>eClassifier</span> is set to <i
+       style='mso-bidi-font-style:normal'>List&lt;E&gt;</i></li>
+   <li class=MsoNormal style='mso-list:l8 level1 lfo23;tab-stops:list .5in'>The
+       generic type of <span class=SpellE><i style='mso-bidi-font-style:normal'>someReference</i></span>
+       has an <span class=SpellE>eTypeArgument</span> (an <span class=SpellE>EGenericType</span>)
+       whose upper bound is set to <i style='mso-bidi-font-style:normal'>Car</i>.</li>
+  </ol>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h4>UML</h4>
+
+<h4><span style='font-weight:normal'><!--[if gte vml 1]><v:shape id="_x0000_i1060"
+ type="#_x0000_t75" style='width:351pt;height:141pt'>
+ <v:imagedata src="article_files/image062.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=468 height=188
+src="article_files/image063.jpg" v:shapes="_x0000_i1060"><![endif]><o:p></o:p></span></h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p>If we focus on the “<span class=SpellE>someReference</span>” property, we
+see that we need to create a new class called “<span class=SpellE>Wildcard_extends_Car</span>”.<span
+style='mso-spacerun:yes'>   </span>This particular class has its stereotype
+property for the upper bound set to <i style='mso-bidi-font-style:normal'>Car</i>:
+</p>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1061" type="#_x0000_t75" style='width:204.75pt;
+ height:36pt'>
+ <v:imagedata src="article_files/image064.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=273 height=48
+src="article_files/image065.jpg" v:shapes="_x0000_i1061"><![endif]></p>
+
+<p><span style='mso-spacerun:yes'> </span>Next, we see that another new class is
+created in order to bind the formal parameter of the generic <i
+style='mso-bidi-font-style:normal'>List</i> to classes of <span class=SpellE><i
+style='mso-bidi-font-style:normal'>Wildcard_extends_Car</i></span><i
+style='mso-bidi-font-style:normal'>:<o:p></o:p></i></p>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1062" type="#_x0000_t75" style='width:310.5pt;
+ height:39pt'>
+ <v:imagedata src="article_files/image066.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=414 height=52
+src="article_files/image067.jpg" v:shapes="_x0000_i1062"><![endif]></p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<div style='border:none;border-bottom:solid windowtext 1.5pt;padding:0in 0in 1.0pt 0in'>
+
+<h3 style='border:none;mso-border-bottom-alt:solid windowtext 1.5pt;padding:
+0in;mso-padding-alt:0in 0in 1.0pt 0in'>Advanced: Type parameters that extend
+multiple classifiers</h3>
+
+</div>
+
+<p>Type parameters in Ecore can also have bounds and in such cases it is
+possible to specify multiple upper bounds. </p>
+
+<h4>Visually</h4>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1063" type="#_x0000_t75" style='width:185.25pt;
+ height:1in'>
+ <v:imagedata src="article_files/image068.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=247 height=96
+src="article_files/image069.jpg" v:shapes="_x0000_i1063"><![endif]></p>
+
+<p>The interesting part is the bounds information stored in the stereotype (see
+below).</p>
+
+<h4>Java</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p><code><span style='color:gray'>1</span>&nbsp;<b><span style='color:#7F0055'>public&nbsp;interface&nbsp;</span></b><span
+  style='color:black'>MyClass4&lt;P1&nbsp;</span><b><span style='color:#7F0055'>extends&nbsp;</span></b><span
+  style='color:black'>A&nbsp;&amp;&nbsp;B&gt;&nbsp;</span><b><span
+  style='color:#7F0055'>extends&nbsp;</span></b><span class=SpellE><span
+  style='color:black'>EObject</span></span><span style='color:black'>&nbsp;{</span></code><span
+  style='font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:black'>}</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=0 cellspacing=0 cellpadding=0
+ style='background:#F3F3F3;border-collapse:collapse;mso-yfti-tbllook:480;
+ mso-padding-alt:0in 5.4pt 0in 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><code><span style='font-size:10.0pt;color:gray'>1</span></code><code><span
+  style='font-size:10.0pt'>&nbsp;<b><span style='color:#7F0055'>public&nbsp;class&nbsp;</span></b><span
+  style='color:black'>MyClass4Impl&lt;P1&nbsp;</span><b><span style='color:
+  #7F0055'>extends&nbsp;</span></b><span style='color:black'>A&nbsp;&amp;&nbsp;B&gt;&nbsp;</span><b><span
+  style='color:#7F0055'>extends&nbsp;</span></b><span class=SpellE><span
+  style='color:black'>EObjectImpl</span></span><span style='color:black'>&nbsp;</span><b><span
+  style='color:#7F0055'>implements&nbsp;</span></b><span style='color:black'>MyClass4&lt;P1&gt;&nbsp;{</span></span></code><span
+  style='font-size:10.0pt;font-family:"Courier New"'><br>
+  <code><span style='color:gray'>2</span>&nbsp;<span style='color:black'>}&nbsp;</span></code></span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Ecore</h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none;mso-border-alt:solid windowtext .5pt;
+ mso-yfti-tbllook:480;mso-padding-alt:0in 5.4pt 0in 5.4pt;mso-border-insideh:
+ .5pt solid windowtext;mso-border-insidev:.5pt solid windowtext'>
+ <tr style='mso-yfti-irow:0;mso-yfti-lastrow:yes'>
+  <td width=240 valign=top style='width:180.1pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_i1064" type="#_x0000_t75"
+   style='width:145.5pt;height:51pt'>
+   <v:imagedata src="article_files/image070.png" o:title=""/>
+  </v:shape><![endif]--><![if !vml]><img border=0 width=194 height=68
+  src="article_files/image071.jpg" v:shapes="_x0000_i1064"><![endif]></p>
+  </td>
+  <td width=767 valign=top style='width:575.1pt;border:solid windowtext 1.0pt;
+  border-left:none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
+  <ol style='margin-top:0in' start=1 type=1>
+   <li class=MsoNormal style='mso-list:l9 level1 lfo26;tab-stops:list .5in'><i
+       style='mso-bidi-font-style:normal'>MyClass4</i> has an <span
+       class=SpellE>ETypeParameter</span> <i style='mso-bidi-font-style:normal'>P1</i>.</li>
+   <li class=MsoNormal style='mso-list:l9 level1 lfo26;tab-stops:list .5in'>The
+       <span class=SpellE>ETypeParameter</span> of <i style='mso-bidi-font-style:
+       normal'>P1</i> has its <span class=SpellE>eBounds</span> set to an <span
+       class=SpellE>EGenericType</span> whose <span class=SpellE>eClassifer</span>
+       is <i style='mso-bidi-font-style:normal'>A</i> and another <span
+       class=SpellE>EGenericType</span> whose <span class=SpellE>eClassifier</span>
+       is set to <i style='mso-bidi-font-style:normal'>B</i>.</li>
+  </ol>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h4>UML</h4>
+
+<h4><!--[if gte vml 1]><v:shape id="_x0000_i1065" type="#_x0000_t75" style='width:278.25pt;
+ height:52.5pt'>
+ <v:imagedata src="article_files/image072.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=371 height=70
+src="article_files/image073.jpg" v:shapes="_x0000_i1065"><![endif]><span
+style='font-weight:normal'><o:p></o:p></span></h4>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p>For the template parameter <i style='mso-bidi-font-style:normal'>P1</i> we
+have to specify the bounds using the stereotype since multiple bounds on such
+parameters are not possible using UML:</p>
+
+<p><!--[if gte vml 1]><v:shape id="_x0000_i1066" type="#_x0000_t75" style='width:312pt;
+ height:36pt'>
+ <v:imagedata src="article_files/image074.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=416 height=48
+src="article_files/image075.jpg" v:shapes="_x0000_i1066"><![endif]>.</p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<h2 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>Conclusion</h2>
+
+<p>Congratulations! You’ve made it this far, if you’ve followed through the
+examples, you will no doubt have discovered that the UML representation is
+verbose and intricate in comparison to Ecore or Java.<span
+style='mso-spacerun:yes'>   </span>Hopefully, with a bit of practice, the UML
+representation will become second nature.<span style='mso-spacerun:yes'>  
+</span>This article really only scratches the surface of the intricate possible
+scenarios one may create when working with generics.<span
+style='mso-spacerun:yes'>   </span>By using templates in UML you can express
+and communicate your ideas more accurately, and code generated via conversion
+through Ecore will result in generically specified Java.</p>
+
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>For
+more information on UML2, visit the <a
+href="http://www.eclipse.org/modeling/mdt/?project=uml2">home page</a> or join
+the <a href="news://news.eclipse.org/eclipse.modeling.mdt.uml2">newsgroup</a>.</p>
+
+<p><o:p>&nbsp;</o:p></p>
+
+<h2 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>Acknowledgements</h2>
+
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>Thanks
+to Kenn Hussey, Ed <span class=SpellE>Merks</span> and Christian <span
+class=SpellE>Damus</span> for their thorough and careful reviews.</p>
+
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><o:p>&nbsp;</o:p></p>
+
+<h2 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>References</h2>
+
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+style='mso-spacerun:yes'> </span><span class=GramE>[1] Unified Modeling
+Language: Superstructure, version 2.1.1; formal/2007-02-05.</span> <span
+class=GramE>OMG.</span></p>
+
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+style='mso-spacerun:yes'> </span>[2] RTF Issue <a
+href="http://www.omg.org/issues/uml2-rtf.open.html#Issue9398">9398</a></p>
+
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><o:p>&nbsp;</o:p></p>
+
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+style='font-size:7.5pt'>Java and all Java-based trademarks and logos are
+trademarks or registered trademarks of Sun Microsystems, Inc. in the </span><st1:country-region><st1:place><span
+  style='font-size:7.5pt'>United States</span></st1:place></st1:country-region><span
+style='font-size:7.5pt'>, other countries, or both.</span></p>
+
+</div>
+
+</body>
+
+</html>
