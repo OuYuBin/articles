@@ -34,7 +34,7 @@ Business Machines Corp.</div>
 
 A few terms and abbreviations will be used throughout this document.
 
-<h2>UML specification</h2>
+<h2>UML Specification</h2>
 
 
 <p>UML2 2.1. This refers to the latest version of the UML API which
@@ -98,7 +98,7 @@ stereotyped items will be reapplied when converting back.</p>
 <p>The subset of newly added stereotypes to the Ecore profile is
 shown in the following diagram:</p>
 
-<div class="figure"><img src="images/image001.png"/></div>
+<div class="figure-left"><img src="images/image001.png"/></div>
 
 <p>While we are on the topic of differences between Ecore and UML we
 should mention that UML has some 'quirkiness' in the area of templates.
@@ -164,7 +164,7 @@ familiar with generics in Java.</p>
 <p>The following diagram showing a subset of the Ecore metamodel
 (highlighting generics) will be used as a reference when describing the
 UML to Ecore mapping.</p>
-<div class="figure"><img src="images/image003.png" /><br />
+<div class="figure-left"><img src="images/image003.png" /><br />
 Figure 1: Ecore meta-model</div>
 
 <p>With this metamodel in mind, we can mention several interesting
@@ -190,7 +190,7 @@ model.</p>
 <p>Showing of generics is enabled from the &quot;Sample Ecore
 Editor&quot; menu when the Ecore editor is being used: From the toolbar,
 select &quot;Sample Ecore Editor &gt; Show Generics&quot;.</p>
-<div class="figure"><img src="images/image005.png"></div>
+<div class="figure-left"><img src="images/image005.png"></div>
 
 <p>Further details on working with generics in EMF can be found at <a
 	href="http://wiki.eclipse.org/EMF_2.3_Generics">http://wiki.eclipse.org/EMF_2.3_Generics</a>.</p>
@@ -231,12 +231,12 @@ select &quot;Sample Ecore Editor &gt; Show Generics&quot;.</p>
 
 
 
-<h2>Baby steps: Simple type parameter</h2>
+<h2>Baby Steps: Simple Type Parameter</h2>
 
 <p>Consider a simple case where we define a generic class with one
 property of some generic type.</p>
 <h3>Visually</h3>
-<div class="figure"><img src="images/image007.png"></div>
+<div class="figure-left"><img src="images/image007.png"></div>
 <h3>Java</h3>
 <div class="code-block">1 public interface MyClass&lt;E&gt; extends EObject {
 2   E getMyProperty();
@@ -278,7 +278,7 @@ Ecore representation.</p>
 	that class as its parametered element.</li>
 </ul>
 
-<div class="figure"><img src="images/image011.gif" /></div>
+<div class="figure-left"><img src="images/image011.gif" /></div>
 
 <p>The class E is the parametered element that will be the focus of
 bindings when we replace formal parameters with actual parameters. We
@@ -294,13 +294,13 @@ substitutions for the template parameter must extend some particular
 classifier such as <span class="code-inline">MyClass&lt;? extends MyOtherClass&gt;</span>. This will be
 explored more in the following examples.</p>
 
-<h2>Baby steps: Creating a generic type</h2>
+<h2>Baby Steps: Creating a Generic Type</h2>
 
 <p>In a little more realistic example, we might have something like
 the following.</p>
 <h3>Visually</h3>
 
-<div class="figure"><img src="images/image012.png" />&nbsp;<img
+<div class="figure-left"><img src="images/image012.png" />&nbsp;<img
 	src="images/image014.png" /></div>
 
 <h3>Java</h3>
@@ -344,7 +344,7 @@ the following.</p>
 <p>The main elements in the UML representation are: a class called
 <span class="code-inline">List</span>, a class called <span class="code-inline">Iterator</span> and a newly introduced class called
 <span class="code-inline">Iterator_E</span>, see below.</p>
-<div class="figure"><img src="images/image018.gif" /></div>
+<div class="figure-left"><img src="images/image018.gif" /></div>
 <p>You might be scratching your head about <span class="code-inline">Iterator_E</span>. This
 construct is required because the class <span class="code-inline">List</span> has an operation that
 returns an iterator that is bound to the same element passed as an
@@ -354,14 +354,14 @@ bound class: <span class="code-inline">Iterator_E</span>.</p>
 
 <p>The template parameter substitution for <span class="code-inline">Iterator_E</span> above has the
 following binding:</p>
-<div class="figure"><img src="images/image019.gif" /></div>
+<div class="figure-left"><img src="images/image019.gif" /></div>
 
 
 <p>The formal template parameter for <span class="code-inline">Iterator&lt;E&gt;</span> is bound to
 the actual parameter E of <span class="code-inline">List</span>.</p>
 
 
-<h2>Basics: Binding to a generic class</h2>
+<h2>Basics: Binding to a Generic Class</h2>
 
 <p>Let's put together some of the basic ideas we have already
 explored. In this example, <span class="code-inline">ArrayList&lt;E&gt;</span> is a generic array list
@@ -371,7 +371,7 @@ addition, <span class="code-inline">TestClass</span> has a property which is an 
 we create a new class <span class="code-inline">ArrayList</span> with bindings set up to the class
 <span class="code-inline">Car</span>.</p>
 <h3>Visually</h3>
-<div class="figure"><img src="images/image021.png" /></div>
+<div class="figure-left"><img src="images/image020.png" /></div>
 
 <h3>Java</h3>
 
@@ -403,7 +403,7 @@ we create a new class <span class="code-inline">ArrayList</span> with bindings s
 
 
 <h3>Ecore</h3>
-<div class="figure"><img style="margin: 10px"
+<div class="figure-left"><img style="margin: 10px"
 	src="images/image022.png" /> <img style="margin: 10px"
 	src="images/image024.png" /> <img style="margin: 10px"
 	src="images/image026.png" /> <img style="margin: 10px"
@@ -412,7 +412,7 @@ we create a new class <span class="code-inline">ArrayList</span> with bindings s
 
 <h3>UML</h3>
 
-<div class="figure"><img style="margin: 10px"
+<div class="figure-left"><img style="margin: 10px"
 	src="images/image032.png" /> <img style="margin: 10px"
 	src="images/image034.png" /> <img style="margin: 10px"
 	src="images/image036.png" /> <img style="margin: 10px"
@@ -423,11 +423,11 @@ we create a new class <span class="code-inline">ArrayList</span> with bindings s
 where the formal template parameter E of <span class="code-inline">List</span> is substituted for the
 actual parameterable element E of <span class="code-inline">ArrayList</span>. These are the substitutions
 for the binding of <span class="code-inline">List_E</span>:</p>
-<div class="figure"><img src="images/image042.png" /></div>
+<div class="figure-left"><img src="images/image042.png" /></div>
 <p>The class <span class="code-inline">ArrayList_Car</span> substitutes the actual parameter <span class="code-inline">Car</span> for
 the exposed template parameter of E of <span class="code-inline">ArrayList</span>. These are the
 substitutions for the <span class="code-inline">ArrayList</span>:</p>
-<div class="figure"><img src="images/image044.png" /></div>
+<div class="figure-left"><img src="images/image044.png" /></div>
 
 <h2>Basics: Operation with Template Parameter</h2>
 
@@ -437,7 +437,7 @@ operation. The operation will have a template parameter T, and will
 return elements of type T. The operation will also have a parameter p1
 of type T.</p>
 <h3>Visually</h3>
-<div class="figure"><img src="images/image046.png" /></div>
+<div class="figure-left"><img src="images/image046.png" /></div>
 <h3>Java</h3>
 <div class="code-block">1 public interface MyClass extends EObject {
 2   &lt;T&gt; T someOperation(T p1);
@@ -474,7 +474,7 @@ of type T.</p>
 
 
 <h3>UML</h3>
-<div class="figure"><img src="images/image050.png" /></div>
+<div class="figure-left"><img src="images/image050.png" /></div>
 
 
 <h2>Basics: Bound Operation Parameters</h2>
@@ -484,7 +484,7 @@ lists of cars. As you might have guessed, the UML version will require
 an extra bound class.</p>
 
 <h3>Visually</h3>
-<div class="figure"><img src="images/image052.png" /></div>
+<div class="figure-left"><img src="images/image052.png" /></div>
 
 <h3>Java</h3>
 <div class="code-block">1 public interface MyClass2 extends EObject {
@@ -502,7 +502,7 @@ an extra bound class.</p>
 	<tbody>
 		<tr>
 			<td>
-			<div class="figure"><img src="images/image054.png" /></div>
+			<div class="figure-left"><img src="images/image054.png" /></div>
 			</td>
 			<td>
 			<ol>
@@ -521,13 +521,14 @@ an extra bound class.</p>
 </table>
 
 <h3>UML</h3>
-<div class="figure"><img src="images/image056.png" /></div>
+<div class="figure-left"><img src="images/image056.png" /></div>
 <p>The only important thing to point out here is that the bound
 <span class="code-inline">List_Car</span> is not duplicated in the UML representation. The bound <span class="code-inline">List_Car</span>
 is used in the context of <span class="code-inline">MyClass2</span>.</p>
 
-<h2>Advanced: Wildcards (specifying upper and lower bounds on
-parameters)</h2>
+<h2>Advanced: Wildcards</h2>
+<p>(Specifying upper and lower bounds on
+parameters)</p>
 
 <p>It is possible to specify wildcards when using parameters in
 Ecore and Java. Wildcards are represented by &quot;?&quot;. The &quot;?&quot; stands for an
@@ -543,7 +544,7 @@ extends Comparable&gt;</span> because the list actually needs to be able to
 compare E's using the <span class="code-inline">Comparable::compareTo(...)</span> operation</p>
 
 <h3>Visually</h3>
-<div class="figure"><img src="images/image058.png" /></div>
+<div class="figure-left"><img src="images/image058.png" /></div>
 
 <h3>Java</h3>
 
@@ -557,7 +558,7 @@ compare E's using the <span class="code-inline">Comparable::compareTo(...)</span
 	<tbody>
 		<tr>
 			<td>
-			<div class="figure"><img src="images/image060.png" /></div>
+			<div class="figure-left"><img src="images/image060.png" /></div>
 			</td>
 			<td>
 			<ol>
@@ -573,17 +574,17 @@ compare E's using the <span class="code-inline">Comparable::compareTo(...)</span
 </table>
 
 <h3>UML</h3>
-<div class="figure"><img src="images/image062.png" /></div>
+<div class="figure-left"><img src="images/image062.png" /></div>
 
 <p>If we focus on the &quot;someReference&quot; property, we see
 that we need to create a new class called
 &quot;<span class="code-inline">Wildcard_extends_Car</span>&quot;. This particular class has its
 stereotype property for the upper bound set to <span class="code-inline">Car</span>:</p>
-<div class="figure"><img src="images/image064.png" /></div>
+<div class="figure-left"><img src="images/image064.png" /></div>
 <p>Next, we see that another new class is created in order to bind
 the formal parameter of the generic <span class="code-inline">List</span> to classes of
 <span class="code-inline">Wildcard_extends_Car</span>:</p>
-<div class="figure"><img src="images/image066.png" /></div>
+<div class="figure-left"><img src="images/image066.png" /></div>
 
 <h2>Advanced: Type Parameters That Extend Multiple Classifiers</h2>
 
@@ -591,7 +592,7 @@ the formal parameter of the generic <span class="code-inline">List</span> to cla
 it is possible to specify multiple upper bounds.</p>
 
 <h3>Visually</h3>
-<div class="figure"><img src="images/image068.png" /></div>
+<div class="figure-left"><img src="images/image068.png" /></div>
 <p>The interesting part is the bounds information stored in the
 stereotype (see below).</p>
 
@@ -607,27 +608,27 @@ stereotype (see below).</p>
 	<tbody>
 		<tr>
 			<td>
-			<div class="figure"><img src="images/image070.png" /></div>
+			<div class="figure-left"><img src="images/image070.png" /></div>
 			</td>
 			<td>
-			<ul>
+			<ol>
 
 				<li><span class="code-inline">MyClass4</span> has an <span class="code-inline">ETypeParameter</span> P1.</li>
 				<li>The <span class="code-inline">ETypeParameter</span> of P1 has its eBounds set to an
 				<span class="code-inline">EGenericType</span> whose eClassifer is A and another <span class="code-inline">EGenericType</span> whose
 				<span class="code-inline">eClassifier</span> is set to B.</li>
-			</ul>
+			</ol>
 			</td>
 		</tr>
 	</tbody>
 </table>
 
 <h3>UML</h3>
-<div class="figure"><img src="images/image072.png" /></div>
+<div class="figure-left"><img src="images/image072.png" /></div>
 <p>For the template parameter P1 we have to specify the bounds using
 the stereotype since multiple bounds on such parameters are not possible
 using UML:</p>
-<div class="figure"><img src="images/image074.png" /></div>
+<div class="figure-left"><img src="images/image074.png" /></div>
 
 <h1>Conclusion</h1>
 
