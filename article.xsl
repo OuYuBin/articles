@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-	$Id: article.xsl,v 1.4 2007/06/20 15:30:14 wbeaton Exp $
+	$Id: article.xsl,v 1.5 2008/01/16 03:29:08 wbeaton Exp $
 	author: Chris Aniszczyk <zx@us.ibm.com>
 	author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -66,6 +66,11 @@
 				<xsl:apply-templates select="articleinfo/legalnotice/*" />
 			</div>
 		</div>
+		
+		<div class="content">
+			<xsl:apply-templates select="title" />
+			<xsl:apply-templates select="bioentry" />
+		</div>
 	</xsl:template>
 	<xsl:template name="graphical.admonition">
 		<xsl:variable name="admon.type">
@@ -111,5 +116,13 @@
 			</table>
 		</div>
 	</xsl:template>
-
+	<xsl:template name="bibliography">
+		<h3><xsl:value-of select="title"/></h3>
+		<ul>
+				<xsl:for-each select="biblioentry">
+					<li><xsl:apply-templates select="bibliosource/ulink"/></li>
+				</xsl:for-each>
+		</ul>
+	</xsl:template>
+	
 </xsl:stylesheet>
