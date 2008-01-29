@@ -22,14 +22,25 @@
 	#
 	#****************************************************************************
 	
+	$host = $_SERVER['HTTP_HOST'];
     $root = $_SERVER['DOCUMENT_ROOT'] . '/articles';
 	$file = $_GET['file'];
 	
+	$article_path = "$root/$file";
+	
 	// If the requested article does not exist, redirect to a warning page.
-	if (!file_exists("$root/$file")) $file = 'nosucharticle.html';
+	if (!file_exists($article_path)) {
+		$file = "nosucharticle.html";
+		$article_path = "$root/$file";
+	}
 	
-	
-	$host = $_SERVER['HTTP_HOST'];
+	$info_file = dirname($article_path) . '/info.xml';
+	if (file_exists($info_file)) {
+		$info = simplexml_load_file($info_file);
+	} else {
+		$info = null;
+	}
+		
 	#
 	# Begin: page-specific settings.  Change these. 
 	$pageTitle 		= "Eclipse Corner Articles";
@@ -54,19 +65,25 @@
 	</div>
 
 	<div style="clear:both;"/>
-	<? if (strtotime("now") < strtotime("March 17, 2008")) { ?>
-	<br/>
-	<div style="width:480px;display:block;margin-left:auto;margin-right:auto"><a href="http://www.eclipsecon.org/2008/"><img border="0" 
- src="http://www.eclipsecon.org/2008/image/480x60.jpg" 
- width="480" height="60" alt="EclipseCon 2008"/></a></div>
- 	<? } ?>
+
+	<?php include ("parts/notices.php"); ?>
+	<?php include ("parts/versions.php"); ?>
+ 	
 	<br/>
 	<div class="article">
-		<?php readfile("$root/$file"); ?>		
+		<?php readfile($article_path); ?>		
 	</div>
 
 <?php
 	$html = ob_get_contents();
 	ob_end_clean();
 	$App->generatePage($theme, $Menu, null, $pageAuthor, $pageKeywords, $pageTitle, $html);
+?>
+
+<? 
+function get_info_for_article($article_path) {
+	
+	
+}
+
 ?>
