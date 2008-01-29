@@ -35,12 +35,12 @@
 			if ($name == null) $name = $id;
  			echo "<a href=\"http://www.eclipse.org/projects/project_summary.php?projectid=$id\">$name</a>";
  			
- 			if ($project->version) {
- 				echo ", version";
- 				if (count ($project->version) > 1) echo "s";
+ 			if ($project->release) {
+ 				echo ", release";
+ 				if (count ($project->release) > 1) echo "s";
  				$separator = " ";
- 				foreach ($project->version as $version) {
- 					echo $separator . $version;
+ 				foreach ($project->release as $release) {
+ 					echo $separator . $release;
  					$separator = ", ";
  				}
  			}
