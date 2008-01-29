@@ -54,11 +54,11 @@
 	</div>
 
 	<div style="clear:both;"/>
-	<? if (strtotime("now") < strtotime("March 8, 2007")) { ?>
+	<? if (strtotime("now") < strtotime("March 17, 2008")) { ?>
 	<br/>
-	<div style="width:480px;display:block;margin-left:auto;margin-right:auto"><a href="http://www.eclipsecon.org/2007/"><img border="0" 
- src="http://www.eclipsecon.org/2007/image480x60.gif" 
- width="480" height="60" alt="EclipseCon 2007"/></a></div>
+	<div style="width:480px;display:block;margin-left:auto;margin-right:auto"><a href="http://www.eclipsecon.org/2008/"><img border="0" 
+ src="http://www.eclipsecon.org/2008/image/480x60.jpg" 
+ width="480" height="60" alt="EclipseCon 2008"/></a></div>
  	<? } ?>
 	<br/>
 	<div class="article">
