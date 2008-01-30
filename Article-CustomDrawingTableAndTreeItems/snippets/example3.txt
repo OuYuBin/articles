@@ -1,0 +1,76 @@
+/*******************************************************************************
+ * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.snippets;
+
+/*
+ * Table snippet: custom draw a Table's selection rectangle as a gradient
+ * 
+ * For a detailed explanation of this snippet see
+ * http://www.eclipse.org/articles/Article-CustomDrawingTableAndTreeItems/customDraw.htm#_example3
+ * 
+ * For a list of all SWT example snippets see
+ * http://www.eclipse.org/swt/snippets/
+ * 
+ * @since 3.2
+ */
+import org.eclipse.swt.*;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.widgets.*;
+
+public class Example3 {
+
+public static void main(String[] args) {
+	Display display = new Display(); 
+	Shell shell = new Shell(display);
+	final Color red = display.getSystemColor(SWT.COLOR_RED);
+	final Color yellow = display.getSystemColor(SWT.COLOR_YELLOW);
+	final Table table = new Table(shell, SWT.FULL_SELECTION);
+	table.setHeaderVisible(true);
+	new TableColumn(table, SWT.NONE).setWidth(100);
+	new TableColumn(table, SWT.NONE).setWidth(100);
+	new TableColumn(table, SWT.NONE).setWidth(100);
+	for (int i = 0; i < 5; i++) {
+		TableItem item = new TableItem(table, SWT.NONE);
+		item.setText(0, "item " + i + " col 0");
+		item.setText(1, "item " + i + " col 1");
+		item.setText(2, "item " + i + " col 2");
+	}
+	table.pack();
+
+	/*
+	 * NOTE: EraseItem is called repeatedly.  Therefore it is critical
+	 * for performance that this method be as efficient as possible.
+	 */
+	table.addListener(SWT.EraseItem, new Listener() {
+		public void handleEvent(Event event) {
+			event.detail &= ~SWT.HOT;
+			if ((event.detail & SWT.SELECTED) == 0) return; /* item not selected */
+			int clientWidth = table.getClientArea().width;
+			GC gc = event.gc;
+			Color oldForeground = gc.getForeground();
+			Color oldBackground = gc.getBackground();
+			gc.setForeground(red);
+			gc.setBackground(yellow);
+			gc.fillGradientRectangle(0, event.y, clientWidth, event.height, false);
+			gc.setForeground(oldForeground);
+			gc.setBackground(oldBackground);
+			event.detail &= ~SWT.SELECTED;
+		}
+	});
+
+	shell.pack();
+	shell.open();
+	while (!shell.isDisposed()) {
+		if (!display.readAndDispatch()) display.sleep();
+	}
+	display.dispose();
+}
+}
