@@ -1,0 +1,1861 @@
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Grant Gayed">
+<link href="../article.css" type="text/css" rel="stylesheet">
+<title>Custom Drawing Table and Tree Items</title>
+</head>
+
+<body>
+<h1>Custom Drawing Table and Tree Items</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>Populating a table or tree widget involves creating items and setting their attributes (eg.- texts, images, etc.), after which the
+table or tree takes responsibility for displaying the items.  This approach makes item creation straightforward and visually consistent.  As of
+Eclipse 3.2, clients of Table and Tree can now custom draw their items, enabling a wide range of potential visual appearances.  This article
+explores the custom draw mechanism for Table and Tree.</p>
+<div class="author">By Grant Gayed, IBM Ottawa Lab</div>
+<div class="copyright">Copyright &copy; 2007 International Business Machines Corp.</div>
+<div class="date">September 15th, 2006 (updated to include <code>SWT.HOT</code> style on June 8, 2007)</div>
+</div>
+
+
+<div class="content">  
+  <h2><a name="_Background"></a>Background</h2>
+  <p align="justify">
+Tables and trees are powerful tools for presenting data in a structured manner.  Data is displayed as a collection of
+items which have attributes like text(s), image(s), and sometimes interactive controls such as checkboxes.  Typically, clients create
+the items and set their attributes, after which the table or tree takes responsibility for displaying them.  This approach makes item creation
+straightforward and visually consistent, but is inflexible.  For example, an item in a table or tree can only contain one image, and it must
+appear before its text.  Given the range of visual appearances that a client may want an item to have, the best way to ensure that clients
+can create items with custom appearances is to allow items to be drawn.
+  </p>
+  <p align="justify">
+The ability to partially or fully custom draw TableItems and TreeItems has been added as of Eclipse 3.2, and will be described in this
+article.  It should be noted that all references made throughout the article to tables can be equally applied to trees, and vice versa.
+  </p>
+
+  <h2><a name="_Custom_Draw_Events"></a>Custom Draw Events</h2>
+  <p align="justify">
+Custom drawing is done on a per-cell basis, where a cell is the portion of an item that resides within some row and column of the parent table, or the
+full item if the table has no columns.  For example, if a table has two columns and three items then it has six cells.
+  </p>
+  <p align="justify">
+The following Table events have been defined to provide hooks into the drawing process:
+  </p>
+<ul>
+  <li><code>SWT.MeasureItem</code>: allows a client to specify the dimensions of a cell's content</li>
+  <li><code>SWT.EraseItem</code>: allows a client to custom draw a cell's background and/or selection, and to influence whether the cell's foreground should be drawn</li>
+  <li><code>SWT.PaintItem</code>: allows a client to custom draw or augment a cell's foreground and/or focus rectangle</li>
+</ul>
+  <p align="justify">
+To minimize the amount of work required to draw cells, these events are configured to reflect how the cell would be drawn by default.  This makes
+it easy to augment a cell's default appearance without having to draw the whole cell.  If a client does not hook one of these listeners then the
+default cell drawing process will occur.  The following sections will examine each of these events in detail along with some example code
+snippets.
+  </p>
+
+  <h2><a name="_MeasureItem"></a>SWT.MeasureItem</h2>
+  <p align="justify">
+<code>SWT.MeasureItem</code> is the first custom draw event that is sent.  This event gives a client the opportunity to specify the width and/or height of
+a cell's content.  It is important to note that content size is not necessarily equivalent to cell size, since the latter may include additional decorations
+such as checkboxes or tree indentation.  Contexts where this event is typically sent include drawing a cell and packing a table column.  This event
+comes pre-configured with the following fields:
+  </p>
+  <ul>
+    <li><code>item</code>: the item</li>
+    <li><code>index</code>: the column index of <code>item</code> to be measured</li>
+    <li><code>width</code>: the default content width that the table would use if it were to draw the cell itself, based on its text, image, and checkbox</li>
+    <li><code>height</code>: the default content height that the table would use, based on the height of all of its items</li>
+    <li><code>gc</code>: a GC that is configured with the cell's font, which can be useful for performing string measurements</li>
+  </ul>
+  <p align="justify">
+An application that wishes to specify a different content width and/or height for the cell can do so by changing the event's <code>width</code> and <code>height</code>
+fields.  A listener may choose to not change one or both of these values.
+  </p>
+
+  <h3><a name="_Example1"></a>Example 1: Specifying cell widths and heights</h3>
+  <p align="justify">
+Listing 1 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet271.java?view=co">snippet</a>) demonstrates
+the use of <code>SWT.MeasureItem</code> to specify custom content dimensions in a table with no columns.
+  </p>
+
+  <table border="1" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt; border-left:solid windowtext .5pt;border-bottom:none;border-right:none; padding:0in 5.4pt 0in 5.4pt"><a name="_tb1C" href="#_tb1D">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext; border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Display display = new Display();</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb2C" href="#_tb2D">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Shell shell = new Shell(display);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb3C" href="#_tb3D">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.setBounds(10,10,200,250);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb4C" href="#_tb4D">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Table table = new Table(shell, SWT.NONE);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb5C" href="#_tb5D">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setBounds(10,10,150,200);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb6C" href="#_tb6D">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setLinesVisible(true);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb7C" href="#_tb7D">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < 5; i++) {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb8C" href="#_tb8D">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;new TableItem(table, SWT.NONE).setText("item " + i);</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb9C" href="#_tb9D">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb10C" href="#_tb10D">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.MeasureItem, new Listener() {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb11C" href="#_tb11D">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb12C" href="#_tb12D">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int clientWidth = table.getClientArea().width;</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb13C" href="#_tb13D">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.height = event.gc.getFontMetrics().getHeight() * 2;</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb14C" href="#_tb14D">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.width = clientWidth * 2;</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb15C" href="#_tb15D">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb16C" href="#_tb16D">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb17C" href="#_tb17D">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.open();</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb18C" href="#_tb18D">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>while (!shell.isDisposed()) {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb19C" href="#_tb19D">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;if (!display.readAndDispatch()) display.sleep();</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb20C" href="#_tb20D">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb21C" href="#_tb21D">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>display.dispose();</code>
+      </td>
+    </tr>
+    <tr>
+  </table>
+  <p align="left">Listing 1.  Specifying custom widths and heights for items in a table with no columns</p>
+  <p align="justify"><a name="_tb1D" href="#_tb1C"><b>Lines 1-3:</b></a><br/>
+Creates a display and shell, and sets the shell's bounds.
+  </p>
+  <p align="justify"><a name="_tb4D" href="#_tb4C"><b>Lines 4-6:</b></a><br/>
+Creates the table with no columns, sets its bounds, and sets its lines to be visible.
+  </p>
+  <p align="justify"><a name="_tb7D" href="#_tb7C"><b>Lines 7-9:</b></a><br/>
+Creates the table's items.
+  </p>
+  <p align="justify"><a name="_tb10D" href="#_tb10C"><b>Lines 10-11</b></a><br/>
+Adds an <code>SWT.MeasureItem</code> listener to the table, which will be invoked whenever the size of a cell's content is needed.
+  </p>
+  <p align="justify"><a name="_tb12D" href="#_tb12C"><b>Line 12:</b></a><br/>
+Gets the table's client width, which will be used when specifying the cell's content width.
+ </p>
+  <p align="justify"><a name="_tb13D" href="#_tb13C"><b>Line 13:</b></a><br/>
+Sets the event's <code>height</code> field to double the height of the font.  This effectively doubles the height of the item in the event's <code>item</code> field relative to its
+default height.
+  </p>
+  <p align="justify"><a name="_tb14D" href="#_tb14C"><b>Line 14:</b></a><br/>
+Sets the event's <code>width</code> field to double the width of the table.  This specifies that the width of the cell should be this value regardless of its content.
+Note that since this table has no columns, the width of the cell is equivalent to that of the full item.
+  </p>
+  <p align="justify"><a name="_tb17D" href="#_tb17C"><b>Lines 17 to 21:</b></a><br/>
+Opens the shell, runs the event loop until the shell has been disposed, and disposes the display just before exiting.
+  </p>
+
+  <p align="justify">
+Figure 1 shows a screenshot of the snippet in Listing 1 running.  Note the increased item heights (caused by line 13), and increased item widths
+(caused by line 14) which can be inferred from the table's horizontal scrollbar.  Figure 2 shows a screenshot of the same snippet running with lines 10
+through 16 commented out, allowing the table to draw in its default manner.
+  </p>
+  <p align="center"><img border="0" src="images/figure1.png"><br/>
+Figure 1.  Screenshot of Listing 1 running, which specifies custom widths and heights for the items in a table
+  </p>
+  <p align="center"><img border="0" src="images/figure2.png"><br/>
+Figure 2.  Screenshot of Listing 1 running without the <code>SWT.MeasureItem</code> listener
+  </p>
+  <p align="justify">
+Note that attempts to change a cell's width or height in <code>SWT.MeasureItem</code> events are subject to the following constraints:
+  </p>
+  <ol>
+    <li>As of Eclipse 3.2 cell heights are not allowed to shrink, only to grow.</li>
+    <li>All items in a table have the same height, so increasing the height of a cell will result in the height of all items in the table growing accordingly.</li>
+    <li>If the cell is within a table column then its width is determined by the column's width.  However, the <code>SWT.MeasureItem</code> event's <code>width</code> field should still
+  always be set to the cell's desired content width because this value will be used if the table has no columns or if its column is being packed.</li>
+  </ol>
+
+  <h3><a name="_Example2"></a>Example 2: Packing columns</h3>
+  <p align="justify">
+Listing 2 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet272.java?view=co">snippet</a>) demonstrates the use of <code>SWT.MeasureItem</code> to specify cell widths when a table column is packed.
+  </p>
+<table border="1" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt; border-left:solid windowtext .5pt;border-bottom:none;border-right:none; padding:0in 5.4pt 0in 5.4pt"><a name="_tb1A" href="#_tb1B">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext; border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Display display = new Display();</code>
+	</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb2A" href="#_tb2B">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Shell shell = new Shell(display);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb3A" href="#_tb3B">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.setBounds(10,10,400,200);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb4A" href="#_tb4B">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Table table = new Table(shell, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb5A" href="#_tb5B">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setBounds(10,10,350,150);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb6A" href="#_tb6B">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setHeaderVisible(true);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb7A" href="#_tb7B">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setLinesVisible(true);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb8A" href="#_tb8B">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final TableColumn column0 = new TableColumn(table, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb9A" href="#_tb9B">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>column0.setWidth(100);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb10A" href="#_tb10B">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final TableColumn column1 = new TableColumn(table, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb11A" href="#_tb11B">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>column1.setWidth(100);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb12A" href="#_tb12B">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>column0.addListener(SWT.Selection, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb13A" href="#_tb13B">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb14A" href="#_tb14B">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;column0.pack();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb15A" href="#_tb15B">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb16A" href="#_tb16B">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb17A" href="#_tb17B">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>column1.addListener(SWT.Selection, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb18A" href="#_tb18B">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb19A" href="#_tb19B">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;column1.pack();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb20A" href="#_tb20B">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb21A" href="#_tb21B">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb22A" href="#_tb22B">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < 5; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb23A" href="#_tb23B">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;TableItem item = new TableItem(table, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb24A" href="#_tb24B">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item.setText(0, "item " + i + " col 0");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb25A" href="#_tb25B">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item.setText(1, "item " + i + " col 1");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb26A" href="#_tb26B">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb27A" href="#_tb27B">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.MeasureItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb28A" href="#_tb28B">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb29A" href="#_tb29B">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.width *= 2;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb30A" href="#_tb30B">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb31A" href="#_tb31B">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb32A" href="#_tb32B">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.open();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb33A" href="#_tb33B">33</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>while (!shell.isDisposed()) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb34A" href="#_tb34B">34</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;if (!display.readAndDispatch()) display.sleep();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb35A" href="#_tb35B">35</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tb36A" href="#_tb36B">36</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>display.dispose();</code></td>
+    </tr>
+  </table>
+  <p align="left">Listing 2.  Specifying custom cell content widths that are used by <code>TableColumn.pack()</code> to size a column
+  <p align="justify"><a name="_tb1B" href="#_tb1A"><b>Lines 1-3:</b></a><br/>
+Creates a display and shell, and sets the shell's bounds.
+  </p>
+  <p align="justify"><a name="_tb4B" href="#_tb4A"><b>Lines 4-7:</b></a><br/>
+Creates the table, sets its bounds, and sets its header and lines to be visible.
+  </p>
+  <p align="justify"><a name="_tb8B" href="#_tb8A"><b>Lines 8-11:</b></a><br/>
+Creates two table columns and sets the initial width of each to 100 pixels.
+  <p align="justify"><a name="_tb12B" href="#_tb12A"><b>Lines 12-21:</b></a><br/>
+Adds an <code>SWT.Selection</code> listener to each of the table's columns.  These listeners will invoke <code>pack()</code> on the column whenever its header is clicked by the user.
+  </p>
+  <p align="justify"><a name="_tb22B" href="#_tb22A"><b>Lines 22-26:</b></a><br/>
+Creates the table's items.
+  </p>
+  <p align="justify"><a name="_tb27B" href="#_tb27A"><b>Lines 27-28:</b></a><br/>
+Adds an <code>SWT.MeasureItem</code> listener to the table, which will be invoked whenever the size of a cell's content is needed.
+  </p>
+  <p align="justify"><a name="_tb29B" href="#_tb29A"><b>Line 29:</b></a><br/>
+Sets the event's <code>width</code> field to double the default width of the cell.  This specifies that the width of the cell should be this value regardless of its content.
+  </p>
+  <p align="justify"><a name="_tb32B" href="#_tb32A"><b>Lines 32-36:</b></a><br/>
+Opens the shell, runs the event loop until the shell has been disposed, and disposes the display just before exiting.
+  </p>
+  <p align="justify">
+Figure 3 shows a screenshot of the snippet in Listing 2 running after each of the table's columns have been packed by clicking on their headers.  Note that
+the columns have been packed to a width that is double of what is needed as a result of the <code>SWT.MeasureItem</code> listener in line 29.  Figure 4 shows a screenshot
+of the same snippet running with lines 27 through 31 commented out, which leaves the table's columns to pack to their default widths.
+  </p>
+  <p align="center"><img border="0" src="images/figure3.png"><br/>
+Figure 3.  Screenshot of Listing 2 running after the table's columns have been packed using the cell content sizes specified in the <code>SWT.MeasureItem</code> listener
+  </p>
+  <p align="center"><img border="0" src="images/figure4.png"><br/>
+Figure 4.  Screenshot of Listing 2 running after the table's columns have been packed using the default cell sizes
+  </p>
+
+  <h2><a name="_EraseItem"></a>SWT.EraseItem</h2>
+  <p align="justify">
+<code>SWT.EraseItem</code> is sent just before the background of a cell is about to be drawn.  The background consists of the cell's background color or the selection background
+if the item is selected.  This event allows a client to custom draw one or both of these.  Also, this event allows the client to indicate whether the cell's default
+foreground should be drawn following the drawing of the background.
+  </p>
+  <p align="justify">
+When this event is received the cell has been filled with either the table's background color or the portion of its background image that
+intersects with the cell.  This event comes pre-configured with the following fields:
+  </p>
+  <ul>
+    <li><code>item</code>: the item
+    <li><code>index</code>: the column index of <code>item</code> being drawn
+    <li><code>x</code>, <code>y</code>: the table-relative co-ordinates of the top-left corner of the cell
+    <li><code>width</code>, <code>height</code>: the width and height of the full cell, or the content width of the cell if the table has no columns; if these values were previously set by
+an <code>SWT.MeasureItem</code> listener then they are the same here
+    <li><code>gc</code>: the GC configured with the default foreground, background, font and clipping for the cell
+    <li><code>detail</code>: the logical OR of one or more of the following bits, indicating what will be drawn by default:
+    <ul>
+      <li><code>SWT.FOREGROUND</code>: this bit will be set if the default cell foreground will be drawn once the background has been drawn (default is <code>true</code>)
+      <li><code>SWT.BACKGROUND</code>: this bit will be set if either a cell-specific or item-specific background color will be drawn for this cell (ie.- a color has previously been
+set with either <code>TableItem.setBackground(Color)</code> or <code>TableItem.setBackground(int, Color)</code>)
+      <li><code>SWT.SELECTED</code>: this bit will be set if the selection will be drawn for this cell, implying that this item is selected
+      <li><code>SWT.FOCUSED</code>: this bit will be set if the focus rectangle will be drawn for this cell, implying that this item is the focus item in the table
+      <li><code>SWT.HOT</code>: <em>(@since 3.3)</em> this bit will be set if the mouse hover background will be drawn for this cell (not all platforms draw this)
+    </ul>
+    <li><code>doit</code>: this boolean indicates whether the table will do the drawing specified in the <code>detail</code> field once this listener has completed (default is <code>true</code>)
+  </ul>
+  <p align="justify">
+The listener is responsible for modifying the event to specify the elements that will be custom drawn (if any), and then doing the work.  This is done by
+clearing certain bits in the <code>detail</code> field, or by setting the <code>doit</code> field to <code>false</code> to indicate that the listener will do all drawing for the cell (usually
+in combination with an <code>SWT.PaintItem</code> listener).
+  </p>
+
+  <h3><a name="_Example3"></a>Example 3: Custom drawing item selection</h3>
+  <p align="justify">
+Listing 3 (<a href="./snippets/example3.txt">snippet</a>) demonstrates the use of <code>SWT.EraseItem</code> to custom draw the item selection rectangle in a table.
+  </p>
+ <table border="1" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt; border-left:solid windowtext .5pt;border-bottom:none;border-right:none; padding:0in 5.4pt 0in 5.4pt"><a name="_tr1C" href="#_tr1D">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext; border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Display display = new Display();</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr2C" href="#_tr2D">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Shell shell = new Shell(display);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr3C" href="#_tr3D">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Color red = display.getSystemColor(SWT.COLOR_RED);</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr4C" href="#_tr4D">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Color yellow = display.getSystemColor(SWT.COLOR_YELLOW);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr5C" href="#_tr5D">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Table table = new Table(shell, SWT.FULL_SELECTION);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr6C" href="#_tr6D">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setHeaderVisible(true);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr7C" href="#_tr7D">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>new TableColumn(table, SWT.NONE).setWidth(100);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr8C" href="#_tr8D">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>new TableColumn(table, SWT.NONE).setWidth(100);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr9C" href="#_tr9D">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>new TableColumn(table, SWT.NONE).setWidth(100);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr10C" href="#_tr10D">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < 5; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr11C" href="#_tr11D">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;TableItem item = new TableItem(table, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr12C" href="#_tr12D">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item.setText(0, "item " + i + " col 0");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr13C" href="#_tr13D">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item.setText(1, "item " + i + " col 1");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr14C" href="#_tr14D">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item.setText(2, "item " + i + " col 2");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr15C" href="#_tr15D">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr16C" href="#_tr16D">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.pack();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr17C" href="#_tr17D">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.EraseItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr18C" href="#_tr18D">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr19C" href="#_tr19D">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.detail &= ~SWT.HOT;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr20C" href="#_tr20D">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((event.detail & SWT.SELECTED) == 0) return; /* item not selected */</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr21C" href="#_tr21D">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int clientWidth = table.getClientArea().width;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr22C" href="#_tr22D">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GC gc = event.gc;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr23C" href="#_tr23D">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Color oldForeground = gc.getForeground();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr24C" href="#_tr24D">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Color oldBackground = gc.getBackground();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr25C" href="#_tr25D">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setForeground(red);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr26C" href="#_tr26D">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setBackground(yellow);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr27C" href="#_tr27D">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.fillGradientRectangle(0, event.y, clientWidth, event.height, false);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr28C" href="#_tr28D">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setForeground(oldForeground);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr29C" href="#_tr29D">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setBackground(oldBackground);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr30C" href="#_tr30D">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.detail &= ~SWT.SELECTED;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr31C" href="#_tr31D">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr32C" href="#_tr32D">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr33C" href="#_tr33D">33</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.pack();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr34C" href="#_tr34D">34</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.open();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr35C" href="#_tr35D">35</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>while (!shell.isDisposed()) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr36C" href="#_tr36D">36</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;if (!display.readAndDispatch()) display.sleep();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr37C" href="#_tr37D">37</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr38C" href="#_tr38D">38</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>display.dispose();</code></td>
+    </tr>
+  </table>
+
+  <p align="left">Listing 3: Custom drawing item selection<br/></p>
+  <p align="justify"><a name="_tr1D" href="#_tr1C"><b>Lines 1-2:</b></a><br/>
+Creates a display and shell.
+  </p>
+  <p align="justify"><a name="_tr3D" href="#_tr3C"><b>Lines 3-4:</b></a><br/>
+Obtains the system's red and yellow colors, which will be used for drawing the custom selection.
+  </p>
+  <p align="justify"><a name="_tr5D" href="#_tr5C"><b>Lines 5-6:</b></a><br/>
+Creates the table and sets its header to be visible.  The table's style is specified to be <code>SWT.FULL_SELECTION</code> since the custom-drawn selection will span
+the full table width.
+  </p>
+  <p align="justify"><a name="_tr7D" href="#_tr7C"><b>Lines 7-9:</b></a><br/>
+Creates three table columns and sets the initial width of each to 100 pixels.
+  </p>
+  <p align="justify"><a name="_tr10D" href="#_tr10C"><b>Lines 10-15:</b></a><br/>
+Creates the table's items.
+  </p>
+  <p align="justify"><a name="_tr16D" href="#_tr16C"><b>Line 16:</b></a><br/>
+Packs the table to its preferred size.
+  </p>
+  <p align="justify"><a name="_tr17D" href="#_tr17C"><b>Lines 17-18:</b></a><br/>
+Adds an <code>SWT.EraseItem</code> listener to the table, which will be invoked whenever the background of a cell is about to be drawn.
+  </p>
+  <p align="justify"><a name="_tr19D" href="#_tr19C"><b>Line 19:</b></a><br/>
+Clears the <code>SWT.HOT</code> bit from the event's <code>detail</code> field to ensure that hover backgrounds are not natively drawn.
+  </p>
+  <p align="justify"><a name="_tr20D" href="#_tr20C"><b>Line 20:</b></a><br/>
+Checks the <code>detail</code> field for the <code>SWT.SELECTED</code> bit, and returns out of the listener if it is not there since there is no selection to draw.
+  </p>
+  <p align="justify"><a name="_tr21D" href="#_tr21C"><b>Line 21:</b></a><br/>
+Gets the table's client width, to be used for drawing the cell's selection.
+  </p>
+  <p align="justify"><a name="_tr22D" href="#_tr22C"><b>Lines 22-24:</b></a><br/>
+Obtains the GC to draw on from the event and stores its foreground and background colors for the purpose of restoring them later.
+  </p>
+  <p align="justify"><a name="_tr25D" href="#_tr25C"><b>Lines 25-27:</b></a><br/>
+Draws the custom selection rectangle using a gradient that spans from red to yellow.  Line 26 specifies the full width of the item as the gradient bounds
+so that the color range will span the table width properly.  Since the GC's clipping is pre-configured to the bounds of the cell, only this portion of this
+gradient drawing will appear.
+  </p>
+  <p align="justify"><a name="_tr28D" href="#_tr28C"><b>Lines 28-29:</b></a><br/>
+Restores the GC's foreground and background colors to their previous values.
+  </p>
+  <p align="justify"><a name="_tr30D" href="#_tr30C"><b>Line 30:</b></a><br/>
+Clears the <code>SWT.SELECTED</code> bit from the event's <code>detail</code> field to indicate that the default selection should not be drawn for this cell.  Note that this item is
+still considered to be logically selected in the table.
+  </p>
+  <p align="justify"><a name="_tr33D" href="#_tr33C"><b>Lines 33-38:</b></a><br/>
+Packs and opens the shell, runs the event loop until the shell has been disposed, and disposes the display just before exiting.
+  </p>
+  <p align="justify">
+Figure 5 shows a screenshot of the snippet in Listing 3 running.  Though the selection gradient appears to be one continuous rectangle, it is actually
+drawn three times, each clipped to its respective cell.
+  </p>
+  <p align="center"><img border="0" src="images/figure5.png"><br/>
+Figure 5.  Screenshot of Listing 3 running, which uses an <code>SWT.EraseItem</code> listener to draw a custom selection
+  </p>
+
+  <h3><a name="_Example4"></a>Example 4: Custom drawing cell backgrounds</h3>
+  <p align="justify">
+Listing 4 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet273.java?view=co">snippet</a>) demonstrates the use of
+<code>SWT.EraseItem</code> to custom draw cell backgrounds in a table with no columns.  This example modifies the default clipping of the GC to display gradient rectangles that
+represent temperature ranges.
+  </p>
+  <table border="1" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt; border-left:solid windowtext .5pt;border-bottom:none;border-right:none; padding:0in 5.4pt 0in 5.4pt"><a name="_tr1E" href="#_tr1F">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext; border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final String[] MONTHS = {</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr2E" href="#_tr2F">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;"Jan", "Feb", "Mar", "Apr", "May", "Jun",</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr3E" href="#_tr3F">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"</td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr4E" href="#_tr4F">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr5E" href="#_tr5F">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int[] HIGHS = {-7, -4, 1, 11, 18, 24, 26, 25, 20, 13, 5, -4};</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr6E" href="#_tr6F">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int[] LOWS = {-15, -13, -7, 1, 7, 13, 15, 14, 10, 4, -2, -11};</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr7E" href="#_tr7F">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int SCALE_MIN = -30; final int SCALE_MAX = 30;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr8E" href="#_tr8F">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int SCALE_RANGE = Math.abs(SCALE_MIN - SCALE_MAX);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr9E" href="#_tr9F">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Display display = new Display();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr10E" href="#_tr10F">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Shell shell = new Shell(display);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr11E" href="#_tr11F">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.setBounds(10,10,400,350);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr12E" href="#_tr12F">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.setText("Ottawa Average Daily Temperature Ranges");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr13E" href="#_tr13F">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Color blue = display.getSystemColor(SWT.COLOR_BLUE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr14E" href="#_tr14F">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Color white = display.getSystemColor(SWT.COLOR_WHITE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr15E" href="#_tr15F">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Color red = display.getSystemColor(SWT.COLOR_RED);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr16E" href="#_tr16F">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Image parliamentImage = new Image(display, "./parliament.jpg");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr17E" href="#_tr17F">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Table table = new Table(shell, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr18E" href="#_tr18F">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setBounds(10,10,350,300);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr19E" href="#_tr19F">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setBackgroundImage(parliamentImage);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr20E" href="#_tr20F">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < 12; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr21E" href="#_tr21F">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;TableItem item = new TableItem(table, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr22E" href="#_tr22F">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item.setText(MONTHS[i] + " (" + LOWS[i] + "C..." + HIGHS[i] + "C)");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr23E" href="#_tr23F">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr24E" href="#_tr24F">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int clientWidth = table.getClientArea().width;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr25E" href="#_tr25F">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.MeasureItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr26E" href="#_tr26F">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr27E" href="#_tr27F">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int itemIndex = table.indexOf((TableItem)event.item);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr28E" href="#_tr28F">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int rightX = (HIGHS[itemIndex] - SCALE_MIN) * clientWidth / SCALE_RANGE;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr29E" href="#_tr29F">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.width = rightX;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr30E" href="#_tr30F">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr31E" href="#_tr31F">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr32E" href="#_tr32F">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.EraseItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr33E" href="#_tr33F">33</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr34E" href="#_tr34F">34</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int itemIndex = table.indexOf((TableItem)event.item);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr35E" href="#_tr35F">35</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int leftX = (LOWS[itemIndex] - SCALE_MIN) * clientWidth / SCALE_RANGE;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr36E" href="#_tr36F">36</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int rightX = (HIGHS[itemIndex] - SCALE_MIN) * clientWidth / SCALE_RANGE;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr37E" href="#_tr37F">37</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GC gc = event.gc;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr38E" href="#_tr38F">38</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rectangle clipping = gc.getClipping();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr39E" href="#_tr39F">39</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clipping.x = leftX;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr40E" href="#_tr40F">40</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clipping.width = rightX - leftX;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr41E" href="#_tr41F">41</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setClipping(clipping);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr42E" href="#_tr42F">42</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Color oldForeground = gc.getForeground();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr43E" href="#_tr43F">43</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Color oldBackground = gc.getBackground();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr44E" href="#_tr44F">44</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setForeground(blue);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr45E" href="#_tr45F">45</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setBackground(white);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr46E" href="#_tr46F">46</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.fillGradientRectangle(<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.x, event.y, event.width / 2, event.height, false);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr47E" href="#_tr47F">47</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setForeground(white);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr48E" href="#_tr48F">48</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setBackground(red);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr49E" href="#_tr49F">49</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.fillGradientRectangle(<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.x + event.width / 2, event.y, event.width / 2, event.height, false);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr50E" href="#_tr50F">50</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setForeground(oldForeground);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr51E" href="#_tr51F">51</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gc.setBackground(oldBackground);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr52E" href="#_tr52F">52</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.detail &= ~SWT.BACKGROUND;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr53E" href="#_tr53F">53</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.detail &= ~SWT.HOT;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr54E" href="#_tr54F">54</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr55E" href="#_tr55F">55</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr56E" href="#_tr56F">56</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.open();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr57E" href="#_tr57F">57</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>while (!shell.isDisposed()) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr58E" href="#_tr58F">58</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;if (!display.readAndDispatch()) display.sleep();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr59E" href="#_tr59F">59</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr60E" href="#_tr60F">60</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>parliamentImage.dispose();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr61E" href="#_tr61F">61</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>display.dispose();</code></td>
+    </tr>
+  </table>
+<p align="left">Listing 4.  Custom drawing item backgrounds<br/></p>
+
+  <p align="justify"><a name="_tr1F" href="#_tr1E"><b>Lines 1-8:</b></a><br/>
+Defines constants that will be used to set the table's item data and to draw item backgrounds.
+  </p>
+  <p align="justify"><a name="_tr9F" href="#_tr9E"><b>Lines 9-12:</b></a><br/>
+Creates a display and shell, and sets the shell's bounds and title.
+  </p>
+  <p align="justify"><a name="_tr13F" href="#_tr13E"><b>Lines 13-15:</b></a><br/>
+Obtains the system's blue, white and red colors, which will be used for drawing item backgrounds.
+  </p>
+  <p align="justify"><a name="_tr16F" href="#_tr16E"><b>Line 16:</b></a><br/>
+Loads an image that will be set into the table as the background.
+  </p>
+  <p align="justify"><a name="_tr17F" href="#_tr17E"><b>Lines 17-18:</b></a><br/>
+Creates the table with no columns and sets its bounds.
+  </p>
+  <p align="justify"><a name="_tr19F" href="#_tr19E"><b>Line 19:</b></a><br/>
+Sets the background image into the table.
+  </p>
+  <p align="justify"><a name="_tr20F" href="#_tr20E"><b>Lines 20-23:</b></a><br/>
+Creates the table's items.
+  </p>
+  <p align="justify"><a name="_tr24F" href="#_tr24E"><b>Line 24:</b></a><br/>
+Stores the table's client width for later use when drawing the item backgrounds.
+  </p>
+  <p align="justify"><a name="_tr25F" href="#_tr25E"><b>Lines 25-26:</b></a><br/>
+Adds an <code>SWT.MeasureItem</code> listener to the table so that item sizes can be specified.
+  </p>
+  <p align="justify"><a name="_tr27F" href="#_tr27E"><b>Lines 27-29:</b></a><br/>
+Computes the right bound of the item in the event's <code>item</code> field and sets this value into the event's <code>width</code> field.
+  </p>
+  <p align="justify"><a name="_tr32F" href="#_tr32E"><b>Lines 32-33:</b></a><br/>
+Adds an <code>SWT.EraseItem</code> listener to the table so that item backgrounds can be custom drawn.
+  </p>
+  <p align="justify"><a name="_tr34F" href="#_tr34E"><b>Lines 34-36:</b></a><br/>
+Gets the item from the event's <code>item</code> field and computes the left and right bounds that its temperature bar should be drawn with.
+  </p>
+  <p align="justify"><a name="_tr37F" href="#_tr37E"><b>Lines 37-41:</b></a><br/>
+Updates the clipping of the GC in the event's <code>gc</code> field to the bounds that were computed for this item's temperature bar.
+  </p>
+  <p align="justify"><a name="_tr42F" href="#_tr42E"><b>Lines 42-43:</b></a><br/>
+Stores the GC's foreground and background colors for the purpose of restoring them later.
+  </p>
+  <p align="justify"><a name="_tr44F" href="#_tr44E"><b>Lines 44-46:</b></a><br/>
+Draws the left half of the custom background rectangle with a gradient that spans from blue to white.  The portion of this rectangle that
+intersects with the GC's clipping bounds that were set in line 41 will ultimately appear.
+  </p>
+  <p align="justify"><a name="_tr47F" href="#_tr47E"><b>Lines 47-49:</b></a><br/>
+Draws the right half of the custom background rectangle with a gradient that spans from white to red.  The portion of this rectangle that
+intersects with the GC's clipping bounds that were set in line 41 will ultimately appear.
+  </p>
+  <p align="justify"><a name="_tr50F" href="#_tr50E"><b>Lines 50-51:</b></a><br/>
+Restores the GC's foreground and background colors to their previous values.
+  </p>
+  <p align="justify"><a name="_tr52F" href="#_tr52E"><b>Line 52:</b></a><br/>
+Clears the <code>SWT.BACKGROUND</code> bit from the event's <code>detail</code> field to indicate that the default background should not be drawn for this cell.
+  </p>
+  <p align="justify"><a name="_tr53F" href="#_tr53E"><b>Line 53:</b></a><br/>
+Clears the <code>SWT.HOT</code> bit from the event's <code>detail</code> field to ensure that hover backgrounds are not natively drawn.
+  </p>
+  <p align="justify"><a name="_tr56F" href="#_tr56E"><b>Lines 56-61:</b></a><br/>
+Opens the shell, runs the event loop until the shell has been disposed, and disposes the background image and display just before exiting.
+  </p>
+  <p align="justify">
+Figure 6 shows a screenshot of the snippet in listing 4 running.
+  </p>
+  <p align="center"><img border="0" src="images/figure6.png"><br/>
+Figure 6.  Screenshot of Listing 4 running, which uses an <code>SWT.EraseItem</code> listener to draw custom item backgrounds
+  </p>
+
+  <br/>
+  <h2><a name="_PaintItem"></a>SWT.PaintItem</h2>
+  <p align="justify">
+<code>SWT.PaintItem</code> is sent for a cell just after its default foreground contents have been drawn.  This event allows a client to augment the
+cell, or to completely draw the cell's content.  This event always comes pre-configured with the following fields:
+  </p>
+  <ul>
+    <li><code>item</code>: the item
+    <li><code>index</code>: the column index of <code>item</code> being drawn
+    <li><code>x</code>, <code>y</code>: the table-relative co-ordinates of the top-left corner of the cell's content (ie.- its image or text)
+    <li><code>width</code>, <code>height</code>: the width and height of the cell's content; if these values were previously set by an <code>SWT.MeasureItem</code> listener then they
+        are the same here
+    <li><code>gc</code>: the GC configured with the default foreground, background, font and clipping for the cell
+    <li><code>detail</code>: the logical OR of zero or more of the following bits:
+    <ul>
+      <li><code>SWT.SELECTED</code>: this bit will be set if the item is selected
+      <li><code>SWT.FOCUSED</code>: this bit will be set if the item is the table's focus item
+      <li><code>SWT.HOT</code>: <em>(@since 3.3)</em> this bit will be set if the mouse hover background will be drawn for this cell (not all platforms draw this)
+    </ul>
+  </ul>
+  <p align="justify">
+The purpose of the <code>x</code> and <code>y</code> fields are to indicate the location for custom drawing.  These values take into account decorations such as checkboxes and
+tree indentation.
+  </p>
+  <h3><a name="_Example5"></a>Example 5: Enhancing the native content</h3>
+  <p align="justify">
+Listing 5 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet220.java?view=co">snippet</a>) demonstrates the use of
+<code>SWT.PaintItem</code> to augment the default drawing of tree items.  It uses the <code>x</code>, <code>y</code> and <code>width</code> fields in the <code>SWT.PaintItem</code>
+event to draw an image to the right of alternating items.  This is an example of a simple drawing enhancement that enriches an item's default content while still maintaining its
+native appearance.
+  </p>
+  <table border="1" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt; border-left:solid windowtext .5pt;border-bottom:none;border-right:none; padding:0in 5.4pt 0in 5.4pt"><a name="_tr1G" href="#_tr1H">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext; border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Display display = new Display();</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr2G" href="#_tr2H">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Shell shell = new Shell(display);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr3G" href="#_tr3H">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.setBounds(10, 10, 350, 200);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr4G" href="#_tr4H">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Image xImage = new Image (display, 16, 16);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr5G" href="#_tr5H">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>GC gc = new GC(xImage);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr6G" href="#_tr6H">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>gc.setForeground(display.getSystemColor(SWT.COLOR_RED));</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr7G" href="#_tr7H">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>gc.drawLine(1, 1, 14, 14);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr8G" href="#_tr8H">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>gc.drawLine(1, 14, 14, 1);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr9G" href="#_tr9H">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>gc.drawOval(2, 2, 11, 11);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr10G" href="#_tr10H">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>gc.dispose();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr11G" href="#_tr11H">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int IMAGE_MARGIN = 2;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr12G" href="#_tr12H">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Tree tree = new Tree(shell, SWT.CHECK);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr13G" href="#_tr13H">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>tree.setBounds(10, 10, 300, 150);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr14G" href="#_tr14H">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>TreeItem item = new TreeItem(tree, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr15G" href="#_tr15H">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>item.setText("root item");</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr16G" href="#_tr16H">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < 4; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr17G" href="#_tr17H">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;TreeItem newItem = new TreeItem(item, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr18G" href="#_tr18H">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;newItem.setText("descendent " + i);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr19G" href="#_tr19H">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;if (i % 2 == 0) newItem.setData(xImage);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr20G" href="#_tr20H">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item.setExpanded(true);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr21G" href="#_tr21H">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;item = newItem;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr22G" href="#_tr22H">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr23G" href="#_tr23H">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>tree.addListener(SWT.MeasureItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr24G" href="#_tr24H">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr25G" href="#_tr25H">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TreeItem item = (TreeItem)event.item;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr26G" href="#_tr26H">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Image trailingImage = (Image)item.getData();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr27G" href="#_tr27H">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (trailingImage != null) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr28G" href="#_tr28H">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.width += trailingImage.getBounds().width + IMAGE_MARGIN;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr29G" href="#_tr29H">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr30G" href="#_tr30H">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr31G" href="#_tr31H">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr32G" href="#_tr32H">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>tree.addListener(SWT.PaintItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr33G" href="#_tr33H">33</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr34G" href="#_tr34H">34</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TreeItem item = (TreeItem)event.item;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr35G" href="#_tr35H">35</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Image trailingImage = (Image)item.getData();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr36G" href="#_tr36H">36</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (trailingImage != null) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr37G" href="#_tr37H">37</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int x = event.x + event.width + IMAGE_MARGIN;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr38G" href="#_tr38H">38</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int itemHeight = tree.getItemHeight();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr39G" href="#_tr39H">39</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int imageHeight = trailingImage.getBounds().height;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr40G" href="#_tr40H">40</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int y = event.y + (itemHeight - imageHeight) / 2;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr41G" href="#_tr41H">41</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.gc.drawImage(trailingImage, x, y);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr42G" href="#_tr42H">42</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr43G" href="#_tr43H">43</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr44G" href="#_tr44H">44</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr45G" href="#_tr45H">45</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.open();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr46G" href="#_tr46H">46</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>while (!shell.isDisposed()) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr47G" href="#_tr47H">47</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;if (!display.readAndDispatch()) display.sleep();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr48G" href="#_tr48H">48</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr49G" href="#_tr49H">49</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>xImage.dispose();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr50G" href="#_tr50H">50</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>display.dispose();</code></td>
+    </tr>
+  </table>
+<p align="left">Listing 5.  Using <code>SWT.PaintItem</code> to augment the default drawing of items<br/></p>
+  <p align="justify"><a name="_tr1H" href="#_tr1G"><b>Lines 1-3:</b></a><br/>
+Creates a display and shell, and sets the shell's bounds.
+  </p>
+  <p align="justify"><a name="_tr4H" href="#_tr4G"><b>Lines 4-11:</b></a><br/>
+Creates the image that will be used in this example, and defines a constant that will be used when drawing item foregrounds.
+  </p>
+  <p align="justify"><a name="_tr12H" href="#_tr12G"><b>Lines 12-13:</b></a><br/>
+Creates the tree with no columns and sets its bounds.
+  </p>
+  <p align="justify"><a name="_tr14H" href="#_tr14G"><b>Lines 14-22:</b></a><br/>
+Creates the tree's items.  Note that line 19 sets the trailing image as the item data for alternating items.  This data will be used when custom drawing the item foregrounds.
+  </p>
+  <p align="justify"><a name="_tr23H" href="#_tr23G"><b>Lines 23-24:</b></a><br/>
+Adds an <code>SWT.MeasureItem</code> listener to the tree so that item sizes can be specified.
+  </p>
+  <p align="justify"><a name="_tr25H" href="#_tr25G"><b>Lines 25-29:</b></a><br/>
+Gets the item from the event's <code>item</code> field, and if it has a trailing image, updates the event's <code>width</code> field to include space for the item's default
+content plus the trailing image.
+  </p>
+  <p align="justify"><a name="_tr32H" href="#_tr32G"><b>Lines 32-33:</b></a><br/>
+Adds an <code>SWT.PaintItem</code> listener to the tree so that the default foreground can be augmented.
+  </p>
+  <p align="justify"><a name="_tr34H" href="#_tr34G"><b>Lines 34-42:</b></a><br/>
+Gets the tree item from the event's <code>item</code> field, and if it has a trailing image set, draws the image to the right of the item's text.
+The event's <code>x</code>, <code>y</code> and <code>width</code> fields are used to compute the position of the image.
+  </p>
+  <p align="justify"><a name="_tr45H" href="#_tr45G"><b>Lines 45-50:</b></a><br/>
+Opens the shell, runs the event loop until the shell has been disposed, and disposes the images and display just before exiting.
+  </p>
+  <p align="justify">
+Figure 7 shows a screenshot of the snippet in listing 5 running.  It has the appearance of a native tree but also includes trailing images.
+  </p>
+  <p align="center"><img border="0" src="images/figure7.png"><br/>
+Figure 7.  Screenshot of Listing 5 running, which uses an <code>SWT.PaintItem</code> listener to augment the default drawing of items in a tree
+  </p>
+
+  <h3><a name="_Example6"></a>Example 6: Custom drawing complete item contents</h3>
+  <p align="justify">
+Listing 6 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet231.java?view=co">snippet</a>) demonstrates the use of
+<code>SWT.PaintItem</code> to draw items with multiple lines of text, which is not currently supported in tables.  It clears the <code>SWT.FOREGROUND</code> bit from the
+<code>detail</code> field in the <code>SWT.EraseItem</code> event, and then draws the text in the <code>SWT.PaintItem</code> event.
+  </p>
+  <table border="1" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border-top:solid windowtext .5pt; border-left:solid windowtext .5pt;border-bottom:none;border-right:none; padding:0in 5.4pt 0in 5.4pt"><a name="_tr1J" href="#_tr1K">1</a></td>
+      <td valign="top" style="width:788;border-top:.5pt solid windowtext; border-left:medium none;border-bottom:medium none;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int COLUMN_COUNT = 4;</code>
+      </td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr2J" href="#_tr2K">2</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int ITEM_COUNT = 8;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr3J" href="#_tr3K">3</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final int TEXT_MARGIN = 3;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr4J" href="#_tr4K">4</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Display display = new Display();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr5J" href="#_tr5K">5</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>Shell shell = new Shell(display);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr6J" href="#_tr6K">6</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>final Table table = new Table(shell, SWT.FULL_SELECTION);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr7J" href="#_tr7K">7</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setHeaderVisible(true);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr8J" href="#_tr8K">8</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.setLinesVisible(true);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr9J" href="#_tr9K">9</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < COLUMN_COUNT; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr10J" href="#_tr10K">10</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;new TableColumn(table, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr11J" href="#_tr11K">11</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr12J" href="#_tr12K">12</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < ITEM_COUNT; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr13J" href="#_tr13K">13</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;TableItem item = new TableItem(table, SWT.NONE);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr14J" href="#_tr14K">14</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;for (int j = 0; j < COLUMN_COUNT; j++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr15J" href="#_tr15K">15</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String string = "item " + i + " col " + j;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr16J" href="#_tr16K">16</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((i + j) % 3 == 1) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr17J" href="#_tr17K">17</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string +="\nnew line1";</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr18J" href="#_tr18K">18</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr19J" href="#_tr19K">19</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if ((i + j) % 3 == 2) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr20J" href="#_tr20K">20</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string +="\nnew line1\nnew line2";</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr21J" href="#_tr21K">21</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr22J" href="#_tr22K">22</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.setText(j, string);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr23J" href="#_tr23K">23</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr24J" href="#_tr24K">24</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr25J" href="#_tr25K">25</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.MeasureItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr26J" href="#_tr26K">26</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr27J" href="#_tr27K">27</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TableItem item = (TableItem)event.item;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr28J" href="#_tr28K">28</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String text = item.getText(event.index);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr29J" href="#_tr29K">29</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Point size = event.gc.textExtent(text);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr30J" href="#_tr30K">30</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.width = size.x + 2 * TEXT_MARGIN;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr31J" href="#_tr31K">31</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.height = Math.max(event.height, size.y + TEXT_MARGIN);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr32J" href="#_tr32K">32</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr33J" href="#_tr33K">33</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr34J" href="#_tr34K">34</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.EraseItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr35J" href="#_tr35K">35</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr36J" href="#_tr36K">36</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.detail &= ~SWT.FOREGROUND;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr37J" href="#_tr37K">37</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr38J" href="#_tr38K">38</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr39J" href="#_tr39K">39</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.addListener(SWT.PaintItem, new Listener() {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr40J" href="#_tr40K">40</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;public void handleEvent(Event event) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr41J" href="#_tr41K">41</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TableItem item = (TableItem)event.item;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr42J" href="#_tr42K">42</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String text = item.getText(event.index);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr43J" href="#_tr43K">43</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* center column 1 vertically */</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr44J" href="#_tr44K">44</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int yOffset = 0;</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr45J" href="#_tr45K">45</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (event.index == 1) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr46J" href="#_tr46K">46</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Point size = event.gc.textExtent(text);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr47J" href="#_tr47K">47</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yOffset = Math.max(0, (event.height - size.y) / 2);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr48J" href="#_tr48K">48</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr49J" href="#_tr49K">49</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.gc.drawText(text, event.x + TEXT_MARGIN, event.y + yOffset, true);</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr50J" href="#_tr50K">50</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr51J" href="#_tr51K">51</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>});</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr52J" href="#_tr52K">52</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>for (int i = 0; i < COLUMN_COUNT; i++) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr53J" href="#_tr53K">53</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;table.getColumn(i).pack();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr54J" href="#_tr54K">54</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr55J" href="#_tr55K">55</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>table.pack();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr56J" href="#_tr56K">56</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.pack();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr57J" href="#_tr57K">57</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>shell.open();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr58J" href="#_tr58K">58</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>while (!shell.isDisposed()) {</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr59J" href="#_tr59K">59</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>&nbsp;&nbsp;&nbsp;if (!display.readAndDispatch()) display.sleep();</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr60J" href="#_tr60K">60</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>}</code></td>
+    </tr>
+    <tr>
+      <td width="43" valign="top" style="width:.45in;border:none;border-left:solid windowtext .5pt; padding:0in 5.4pt 0in 5.4pt"><a name="_tr61J" href="#_tr61K">61</a></td>
+      <td valign="top" style="border-left:medium none; border-top:medium none; border-bottom:medium none; width:788;border-right:.5pt solid windowtext; padding-left:5.4pt; padding-right:5.4pt; padding-top:0in; padding-bottom:0in">
+<code>display.dispose();</code></td>
+    </tr>
+  </table>
+<p align="left">Listing 6.  Using <code>SWT.PaintItem</code> to draw items with multiple lines of text<br/></p>
+  <p align="justify"><a name="_tr1K" href="#_tr1J"><b>Lines 1-3:</b></a><br/>
+Defines constants that will be used for creating and drawing the table's items.
+  </p>
+
+  <p align="justify"><a name="_tr4K" href="#_tr4J"><b>Lines 4-5:</b></a><br/>
+Creates a display and shell.
+  </p>
+  <p align="justify"><a name="_tr6K" href="#_tr6J"><b>Lines 6-8:</b></a><br/>
+Creates the table and sets its header and lines to be visible.
+  </p>
+  <p align="justify"><a name="_tr9K" href="#_tr9J"><b>Lines 9-11:</b></a><br/>
+Creates the table's columns.
+  </p>
+  <p align="justify"><a name="_tr12K" href="#_tr12J"><b>Lines 12-24:</b></a><br/>
+Creates the table's items.  Item texts are set to values with one, two, or three lines of text.
+  </p>
+  <p align="justify"><a name="_tr25K" href="#_tr25J"><b>Lines 25-26:</b></a><br/>
+Adds an <code>SWT.MeasureItem</code> listener to the table so that item sizes can be specified.
+  </p>
+  <p align="justify"><a name="_tr27K" href="#_tr27J"><b>Lines 27-31:</b></a><br/>
+Gets the item and column index from the event, computes the bounds of its text, and uses this value to set the event's <code>width</code> and <code>height</code> fields.  <code>TEXT_MARGIN</code> is added
+to the bounds to create space for a small margin around the item's content.
+  </p>
+  <p align="justify"><a name="_tr34K" href="#_tr34J"><b>Lines 34-38:</b></a><br/>
+Adds an <code>SWT.EraseItem</code> listener to the table for the purpose of clearing the <code>SWT.FOREGROUND</code> bit from the event's <code>detail</code> field.  This indicates that the default drawing
+of item foregrounds should not occur because the <code>SWT.PaintItem</code> listener will do this in full.
+  </p>
+  <p align="justify"><a name="_tr39K" href="#_tr39J"><b>Lines 39-40:</b></a><br/>
+Adds an <code>SWT.PaintItem</code> listener to the table so that item foregrounds can be custom drawn.
+  </p>
+  <p align="justify"><a name="_tr41K" href="#_tr41J"><b>Lines 41-49:</b></a><br/>
+Gets the text for the cell and draws it.  The text is centered vertically within the cell for column 1, and draws top-aligned otherwise.
+  </p>
+  <p align="justify"><a name="_tr52K" href="#_tr52J"><b>Lines 52-54:</b></a><br/>
+Packs the table's columns to their preferred widths, using the values provided by the <code>SWT.MeasureItem</code> listener.
+  </p>
+  <p align="justify"><a name="_tr55K" href="#_tr55J"><b>Lines 55-56:</b></a><br/>
+Packs the table and shell to their preferred sizes.
+  </p>
+  <p align="justify"><a name="_tr57K" href="#_tr57J"><b>Lines 57-61:</b></a><br/>
+Opens the shell, runs the event loop until the shell has been disposed, and disposes the display just before exiting.
+  </p>
+  <p align="justify">
+Figure 8 shows a screenshot of the snippet in Listing 6 running.
+  </p>
+  <p align="center"><img border="0" src="images/figure8.png"><br/>
+Figure 8.  Screenshot of Listing 6 running, which uses an <code>SWT.PaintItem</code> listener to custom draw the table's items
+  </p>
+
+  <h2><a name="_Conclusion"></a>Conclusion</h2>
+  <p align="justify">
+With Table and Tree custom draw facilities in place, items can appear native, custom-drawn, or somewhere in between.  With a small amount of effort, clients can use
+this flexibility to display data any way that they want.  The potential uses for custom item drawing extend beyond the examples presented in this article.  To view
+a growing collection of examples that use custom draw tables and trees see <a href="http://www.eclipse.org/swt/snippets/#table">http://www.eclipse.org/swt/snippets/#table</a>
+and <a href="http://www.eclipse.org/swt/snippets/#tree">http://www.eclipse.org/swt/snippets/#tree</a>.
+  </p>
+  <p align="justify">
+Errata and comments about this article can be reported in <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=157330">https://bugs.eclipse.org/bugs/show_bug.cgi?id=157330</a>.
+  </p>
+</div>
+<div class="notices">
+  <p>Java and all Java-based trademarks and logos are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States, other countries, or both.</p>
+  <p>IBM is a registered trademark of International Business Machines Corporation in the United States, other countries, or both.</p>
+  <p>Other company, product, or service names may be trademarks or service marks of others.</p>
+</p>
+</div>
+</body>
