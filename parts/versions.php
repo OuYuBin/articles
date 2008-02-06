@@ -48,6 +48,8 @@
  			echo "</li>";
  		}
  		echo "</ul>";
+ 		
+ 		echo "<p>Help us keep this information up-to-date: let us know if this information applies to other projects or releases.";
  	}
  ?>
  
@@ -61,7 +63,10 @@
  			$separator = ", ";
  		}
  		echo ".<p>";
+ 	} else {
+ 		echo "<p>To comment on this article, ask questions, or propose corrections, please <a href\"https://bugs.eclipse.org/bugs/enter_bug.cgi?product=Community&component=Articles\">open a bug</a>.</p>";
  	}
+ 	
  ?>
 
 </div>
