@@ -18,12 +18,13 @@ that supports graphical and list- oder tree-based editing of the same
 information. The approach outlined in this article can easily be used as
 a starting point for the implementation of arbitrary multi-page editor
 solutions that contain GMF-based graphical editors.</p>
-</div>
 <div class="author">by Volker Wegert and Alex Shatalin</div>
-<div class="copyright">Copyright &copy; 2007 Volker Wegert and
+<div class="copyright">Copyright &copy; 2008 Volker Wegert and
 Alex Shatalin</div>
-<div class="date">November 26, 2007</div>
+<div class="date">March 20, 2008</div>
+</div>
 
+<div class="content">
 <h2>Table of Contents</h2>
 <ol>
 	<li><a href="#introduction">Introduction</a></li>
@@ -44,12 +45,12 @@ Alex Shatalin</div>
 	<li><a href="#creating_the_diagram">Creating the Diagram</a></li>
 	<li><a href="#fixing_the_resource_navigator">Fixing the
 	Resource Navigator</a></li>
+	<li><a href="#rcp">Want some RCP with that?</a></li>
 	<li><a href="#miscellaneous_notes">Miscellaneous Notes</a></li>
 	<li><a href="#conclusion">Conclusion</a></li>
 	<li><a href="#acknowledgements">Acknowledgements</a></li>
 </ol>
 
-<div class="content">
 <h2><a name="introduction">Introduction</a></h2>
 <p>Both the Eclipse Modeling Framework (<a
 	href="http://www.eclipse.org/emf">EMF</a>) and the Graphical Modeling
@@ -205,20 +206,26 @@ a reference to our central <tt>EditingDomain</tt> instance. In general,
 any implementation of <tt>IEditorInput</tt> could be used as input
 object for the <tt>EditorPart</tt>s contained in the multi-page editor.
 Fortunately, the GMF code base already contains a convenient wrapper for
-our task: the <tt>FileEditorInputProxy</tt>. In order to use this class,
-we have to adjust the method <tt>init()</tt> of the generated <tt>TopicmapEditor</tt>:</p>
+our task: the <tt>FileEditorInputProxy</tt>.</p>
+
+<p>While it is tempting to simply replace the editor's input with
+the wrapped-up input, this should be avoided since it causes trouble e.
+g. with the problem markers. As a rule of thumb, an editor should always
+return the same input object that it was initialized with or that was
+passed to it, no matter what happens internally. In our case, we just
+add an attribute of type <tt>FileEditorInputProxy</tt> to the <tt>TopicmapEditor</tt>
+and add a method for the lazy initialization of this attribute:</p>
 <pre>
-  public void init(IEditorSite site, IEditorInput editorInput) {
-    <b>IEditorInput input = editorInput;
-    if (input instanceof IFileEditorInput) {
-      input = new FileEditorInputProxy((IFileEditorInput)input, (TransactionalEditingDomain) editingDomain);
-    }</b>
-    setSite(site);
-    <b>setInputWithNotify(input);
-    setPartName(input.getName());</b>
-    site.setSelectionProvider(this);
-    site.getPage().addPartListener(partListener);
-    ResourcesPlugin.getWorkspace().addResourceChangeListener(resourceChangeListener, IResourceChangeEvent.POST_CHANGE);
+  protected IEditorInput getWrappedInput() {
+    if (wrappedInput == null) {
+      if (getEditorInput() instanceof IFileEditorInput) {
+        wrappedInput = new FileEditorInputProxy((IFileEditorInput)getEditorInput(), 
+                                                (TransactionalEditingDomain) getEditingDomain());
+      } else {
+        wrappedInput = getEditorInput();
+      }
+    }
+    return wrappedInput;
   }</pre>
 <p>You will note that references to <tt>FileEditorInputProxy</tt>
 can not be resolved at this point - simply because this class is
@@ -439,39 +446,39 @@ the editor parts. The instantiation procedure now looks like this:</p>
                 // Create a page for the selection tree view.
                 //
                 selectionEditorPart = new SelectionEditorPart(this);
-                pageIndex = addPage(selectionEditorPart, getEditorInput());
+                pageIndex = addPage(selectionEditorPart, getWrappedInput());
                 setPageText(pageIndex, getString("_UI_SelectionPage_label"));
                 selectionEditorPart.setInput(getEditingDomain().getResourceSet());
 
                 // Create a page for the parent tree view.
                 //
                 parentEditorPart = new ParentEditorPart(this);
-                pageIndex = addPage(parentEditorPart, getEditorInput());
+                pageIndex = addPage(parentEditorPart, getWrappedInput());
                 setPageText(pageIndex, getString("_UI_ParentPage_label"));
 
                 // This is the page for the list viewer
                 //
                 listEditorPart = new ListEditorPart(this);
-                pageIndex = addPage(listEditorPart, getEditorInput());
+                pageIndex = addPage(listEditorPart, getWrappedInput());
                 setPageText(pageIndex, getString("_UI_ListPage_label"));
 
                 // This is the page for the tree viewer
                 //
                 treeEditorPart = new TreeEditorPart(this);
-                pageIndex = addPage(treeEditorPart, getEditorInput());
+                pageIndex = addPage(treeEditorPart, getWrappedInput());
                 setPageText(pageIndex, getString("_UI_TreePage_label"));
         
 
                 // This is the page for the table viewer.
                 //
                 tableEditorPart = new TableEditorPart(this);
-                pageIndex = addPage(tableEditorPart, getEditorInput());
+                pageIndex = addPage(tableEditorPart, getWrappedInput());
                 setPageText(pageIndex, getString("_UI_TablePage_label"));
 
                 // This is the page for the table tree viewer.
                 //
                 tableTreeEditorPart = new TableTreeEditorPart(this);
-                pageIndex = addPage(tableTreeEditorPart, getEditorInput());
+                pageIndex = addPage(tableTreeEditorPart, getWrappedInput());
                 setPageText(pageIndex, getString("_UI_TreeWithColumnsPage_label"));
 
             } catch (PartInitException e) {
@@ -646,7 +653,7 @@ Note that the pre-packaged examples still contain this extension so that
 you can compare the generated diagram editor and the integrated editors
 more easily.</p>
 
-<p>Althought the integrated editor already looks quite impressive,
+<p>Although the integrated editor already looks quite impressive,
 there are several important issues to fix.</p>
 <ul>
 	<li>The properties view refuses to show any properties while the
@@ -859,6 +866,112 @@ the diagram editor's plug-in manifest:</p>
 <p><img src="screenshots/DiagramContents.png"
 	alt="Disable Diagram Content Provider" /></p>
 
+<h2><a name="rcp">Want some RCP with that?</a></h2>
+
+<p>Until now, we've worked in a complete Eclipse workbench
+environment. Both EMF and GMF support generating RCP editors as well. In
+order to combine the generated editors in an RCP environment, a few
+things need to be observed - it is not sufficient to just set the
+properties in the EMF .genmodel and the GMF generator to RCP (although
+that's the first step, of course).</p>
+
+<p>In the following sections we'll discuss the differences from the
+solution outlined above that apply to RCP applications. <b>You
+should walk through the entire process for a non-RCP application at
+least once before attempting to try this in the RCP environment</b> - after
+all, these are just the <i>differences</i> in the process that won't
+make much sense unless you know the process.</p>
+
+<p>As with the workbench edition of the integrated editor, we've
+provided both the <a href="files/rcp-projects-initial-state.zip">projects
+in their unmodified state</a>, right after generation, as well as the <a
+	href="files/rcp-projects-final-state.zip">projects in their final
+state</a>.</p>
+
+<h2><a name="setting_the_stage">Setting the Stage</a></h2>
+<p>Before we can try to integrate the generated editors, we first
+need to setup some playground projects. This is covered by the
+documentation provided for EMF and GMF, so let's not get lost in the
+details. You can use the 
+
+<h3>One editor or <strike>another</strike> the same?</h3>
+
+<p>One of the first things you'll notice when running the generated
+editors is that you'll see two sets of "Open" and "Open URI" actions in
+the file menu. However, an attempt to create an EMF-only file (using
+File - New - Topicmap Model) will lead to a strange error message
+stating that a "Diagram is not present in the resource". The reason for
+this is that although the file is created using the EMF wizard (and thus
+doesn't contain a diagram), the application tries to open the file with
+the GMF generated editor. This happens because in both editor plug-ins, 
+the extensions to <tt>org.eclipse.ui.editors</tt> have the (file) 
+extension property set to "topicmap". Remove this value from the 
+GMF generated editor so that the RCP application will always use 
+the EMF generated editor. While you're at it, you can also remove the 
+extensions to <tt>org.eclipse.ui.actionSets</tt>, 
+<tt>org.eclipse.ui.bindings</tt> and <tt>org.eclipse.ui.commands</tt>
+to clean up the file menu a little. <b>Make sure you've got the 
+EMF generated editor working before you attempt to perform any of 
+the actions outlined above.</b> You should then be able to follow 
+the steps outlined in section 
+<a href="#upgrading_the_editing_domain">Upgrading the Editing Domain</a>.</p>
+
+<h3>Editor Input, revised</h3>
+
+<p>In section <a href="#extending_the_editor_input">Extending
+the Editor Input</a> we used a wrapper class to pass the <tt>FileEditorInput</tt>
+instance along with the editing domain to all subordinate editors. When
+building an RCP application, the programs have to operate on <tt>URIEditorInput</tt>
+instances instead, so we can't use the same wrapper. Fortunately, it's
+not that difficult to build a specialized wrapper:</p>
+<pre>
+public class URIEditorInputProxy extends URIEditorInput {
+
+	protected TransactionalEditingDomain editingDomain;
+	
+	public URIEditorInputProxy(URI uri, TransactionalEditingDomain domain) {
+		super(uri);
+		this.editingDomain = domain;
+	}
+
+	public URIEditorInputProxy(IMemento memento, TransactionalEditingDomain domain) {
+		super(memento);
+		this.editingDomain = domain;
+	}
+
+	public URIEditorInputProxy(URI uri, String name, TransactionalEditingDomain domain) {
+		super(uri, name);
+		this.editingDomain = domain;
+	}
+	
+	public TransactionalEditingDomain getEditingDomain() {
+		return editingDomain;
+	}
+}</pre>
+<p>Note that you should place this wrapper in the diagram editor
+plug-in, for example in the package <tt>...diagram.part</tt>. Now we can
+integrate this wrapper as outlined in section <a
+	href="#extending_the_editor_input">Extending the Editor Input</a>,
+including the modifications to the document provider methods. Since the
+document provider already supports <tt>URIEditorInput</tt> instances,
+you only have to adapt the methods as outlined above. Note that you
+still need to re-export the GMF dependencies from the diagram editor
+plug-in because they are needed later on.</p>
+
+<h3>Business as usual</h3>
+
+<p>We can then continue as outlined in <a
+	href="#dissecting_the_emf_editor">Dissecting the EMF Editor</a>, <a
+	href="#selection_handling">Selection Handling</a> and <a
+	href="#combining_the_editors">Combining the Editors</a>, with some
+minor adjustments due to the differences in handling the editor input.
+After a brief moment of enthusiasm when we can see the integrated editor
+for the first time, we continue through <a href="#taming_the_properties">Taming
+the Properties</a>, <a href="#completing_menus_and_toolbars">Completing
+Menus and Toolbars</a>, <a href="#fixing_edit_menu_actions">Fixing Edit
+Menu Actions</a> and <a href="#creating_the_diagram">Creating the
+Diagram</a>.</p>
+
 <h2><a name="miscellaneous_notes">Miscellaneous Notes</a></h2>
 
 <p>While the integrated editor in its current state is already
@@ -867,6 +980,17 @@ article to outline the general procedure and not a comprehensive book,
 we can't really cover every aspect of the integration in detail. That
 being said, here are a few notes to illustrate known issues, outline
 some possible solutions and encourage further reading.</p>
+
+<h3>File Extension Issues</h3>
+
+<p>If you're encountering strange issues with the modification
+listeners of your resource sets or other synchronization problems, check
+that the file extension that is set in the diagram editor plug-in
+manifest in the extension to <tt>org.eclipse.emf.ecore.extension.parser</tt>
+matches the actual file extension set for the editor itself. This issue
+usually occurs if you forget to set <i>Same File for Diagram And
+Model</i> to <tt>true</tt> when <a href="#setting_the_stage">setting the
+stage</a>.</p>
 
 <h3>Adapting the Outline</h3>
 
@@ -936,16 +1060,6 @@ diagram files, create or load them whenever necessary and make sure that
 every embedded editor receives a complete resource set. While this is
 entirely possible, it's outside the scope of this article.</p>
 
-<h3>RCP Considerations</h3>
-
-<p>For pure RCP applications, you should be able to use almost the
-same approach; you just have to make sure that you avoid classes that
-are not available in the RCP environment. One example is the <tt>FileEditorInputProxy</tt>
-that is used to wrap the editing domain and the original editor input.
-However, it should not be too difficult to create your own wrapper
-classes and other adaptions once you've got the idea of how things are
-supposed to work together.</p>
-
 <h2><a name="conclusion">Conclusion</a></h2>
 
 <p>As you may have noticed, it's not the integration of the editors
@@ -962,9 +1076,10 @@ efforts to make this task less painful in future versions.</p>
 many different locations. Thanks to <a
 	href="http://hse-at-work.blogspot.com">Seweryn Niemiec</a> who created
 a first <a href="http://docs.google.com/View?docid=dcqc65c5_168kvf4">short
-documentation</a> on how to get the editors synchronized. Many kudos to all
-the people behind EMF, GMF and Eclipse who made this possible in the
-first place and never (OK, seldomly) seem to be bothered by
+documentation</a> on how to get the editors synchronized, as well as to all
+the readers and beta-testers of the contents of this article. Many kudos
+to all the people behind EMF, GMF and Eclipse who made this possible in
+the first place and never (OK, seldomly) seem to be bothered by
 more-or-less-stupid questions appearing in their newsgroups.</p>
 
 </div>
