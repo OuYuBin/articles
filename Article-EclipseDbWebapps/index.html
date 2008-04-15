@@ -1,0 +1,622 @@
+<html>
+<head>
+<title>Creating Database Web Applications with Eclipse</title>
+<meta http-equiv="Content-Type"
+	content="text/html; charset=windows-1252">
+<link href="../article.css" type="text/css" rel="stylesheet">
+
+</head>
+<body>
+
+<h1>Creating Database Web Applications with Eclipse</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>The Eclipse Web Tools and Data Tools Projects deliver a feature-rich environment for developing Java EE
+database-driven web applications. This tutorial walks you through the
+process of creating a simple database web application using Eclipse
+    WTP/DTP, Tomcat, and the Derby database engine.</p>
+<div class="author">By Stephen Schaub, Department of Computer Science, Bob Jones University</div>
+<div class="copyright">Copyright &copy; 2007 Stephen Schaub, Source code in
+  this article is made available under the EPL, v1.0, remainder of the
+  presentation is licensed under Creative Commons Att. Nc Nd 2.5 license <br>
+
+&nbsp;</div>
+<div class="date">March 13, 2006<br />Updated January 3, 2008 for Eclipse 3.3</div>
+</div>
+<div class="content">
+
+<H2>Introduction</H2>
+<P>Creating database-driven web applications in Java has
+traditionally involved a steep learning curve. Even if you already
+know how to write Java programs, and have a basic understanding of
+web applications, the Java Enterprise Edition (Java EE) stack is
+daunting. Learning to use the Servlet API and JavaServer Page (JSP)
+technology to generate dynamic content is just the beginning.
+Installing and configuring an open source Java EE web application server
+and a DBMS, and getting them to talk to each other, can require
+significant developer effort. 
+</P>
+<P>In this article, I will demonstrate how the combination of <A HREF="http://www.eclipse.org/webtools/">Eclipse
+Web Tools Platform</A>, <a href="http://www.eclipse.org/datatools/">Eclipse Data 
+    Tools Platform</a>, <A HREF="http://tomcat.apache.org/">Tomcat</A>, and <A HREF="http://db.apache.org/derby/">Derby</A> help to
+&quot;lower the bar&quot; by virtually eliminating the server
+administration issues, allowing developers to focus on the task at
+hand: building the web application. I will assume that you understand
+the basics of <A HREF="http://en.wikipedia.org/wiki/SQL">SQL</A>, and
+are familiar with HTML and basic web application concepts. 
+</P>
+<H2>Prerequisites</H2>
+<P>You will need the following software to build the project: &nbsp;</P>
+<OL>
+	<LI><P>Eclipse IDE for Java EE Developers 3.3<BR>Eclipse can be
+	downloaded from <A HREF="http://www.eclipse.org/downloads/">http://www.eclipse.org/downloads/</A>.
+	The Eclipse IDE for Java EE Developers distribution packages
+	together all of the Web Tools Platform components and their
+	dependencies in a convenient all-in-one download archive. To
+	install, simply extract the archive to your hard drive.</P>
+	<LI><P>Tomcat 6.0<BR>Available from
+	<A HREF="http://tomcat.apache.org/download-60.cgi">http://tomcat.apache.org/download-60.cgi</A>.
+	This tutorial was written using version 6.0.14. <BR><BR><STRONG>Note:</STRONG>
+	If you're a Windows user, I recommend downloading the zip
+	distribution and extracting it, instead of getting the packaged
+	Tomcat installer, which installs Tomcat as a Windows service (not an
+	appropriate configuration for use with Eclipse WTP).</P>
+	<LI><P>Derby Plugin for Eclipse<BR>Get the Derby Plugin for Eclipse
+	(derby_core_plugin_10.2.2.zip and derby_ui_plugin_1.1.0.zip),
+	available at <A HREF="http://db.apache.org/derby/derby_downloads.html" TARGET="_blank">http://db.apache.org/derby/derby_downloads.html</A>.
+	<BR><BR><B>Note:</B> The plugins contain the Derby engine. You don't
+	need to download the standard Derby distribution for this tutorial. 
+	</P>
+	<LI><P>JRE 6.0<BR>Sun's JRE is available from
+	<A HREF="http://java.com/en/download/manual.jsp">http://java.com/en/download/manual.jsp</A>
+		</P>
+</OL>
+<H2>Getting Started with Derby</H2>
+<P>Derby is an open-source pure-Java Database Management System (DBMS). I picked it 
+    as the DBMS for this article because it is freely available, integrates nicely 
+    with Eclipse, runs on all platforms that Eclipse runs on, and, most importantly, 
+    is far simpler to install and administer than traditional DBMS's.</P>
+<P>Like most popular DBMS's, Derby has a client/server architecture. The Derby engine runs 
+    as a server process, accepting connections from client applications. To use 
+    Derby, you start the Derby server, then you use Java database management tools 
+    to connect to the Derby server, create and populate databases, run queries, and 
+    so on. The Derby plugin for Eclipse described in this article integrates the 
+    Derby server controls into Eclipse, so you can start and stop the Derby server 
+    from the Eclipse environment. The plugin also stores the database files in the 
+    workspace, simplifying backup.</P>
+<P>Installing the Derby plugin for Eclipse is fairly straightforward.
+Here's how to do it.</P>
+<OL>
+	<LI><P>Unzip the two Derby Eclipse plugins
+	(derby_core_plugin_10.2.2.zip and derby_ui_plugin_1.1.0.zip) into
+	your eclipse installation folder (ECLIPSE_ROOT). Detailed
+	instructions are available here:
+	<A HREF="http://db.apache.org/derby/integrate/plugin_howto.html#Installing+the+plug-ins">http://db.apache.org/derby/integrate/plugin_howto.html#Installing+the+plug-ins</A>
+		</P>
+	<LI><P>In your ECLIPSE_ROOT/plugins folder, you should have a folder
+	named <U>org.apache.derby.core_10.2.2</U>. Copy the file
+	derbyclient.jar from that folder to your TOMCAT_ROOT/lib folder (if
+	you're using Tomcat 5.x, install into TOMCAT_ROOT/common/lib). This
+	installs the Derby JDBC driver into Tomcat for use in a DataSource.</P>
+</OL>
+<P>Eclipse organizes files in the workspace into projects. When you
+use the Derby plugin for Eclipse, you create an empty Java project,
+and then you &quot;Derby enable&quot; it. This project then becomes
+the repository for all of the Derby databases that you create in your
+workspace. 
+</P>
+<P>Follow these steps to create a Derby data project in Eclipse:&nbsp;</P>
+<OL>
+	<LI><P>Start Eclipse. If you have an existing Eclipse workspace, I
+	suggest choosing a new workspace folder for this tutorial. 
+	</P>
+	<LI><P>Choose <I>Window &gt; Preferences</I> <SPAN STYLE="font-style: normal">from
+	the menu to open the Eclipse Preferences dialog. Navigate to
+	</SPAN><I>Connectivity &gt; Driver Definitions</I><SPAN STYLE="font-style: normal">.
+	Select the Derby 10.2 folder and click </SPAN><I>Add...</I><SPAN STYLE="font-style: normal">.<BR><BR><IMG SRC="images/driverdef1.jpg" NAME="graphics58" ALIGN=BOTTOM WIDTH=635 HEIGHT=552 BORDER=0></SPAN></P>
+	<LI><P><SPAN STYLE="font-style: normal">In the New Driver Definition
+	dialog, select </SPAN><SPAN STYLE="font-style: normal"><B>Derby
+	Client JDBC Driver </B></SPAN>and click <I>OK</I>.<BR><BR><IMG SRC="images/driverdef2.jpg" NAME="graphics59" ALIGN=BOTTOM WIDTH=548 HEIGHT=385 BORDER=0></P>
+	<LI><P>In the Provide Driver Details dialog, select the
+	derbyclient.jar file and click <I>Edit Jar/Zip</I><SPAN STYLE="font-style: normal">.
+	Navigate to the location of the derbyclient.jar file on your system
+	and click OK.<BR><BR><IMG SRC="images/driverdef3.jpg" NAME="graphics60" ALIGN=BOTTOM WIDTH=583 HEIGHT=750 BORDER=0></SPAN></P>
+	<LI><P STYLE="font-style: normal">Click OK in the Preferences
+	dialog.</P>
+	<LI><P>Create a new Java project by selecting <I>File &gt; New &gt;
+	Other</I>. Select <I>Java &gt; Java Project</I> and click <I>Next</I>.
+	Enter the name <B>data</B> for the project, choose the option to
+	create separate source and output folders, and click <I>Finish</I>.<BR><BR><IMG SRC="images/newdataproject.jpg" NAME="graphics24" ALIGN=BOTTOM WIDTH=553 HEIGHT=761 BORDER=0></P>
+	<LI><P>This project will hold your Derby database for this tutorial.
+	In the Package Explorer, right-click your new project and choose
+	<I>Apache Derby &gt; Add Apache Derby Nature</I>. This action marks
+	the project as a Derby project, capable of storing one or more Derby
+	databases.<BR><BR><IMG SRC="images/add_derby_nature.jpg" NAME="graphics25" 
+            ALIGN=BOTTOM WIDTH=628 HEIGHT=740 BORDER=0></P>
+	<LI><P>Next, right-click your data project and choose <I>Apache
+	Derby &gt; Start Derby Network Server</I>.<BR><BR><IMG SRC="images/start_derby.jpg" NAME="graphics26" ALIGN=BOTTOM WIDTH=489 HEIGHT=148 BORDER=0><BR><BR><BR>
+	</P>
+	<LI><P>This action starts the Derby server. You should see the
+	following message appear in the Eclipse Console:<BR><BR><IMG SRC="images/derby_started.jpg" NAME="graphics27" ALIGN=BOTTOM WIDTH=865 HEIGHT=100 BORDER=0></P>
+	<LI><P>The Derby server will run as long as you have Eclipse open.
+	If you close Eclipse, the next time you start Eclipse, you will need
+	to start the Derby server again. The server accepts connections only
+	from the local host, which is just what you want for a development
+	database.</P>
+</OL>
+<H2>Creating a Derby Database</H2>
+<P>Now that you've installed Derby and started the Derby server, you
+will create a new database to hold the data for your web application.</P>
+<P>To create a new Derby database, you must use a Java DBMS
+management tool to connect to the Derby server with a specially
+formatted connection string that includes the name of the database
+you want to create, and an option that tells the Derby server to
+create the database. Here's how to accomplish the task using the
+Eclipse Data tooling included with the Eclipse IDE for Java EE Developers.</P>
+<OL>
+	<LI><P>Select <I>Window &gt; Open Perspective &gt; Other. </I>Choose
+	<B>Database Development</B> from the list.<BR><BR><IMG SRC="images/dbexplorer.jpg" NAME="graphics28" ALIGN=BOTTOM WIDTH=359 HEIGHT=434 BORDER=0></P>
+	<LI><P>In the Data Source Explorer view, right-click the Databases
+	folder and choose <I>New</I>.<BR><BR><IMG SRC="images/dbexplorer_newconn.jpg" NAME="graphics2" ALIGN=BOTTOM WIDTH=247 HEIGHT=140 BORDER=0></P>
+	<LI><P>In the New Connection Profile dialog, choose <B>SQL Model-JDBC Connection</B>, and click <I>Next</I>. (We won't be using the Derby
+	Embedded Database option, which prevents multiple JVM's from concurrently accessing 
+    the database.)</P>
+	<LI><P>On the next page, enter the name <B>sample</B> <SPAN STYLE="font-weight: medium">for
+	your database and click </SPAN><I><SPAN STYLE="font-weight: medium">Next</SPAN></I><SPAN STYLE="font-weight: medium">.
+	Leave </SPAN><I><SPAN STYLE="font-weight: medium">Auto-connect at
+	startup</SPAN></I> <SPAN STYLE="font-weight: medium">unchecked.</SPAN></P>
+	<LI><P>Fill out the final page as shown. Note carefully the
+	selections: Choose the <STRONG>Derby Client JDBC Driver</STRONG>
+	from the driver dropdown; accept the default Database name
+	(&quot;SAMPLE&quot;); use any non-blank User ID and non-blank
+	password (the password is ignored by Derby). <BR><BR><IMG SRC="images/new_database_dialog.jpg" NAME="graphics3" ALIGN=BOTTOM WIDTH=525 HEIGHT=663 BORDER=0></P>
+	<LI><P>Click <I>Finish</I>. The connection wizard will display a new
+	connection in the Databases folder named <I>sample</I>. Right-click
+	the <I>sample</I> <SPAN STYLE="font-style: normal">icon and choose
+	</SPAN><I>Connect </I>to open the connection. This will cause Derby
+	to create the database. The database files are stored in a folder
+	named <I>sample</I> in your data project. If you want to see them,
+	switch to the Java perspective, right-click the data project and
+	choose Refresh.<BR><BR><IMG SRC="images/sample_files.jpg" NAME="graphics4" ALIGN=BOTTOM WIDTH=318 HEIGHT=280 BORDER=0></P>
+</OL>
+<DL>
+	<DD>
+	<TABLE CELLPADDING=2 CELLSPACING=2>
+		<TR>
+			<TD VALIGN=TOP>
+				<P><IMG SRC="images/tip.gif" NAME="graphics5" ALIGN=BOTTOM WIDTH=62 HEIGHT=13 BORDER=0></P>
+			</TD>
+			<TD>
+				<P>To create a backup of your Derby database, simply stop the
+				Derby server, make a copy of the sample folder and its
+				subfolders, and restart the server. Restoring the database is
+				just as simple: stop the server, replace the sample folder
+				structure with the backup copy, and restart the server. 
+				</P>
+			</TD>
+		</TR>
+	</TABLE>
+</DL>
+<P>Now that the database is created, it's time to create a table for
+our application and populate it with some data. The current version
+of the Data tooling doesn't include any wizards to create a table, so we'll create
+a table using SQL Data Definition commands. &nbsp;</P>
+<P>To execute SQL commands using the Eclipse Data tooling, you will
+create a SQL File, which provides an editor that allows you to enter
+and execute SQL statements.</P>
+<OL>
+	<LI><P>Choose <I>File &gt; New &gt; SQL File</I>. Click <I>Next</I>,
+	and enter <U>scratch</U> (or whatever) as the filename. Select
+	<B>sample</B> <SPAN STYLE="font-weight: medium">from the </SPAN><I><SPAN STYLE="font-weight: medium">Connection
+	profile name</SPAN></I> <SPAN STYLE="font-weight: medium">dropdown,
+	and select </SPAN><B>SAMPLE</B> <SPAN STYLE="font-weight: medium">from
+	</SPAN><I><SPAN STYLE="font-weight: medium">the Database name</SPAN></I>
+	<SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: medium">dropdown
+	to associate the SQL file with your Derby sample database. </SPAN></SPAN>Click
+	<I>Finish</I>.<BR><BR><IMG SRC="images/new_scrapbook.jpg" NAME="graphics5" ALIGN=BOTTOM WIDTH=525 HEIGHT=679 BORDER=0></P>
+	<LI><P>A blank SQL editor will open. Copy and paste the following
+	code into the editor:</P>
+	<PRE>CREATE TABLE app.posts (
+  post_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), 
+  postname VARCHAR(50),
+  comments VARCHAR(512) NOT NULL
+ );
+  
+INSERT INTO app.posts(postname, comments) VALUES('Fred Jones', 
+   'Derby is cool, and the Eclipse plugin makes using it a snap!');
+INSERT INTO app.posts(postname, comments) VALUES('Wilma Harris', 
+   'Tomcat lets me register DataSources using a file in my web project? That''s great stuff!');</PRE>
+	<LI><P>Right-click in the editor and choose <I>Execute All</I>.<BR><BR>
+        <IMG SRC="images/run_scrapbook.jpg" NAME="graphics6" ALIGN=BOTTOM WIDTH=843 
+            HEIGHT=342 BORDER=0><BR><BR><BR>
+	</P>
+	<LI><P>The SQL Results tab will appear to show the results of the
+	execution.<BR><BR><IMG SRC="images/run_scrapbook_output.jpg" NAME="graphics8" ALIGN=BOTTOM WIDTH=933 HEIGHT=193 BORDER=0></P>
+	<LI><P>Now, back on the Data Source Explorer tab, browse to find the
+	table that was created. Right-click the Posts table and choose <I>Data
+	&gt; Edit</I> to view the contents in an editable grid. <BR><BR>
+        <IMG SRC="images/posts_table_edit.jpg" NAME="graphics9" ALIGN=BOTTOM WIDTH=601 
+            HEIGHT=363 BORDER=0></P>
+</OL>
+<H2>Creating a Web Project</H2>
+<P>Now that the database is in place, we're ready to begin creating
+our web application. A Java EE web application consists of a collection
+of dynamic resources (such as Servlets, JavaServer Pages, and
+other Java classes), static resources (HTML pages and images), and
+configuration files, all organized in a standardized directory.
+Eclipse helps you organize your web applications using a type of
+project called a Dynamic Web Project. When you create a Dynamic Web
+Project, you must select a Java EE web application server, which
+provides libraries needed by the project. 
+</P>
+<P>Follow these steps to create the project. &nbsp;</P>
+<OL>
+	<LI><P>Select <I>File &gt; New &gt; Other</I>. Select <I>Web &gt;
+	Dynamic Web Project</I> and click <I>Next</I>. Enter the Project
+	Name <I>demo,</I> and click <I>New</I> beside the <I>Target runtime</I>
+	dropdown. <BR><BR><IMG SRC="images/new_webproj.jpg" NAME="graphics29" ALIGN=BOTTOM WIDTH=473 HEIGHT=560 BORDER=0></P>
+	<LI><P>Select Tomcat 6.0 and click <EM>Next</EM>.<BR><BR><IMG SRC="images/new_runtime.jpg" NAME="graphics30" ALIGN=BOTTOM WIDTH=459 HEIGHT=546 BORDER=0></P>
+	<LI><P>Select your Tomcat 6.0 installation folder (the root folder
+	of the extracted Tomcat download archive). Click <I>Finish</I>.<BR><BR><IMG SRC="images/new_runtime_config.jpg" NAME="graphics31" ALIGN=BOTTOM WIDTH=459 HEIGHT=546 BORDER=0></P>
+	<LI><P>Back in the New Dynamic Project wizard, click <I>Finish</I>
+	to create the project<SPAN STYLE="font-style: normal">. </SPAN>
+	</P>
+	<LI><P>The application will use JSP tag libraries that you must
+	download and install into your project. Browse to
+	<A HREF="http://jakarta.apache.org/site/downloads/downloads_taglibs-standard.cgi">http://jakarta.apache.org/site/downloads/downloads_taglibs-standard.cgi</A>
+	and download the jakarta-taglibs-standard-1.1.2.zip distribution
+	(or, you can get them from the <A HREF="demo.zip">completed sample</A>
+	that accompanies this article). Copy the jstl.jar and standard.jar
+	files from the download archive into your project's
+	WebContent/WEB-INF/lib folder. When you've done this, you may need
+	to right-click on the project and choose <I>Refresh</I>. In the Java EE
+	Perspective's Project Explorer, you should see them listed both
+	under Web App Libraries and under the WEB-INF/lib folder as shown
+	here (note that if you're using the Java perspective, with the
+	Package Explorer, you won't see them in the WEB-INF/lib folder):<BR><BR><IMG SRC="images/jstl_lib.jpg" NAME="graphics11" ALIGN=BOTTOM WIDTH=257 HEIGHT=386 BORDER=0></P>
+</OL>
+<P>Next, we'll tackle the issue of database connection management for
+our application. Servlets and JSP pages that access a database are
+usually designed to obtain a database connection for each incoming
+request, and release the connection when the request has finished
+processing. Since opening and closing database connections is usually
+an expensive operation, an efficient web application makes use of
+JNDI connection pooling to speed up database access. The application
+server maintains a pool of connections to the database, and makes
+them available to the web application via a DataSource object. 
+</P>
+<P>Since connection pools are managed by the application server, not
+the web application, configuring connection pooling can be a pain.
+Fortunately, Tomcat 6.0 makes it really easy. Tomcat allows the
+developer to configure the database connection pool using a
+configuration file in the web project. We'll use that feature to
+simplify this tutorial. 
+</P>
+<DL>
+	<DD>
+	<TABLE CELLPADDING=2 CELLSPACING=2>
+		<TR>
+			<TD VALIGN=TOP>
+				<P><IMG SRC="images/tip.gif" NAME="graphics10" ALIGN=BOTTOM WIDTH=62 HEIGHT=13 BORDER=0></P>
+			</TD>
+			<TD>
+				<P>The technique discussed here also works for Tomcat 5.5. If you
+				are using Tomcat 5.0 or older, or another application server, you
+				must consult your application server for information on
+				configuring a DataSource. 
+				</P>
+			</TD>
+		</TR>
+	</TABLE>
+</DL>
+<OL>
+	<LI><P>Choose <I>File &gt; New &gt; File</I>, select the META-INF
+	folder, and enter the name <U>context.xml</U>.<BR><BR>
+        <IMG SRC="images/create_context.jpg" NAME="graphics12" ALIGN=TEXTTOP WIDTH=280 
+            HEIGHT=530 BORDER=0></P>
+	<LI><P>Copy and paste the following into your context.xml file (you
+	may have to click on the Source tab at the bottom of the editor to
+	be able to paste). This defines a DataSource with the name
+	&quot;jdbc/SampleDB&quot;. Our application will retrieve database
+	connections from the pool using this name.</P>
+	<PRE>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+
+&lt;Context&gt;
+   &lt;Resource name=&quot;jdbc/SampleDB&quot; auth=&quot;Container&quot;
+       type=&quot;javax.sql.DataSource&quot; 
+       username=&quot;app&quot; password=&quot;app&quot;
+       driverClassName=&quot;org.apache.derby.jdbc.ClientDriver&quot;
+       url=&quot;jdbc:derby://localhost:1527/sample&quot; 
+       maxActive=&quot;8&quot;    /&gt; 
+&lt;/Context&gt; </PRE>
+</OL>
+<DL>
+	<DD>
+	<TABLE CELLPADDING=2 CELLSPACING=2>
+		<TR>
+			<TD VALIGN=TOP>
+				<P><IMG SRC="images/tip.gif" NAME="graphics13" ALIGN=BOTTOM WIDTH=62 HEIGHT=13 BORDER=0></P>
+			</TD>
+			<TD>
+				<P>If you want to use a different DBMS, simply change the
+				<EM>driverClassName</EM> and <EM>url</EM> to values appropriate
+				for your database, and make sure you install your DBMS's JDBC
+				driver in Tomcat's common/lib folder. 
+				</P>
+			</TD>
+		</TR>
+	</TABLE>
+</DL>
+    <h2>
+        Writing the Application</h2>
+
+<p>Standard Java EE web applications use servlets and JSPs to generate dynamic content.
+    For this tutorial, we'll create a JSP page to allow the user to interact with the
+    database. You don't have to know Java to write JSPs; the JSP Standard Tag Library 
+    provides all the capabilities a simple database application needs.  </p>
+<p>
+    We'll begin with a simple page that displays the comments in the Posts table.</p>
+    <ol>                                                
+                                        <li>
+                                            <p>
+                                                Choose <i>File &gt; New &gt; File</i>.
+                                                Fill out the dialog as shown, making sure that the WebContent folder is highlighted.<br>
+                                                <br>
+                                                <img src="images/create_jsp.jpg" name="graphics10" align="BOTTOM" width="280" height="488"
+                                                    border="0"></p>
+                                                   
+<li><p>Next, paste the following code into the page:</p>
+<pre>        &lt;%@ page language="java" contentType="text/html; charset=ISO-8859-1"%&gt;
+
+<img src="images/tag_1.gif" />     &lt;%@ taglib prefix="sql" uri="http://java.sun.com/jsp/jstl/sql" %&gt;
+        &lt;%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %&gt;
+
+<img src="images/tag_2.gif" />     &lt;sql:setDataSource dataSource="jdbc/SampleDB" /&gt;
+
+        &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"&gt;
+        &lt;html&gt;
+        &lt;head&gt;
+        &lt;title&gt;Speak To Me, Please&lt;/title&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+
+        &lt;h1&gt;Speak To Me, Please&lt;/h1&gt;
+
+        Welcome to the Acme Corp. feedback site. 
+         
+        &lt;h2&gt;Here's what your fellow workers have said:&lt;/h2&gt; 
+        &lt;table border='1'&gt;
+          &lt;tr&gt;&lt;th&gt;Worker&lt;/th&gt;&lt;th&gt;Comment&lt;/th&gt;&lt;/tr&gt;
+
+<img src="images/tag_3.gif" />       &lt;sql:query var="qryPosts" &gt;
+                  SELECT postname, comments FROM app.posts
+          &lt;/sql:query&gt;
+
+<img src="images/tag_4.gif" />       &lt;c:forEach var="row" items="${qryPosts.rows}"&gt;
+	        &lt;tr&gt;
+<img src="images/tag_5.gif" />               &lt;td&gt;&lt;c:out value="${row.postname}" /&gt;&lt;/td&gt;
+                  &lt;td&gt;&lt;c:out value="${row.comments}" /&gt;&lt;/td&gt;
+	        &lt;/tr&gt;
+          &lt;/c:forEach&gt;
+        &lt;/table&gt;
+
+        &lt;/body&gt;
+        &lt;/html&gt;
+</pre>
+ </ol>
+ 
+Notes about the code:
+<ul>
+<li>The <img src="images/tag_1.gif" />taglib directives allow the use of the <span style="font-family: 'Courier New', Courier, mono">
+    &lt;</span>sql:&gt; and &lt;c:&gt; tags from the JSP Standard
+    Tag Library.</li>
+    <li>The <img src="images/tag_2.gif" />&lt;sql:setDataSource&gt; tag references the JNDI DataSource whose attributes
+        are defined in the context.xml file you created earlier. The JSP engine retrieves a connection from
+        the DataSource for use by queries later in the page. </li>
+    <li>The <img src="images/tag_3.gif" />&lt;sql:query&gt; tag executes a query against the database and exposes
+        the results in a JSP page variable named <em>qryPosts</em>. </li>
+    <li>The <img src="images/tag_4.gif" />&lt;c:forEach&gt; tag iterates over the results of the query. The items expression "${qryPosts.rows}" references the collection
+        of rows returned from the query and exposed via the <em>qryPosts</em> JSP variable.
+        The body of the
+        &lt;c:forEach&gt; tag emits a row of the HTML table for each row in the query result
+        set. Each time the body is evaluated, the iterator variable <em>row</em> references
+        the next row of the query result set.</li>
+        <li>The <img src="images/tag_5.gif" />&lt;c:out value="${row.postname}" /&gt; expression inserts the value of the <em>postname</em> field of the current
+        row of the result set. &nbsp;</li>
+</ul>
+                <blockquote>
+                <table>
+                <tr><td valign="top"><img src="images/tip.gif" ></td>
+                <td>
+                    If you're using an application server other than Tomcat 6.0, and you don't know how to configure a DataSource, you can embed the connection
+    attributes directly in the JSP page. You won't get connection pooling, but you can
+    at least get the sample working by replacing line
+    <img src="images/tag_2.gif" />
+    with the following lines:<br />
+    <pre>    &lt;% Class.forName("org.apache.derby.jdbc.ClientDriver"); %&gt;
+    &lt;sql:setDataSource dataSource="jdbc:derby://localhost:1527/sample" user="app" password="app" /&gt;</pre>
+    If you do this, you may also find it necessary to copy the derbyclient.jar file to your project's WEB-INF/lib folder
+    to make the JDBC driver class available to your application.
+                 </td>   </tr></table>
+                 </blockquote>  
+
+    
+    <h2>
+        Testing the Application</h2>
+    <p>
+        We haven't finished the application yet, but let's take a break from coding to test
+        the existing functionality.</p>
+         <ol>
+                        <li>
+                            <p>
+                                Right click on demo.jsp and select <em>Run As &gt; Run on Server</em>. Select the Tomcat
+                                6.0 server, and click <i>Finish</i>.</p>
+                            <li>
+                                <p>
+                                    Eclipse starts the Tomcat application server.
+                                    After the server starts, you should see a page like this.
+                                    <br>
+                                    <br>
+                                    <img src="images/running_app_v1.jpg" name="graphics23" align="BOTTOM" width="637" height="292"
+                                        border="0"><br />
+                                    <br />
+                                    <strong>Note:</strong> If Eclipse has problems starting the server, make sure you don't
+                                    already have Tomcat running on your system. If you have an instance of Tomcat
+                                    running, you should stop it before trying to test your application in Eclipse.</p>
+                        <li>
+                            <p>Try adding a new row to the Posts table using the Eclipse table editor I mentioned
+                                earlier. After you save the new row, you should be able to click Reload in the web
+                                browser, and the new row should appear.</p>
+                    </ol>
+    <h2>
+        Letting Users Leave Feedback</h2>
+    <p>
+        This application doesn't allow users to contribute feedback. Let's enhance the JSP
+        page to provide a form that users can fill out to add comments.</p>
+    <p>
+        Switch to the JSP editor and copy and paste the following code just above the closing
+        &lt;/body&gt; tag:</p>
+    <pre><IMG src="images/tag_1.gif" />     &lt;form action="demo.jsp" method="post"&gt;
+          &lt;table&gt;
+            &lt;tr&gt;
+              &lt;td&gt;Your name: (optional)&lt;/td&gt;
+<IMG src="images/tag_2.gif" />           &lt;td&gt;&lt;input type='text' name='name' value="${name}"&gt;&lt;/td&gt;
+            &lt;/tr&gt;
+            &lt;tr&gt;
+              &lt;td&gt;Your comments:&lt;/td&gt;
+<IMG src="images/tag_3.gif" />           &lt;td&gt;&lt;textarea name='comments' rows="6" cols="40"&gt;${comments}&lt;/textarea&gt;&lt;/td&gt;
+            &lt;/tr&gt;  
+            &lt;tr&gt;
+              &lt;td&gt;&lt;/td&gt;
+<IMG src="images/tag_4.gif" />           &lt;td&gt;&lt;input type='submit' name='action' value='Submit'&gt;
+            &lt;/tr&gt;
+           &lt;/table&gt;
+<IMG src="images/tag_5.gif" />        &lt;h3&gt;${msg}&lt;/h3&gt;
+        &lt;/form&gt;
+
+</pre>
+<p>
+    When the user clicks the
+    <IMG src="images/tag_4.gif" />submit button on this form, the
+    <IMG src="images/tag_2.gif" />name and
+    <IMG src="images/tag_3.gif" />comments entered by the user will be submitted to
+    the
+    <IMG src="images/tag_1.gif" />demo.jsp page for processing. A message indicating
+    success or failure will be placed in a JSP variable named
+    <IMG src="images/tag_5.gif" />
+    <em>msg</em> to inform the user of the result of the processing.</p>
+    <p>
+        Next, we need to write the code to process the form submission. Insert the following code at the top of the page,
+after the &lt;sql:setDataSource&gt; tag:</p>
+<pre><IMG src="images/tag_1.gif" />     &lt;c:set var="name" value="${param.name}" /&gt;
+        &lt;c:set var="comments" value="${param.comments}" /&gt;
+            
+<IMG src="images/tag_2.gif" />     &lt;c:if test="${param.action == 'Submit'}"&gt;
+          &lt;c:choose&gt;
+<IMG src="images/tag_3.gif" />         &lt;c:when test="${not empty comments}"&gt;
+<IMG src="images/tag_4.gif" />            &lt;sql:update&gt;
+		    INSERT INTO app.posts(postname, comments) VALUES(?, ?)
+<IMG src="images/tag_5.gif" />	            &lt;sql:param value="${name}"/&gt;
+		    &lt;sql:param value="${comments}"/&gt;
+	       &lt;/sql:update&gt;
+<IMG src="images/tag_6.gif" />            &lt;c:set var="msg" value="Thank you for your feedback." /&gt;
+	       &lt;c:set var="name" value="" /&gt;
+	       &lt;c:set var="comments" value="" /&gt;		
+            &lt;/c:when&gt;
+            &lt;c:otherwise&gt;
+<IMG src="images/tag_7.gif" />            &lt;c:set var="msg" value="Please supply some comments." /&gt;
+            &lt;/c:otherwise&gt;
+          &lt;/c:choose&gt;
+        &lt;/c:if&gt;
+</pre>
+
+<p>Notes about the code:</p>
+<ul>
+<li>When the user submits the form, his name and comments are submitted to the JSP page.
+    The <img src="images/tag_1.gif" />&lt;c:set&gt; statements retrieve those values and place them in local JSP variables
+    named <em>name</em> and <em>comments</em>.</li>
+    <li>If this is a form submission, the action parameter will be "Submit", and the code
+        inside the <img src="images/tag_2.gif" />&lt;c:if&gt; block will execute to process the submission. On the initial page load, the action parameter will be empty, and the code inside the &lt;c:if&gt;
+        block will not execute.</li>
+    <li>The user may opt to omit his name, but must supply some comments. The
+        <img src="images/tag_3.gif" />&lt;c:when&gt; test verifies
+        that the comments variable is not blank.</li>
+    <li>The <img src="images/tag_4.gif" />&lt;sql:update&gt; tag is used to execute an INSERT, UPDATE, or DELETE statement
+        against the database. The question marks (?) indicate places in the query where
+        user input is substituted. </li>
+    <li>The <img src="images/tag_5.gif" />&lt;sql:param&gt; tags supply values for the ? placeholders.</li>
+    <li>The contents of a JSP variable named <em>msg</em> is displayed at the bottom of
+        the form. <img src="images/tag_6.gif" />Here, <em>msg</em> is set to indicate to the user that the submission
+        was successfully saved.</li>
+    <li>If the user failed to enter comments, <img src="images/tag_7.gif" />this code is executed, and sets <em>msg</em>
+        to indicate to the user why the submission could not be successfully processed.</li>
+</ul>
+<p>After entering this code, save the changes. Switch back to the browser view and
+    click Reload. You should see a form appear:</p>
+    <p><img src="images/running_app.jpg" name="graphics23" align="BOTTOM" width="686" height="489"
+                                        border="0"></p>
+<p>Try entering some comments and clicking Submit. The page should process the submission,
+and you should see your comments appear in the table. Check the database table using the
+table editor; you should find that the comments have been saved there.</p>                                        
+
+    <h2>
+        Deploying the Database</h2>
+    <p>
+                        When you are ready to deploy the application to a production Tomcat application
+                        server, you must copy the Derby database data folders to the application server
+        computer. You then have a couple of options for accessing the Derby database from
+        your deployed application.</p>
+                    <ul>
+                        <li>
+                            <p>
+                                You can install Derby on the application server computer, and run it in client/server
+                                mode. Your application connects to the database using the same technique as I've
+                                demonstrated in this article. The drawback to this approach is that you have two
+                                server processes to manage: Tomcat and Derby.</p>
+                            <li>
+                                <p>
+                                    You can use Derby in embedded mode. In this scenario, the Derby engine runs inside
+                                    the Tomcat process. You don't have to stop and start Derby separately from Tomcat.
+                                    For more information, refer to the Derby website.</p>
+                    </ul>
+    <h2>
+        Summary</h2>
+    <p>
+        &nbsp;The Eclipse Web Tools Project, combined with Tomcat 6.0, Derby, and the Eclipse 
+        Data Tools Project, reduces the burden of server administration, delivering a 
+        convenient platform for Java EE database web application development. This 
+        article demonstrated how to construct a simple Java EE web application using 
+        these tools. </p>
+    &nbsp;
+<h2>Resources</h2>
+    <p>
+        <a href="demo.zip">The completed sample</a> is available. You can import it into
+        Eclipse by renaming it to demo.war, choosing <em>File &gt; Import</em>, and selecting
+        <em>Web &gt; WAR File</em>. Note that the database is not included; you must set that up following
+        the instructions in the article.</p>
+    <p>
+        If you want to know more about JSP application development, here are some resources
+        that can help.&nbsp;</p>
+
+<ul>
+<li><a href="http://java.sun.com/products/jsp/docs.html">http://java.sun.com/products/jsp/docs.html</a><br />
+    Sun JSP Documentation</li>
+    <li><a href="http://java.sun.com/products/jsp/jstl/1.1/docs/tlddocs/index.html">http://java.sun.com/products/jsp/jstl/1.1/docs/tlddocs/index.html</a><br />
+    JSTL Quick Reference&nbsp; </li>
+    <li><a href="http://jcp.org/aboutJava/communityprocess/final/jsr052/index2.html">http://jcp.org/aboutJava/communityprocess/final/jsr052/index2.html</a><br />
+        JSTL Specification and Reference</li>
+    <li><A HREF="http://www.eclipse.org/webtools/">http://www.eclipse.org/webtools/</A><br />
+        Eclipse Web Tools Platform</li>
+    <li><a href="http://www.eclipse.org/datatools/">http://www.eclipse.org/datatools/</a><br />
+        Eclipse Data Tools Platform</li>
+    <li><A HREF="http://tomcat.apache.org/">http://tomcat.apache.org/</A><br />
+        Tomcat</li>
+    <li><A HREF="http://db.apache.org/derby/">http://db.apache.org/derby/</A><br />
+        Derby</li>
+    <li><A HREF="http://en.wikipedia.org/wiki/SQL">http://en.wikipedia.org/wiki/SQL</A><br />
+        SQL</li>
+        
+</ul>
+</div>
+</body>
+</html>
