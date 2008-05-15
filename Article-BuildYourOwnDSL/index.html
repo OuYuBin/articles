@@ -1,0 +1,401 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Build your own textual DSL with Tools from the Eclipse Modeling Project</title><link href="../article.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.71.1" name="generator"><meta name="description" content="Domain Specific Languages (DSLs) are a hot topic nowadays. While creating internal DSLs is no big deal, creating external DSLs have been said to be hard to create. In this tutorial we will show you how easy it is to create your own DSL with tools from the Eclipse Modeling Project (EMP) in less than one hour."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><h1>Build your own textual DSL with Tools from the Eclipse Modeling Project</h1><div class="summary"><h2>Summary</h2><p>
+				Domain Specific Languages (DSLs) are a hot topic nowadays. While creating internal DSLs
+				is no big deal, creating external DSLs have been said to be hard to create. In this
+				tutorial we will show you how easy it is to create your own DSL with tools from the
+				Eclipse Modeling Project (EMP) in less than one hour.
+			</p><div class="author">
+				By
+				Peter&nbsp;Friese,
+					itemis labs Kiel<br>Sven&nbsp;Efftinge,
+					itemis labs Kiel<br>Jan&nbsp;K&ouml;hnlein,
+					itemis labs Kiel<br></div><div class="copyright">
+				Copyright &copy;
+				2008&nbsp;itemis labs Kiel. All rights reserved.</div><div class="date"><span class="date">April 18, 2008<br></span></div></div><div class="content"><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introduction"></a>Introduction</h2></div></div></div><p>
+		The purpose of this tutorial is to illustrate the definition of external
+    DSLs using tools from the Eclipse Modeling Project (EMP). The main focus is on the 
+    <span class="emphasis"><em>Xtext</em></span> framework. We will start by defining our own DSL in an 
+    <span class="emphasis"><em>Xtext</em></span> grammar. Then we will use the
+    <span class="emphasis"><em>Xtext</em></span> framework to generate a parser, an 
+    <span class="emphasis"><em>Ecore-based</em></span>
+    metamodel and a textual editor for Eclipse. Afterwards we will see how to refine 
+    the DSL and its editor by means of <span class="emphasis"><em>Xtend</em></span> extensions. 
+    Finally, we will learn how one can generate code out of textual models using the template
+    language <span class="emphasis"><em>Xpand</em></span>.</p><p>The actual content of this example is rather trivial&mdash;our 
+    DSL will describe entities with properties and references between them from
+    which we generate Java classes according to the JavaBean conventions&mdash;a rather
+    typical data model. In a real setting, we might also generate persistence 
+    mappings, etc. from the same models. We skipped this to keep the tutorial simple.
+		</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="environment"></a>Setting up the Environment</h2></div></div></div><p>
+		To follow this tutorial, you will need to install the following components
+		<div class="itemizedlist"><ul type="disc"><li>
+					A Java 5 or 6 SDK. Download it at
+					[<a href="#java_download" title="[java_download]">1</a>] 
+					or use another SDK that suits your environment. 
+				</li><li>
+					Eclipse SDK 3.3 (From the "Europa" release). You can download it from 
+					[<a href="#eclipse_europa" title="[eclipse_europa]">2</a>]. 
+					Install by simply unpacking the archive.
+				</li><li>
+					openArchitectureWare 4.3. Download the ZIP file from 
+					[<a href="#oaw_download" title="[oaw_download]">3</a>] 
+					or point your eclipse update manager to  
+					[<a href="#oaw_update_site" title="[oaw_update_site]">4</a>].
+				</li></ul></div>
+		</p><p>
+			The source code for the samples developed in this article can be downloaded from [<a href="#solution" title="[solution]">6</a>].
+		</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="defininig_the_dsl"></a>Defining the DSL</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="creating_an_xtext_project"></a>Creating an Xtext Project</h3></div></div></div><p>
+				Xtext projects are based on the well-known Eclipse plug-in architecture. In fact, to
+				create a new textual DSL with Xtext, you'll need up to three projects that depend
+				on each other. But fear not - Xtext comes with a handy wizards to get you up and running
+				in no time.
+			</p><p>
+				To create a new Xtext project, 
+				<div class="itemizedlist"><ul type="disc"><li>
+							Start up Eclipse 3.3 with oAW 4.3 installed 
+							(see <a href="#environment" title="Setting up the Environment">the section called &ldquo;Setting up the Environment&rdquo;</a>) in a fresh workspace and close the 
+							welcome screen
+						</li><li>
+							Select <span class="bold"><strong>File &gt; New... &gt; Project... Xtext Project</strong></span>
+						</li><li>
+							Specify the project settings in the wizard dialog. Since you started in a
+							fresh workspace, the wizard should provide sensible defaults. See the 
+							Xtext reference documentation for a detailed overview of what all those
+							settings mean.
+						</li><li>
+							Click <span class="bold"><strong>Finish</strong></span>
+						</li></ul></div>
+			</p><p>
+				The wizard creates three projects, <code class="filename">my.dsl</code>, 
+				<code class="filename">my.dsl.editor</code>, and <code class="filename">my.dsl.generator</code>:
+				
+				<div class="itemizedlist"><ul type="disc"><li>
+							<span class="bold"><strong>my.dsl</strong></span> is the language project, in which
+							we will define the grammar for our DSL. After running the Xtext generator,
+							this model also contains a parser for the DSL and a metamodel backing the
+							language.
+						</li><li>
+							<span class="bold"><strong>my.dsl.editor</strong></span> will contain the DSL 
+							editor. Since we have not yet defined a grammar, this project is still 
+							empty. It will be filled by the Xtext generator later. 
+						</li><li>
+							<span class="bold"><strong>my.dsl.generator</strong></span> contains an 
+							openArchitectureWare code generator skeleton. Later in this tutorial, you 
+							will write a couple of templates that process models created with your
+							DSL editor.
+						</li></ul></div>
+			</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="defining_the_grammar"></a>Defining the Grammar</h3></div></div></div><p>
+				Now that you have created a new Xtext project, you can define the grammar for
+				your DSL. The grammar specifies the metamodel <span class="emphasis"><em>and</em></span> the concrete
+				syntax for your domain specific language. This allows for fast roundtrips and an
+				incremental development of your language, as you will see later.
+			</p><p>
+				To specify the grammar, you will be using the Xtext grammar language. The Xtext 
+				documentation contains an extensive reference of all grammar elements. However, to
+				make it easier for you to follow along this tutorial, we have included the relevant
+				grammar rules here. 
+			</p><p>
+				In this tutorial, we will develop a DSL for entities (since entities are something
+				most developers know quite well).
+				<div class="itemizedlist"><ul type="disc"><li>
+							Open the Xtext grammar definition <code class="filename">my.dsl/src/mydsl.xtxt</code>
+						</li><li>
+							And type in the following grammar definition:
+						</li></ul></div>
+			</p><pre class="programlisting">
+Model:
+  (types+=Type)*;            <a name="rule.model"></a><img border="0" alt="1" src="images/callouts/1.png">
+
+Type:
+  DataType | Entity;         <a name="rule.type"></a><img border="0" alt="2" src="images/callouts/2.png">
+
+DataType:
+  "datatype" name=ID;        <a name="rule.datatype"></a><img border="0" alt="3" src="images/callouts/3.png">
+
+Entity:
+  "entity" name=ID "{"
+    (features+=Feature)*     <a name="rule.entity"></a><img border="0" alt="4" src="images/callouts/4.png">
+  "}";
+
+Feature:
+  type=[Type|ID] name=ID;    <a name="rule.feature"></a><img border="0" alt="5" src="images/callouts/5.png">
+			</pre><div class="calloutlist"><table summary="Callout list" border="0"><tr><td align="left" valign="top" width="5%"><a href="#rule.model"><img border="0" alt="1" src="images/callouts/1.png"></a> </td><td align="left" valign="top"><p>
+						The <span class="bold"><strong>Model</strong></span> rule specifies that a model contains
+						zero or more <span class="bold"><strong>Types</strong></span>.
+					</p></td></tr><tr><td align="left" valign="top" width="5%"><a href="#rule.type"><img border="0" alt="2" src="images/callouts/2.png"></a> </td><td align="left" valign="top"><p>
+						The <span class="bold"><strong>Type</strong></span> rule is an abstract rule. It specifies
+						that a <span class="bold"><strong>Type</strong></span> may either be a <span class="bold"><strong>DataType</strong></span>
+						or an <span class="bold"><strong>Entity</strong></span>
+					</p></td></tr><tr><td align="left" valign="top" width="5%"><a href="#rule.datatype"><img border="0" alt="3" src="images/callouts/3.png"></a> </td><td align="left" valign="top"><p>
+						The <span class="bold"><strong>DataType</strong></span> rule specifies that a <span class="bold"><strong>DataType</strong></span>
+						starts with the literal <span class="bold"><strong>datatype</strong></span>, followed by a name. The
+						name must comply with the (built-in) rule for identifiers (that is, only
+						characters followed by zero or more characters mixed with any number of numbers
+						are valid).
+					</p></td></tr><tr><td align="left" valign="top" width="5%"><a href="#rule.entity"><img border="0" alt="4" src="images/callouts/4.png"></a> </td><td align="left" valign="top"><p>
+						The <span class="bold"><strong>Entity</strong></span> rule specifies that an <span class="bold"><strong>Entity</strong></span>
+						starts with the literal <span class="bold"><strong>entity</strong></span>, followed by the name of the entity
+						(which, in turn, must be an identifier). An entity definition has a body which is surrounded
+						by curly braces. The body may then contain any number (zero or more) of <span class="bold"><strong>Feature</strong></span>s.
+					</p></td></tr><tr><td align="left" valign="top" width="5%"><a href="#rule.feature"><img border="0" alt="5" src="images/callouts/5.png"></a> </td><td align="left" valign="top"><p>
+						A <span class="bold"><strong>Feature</strong></span> has a reference to a <span class="bold"><strong>Type</strong></span> 
+						and a name. The reference to <span class="bold"><strong>Type</strong></span> is particularly interesting,
+						because by appending the <span class="emphasis"><em>|ID</em></span> modifier, we point out that
+						the reference to <span class="bold"><strong>Type</strong></span> will be determined by an ID.
+					</p></td></tr></table></div><p>
+				Your grammar should now look like in <a href="#xtext_dsl_grammar" title="Figure&nbsp;1.&nbsp;DSL grammar">Figure&nbsp;1, &ldquo;DSL grammar&rdquo;</a>.
+			</p><div class="figure"><a name="xtext_dsl_grammar"></a><p class="title"><b>Figure&nbsp;1.&nbsp;DSL grammar</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/3_grammar.png" alt="DSL grammar"></div></div></div><br class="figure-break"></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="generating_the_dsl_editor"></a>Generating the DSL Editor</h3></div></div></div><p>
+				Having specified the grammar, we can now generate the DSL editor.
+				<div class="itemizedlist"><ul type="disc"><li>
+							Right-click inside the Xtext grammar editor to open the context menu. 
+						</li><li>
+							Select <span class="bold"><strong>Generate Xtext Artifacts</strong></span> to 
+							generate the DSL parser, the corresonding metamodel and, last but not 
+							least, the DSL editor.
+						</li></ul></div>
+			</p><div class="figure"><a name="generate_xtext_artifacts"></a><p class="title"><b>Figure&nbsp;2.&nbsp;Generate Xtext artifacts</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/4_generate_xtext_artifacts.png" alt="Generate Xtext artifacts"></div></div></div><br class="figure-break"></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="running_the_editor"></a>Deploying and Running the Editor</h3></div></div></div><p>
+				To run the generated editor, you have to deploy the DSL plug-ins to an Eclipse 
+				installation. For simplicity, we take the one we are already running.
+				<div class="itemizedlist"><ul type="disc"><li>
+							Choose <span class="bold"><strong>Export... &gt; Deployable plug-ins and 
+							fragments...</strong></span>
+						</li><li>
+							The <span class="emphasis"><em>Export</em></span> dialog appears.
+							Select the three DSL plug-ins.
+						</li><li>
+							Enter the path to your Eclipse installation. Make sure the selected 
+							directory contains the Eclipse executable and a folder named 
+							<span class="emphasis"><em>plugins</em></span>. Usually, the directory is called 
+							<span class="emphasis"><em>eclipse</em></span>.
+						</li><li>
+							Choose <span class="bold"><strong>Finish</strong></span>.
+						</li><li>
+							Restart Eclipse.
+						</li></ul></div>
+				<div class="figure"><a name="deploy_plugins"></a><p class="title"><b>Figure&nbsp;3.&nbsp;Deployment of the DSL plug-ins</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/5_deploy_plugins.png" alt="Deployment of the DSL plug-ins"></div></div></div><br class="figure-break">
+			</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="exploring_the_editor"></a>Taking it for a spin</h3></div></div></div><p>
+				You should now see the same workspace as before. To check out the DSL editor, create 
+				a new <span class="emphasis"><em>mydsl</em></span> project and model in the runtime instance:
+			</p><div class="itemizedlist"><ul type="disc"><li>
+						Select <span class="bold"><strong>File &gt; New... &gt; Other... &gt; mydsl 
+						Project</strong></span> to create a new <span class="emphasis"><em>mydsl</em></span> project.
+					</li><li>
+						Click <span class="bold"><strong>Next</strong></span> to proceed to the next wizard page.
+					</li><li>
+						Leave the project name as is (it should read <span class="emphasis"><em>mydslproject</em></span>)
+						and click <span class="bold"><strong>Finish</strong></span> to create the project.
+					</li></ul></div><p>
+				The wizard will now create a new project for you, including an empty sample model.
+			</p><p>
+				Key in the following model to see your editor in action. Note how the outline reflects
+				the contents of your model. While typing, try using the content assist feature by 
+				pressing <span><strong class="keycap">CTRL</strong></span>-<span><strong class="keycap">Space</strong></span>.
+			</p><pre class="programlisting">
+datatype String
+datatype String
+
+entity Person {
+	String name
+	String lastName
+	Address home
+	Address business
+}
+
+entity Address {
+	String street
+	String zip
+	String city
+}		
+			</pre><p>
+				Xtext-based editors support a number of features right out of the box:
+			</p><div class="itemizedlist"><ul type="disc"><li><p>
+						Syntax coloring
+					</p></li><li><p>
+						Code completion (press 
+						<span><strong class="keycap">CTRL</strong></span>-<span><strong class="keycap">Space</strong></span> to 
+						invoke)
+					</p></li><li><p>
+						Navigation (either by holding the <span><strong class="keycap">CTRL</strong></span> key and 
+						left-clicking an identifier or by pressing the <span><strong class="keycap">F3</strong></span> key
+						when the cursor is on an identifier)  
+					</p></li><li><p>
+						Find References (place the cursor on an identifier and press 
+						<span><strong class="keycap">CTRL</strong></span>-<span><strong class="keycap">SHIFT</strong></span>-<span><strong class="keycap">G</strong></span>)
+					</p></li><li><p>
+						Folding
+					</p></li><li><p>
+						Outline
+					</p></li><li><p>
+						Quick Outline (press <span><strong class="keycap">CTRL</strong></span>-<span><strong class="keycap">O</strong></span>)
+					</p></li><li><p>
+						Syntax checking / Error markers
+					</p></li></ul></div><p>
+				It is important to note that all those features have been derived from the grammar 
+				you defined earlier. If you make changes to the grammar, the generated tooling will 
+				reflect these changes as well, as you will see in a minute.
+			</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="refining_the_dsl"></a>Refining the DSL</h2></div></div></div><p>
+			While Xtext-based DSL editors have a collection of great feature that come for free, they
+			can be easily customized to your needs. In the following section, we will add some extra
+			features that improve your editor's usability. As you will see, implementing those
+			features will not cost us much effort.
+		</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="adjusting_code_completion"></a>Adjusting code completion</h3></div></div></div><p>
+				First, let's enhance code completion. Let's assume you want to assist the user of 
+				your editor in choosing the right data types. In most projects, there's probably
+				only about five or six different data types in use, so why not provide them in the
+				suggestion list for the <code class="varname">datatype</code> grammar rule?
+			</p><p>
+				To do so, open <code class="filename">my.dsl.editor/src/org.example.dsl/ContentAssist.ext</code>
+				and insert the following lines at the end of the file:
+			</p><pre class="programlisting">
+/* proposals for Feature DataType::name */
+List[Proposal] completeDataType_name<a name="extension.name"></a><img border="0" alt="1" src="images/callouts/1.png">(emf::EObject ctx, String prefix) :
+	{
+		newProposal("String"), 
+		newProposal("Date"), 
+		newProposal("Boolean"), 
+		newProposal("Long"), 
+		newProposal("int")
+	};
+			</pre><div class="calloutlist"><table summary="Callout list" border="0"><tr><td align="left" valign="top" width="5%"><a href="#extension.name"><img border="0" alt="1" src="images/callouts/1.png"></a> </td><td align="left" valign="top"><p>
+						The name of he extension function must match the following rule:
+						<span class="bold"><strong>complete&lt;name of the metatype&gt;_&lt;name of the attribute to be completed&gt;</strong></span>.
+						In this sample, the extension function will be invoked as soon as the user 
+						requests content assist for the name of a <span class="bold"><strong>DataType</strong></span>.
+					</p></td></tr></table></div><p>
+				After saving the extension file, the DSL editor display the new proposals: 
+			</p><div class="figure"><a name="enhanced_CA"></a><p class="title"><b>Figure&nbsp;4.&nbsp;Enhanced content assist in action</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/7_enhanced_CA.png" alt="Enhanced content assist in action"></div></div></div><br class="figure-break"></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="refining_checks"></a>Defining constraints for your model</h3></div></div></div><p>
+				You may have noticed that although the generated DSL editor detects syntax violations
+				in your models, it is still possible to define illegal models, e.g. by defining
+				several datatype definitions with the same name.
+			</p><p>
+				The <span class="emphasis"><em>Check</em></span> language from the openArchitectuerWare stack can be 
+				used to define constraints that ensure the validity of your models.
+			</p><p>
+				Let's define a constraint that ensures that a model does not contain more than one
+				data type with the same name. To do so, open <code class="filename">my.dsl/src/org.example.dsl/Checks.chk</code> 
+				and add the following contraint to the end of the file:
+			</p><pre class="programlisting">
+context Type ERROR "Duplicate type detected: " + this.name :
+	allElements()<a name="allElements"></a><img border="0" alt="1" src="images/callouts/1.png">.typeSelect(Type)<a name="typeSelect"></a><img border="0" alt="2" src="images/callouts/2.png">.select(e|e.name == this.name).size ==1;
+			</pre><p>
+				This constraint basically means the following:
+				<div class="itemizedlist"><ul type="disc"><li><p>
+							From the collection of <span class="emphasis"><em>all model elements</em></span>,
+						</p></li><li><p>
+							select all elements that are of type <span class="bold"><strong>Type</strong></span> (i.e, all
+							<span class="bold"><strong>DataTypes</strong></span> and all <span class="bold"><strong>Entities</strong></span>).
+						</p></li><li><p>
+							Of the resulting collection, select all elements whose name equals the
+							name of the current <span class="bold"><strong>Type</strong></span>.
+						</p></li><li><p>
+							Finally, check whether the size of the resulting collection is exactly one (1).
+						</p></li></ul></div>
+				In other words: each model may only have exactly one <span class="bold"><strong>Type</strong></span> with the same name.
+			</p><p>
+				After saving the check file, the DSL editor now issues an error if you enter two 
+				types with the same name: 
+			</p><div class="figure"><a name="constraint_validation"></a><p class="title"><b>Figure&nbsp;5.&nbsp;Constraint fails on duplicate data types</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/8_constraint_validation.png" alt="Constraint fails on duplicate data types"></div></div></div><br class="figure-break"></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N102CF"></a>Generating code</h2></div></div></div><p>Now, that we have a DSL, we may want to do something useful with it.
+    DSLs are essentially small programming languages. A programming language
+    has to be understandable by a computer. There are basically two ways to
+    make a language "understandable" by a computer. The first one is to write
+    a compiler which transforms expressions made in one language into another
+    language, which is already understandable by a computer. For example, a
+    Java compiler transforms Java programs to bytecode programs. Bytecode is
+    understandable, because there are VMs which translate expressions in Java
+    bytecode into more native instructions. This is usually done at runtime.
+    Translating a language at runtime is called interpretation (ignoring
+    special cases like just-in-time compilation here).</p><p>With Xtext, models one can either create a
+    compiler (also called generator) or an interpreter. Although there are
+    good reasons for both approaches, we will just discuss how one creates a
+    generator in this tutorial.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N102D6"></a>Code generation with Xpand</h3></div></div></div><p>The Xtext wizard already created a generator
+      project for us. We are going to write an Xpand
+      template, which generates simple JavaBeans from our entities. It is
+      assumed, that there is a Java data type corresponding to the data types
+      used in the models (e.g. <span class="bold"><strong>String</strong></span>). So, we do not
+      need to care about mapping data types.</p><p>So just open the Xpand template (<span class="bold"><strong>Main.xpt</strong></span>) 
+      and modify it like this:</p><div class="figure"><a name="xtext_tutorial_xpand_tenplate"></a><p class="title"><b>Figure&nbsp;6.&nbsp;Xpand template</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/9_xpand_template.png" alt="Xpand template"></div></div></div><br class="figure-break"><p>The definition <span class="bold"><strong>main</strong></span> is invoked from the
+      workflow file. It is declared for elements of type
+      <span class="bold"><strong>mydsl::Model</strong></span>, which corresponds to the root node
+      of our DSL models. Within this definition, another definition
+      (<span class="bold"><strong>javaBean</strong></span>) is called (<span class="bold"><strong>&laquo;EXPAND
+      javaBean...&raquo;</strong></span>) for each model element
+      (<span class="bold"><strong>...FOREACH...</strong></span>) contained in the reference
+      '<span class="bold"><strong>types</strong></span>' of <span class="bold"><strong>Model</strong></span> 
+      which is of type <span class="bold"><strong>Entity</strong></span>.
+      (<span class="bold"><strong>typeSelect(Entity)</strong></span>).</p><p>The definition <span class="bold"><strong>javaBean</strong></span> is declared for
+      elements of type <span class="bold"><strong>Entity</strong></span>. In this definition, we
+      open a file (&laquo;FILE ...&raquo;). The path name of the file is defined by an
+      expression. In this case, it corresponds to the name of the entity
+      suffixed with '<code class="filename">.java</code>'. It is going to be generated
+      into the <code class="filename">src-gen</code> directory directly.</p><p>All text contained between <span class="bold"><strong>&laquo;FILE ...&raquo;</strong></span> and
+      <span class="bold"><strong>&laquo;ENDFILE&raquo;</strong></span> will go to the new file.
+      <span class="emphasis"><em>Xpand</em></span> provides control statements
+      (<span class="bold"><strong>FOR</strong></span>, <span class="bold"><strong>IF</strong></span>,
+      <span class="bold"><strong>ELSEIF</strong></span>, ...), as well as evaluation of expression, in
+      order to create the desired code. See the openArchitectureWare reference  
+      documentation for details.</p><p>To see our template in action, we have to run the code generator:
+      	<div class="itemizedlist"><ul type="disc"><li><p>
+					Locate the oAW workflow file <span class="emphasis"><em>mydslproject.oaw</em></span> in 
+					your <span class="emphasis"><em>mydslproject</em></span> plug-in. 
+				</p></li><li><p>
+					Right-click on it and choose 
+					<span class="bold"><strong>Run as &gt; oAW Workflow</strong></span> from the context
+					menu.
+				</p></li><li><p>
+					You can see the generator running and logging into the 
+					<span class="emphasis"><em>Console</em></span> view.
+				</p></li><li><p>
+					The result will be stored in a new source folder 
+					<span class="emphasis"><em>src-gen</em></span> in the <span class="emphasis"><em>mydslproject</em></span> 
+					project.
+				</p></li></ul></div>
+      </p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10368"></a>Where to go from here...</h2></div></div></div><p>
+	This tutorial ends here, but there is a lot more to know about Xtext, Xpand, DSLs and EMP, e.g.
+	<div class="itemizedlist"><ul type="disc"><li>
+				Advanced model customization: References to elements outside the model, 
+				configurable linking of cross-references, etc.
+			</li><li>
+				Further customizing of the editor: Choosing font styles, defining multiple 
+				outline views etc.
+			</li><li>
+				Integration with the Eclipse Modeling Framework (EMF), and thereby opening 
+				to the whole world of eclipse modeling.
+			</li></ul></div>
+	Please consult the openArchitectureWare reference documentation 
+	[<a href="#oaw_reference_documentation" title="[oaw_reference_documentation]">5</a>] for further information.
+	</p></div><div class="bibliography"><div class="titlepage"><div><div><h2 class="title"><a name="N1037B"></a>Resources</h2></div></div></div><div class="biblioentry"><a name="java_download"></a><p>[1] <span class="title"><i>Sun's Java SDK</i>. </span><span class="bibliosource">
+				<a href="http://java.sun.com/javase/downloads/index.jsp" target="_new">
+					http://java.sun.com/javase/downloads/index.jsp
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="eclipse_europa"></a><p>[2] <span class="title"><i>Eclipse 3.3</i>. </span><span class="bibliosource">
+				<a href="http://www.eclipse.org/europa/" target="_new">
+					http://www.eclipse.org/europa/
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="oaw_download"></a><p>[3] <span class="title"><i>openArchitectureWare download page</i>. </span><span class="bibliosource">
+				<a href="http://www.eclipse.org/gmt/oaw/download/" target="_new">
+					http://www.eclipse.org/gmt/oaw/download/
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="oaw_update_site"></a><p>[4] <span class="title"><i>openArchitectureWare update site</i>. </span><span class="bibliosource">
+				<a href="http://www.openarchitectureware.org/updatesite/milestone/site.xml" target="_new">
+					http://www.openarchitectureware.org/updatesite/milestone/site.xml
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="oaw_reference_documentation"></a><p>[5] <span class="title"><i>openArchitectureWare reference documentation</i>. </span><span class="bibliosource">
+				<a href="http://www.eclipse.org/gmt/doc/" target="_new">
+					http://www.eclipse.org/gmt/doc/
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="solution"></a><p>[6] <span class="title"><i>Source code for the sample developed in this article</i>. </span><span class="bibliosource">
+				<a href="solution/mydsl.zip" target="_new">
+					mydsl.zip
+				</a>
+			. </span></p></div></div><div class="notices"><h3>Legal Notices</h3><p>
+				Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. in the United 
+				States, other countries, or both.
+			</p><p>
+				Linux is a trademark of Linus Torvalds in the United States, other countries, or both.
+			</p><p>
+				Microsoft is a trademark of Microsoft Corporation in the United States, other countries, or both.
+			</p><p>
+				UNIX is a registered trademark of The Open Group in the United States and other countries.
+			</p><p>
+				Other company, product, or service names may be trademarks or service marks of others.
+			</p></div></div><div class="content"></div></body></html>
