@@ -1,6 +1,6 @@
 <!--
         Build script for Eclipse.org Articles
-        $Id: build.xml,v 1.1 2006/11/20 15:03:46 wbeaton Exp $
+        $Id: build.xml,v 1.2 2008/05/15 15:08:33 wbeaton Exp $
         author: Chris Aniszczyk <zx@us.ibm.com>
         author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -14,7 +14,7 @@
 	<property name="article.stylesheet" value="article.xsl"/>
 	
 	<property name="dest.dir" value="."/>
-	<property name="download.dir" value="${user.home}${file.separator}downloads"/>
+	<property name="download.dir" value="${user.home}${file.separator}.downloads"/>
 	
 	<property name="docbook.dir" value="${download.dir}${file.separator}docbook-xsl-1.71.1"/>
 	<property name="docbookxsl.url" value="http://downloads.sourceforge.net/docbook/docbook-xsl-1.71.1.zip"/>
@@ -30,8 +30,6 @@
 	<target name="build-doc" depends="init, get-docbook-xsl">
 		<echo>Building Article...</echo>
 		<antcall target="docbook2html"/>
-		<antcall target="docbook2pdf"/>
-		<antcall target="dist"/>
 	</target>
 		
 	<target name="check-docbook">
