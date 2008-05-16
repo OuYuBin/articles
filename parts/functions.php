@@ -33,7 +33,7 @@ function get_title_from_html_document(&$file_name) {
     	return "Eclipse Corner Article: $title[1]";
 	}
 	
-	return "Eclipse Corner Article, Man";
+	return "Eclipse Corner Article";
 }
 
 function get_header_from_html_document(&$file_name) {
