@@ -80,8 +80,6 @@
 	<div class="article">
 		<?php readfile($article_path); ?>		
 	</div>
-	<hr/>
-
 	
 <?php
 	$html = ob_get_contents();
