@@ -34,6 +34,8 @@
 		$article_path = "$root/$file";
 	}
 	
+	require_once("parts/functions.php");
+	
 	$info_file = dirname($article_path) . '/info.xml';
 	if (file_exists($info_file)) {
 		$info = simplexml_load_file($info_file);
@@ -43,7 +45,7 @@
 		
 	#
 	# Begin: page-specific settings.  Change these. 
-	$pageTitle 		= "Eclipse Corner Articles";
+	$pageTitle 		= get_title_from_html_document($article_path);
 	// TODO Should be able to extract the title from the XML data.
 	$pageKeywords	= "article, articles, tutorial, tutorials, how-to, howto, whitepaper, whitepapers, white, paper";
 	$pageAuthor		= "Wayne Beaton";
@@ -52,7 +54,7 @@
 	#
 	$App->ExtraHtmlHeaders = "<link rel=\"stylesheet\" type=\"text/css\" href=\"layout.css\" media=\"screen\" />\n<base href=\"http://$host/articles/$file\"/>\n";
 
-	$charset = $App->getHTTPParameter('charset');
+	//$charset = "UTF-8";//$App->getHTTPParameter('charset');
 	if ($charset) header("Content-Type: text/html; charset=$charset");
 	
 	ob_start();
@@ -61,6 +63,10 @@
 		<a href="/articles/index.php"><img src="/articles/images/back.gif"/> Back to Eclipse Corner Articles</a>
 	</div>
 	<div style="float: right;">
+		<!-- AddThis Button BEGIN -->
+		<script type="text/javascript">addthis_pub  = 'wbeaton';</script>
+		<a href="http://www.addthis.com/bookmark.php" onmouseover="return addthis_open(this, '', '[URL]', '[TITLE]')" onmouseout="addthis_close()" onclick="return addthis_sendto()"><img src="http://s9.addthis.com/button1-addthis.gif" width="125" height="16" border="0" alt="" /></a><script type="text/javascript" src="http://s7.addthis.com/js/152/addthis_widget.js"></script>
+		<!-- AddThis Button END -->
 		<a target="_blank" href="/articles/printable.php?file=<?= $file ?>"><img src="/articles/images/printer.gif"/> Printer-friendly version</a>
 	</div>
 
@@ -70,10 +76,13 @@
 	<?php include ("parts/versions.php"); ?>
  	
 	<br/>
+
 	<div class="article">
 		<?php readfile($article_path); ?>		
 	</div>
+	<hr/>
 
+	
 <?php
 	$html = ob_get_contents();
 	ob_end_clean();
