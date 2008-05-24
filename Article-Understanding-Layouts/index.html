@@ -82,7 +82,7 @@ by creating attachments for each of their sides </li>
 
 <p>To use the standard layouts, you need to import the SWT layout package:</p>
 
-<pre>    import org.eclipse.swt.layout.*;</pre>
+<pre>import org.eclipse.swt.layout.*;</pre>
 
 <p>Layouts are pluggable. To set the <code>Composite</code>
 widget's layout, you use the widget's <code>setLayout(Layout)</code>
@@ -90,8 +90,8 @@ method. In the following code, a <code>Shell</code> (a
 subclass of <code>Composite</code>) is told to
 position its children using a <code>RowLayout</code>:</p>
 
-<pre>   Shell shell = new Shell();
-   shell.setLayout(new RowLayout());</pre>
+<pre>Shell shell = new Shell();
+shell.setLayout(new RowLayout());</pre>
 
 
 <p>A layout class may have a corresponding layout
@@ -105,8 +105,8 @@ the layout class <code>GridLayout</code> uses a
 layout data class called <code>GridData</code>, and the layout class <code>FormLayout</code> has a layout data class called <code>FormData</code>. A widget's layout data class is set as follows:</p>
 
 
-<pre>   Button button = new Button(shell, SWT.PUSH);
-   button.setLayoutData(new RowData(50, 40));</pre>
+<pre>Button button = new Button(shell, SWT.PUSH);
+button.setLayoutData(new RowData(50, 40));</pre>
 
 <h3>Examples in this Document</h3>
 
@@ -114,9 +114,11 @@ layout data class called <code>GridData</code>, and the layout class <code>FormL
 on the following example code. We may change the type of layout, the options
 used, or the type or number of children.</p>
 
-<pre>import org.eclipse.swt.*;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.swt.layout.*;
+<pre>import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 public class LayoutExample {
     public static void main(String[] args) {
@@ -129,11 +131,12 @@ public class LayoutExample {
         // Set the layout into the composite.
         shell.setLayout(layout);
         // Create the children of the composite.
-        new Button(shell, SWT.PUSH).setText(&quot;B1&quot;);
-        new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
-        new Button(shell, SWT.PUSH).setText(&quot;Button 3&quot;);
+        new Button(shell, SWT.PUSH).setText("B1");
+        new Button(shell, SWT.PUSH).setText("Wide Button 2");
+        new Button(shell, SWT.PUSH).setText("Button 3");
         shell.pack();
         shell.open();
+        
         while (!shell.isDisposed()) {
             if (!display.readAndDispatch()) display.sleep();
         }
@@ -143,13 +146,13 @@ public class LayoutExample {
 
 <p>Running the above code results in the following:</p>
 
-<img src="images/image003.png" />
+<img src="images/LayoutExample.jpg" />
 
 <p>If the user resizes the shell so that there is no longer room for Button 3 on the
 right, the <code>RowLayout</code> wraps Button 3 to the
 next row, as follows:</p>
 
-<img src="images/image005.png" />
+<img src="images/LayoutExampleResized.jpg" />
 
 <p>Using layouts is closely tied with resize, as we shall see.
 Consequently, most of the examples in this document show what would happen if
@@ -176,12 +179,12 @@ then (if we want vertical) we set its <code>type</code>
 that in a <code>FillLayout</code>, children are
 always the same size, and they fill all available space.</p>
 
-<pre>    FillLayout fillLayout = new FillLayout();
-    fillLayout.type = SWT.VERTICAL;
-    shell.setLayout(fillLayout);
-    new Button(shell, SWT.PUSH).setText(&quot;B1&quot;);
-    new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
-    new Button(shell, SWT.PUSH).setText(&quot;Button 3&quot;);</pre>
+<pre>FillLayout fillLayout = new FillLayout();
+fillLayout.type = SWT.VERTICAL;
+shell.setLayout(fillLayout);
+new Button(shell, SWT.PUSH).setText(&quot;B1&quot;);
+new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
+new Button(shell, SWT.PUSH).setText(&quot;Button 3&quot;);</pre>
 
 <p>The following table shows the differences
 between a horizontal and vertical <code>FillLayout</code>,
@@ -198,13 +201,13 @@ initially and after the parent has grown.</p>
   <code>fillLayout.type = SWT.HORIZONTAL</code>
   <p>(default)</p>
   </td>
-  <td><img src="images/image007.png"/></td>
-  <td><img src="images/image009.png"/></td>
+  <td><img src="images/FillLayoutSampleHorizontal.jpg"/></td>
+  <td><img src="images/FillLayoutSampleHorizontalResized.jpg"/></td>
  </tr>
  <tr>
-  <td><code>fillLayout.type = SWT.VERTICAL</code>
-  </td><td><img src="images/image011.png" /></td>
-  <td><img src="images/image013.png" /></td>
+  <td><code>fillLayout.type = SWT.VERTICAL</code></td>
+  <td><img src="images/FillLayoutSampleVertical.png" /></td>
+  <td><img src="images/FillLayoutSampleVerticalResized.png" /></td>
  </tr>
 </table>
 
@@ -242,30 +245,29 @@ the number of pixels between a widget and the side of the parent <code>Composite
 leave 3 pixels for margins and spacing. The margin and spacing fields are shown
 in the following diagram.</p>
 
-<img src="images/image015.png"/>
+<img src="images/margins.png"/>
 
 <h4>RowLayout
 Examples</h4>
 
 <p>The following example code creates a <code>RowLayout</code>,
-sets all of its fields to non-default values, and then sets it into a <code>Shell</code>. </p>
+sets all of its fields to non-default values, and then sets it into a <code>Shell</code>.</p>
 
-<pre>   RowLayout rowLayout = new RowLayout();
-   rowLayout.wrap = false;
-   rowLayout.pack = false;
-   rowLayout.justify = true;
-   rowLayout.type = SWT.VERTICAL;
-   rowLayout.marginLeft = 5;
-   rowLayout.marginTop = 5;
-   rowLayout.marginRight = 5;
-   rowLayout.marginBottom = 5;
-   rowLayout.spacing = 0;
-   shell.setLayout(rowLayout);</pre>
-
+<pre>RowLayout rowLayout = new RowLayout();
+rowLayout.wrap = false;
+rowLayout.pack = false;
+rowLayout.justify = true;
+rowLayout.type = SWT.VERTICAL;
+rowLayout.marginLeft = 5;
+rowLayout.marginTop = 5;
+rowLayout.marginRight = 5;
+rowLayout.marginBottom = 5;
+rowLayout.spacing = 0;
+shell.setLayout(rowLayout);</pre>
 
 <p>If you are using the default field values, you only need one line of code:</p>
 
-<pre>   shell.setLayout(new RowLayout());</pre
+<pre>shell.setLayout(new RowLayout());</pre
 
 <p>In the table below, the result of setting specific fields is shown.</p>
 
@@ -277,62 +279,46 @@ sets all of its fields to non-default values, and then sets it into a <code>Shel
  </tr>
  <tr>
   <td>
-<pre>wrap = true
-pack = true
-justify = false
-type = SWT.HORIZONTAL</pre>
+<pre>rowLayout.wrap = true;
+rowLayout.pack = true;
+rowLayout.justify = false;
+rowLayout.type = SWT.HORIZONTAL;</pre>
   <p>(defaults)</p>
   </td>
-  <td><img src="images/image017.png" /></td>
-  <td><img src="images/image019.png" /></td>
+  <td><img src="images/RowLayoutSample01.jpg" /></td>
+  <td><img src="images/RowLayoutSample01Resized.jpg" /></td>
  </tr>
  <tr>
   <td>
 <pre>wrap = false</pre>
 <p>(clips if not enough space)</p>
   </td>
-  <td>
-  <img src="images/image017.png" />
-  </td>
-  <td>
-  <img src="images/image022.png" />
-  </td>
+  <td><img src="images/RowLayoutSample02.jpg" /></td>
+  <td><img src="images/RowLayoutSample02Resized.jpg" /></td>
  </tr>
  <tr>
   <td>
   <pre>pack = false</pre>
   <p>(all widgets are the same size)</p>
   </td>
-  <td>
-  <img src="images/image024.png" />
-  </td>
-  <td>
-  <img src="images/image026.png" />
-  </td>
+  <td><img src="images/RowLayoutSample03.jpg" /></td>
+  <td><img src="images/RowLayoutSample03Resized.jpg" /></td>
  </tr>
  <tr>
   <td>
   <pre>justify = true</pre>
   <p>(widgets are spread across the available space)</p>
   </td>
-  <td>
-  <img src="images/image028.png" />
-  </td>
-  <td>
-  <img src="images/image030.png"/>
-  </td>
+  <td><img src="images/RowLayoutSample04.jpg" /></td>
+  <td><img src="images/RowLayoutSample04Resized.jpg" /></td>
  </tr>
  <tr>
   <td>
   <pre>type = SWT.VERTICAL</pre>
   <p>(widgets are arranged vertically in columns)</p>
   </td>
-  <td>
-  <img src="images/image032.png" />
-  </td>
-  <td>
- <img src="images/image034.png" />
-  </td>
+  <td><img src="images/RowLayoutSample05.jpg" /></td>
+  <td><img src="images/RowLayoutSample05Resized.jpg" /></td>
  </tr>
 </table>
 
@@ -374,7 +360,7 @@ public class RowDataExample {
 <p>Here is
 what you see when you run this code.</p>
 
-<img src="images/image033.jpg" />
+<img src="images/RowDataExample.jpg" />
 
 <h3>GridLayout</h3>
 
@@ -398,22 +384,22 @@ managed by a <code>GridLayout</code>. The table
 below shows the grid when <code>numColumns</code>
 is set to 1, 2, or 3.</p>
 
-<pre>   Display display = new Display();
-   Shell shell = new Shell(display);
-   GridLayout gridLayout = new GridLayout();
-   gridLayout.numColumns = 3;
-   shell.setLayout(gridLayout);
-   new Button(shell, SWT.PUSH).setText(&quot;B1&quot;);
-   new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
-   new Button(shell, SWT.PUSH).setText(&quot;Button 3&quot;);
-   new Button(shell, SWT.PUSH).setText(&quot;B4&quot;);
-   new Button(shell, SWT.PUSH).setText(&quot;Button 5&quot;);
-   shell.pack();
-   shell.open();
+<pre>Display display = new Display();
+Shell shell = new Shell(display);
+GridLayout gridLayout = new GridLayout();
+gridLayout.numColumns = 3;
+shell.setLayout(gridLayout);
+new Button(shell, SWT.PUSH).setText(&quot;B1&quot;);
+new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
+new Button(shell, SWT.PUSH).setText(&quot;Button 3&quot;);
+new Button(shell, SWT.PUSH).setText(&quot;B4&quot;);
+new Button(shell, SWT.PUSH).setText(&quot;Button 5&quot;);
+shell.pack();
+shell.open();
 
-   while (!shell.isDisposed()) {
-      if (!display.readAndDispatch()) display.sleep();
-   }</pre>
+while (!shell.isDisposed()) {
+	if (!display.readAndDispatch()) display.sleep();
+}</pre>
 
 <table>
  <tr>
@@ -428,9 +414,9 @@ is set to 1, 2, or 3.</p>
   </td>
  </tr>
  <tr>
-  <td><img src="images/image035.jpg" /></td>
-  <td><img src="images/image037.jpg" /></td>
-  <td><img src="images/image039.jpg" /></td>
+  <td><img src="images/GridLayoutSampleNumColumns1.jpg" /></td>
+  <td><img src="images/GridLayoutSampleNumColumns2.jpg" /></td>
+  <td><img src="images/GridLayoutSampleNumColumns3.jpg" /></td>
  </tr>
 </table>
 
@@ -440,7 +426,7 @@ above to have 3 columns of equal width, this is what we would get (note that in
 the absence of further instruction, widgets are left-justified in their
 columns).</p>
 
-<img src="images/image041.jpg" />
+<img src="images/GridLayoutSampleEqualWidth.jpg" />
 
 <p>The <code>marginWidth</code>, <code>marginHeight</code>, <code>horizontalSpacing</code>, and 
 <code>verticalSpacing</code> fields in a <code>GridLayout</code>
@@ -456,9 +442,9 @@ the <code>RowLayout</code>.</p>
 <p><code>GridData</code> is the layout data object associated with <code>GridLayout</code>. To set a widget's <code>GridData</code> object, you use the <code>setLayoutData</code> method. For example, to
 set the <code>GridData</code> for a <code>Button</code>, we could do the following:</p>
 
-<pre>   Button button1 = new Button(shell, SWT.PUSH);
-   button1.setText(&quot;B1&quot;);
-   button1.setLayoutData(new GridData());</pre>
+<pre>Button button1 = new Button(shell, SWT.PUSH);
+button1.setText("B1");
+button1.setLayoutData(new GridData());</pre>
 
 <p>Of course, this code just creates a <code>GridData</code>
 object with all of its fields set to their default values, which is the same as
@@ -466,20 +452,22 @@ not setting the layout data at all. There are two ways to create a <code>GridDat
 object with certain fields set.
 The first is to set the fields directly, like this:</p>
 
-<pre>   GridData gridData = new GridData();
-   gridData.horizontalAlignment = GridData.FILL;
-   gridData.grabExcessHorizontalSpace = true;
-   button1.setLayoutData(gridData);</pre>
+<pre>GridData gridData = new GridData();
+gridData.horizontalAlignment = GridData.FILL;
+gridData.grabExcessHorizontalSpace = true;
+button1.setLayoutData(gridData);</pre>
+
+<img src="images/GridDataSampleHorizontalFill.jpg" />
 
 <p>The second is to take advantage of convenience API – style bits defined
 by <code>GridData</code>:</p>
 
-<pre>   button1.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));</pre>
+<pre>button1.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));</pre>
 
 <p>In fact, certain common style bit combinations are provided for further
 convenience:</p>
 
-<pre>   button1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));</pre>
+<pre>button1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));</pre>
 
 <p>Note that
 <code>FILL_</code> convenience styles set both fill alignment <i>and</i> grab. <code>GridData</code> style
@@ -517,23 +505,23 @@ the <code>horizontalAlignment</code> of Button 5.</p>
   <td><pre>horizontalAlignment = GridData.BEGINNING</pre>
   <p>(default)</p>
   </td>
-  <td><img src="images/image043.jpg"/></td>
+  <td><img src="images/GridDataSampleBeginning.jpg"/></td>
  </tr>
  <tr>
   <td>
   <pre>horizontalAlignment = GridData.CENTER</pre>
   </td>
-  <td><img src="images/image045.jpg" /></td>
+  <td><img src="images/GridDataSampleCenter.jpg" /></td>
  </tr>
  <tr>
   <td>
   <pre>horizontalAlignment = GridData.END</pre>
-  </td><td><img src="images/image047.jpg" /></td>
+  </td><td><img src="images/GridDataSampleEnd.jpg" /></td>
  </tr>
  <tr>
   <td>
   <pre>horizontalAlignment = GridData.FILL</pre>
-  </td><td><img src="images/image049.jpg" /></td>
+  </td><td><img src="images/GridDataSampleFill.jpg" /></td>
  </tr>
 </table>
 
@@ -543,43 +531,43 @@ typically only useful when the <code>horizontalAlignment</code>
 is <code>BEGINNING</code>. We cannot use a style bit to set the indent, so we will indent Button 5 in our
 example by 4 pixels as follows:</p>
 
- <img src="images/image054.png"/>
-
 <pre>GridData gridData = new GridData();
 gridData.horizontalIndent = 4;
 button5.setLayoutData(gridData);</pre>
 
+ <img src="images/GridDataSampleIndent.jpg"/>
+ 
 <p>The <code>horizontalSpan</code> and <code>verticalSpan</code> fields let widgets occupy more
 than one grid cell. They are often used in conjunction with FILL alignment. We
 can make Button 5 in our example span the last two cells as follows:</p>
  
-<img src="images/image056.png"/>
-
 <pre>GridData gridData = new GridData();
 gridData.horizontalAlignment = GridData.FILL;
 gridData.horizontalSpan = 2;
 button5.setLayoutData(gridData);</pre>
 
+<img src="images/GridDataSampleSpan01.jpg"/>
+
 <p>If we
 decide to make Wide Button 2 span two cells instead, we would
 end up with this:</p>
-
-<img src="images/image058.png"/>
  
 <pre>GridData gridData = new GridData();
 gridData.horizontalAlignment = GridData.FILL;
 gridData.horizontalSpan = 2;
 button2.setLayoutData(gridData);</pre>
 
+<img src="images/GridDataSampleSpan02.jpg"/>
+
 <p>Or we could
 make Button 3 span two cells vertically:</p>
-
-<img src="images/image060.png"/>
 
 <pre>GridData gridData = new GridData();
 gridData.verticalAlignment = GridData.FILL;
 gridData.verticalSpan = 2;
 button3.setLayoutData(gridData);</pre>
+
+<img src="images/GridDataSampleSpan03.jpg"/>
 
 <p>The <code>grabExcessHorizontalSpace</code>
 and <code>grabExcessVerticalSpace</code> fields
@@ -596,50 +584,53 @@ smaller. It is easiest to always think of the <b>grabExcessSpace</b> fields in t
 example, let's reuse the previous example where Button 3 spanned
 two cells vertically. Here it is again:</p>
 
-<img src="images/image060.png"/>
+<img src="images/GridDataSampleSpan03.jpg"/>
 
 <p>If we resize this window, the only thing that happens is that the window gets
 bigger:</p>
-      
-<img src="images/image063.png"/>
+
+<img src="images/GridDataSampleSpan03Resized.jpg"/>
 
 <p>Now we will tell Button 3 to grab excess horizontal and
-vertical space, and B1 and B4 to fill vertically (without
+vertical space, and Buttons 1 and 4 to fill vertically (without
 grabbing), and we resize the window again:</p>
-       
-<img src="images/image065.png"/>
+
+<pre>Button button1 = new Button(shell, SWT.PUSH);
+button1.setText(&quot;B1&quot;);
+GridData gridData = new GridData();
+gridData.verticalAlignment = GridData.FILL;
+button1.setLayoutData(gridData);
+
+new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
+
+Button button3 = new Button(shell, SWT.PUSH);
+button3.setText(&quot;Button 3&quot;);
+gridData = new GridData();
+gridData.verticalAlignment = GridData.FILL;
+gridData.verticalSpan = 2;
+gridData.grabExcessVerticalSpace = true;
+gridData.horizontalAlignment = GridData.FILL;
+gridData.grabExcessHorizontalSpace = true;
+button3.setLayoutData(gridData);
+
+Button button4 = new Button(shell, SWT.PUSH);
+button4.setText(&quot;B4&quot;);
+gridData = new GridData();
+gridData.verticalAlignment = GridData.FILL;
+button4.setLayoutData(gridData);
+
+new Button(shell, SWT.PUSH).setText(&quot;Button 5&quot;);</pre>
+
+<img src="images/GridDataSampleGrab01.jpg"/>
 
 <p>This time, Button 3 grew in
-both directions, and B4 grew vertically. The other buttons stayed their
+both directions, and Button 4 grew vertically. The other buttons stayed their
 original sizes. Because Button 3 was grabbing vertically and it spans two rows,
 the <i>last</i> row that it spans grew
-taller. Note that B1 did not grow&mdash;although it is filling
+taller. Note that Button 1 did not grow&mdash;although it is filling
 vertically&mdash;because its row did not grow. Since Button 3 was
 grabbing horizontally, its column grew wider, and since it was filling
-horizontally, it grew wider to fill the column. Here is the code for all five
-buttons:</p>
-
-<pre>   Button button1 = new Button(shell, SWT.PUSH);
-   button1.setText(&quot;B1&quot;);
-   GridData gridData = new GridData();
-   gridData.verticalAlignment = GridData.FILL;
-   button1.setLayoutData(gridData);
-   new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
-   Button button3 = new Button(shell, SWT.PUSH);
-   button3.setText(&quot;Button 3&quot;);
-   gridData = new GridData();
-   gridData.verticalAlignment = GridData.FILL;
-   gridData.verticalSpan = 2;
-   gridData.grabExcessVerticalSpace = true;
-   gridData.horizontalAlignment = GridData.FILL;
-   gridData.grabExcessHorizontalSpace = true;
-   button3.setLayoutData(gridData);
-   Button button4 = new Button(shell, SWT.PUSH);
-   button4.setText(&quot;B4&quot;);
-   gridData = new GridData();
-   gridData.verticalAlignment = GridData.FILL;
-   button4.setLayoutData(gridData);
-   new Button(shell, SWT.PUSH).setText(&quot;Button 5&quot;);</pre>
+horizontally, it grew wider to fill the column.</p>
 
 <p>In a
 typical application window, you often want to have at least one widget that is
