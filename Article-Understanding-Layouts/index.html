@@ -3,7 +3,7 @@
 
 <head>
 <meta http-equiv="Content-Type"
-    content="text/html; charset=windows-1252">
+	content="text/html; charset=windows-1252">
 <title>Understanding Layouts in SWT</title>
 <link rel="stylesheet" href="../article.css" type="text/css" />
 </head>
@@ -12,62 +12,68 @@
 
 <div class="summary">
 <h2>Summary</h2>
-<p>When writing applications in SWT, you may need to use <i>layouts</i> to give your windows a specific look. A layout controls the
-position and size of children in a <code>Composite</code>.
-Layout classes are subclasses of the abstract class <code>Layout</code>. This article shows you how to work with standard layouts,
-and write your own custom layout class.</p>
+<p>When writing applications in SWT, you may need to use <i>layouts</i>
+to give your windows a specific look. A layout controls the position and
+size of children in a <code>Composite</code>. Layout classes are
+subclasses of the abstract class <code>Layout</code>. This article shows
+you how to work with standard layouts, and write your own custom layout
+class.</p>
 
 <div class="author">By Carolyn MacLeod, OTI</div>
-<div class="copyright">Copyright &copy; 2001, 2002 Object Technology International, Inc.</div>
+<div class="copyright">Copyright &copy; 2001, 2002 Object
+Technology International, Inc.</div>
 <div class="date">March 22, 2001</div>
 
 <div class="author">Revised by Shantha Ramachandran, OTI</div>
 <div class="date">May 02, 2002</div>
 
-<div class="author">Revised by Wayne Beaton, The Eclipse Foundation</div>
-<div class="copyright">Copyright &copy; 2008 The Eclipse Foundation, Inc.</div>
+<div class="author">Revised by Wayne Beaton, The Eclipse
+Foundation</div>
+<div class="copyright">Copyright &copy; 2008 The Eclipse
+Foundation, Inc.</div>
 <div class="date">May 30, 2008</div>
 </div>
 
 <div class="content">
 
+<h2>Overview</h2>
 
-<h2>Layouts</h2>
-
-<h3>Overview</h3>
-
-<p>When writing applications in the Standard Widget Toolkit (SWT), you may
-need to use <i>layouts</i> to give your
-windows a specific look. A layout controls the position and size of children in
-a <code>Composite</code>. Layout classes are
-subclasses of the abstract class <code>Layout</code>.
-SWT provides several standard layout classes, and you can write custom layout
-classes.</p>
+<p>When writing applications in the <a
+	href="http://www.eclipse.org/swt">Standard Widget Toolkit</a> (SWT),
+you may need to use <i>layouts</i> to give your windows a specific look.
+A layout controls the position and size of children in a <code>Composite</code>.
+Layout classes are subclasses of the abstract class <code>Layout</code>.
+SWT provides several standard layout classes, and you can write custom
+layout classes.</p>
 
 <p>In SWT, positioning and sizing does not happen automatically.
 Applications can decide to size and place a <code>Composite</code>'s
-children initially, or in a resize listener. Another option is to specify a
-layout class to position and size the children. If children are not given a
-size, they will have zero size and they cannot be seen.</p>
+children initially, or in a resize listener. Another option is to
+specify a layout class to position and size the children. If children
+are not given a size, they will have zero size and they cannot be seen.</p>
 
-<p>The diagram below illustrates a few general terms that are used when
-discussing layouts. The <code>Composite</code> (in this case, a <code>TabFolder</code>) has
-a <i>location</i>, <i>clientArea</i> and <i>trim</i>. The size of the <code>Composite</code>
-is the size of the <i>clientArea</i> plus the size of the <code>trim</code>. This <code>Composite</code>
-has two children that are laid out side by side. A <code>Layout</code> is managing
-the size and position of the children. This <code>Layout</code> allows <code>spacing</code>
-between the children, and a <i>margin</i> between the children and the edges of
-the <code>Layout</code>. The size of the <code>Layout</code> is the same as the size of the
-<code>Composite</code>'s <i>clientArea</i>.</p>
+<p>The diagram below illustrates a few general terms that are used
+when discussing layouts. The <code>Composite</code> (in this case, a <code>TabFolder</code>)
+has a <i>location</i>, <i>clientArea</i> and <i>trim</i>. The size of
+the <code>Composite</code> is the size of the <i>clientArea</i> plus the
+size of the <code>trim</code>. This <code>Composite</code> has two
+children that are laid out side by side. A <code>Layout</code> is
+managing the size and position of the children. This <code>Layout</code>
+allows <code>spacing</code> between the children, and a <i>margin</i>
+between the children and the edges of the <code>Layout</code>. The size
+of the <code>Layout</code> is the same as the size of the <code>Composite</code>'s
+<i>clientArea</i>.</p>
 
-<p>The <i>preferred size</i> of a widget is the minimum size needed to show
-its content. In the case of a <code>Composite</code>, the preferred size is the
-smallest rectangle that contains all of its children. If children have been
-positioned by the application, the <code>Composite</code>
-computes its own preferred size based on the size and position of the children.
-If a <code>Composite</code> is using a layout
-class to position its children, it asks the <code>Layout</code>
-to compute the size of its <code>clientArea</code>, and then it adds in the <code>trim</code>
+<img src="images/GeneralTerms.jpg" />
+
+<p>The <i>preferred size</i> of a widget is the minimum size needed
+to show its content. In the case of a <code>Composite</code>, the
+preferred size is the smallest rectangle that contains all of its
+children. If children have been positioned by the application, the <code>Composite</code>
+computes its own preferred size based on the size and position of the
+children. If a <code>Composite</code> is using a layout class to
+position its children, it asks the <code>Layout</code> to compute the
+size of its <code>clientArea</code>, and then it adds in the <code>trim</code>
 to determine its preferred size.</p>
 
 <h3>Standard Layouts</h3>
@@ -75,48 +81,46 @@ to determine its preferred size.</p>
 <p>The standard layout classes in the SWT library are:</p>
 
 <ul>
-  <li><code>FillLayout</code> lays out equal-sized widgets in a single row
-or column</li>
-  <li><code>RowLayout</code> lays out widgets in a row or rows, with
-fill, wrap, and spacing options</li>
-  <li><code>GridLayout</code> lays out widgets in a grid</li>
-  <li><code>FormLayout</code> lays out widgets
-by creating attachments for each of their sides </li>
+	<li><code>FillLayout</code> lays out equal-sized widgets in a
+	single row or column</li>
+	<li><code>RowLayout</code> lays out widgets in a row or rows, with
+	fill, wrap, and spacing options</li>
+	<li><code>GridLayout</code> lays out widgets in a grid</li>
+	<li><code>FormLayout</code> lays out widgets by creating
+	attachments for each of their sides</li>
 </ul>
 
-<p>To use the standard layouts, you need to import the SWT layout package:</p>
+<p>To use the standard layouts, you need to import the SWT layout
+package:</p>
 
 <pre>import org.eclipse.swt.layout.*;</pre>
 
-<p>Layouts are pluggable. To set the <code>Composite</code>
-widget's layout, you use the widget's <code>setLayout(Layout)</code>
-method. In the following code, a <code>Shell</code> (a
-subclass of <code>Composite</code>) is told to
-position its children using a <code>RowLayout</code>:</p>
+<p>Layouts are pluggable. To set a <code>Composite</code> widget's
+layout, you use the widget's <code>setLayout(Layout)</code> method. In
+the following code, a <code>Shell</code> (a subclass of <code>Composite</code>)
+is told to position its children using a <code>RowLayout</code>:</p>
 
 <pre>Shell shell = new Shell();
 shell.setLayout(new RowLayout());</pre>
 
-
-<p>A layout class may have a corresponding layout
-data class: a subclass of <code>Object</code>
-that contains layout data for a specific child. By convention, layout data
-classes are identified by substituting &quot;Data&quot;
-for &quot;Layout&quot; in the class name. For
-example, the standard layout class <code>RowLayout</code>
-has a layout data class called <code>RowData</code>,
-the layout class <code>GridLayout</code> uses a
-layout data class called <code>GridData</code>, and the layout class <code>FormLayout</code> has a layout data class called <code>FormData</code>. A widget's layout data class is set as follows:</p>
-
+<p>A layout class may have a corresponding layout data class: a
+subclass of <code>Object</code> that contains layout data for a specific
+child. By convention, layout data classes are identified by substituting
+&quot;Data&quot; for &quot;Layout&quot; in the class name. For example,
+the standard layout class <code>RowLayout</code> has a layout data class
+called <code>RowData</code>, the layout class <code>GridLayout</code>
+uses a layout data class called <code>GridData</code>, and the layout
+class <code>FormLayout</code> has a layout data class called <code>FormData</code>.
+A widget's layout data class is set as follows:</p>
 
 <pre>Button button = new Button(shell, SWT.PUSH);
 button.setLayoutData(new RowData(50, 40));</pre>
 
 <h3>Examples in this Document</h3>
 
-<p>Most of the snapshots in this document were taken by running variations
-on the following example code. We may change the type of layout, the options
-used, or the type or number of children.</p>
+<p>Most of the snapshots in this document were taken by running
+variations on the following example code. We may change the type of
+layout, the options used, or the type or number of children.</p>
 
 <pre>import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.RowLayout;
@@ -147,41 +151,41 @@ public class LayoutExample {
     }
 }</pre>
 
-
 <p>Running the above code results in the following:</p>
 
 <img src="images/LayoutExample.jpg" />
 
-<p>If the user resizes the shell so that there is no longer room for Button 3 on the
-right, the <code>RowLayout</code> wraps Button 3 to the
+<p>If the user resizes the shell so that there is no longer room for
+Button 3 on the right, the <code>RowLayout</code> wraps Button 3 to the
 next row, as follows:</p>
 
 <img src="images/LayoutExampleResized.jpg" />
 
 <p>Using layouts is closely tied with resize, as we shall see.
-Consequently, most of the examples in this document show what would happen if
-the <code>Composite</code> becomes smaller or
-larger, in order to illustrate how the <code>Layout</code>
-works.</p>
+Consequently, most of the examples in this document show what would
+happen if the <code>Composite</code> becomes smaller or larger, in order
+to illustrate how the <code>Layout</code> works.</p>
 
-<h3>FillLayout</h3>
+<h2>FillLayout</h2>
 
-<p><code>FillLayout</code> is the simplest layout class. It
-lays out widgets in a single row or column, forcing them to be the same size.
-Initially, the widgets will all be as tall as the tallest widget, and as wide
-as the widest. <code>FillLayout</code> does not
-wrap, and you cannot specify margins or spacing. You might use it to lay out
-buttons in a task bar or tool bar, or to stack checkboxes in a <code>Group</code>. <code>FillLayout</code> can also be used when a <code>Composite</code> only has one child. For example, if a <code>Shell</code> has a single <code>Group</code> child, <code>FillLayout</code>
-will cause the <code>Group</code> to completely
-fill the <code>Shell</code>.</p>
+<p><code>FillLayout</code> is the simplest layout class. It lays out
+widgets in a single row or column, forcing them to be the same size.
+Initially, the widgets will all be as tall as the tallest widget, and as
+wide as the widest. <code>FillLayout</code> does not wrap, and you
+cannot specify margins or spacing. You might use it to lay out buttons
+in a task bar or tool bar, or to stack checkboxes in a <code>Group</code>.
+<code>FillLayout</code> can also be used when a <code>Composite</code>
+only has one child. For example, if a <code>Shell</code> has a single <code>Group</code>
+child, <code>FillLayout</code> will cause the <code>Group</code> to
+completely fill the <code>Shell</code>.</p>
 
-<p>Here is the relevant portion of the example
-code. First we create a <code>FillLayout</code>,
-then (if we want vertical) we set its <code>type</code>
- field to SWT.VERTICAL, and set it into the <code>Composite</code>
-(a <code>Shell</code>). The <code>Shell</code> has three pushbutton children, B1, B2, and Button 3. Note
-that in a <code>FillLayout</code>, children are
-always the same size, and they fill all available space.</p>
+<p>Here is the relevant portion of the example code. First we create
+a <code>FillLayout</code>, then (if we want vertical) we set its <code>type</code>
+field to <code>SWT.VERTICAL</code>, and set it into the <code>Composite</code>
+(a <code>Shell</code>). The <code>Shell</code> has three push button
+children, &quot;B1&quot;, &quot;Wide Button 2&quot;, and &quot;Button
+3&quot;. Note that in a <code>FillLayout</code>, children are always the
+same size, and they fill all available space.</p>
 
 <pre>FillLayout fillLayout = new FillLayout();
 fillLayout.type = SWT.VERTICAL;
@@ -190,72 +194,83 @@ new Button(shell, SWT.PUSH).setText(&quot;B1&quot;);
 new Button(shell, SWT.PUSH).setText(&quot;Wide Button 2&quot;);
 new Button(shell, SWT.PUSH).setText(&quot;Button 3&quot;);</pre>
 
-<p>The following table shows the differences
-between a horizontal and vertical <code>FillLayout</code>,
-initially and after the parent has grown.</p>
+<p>The following table shows the differences between a horizontal
+and vertical <code>FillLayout</code>, initially and after the parent has
+grown.</p>
 
 <table>
- <tr>
-  <td>&nbsp;</td>
-  <td><p>Initial</p></td>
-  <td><p>After resize</p></td>
- </tr>
- <tr>
-  <td>
-  <code>fillLayout.type = SWT.HORIZONTAL</code>
-  <p>(default)</p>
-  </td>
-  <td><img src="images/FillLayoutSampleHorizontal.jpg"/></td>
-  <td><img src="images/FillLayoutSampleHorizontalResized.jpg"/></td>
- </tr>
- <tr>
-  <td><code>fillLayout.type = SWT.VERTICAL</code></td>
-  <td><img src="images/FillLayoutSampleVertical.png" /></td>
-  <td><img src="images/FillLayoutSampleVerticalResized.png" /></td>
- </tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>
+		<p>Initial</p>
+		</td>
+		<td>
+		<p>After resize</p>
+		</td>
+	</tr>
+	<tr>
+		<td><code>fillLayout.type = SWT.HORIZONTAL</code>
+		<p>(default)</p>
+		</td>
+		<td><img src="images/FillLayoutSampleHorizontal.jpg" /></td>
+		<td><img src="images/FillLayoutSampleHorizontalResized.jpg" /></td>
+	</tr>
+	<tr>
+		<td><code>fillLayout.type = SWT.VERTICAL</code></td>
+		<td><img src="images/FillLayoutSampleVertical.jpg" /></td>
+		<td><img src="images/FillLayoutSampleVerticalResized.jpg" /></td>
+	</tr>
 </table>
 
-<h3>RowLayout</h3>
+<h2>RowLayout</h2>
 
-<p><code>RowLayout</code> is more commonly used than <code>FillLayout</code> because of its ability to
-wrap, and because it provides configurable margins and spacing. <code>RowLayout</code> has a number of configuration
-fields. In addition, the height and width of each widget in a <code>RowLayout</code> can be specified by setting
-the widget's <code>RowData</code> object using <code>setLayoutData</code>.</p>
+<p><code>RowLayout</code> is more commonly used than <code>FillLayout</code>
+because of its ability to wrap, and because it provides configurable
+margins and spacing. <code>RowLayout</code> has a number of
+configuration fields. In addition, the height and width of each widget
+in a <code>RowLayout</code> can be specified by setting the widget's <code>RowData</code>
+object using <code>setLayoutData</code>.</p>
 
-<h4>RowLayoutConfiguration Fields</h4>
+<h3>RowLayoutConfiguration Fields</h3>
 
 <p>The <code>type</code> field controls whether the <code>RowLayout</code>
-lays out widgets in horizontal rows, or vertical columns. <code>RowLayouts</code> are
-horizontal by default.</p>
+lays out widgets in horizontal rows, or vertical columns. <code>RowLayouts</code>
+are horizontal by default.</p>
 
-<p>The <code>wrap</code> field controls whether or not the <code>RowLayout</code> will wrap widgets into the
-next row if there isn't enough space in the current row. <code>RowLayouts</code> wrap by default.</p>
+<p>The <code>wrap</code> field controls whether or not the <code>RowLayout</code>
+will wrap widgets into the next row if there isn't enough space in the
+current row. <code>RowLayouts</code> wrap by default.</p>
 
-<p>If the <code>pack</code> field is true, widgets in a <code>RowLayout</code> will take their natural size,
-and they will be aligned as far to the left as possible. If pack is false,
-widgets will fill the available space, similar to the widgets in a <code>FillLayout</code>. <code>RowLayouts</code> pack by default.</p>
+<p>If the <code>pack</code> field is true, widgets in a <code>RowLayout</code>
+will take their natural size (&quot;natural size&quot; varies by widget;
+the natural size for a label or push button, for example, is large enough to
+display its textual contents), and they will be aligned as far to the
+left as possible. If pack is false, widgets will fill the available
+space, similar to the widgets in a <code>FillLayout</code>. <code>RowLayouts</code>
+pack by default.</p>
 
-
-<p>If the <code>justify</code> field is true, widgets in a <code>RowLayout</code> are spread across the
-available space from left to right. If the parent <code>Composite</code> grows wider, the extra space is distributed evenly among
-the widgets. If both <code>pack</code> and <code>justify</code> are true, widgets take their
-natural size, and the extra space is placed between the widgets in order to
-keep them fully justified. By default, <code>RowLayouts</code>
+<p>If the <code>justify</code> field is true, widgets in a <code>RowLayout</code>
+are spread across the available space from left to right. If the parent
+<code>Composite</code> grows wider, the extra space is distributed
+evenly among the widgets. If both <code>pack</code> and <code>justify</code>
+are true, widgets take their natural size, and the extra space is placed
+between the widgets in order to keep them fully justified. By default, <code>RowLayouts</code>
 do not justify.</p>
 
-<p>The <code>marginLeft</code>, <code>marginTop</code>, <code>marginRight</code>, <code>marginBottom</code> and <code>spacing</code> fields control the number of
-pixels between widgets (<code>spacing</code>) and
-the number of pixels between a widget and the side of the parent <code>Composite</code> (margin). By default, <code>RowLayouts</code>
-leave 3 pixels for margins and spacing. The margin and spacing fields are shown
-in the following diagram.</p>
+<p>The <code>marginLeft</code>, <code>marginTop</code>, <code>marginRight</code>,
+<code>marginBottom</code> and <code>spacing</code> fields control the
+number of pixels between widgets (<code>spacing</code>) and the number
+of pixels between a widget and the side of the parent <code>Composite</code>
+(margin). By default, <code>RowLayouts</code> leave 3 pixels for margins
+and spacing. The margin and spacing fields are shown in the following
+diagram.</p>
 
-<img src="images/RowLayoutMargins.jpg"/>
+<img src="images/RowLayoutMargins.jpg" />
 
-<h4>RowLayout
-Examples</h4>
+<h3>RowLayout Examples</h3>
 
-<p>The following example code creates a <code>RowLayout</code>,
-sets all of its fields to non-default values, and then sets it into a <code>Shell</code>.</p>
+<p>The following example code creates a <code>RowLayout</code>, sets
+all of its fields to non-default values, and then sets it into a <code>Shell</code>.</p>
 
 <pre>RowLayout rowLayout = new RowLayout();
 rowLayout.wrap = false;
@@ -269,69 +284,69 @@ rowLayout.marginBottom = 5;
 rowLayout.spacing = 0;
 shell.setLayout(rowLayout);</pre>
 
-<p>If you are using the default field values, you only need one line of code:</p>
+<p>If you are using the default field values, you only need one line
+of code:</p>
 
-<pre>shell.setLayout(new RowLayout());</pre
+<pre>shell.setLayout(new RowLayout());</pre>
 
 <p>The results of setting specific fields is shown below:</p>
 
-<table border=0 cellspacing=0 cellpadding=0 style='border-collapse:collapse'>
- <tr>
-  <td width="150">&nbsp;</td>
-  <td><p>Initial</p></td>
-  <td><p>After resize</p></td>
- </tr>
- <tr>
-  <td>
-<pre>rowLayout.wrap = true;
+<table>
+	<tr>
+		<td width="150">&nbsp;</td>
+		<td>
+		<p>Initial</p>
+		</td>
+		<td>
+		<p>After resize</p>
+		</td>
+	</tr>
+	<tr>
+		<td><pre>rowLayout.wrap = true;
 rowLayout.pack = true;
 rowLayout.justify = false;
 rowLayout.type = SWT.HORIZONTAL;</pre>
-  <p>(defaults)</p>
-  </td>
-  <td><img src="images/RowLayoutSample01.jpg" /></td>
-  <td><img src="images/RowLayoutSample01Resized.jpg" /></td>
- </tr>
- <tr>
-  <td>
-<pre>wrap = false</pre>
-<p>(clips if not enough space)</p>
-  </td>
-  <td><img src="images/RowLayoutSample02.jpg" /></td>
-  <td><img src="images/RowLayoutSample02Resized.jpg" /></td>
- </tr>
- <tr>
-  <td>
-  <pre>pack = false</pre>
-  <p>(all widgets are the same size)</p>
-  </td>
-  <td><img src="images/RowLayoutSample03.jpg" /></td>
-  <td><img src="images/RowLayoutSample03Resized.jpg" /></td>
- </tr>
- <tr>
-  <td>
-  <pre>justify = true</pre>
-  <p>(widgets are spread across the available space)</p>
-  </td>
-  <td><img src="images/RowLayoutSample04.jpg" /></td>
-  <td><img src="images/RowLayoutSample04Resized.jpg" /></td>
- </tr>
- <tr>
-  <td>
-  <pre>type = SWT.VERTICAL</pre>
-  <p>(widgets are arranged vertically in columns)</p>
-  </td>
-  <td><img src="images/RowLayoutSample05.jpg" /></td>
-  <td><img src="images/RowLayoutSample05Resized.jpg" /></td>
- </tr>
+		<p>(defaults)</p>
+		</td>
+		<td><img src="images/RowLayoutSample01.jpg" /></td>
+		<td><img src="images/RowLayoutSample01Resized.jpg" /></td>
+	</tr>
+	<tr>
+		<td><pre>wrap = false</pre>
+		<p>(clips if not enough space)</p>
+		</td>
+		<td><img src="images/RowLayoutSample02.jpg" /></td>
+		<td><img src="images/RowLayoutSample02Resized.jpg" /></td>
+	</tr>
+	<tr>
+		<td><pre>pack = false</pre>
+		<p>(all widgets are the same size)</p>
+		</td>
+		<td><img src="images/RowLayoutSample03.jpg" /></td>
+		<td><img src="images/RowLayoutSample03Resized.jpg" /></td>
+	</tr>
+	<tr>
+		<td><pre>justify = true</pre>
+		<p>(widgets are spread across the available space)</p>
+		</td>
+		<td><img src="images/RowLayoutSample04.jpg" /></td>
+		<td><img src="images/RowLayoutSample04Resized.jpg" /></td>
+	</tr>
+	<tr>
+		<td><pre>type = SWT.VERTICAL</pre>
+		<p>(widgets are arranged vertically in columns)</p>
+		</td>
+		<td><img src="images/RowLayoutSample05.jpg" /></td>
+		<td><img src="images/RowLayoutSample05Resized.jpg" /></td>
+	</tr>
 </table>
 
-<h4>Using RowData Objects with RowLayout</h4>
+<h3>Using RowData Objects with RowLayout</h3>
 
-<p>Each widget
-controlled by a <code>RowLayout</code> can have
-its initial width and height specified by setting its <code>RowData</code> object. 
-The following code uses <code>RowData</code> objects to change the initial size of the <code>Buttons</code> in a <code>Shell</code>.</p>
+<p>Each widget controlled by a <code>RowLayout</code> can have its
+initial width and height specified by setting its <code>RowData</code>
+object. The following code uses <code>RowData</code> objects to change
+the initial size of the <code>Buttons</code> in a <code>Shell</code>.</p>
 
 <pre>import org.eclipse.swt.*;
 import org.eclipse.swt.widgets.*;
@@ -361,32 +376,31 @@ public class RowDataExample {
    }
 }</pre>
 
-<p>Here is
-what you see when you run this code.</p>
+<p>Here is what you see when you run this code.</p>
 
 <img src="images/RowDataExample.jpg" />
 
-<h3>GridLayout</h3>
+<h2>GridLayout</h2>
 
-<p><code>GridLayout</code> is possibly the most useful and
-powerful of the standard layouts, but it is also the most complicated. With a <code>GridLayout</code>, 
-the widget children of a <code>Composite</code> are laid out in a grid. <code>GridLayout</code> has 
-a number of configuration
-fields, and, like <code>RowLayout</code>, the
-widgets it lays out can have an associated layout data object, called <code>GridData</code>. The power of <code>GridLayout</code> lies in the ability to
-configure <code>GridData</code> for each widget
+<p>With a <code>GridLayout</code>,
+the widget children of a <code>Composite</code> are laid out in a grid.
+<code>GridLayout</code> has a number of configuration fields, and&mdash;like
+<code>RowLayout</code>&mdash;the widgets it lays out can have an associated
+layout data object, called <code>GridData</code>. The power of <code>GridLayout</code>
+lies in the ability to configure <code>GridData</code> for each widget
 controlled by the <code>GridLayout</code>.</p>
 
-<h4>GridLayout Configuration Fields</h4>
+<h3>GridLayout Configuration Fields</h3>
 
-<p>The <code>numColumns</code> field is the most important
-field in a <code>GridLayout</code>, and it is
-usually the first field an application will set. Widgets are laid out in
-columns from left to right, and a new row is created when <code>numColumns</code> + 1 widgets are added to the <code>Composite</code>. The default is to have only 1 column. The following code
-creates a <code>Shell</code> with five <code>Button</code> children of various widths,
-managed by a <code>GridLayout</code>. The table
-below shows the grid when <code>numColumns</code>
-is set to 1, 2, or 3.</p>
+<p>The <code>numColumns</code> field is the most important field in
+a <code>GridLayout</code>, and it is usually the first field an
+application will set. Widgets are laid out in columns from left to
+right, and a new row is created when <code>numColumns</code> + 1 widgets
+are added to the <code>Composite</code>. The default is to have only 1
+column. The following code creates a <code>Shell</code> with five <code>Button</code>
+children of various widths, managed by a <code>GridLayout</code>. The
+table below shows the grid when <code>numColumns</code> is set to one, two,
+or three.</p>
 
 <pre>Display display = new Display();
 Shell shell = new Shell(display);
@@ -406,198 +420,181 @@ while (!shell.isDisposed()) {
 }</pre>
 
 <table>
- <tr>
-  <td>
-  <pre>numColumns = 1</pre>
-  </td>
-  <td>
-  <pre>numColumns = 2</pre>
-  </td>
-  <td>
-  <pre>numColumns = 3</pre>
-  </td>
- </tr>
- <tr>
-  <td><img src="images/GridLayoutSampleNumColumns1.jpg" /></td>
-  <td><img src="images/GridLayoutSampleNumColumns2.jpg" /></td>
-  <td><img src="images/GridLayoutSampleNumColumns3.jpg" /></td>
- </tr>
+	<tr>
+		<td><pre>numColumns = 1</pre></td>
+		<td><pre>numColumns = 2</pre></td>
+		<td><pre>numColumns = 3</pre></td>
+	</tr>
+	<tr>
+		<td><img src="images/GridLayoutSampleNumColumns1.jpg" /></td>
+		<td><img src="images/GridLayoutSampleNumColumns2.jpg" /></td>
+		<td><img src="images/GridLayoutSampleNumColumns3.jpg" /></td>
+	</tr>
 </table>
 
-<p>The <code>makeColumnsEqualWidth</code> field forces the
-columns to be the same width. The default is false. If we change the example
-above to have 3 columns of equal width, this is what we would get (note that in
-the absence of further instruction, widgets are left-justified in their
-columns).</p>
+<p>The <code>makeColumnsEqualWidth</code> field forces the columns
+to be the same width. The default is <code>false</code>. If we change the example
+above to have three columns of equal width, this is what we would get (note
+that in the absence of further instruction, widgets are left-justified
+in their columns).</p>
 
 <img src="images/GridLayoutSampleEqualWidth.jpg" />
 
-<p>The <code>marginWidth</code>, <code>marginHeight</code>, <code>horizontalSpacing</code>, and 
-<code>verticalSpacing</code> fields in a <code>GridLayout</code>
-are similar to those in a <code>RowLayout</code>.
-The difference is that the left and right margins are grouped into <code>marginWidth</code>, and the top and bottom margins
-are grouped into <code>marginHeight</code>. Also,
-in a <code>GridLayout</code> you can specify <code>horizontalSpacing</code> and <code>verticalSpacing</code> independently,
-whereas in a <code>RowLayout</code>, <code>spacing</code>  applies to horizontal or vertical depending on the type of
-the <code>RowLayout</code>.</p>
+<p>The <code>marginWidth</code>, <code>marginHeight</code>, <code>horizontalSpacing</code>,
+and <code>verticalSpacing</code> fields in a <code>GridLayout</code> are
+similar to those in a <code>RowLayout</code>. The difference is that the
+left and right margins are grouped into <code>marginWidth</code>, and
+the top and bottom margins are grouped into <code>marginHeight</code>.
+Also, in a <code>GridLayout</code> you can specify <code>horizontalSpacing</code>
+and <code>verticalSpacing</code> independently, whereas in a <code>RowLayout</code>,
+<code>spacing</code> applies to horizontal or vertical depending on the
+type of the <code>RowLayout</code>.</p>
 
-<h4>GridData Object Fields</h4>
+<h3>GridData Object Fields</h3>
 
-<p><code>GridData</code> is the layout data object associated with <code>GridLayout</code>. To set a widget's <code>GridData</code> object, you use the <code>setLayoutData</code> method. For example, to
-set the <code>GridData</code> for a <code>Button</code>, we could do the following:</p>
+<p><code>GridData</code> is the layout data object associated with <code>GridLayout</code>.
+To set a widget's <code>GridData</code> object, you use the <code>setLayoutData</code>
+method. For example, to set the <code>GridData</code> for a <code>Button</code>,
+we could do the following:</p>
 
 <pre>Button button1 = new Button(shell, SWT.PUSH);
 button1.setText("B1");
 button1.setLayoutData(new GridData());</pre>
 
-<p>Of course, this code just creates a <code>GridData</code>
-object with all of its fields set to their default values, which is the same as
+<p>Of course, this code just creates a <code>GridData</code> object
+with all of its fields set to their default values, which is the same as
 not setting the layout data at all. There are two ways to create a <code>GridData</code>
-object with certain fields set.
-The first is to set the fields directly, like this:</p>
+object with certain fields set. The first is to set the fields directly:</p>
 
 <pre>GridData gridData = new GridData();
 gridData.horizontalAlignment = GridData.FILL;
 gridData.grabExcessHorizontalSpace = true;
-button1.setLayoutData(gridData);</pre>
+button1.setLayoutData(gridData);</pre> <img
+	src="images/GridDataSampleHorizontalFill.jpg" />
 
-<img src="images/GridDataSampleHorizontalFill.jpg" />
-
-<p>The second is to take advantage of convenience API – style bits defined
-by <code>GridData</code>:</p>
+<p>The second is to take advantage of convenience API: style bits
+defined by <code>GridData</code>:</p>
 
 <pre>button1.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));</pre>
 
-<p>In fact, certain common style bit combinations are provided for further
-convenience:</p>
+<p>In fact, certain common style bit combinations are provided for
+further convenience:</p>
 
 <pre>button1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));</pre>
 
-<p>Note that
-<code>FILL_</code> convenience styles set both fill alignment <i>and</i> grab. <code>GridData</code> style
-bits can only be used for boolean and enumeration fields. Numeric fields must
-be set directly.</p>
+<p>Note that <code>FILL_</code> convenience styles set both fill
+alignment <i>and</i> grab. <code>GridData</code> style bits can only be
+used for boolean and enumeration fields. Numeric fields must be set
+directly.</p>
 
-<p>One final
-note about <code>GridData</code> objects before we get into their fields: do not
-reuse <code>GridData</code> objects. Every widget in a <code>Composite</code> that is
-managed by a <code>GridLayout</code> must have a unique <code>GridData</code> object. If
-the layout data for a widget in a <code>GridLayout</code> is null at layout time, a
-unique <code>GridData</code> object is created for it.</p>
+<p>One final note about <code>GridData</code> objects before we get
+into their fields: do not reuse <code>GridData</code> objects. Every
+widget in a <code>Composite</code> that is managed by a <code>GridLayout</code>
+must have a unique <code>GridData</code> object. If the layout data for
+a widget in a <code>GridLayout</code> is null at layout time, a unique <code>GridData</code>
+object is created for it.</p>
 
-<p>The <code>horizontalAlignment</code> and <code>verticalAlignment</code> fields specify where to place
-a widget horizontally and/or vertically within its grid cell. Each alignment
-field can have one of the following values:</p>
+<p>The <code>horizontalAlignment</code> and <code>verticalAlignment</code>
+fields specify where to place a widget horizontally and/or vertically
+within its grid cell. Each alignment field can have one of the following
+values:</p>
 
 <ul>
-<li><code>BEGINNING</code></li>
-<li><code>CENTER</code></li>
-<li><code>END</code></li>
-<li><code>FILL</code></li>
+	<li><code>BEGINNING</code></li>
+	<li><code>CENTER</code></li>
+	<li><code>END</code></li>
+	<li><code>FILL</code></li>
 </ul>
 
-<p>The default
-horizontalAlignment is BEGINNING (or left-aligned). The default
-verticalAlignment is CENTER.</p>
+<p>The default horizontalAlignment is BEGINNING (or left-aligned).
+The default verticalAlignment is CENTER.</p>
 
-<p>Let's go
-back to our five-button example with three columns, and we will vary 
-the <code>horizontalAlignment</code> of Button 5.</p>
+<p>Let's go back to our five-button example with three columns, and
+we will vary the <code>horizontalAlignment</code> of Button 5.</p>
 
 <table>
- <tr>
-  <td><pre>horizontalAlignment = GridData.BEGINNING</pre>
-  <p>(default)</p>
-  </td>
-  <td><img src="images/GridDataSampleBeginning.jpg"/></td>
- </tr>
- <tr>
-  <td>
-  <pre>horizontalAlignment = GridData.CENTER</pre>
-  </td>
-  <td><img src="images/GridDataSampleCenter.jpg" /></td>
- </tr>
- <tr>
-  <td>
-  <pre>horizontalAlignment = GridData.END</pre>
-  </td><td><img src="images/GridDataSampleEnd.jpg" /></td>
- </tr>
- <tr>
-  <td>
-  <pre>horizontalAlignment = GridData.FILL</pre>
-  </td><td><img src="images/GridDataSampleFill.jpg" /></td>
- </tr>
+	<tr>
+		<td><pre>horizontalAlignment = GridData.BEGINNING</pre>
+		<p>(default)</p>
+		</td>
+		<td><img src="images/GridDataSampleBeginning.jpg" /></td>
+	</tr>
+	<tr>
+		<td><pre>horizontalAlignment = GridData.CENTER</pre></td>
+		<td><img src="images/GridDataSampleCenter.jpg" /></td>
+	</tr>
+	<tr>
+		<td><pre>horizontalAlignment = GridData.END</pre></td>
+		<td><img src="images/GridDataSampleEnd.jpg" /></td>
+	</tr>
+	<tr>
+		<td><pre>horizontalAlignment = GridData.FILL</pre></td>
+		<td><img src="images/GridDataSampleFill.jpg" /></td>
+	</tr>
 </table>
 
-<p>The <code>horizontalIndent</code> field allows you to
-move a widget to the right by a specified number of pixels. This field is
-typically only useful when the <code>horizontalAlignment</code>
-is <code>BEGINNING</code>. We cannot use a style bit to set the indent, so we will indent Button 5 in our
-example by 4 pixels as follows:</p>
+<p>The <code>horizontalIndent</code> field allows you to move a
+widget to the right by a specified number of pixels. This field is
+typically only useful when the <code>horizontalAlignment</code> is <code>BEGINNING</code>.
+We cannot use a style bit to set the indent, so we will indent &quot;Button 5&quot;
+in our example by four pixels as follows:</p>
 
 <pre>GridData gridData = new GridData();
 gridData.horizontalIndent = 4;
-button5.setLayoutData(gridData);</pre>
+button5.setLayoutData(gridData);</pre> <img
+	src="images/GridDataSampleIndent.jpg" />
 
- <img src="images/GridDataSampleIndent.jpg"/>
- 
-<p>The <code>horizontalSpan</code> and <code>verticalSpan</code> fields let widgets occupy more
-than one grid cell. They are often used in conjunction with FILL alignment. We
-can make Button 5 in our example span the last two cells as follows:</p>
- 
+<p>The <code>horizontalSpan</code> and <code>verticalSpan</code>
+fields let widgets occupy more than one grid cell. They are often used
+in conjunction with <code>FILL</code> alignment. We can make &quot;Button 5&quot; in our example
+span the last two cells as follows:</p>
+
 <pre>GridData gridData = new GridData();
 gridData.horizontalAlignment = GridData.FILL;
 gridData.horizontalSpan = 2;
-button5.setLayoutData(gridData);</pre>
+button5.setLayoutData(gridData);</pre> <img
+	src="images/GridDataSampleSpan01.jpg" />
 
-<img src="images/GridDataSampleSpan01.jpg"/>
+<p>If we decide to make &quot;Wide Button 2&quot; span two cells instead, we
+would end up with this:</p>
 
-<p>If we
-decide to make Wide Button 2 span two cells instead, we would
-end up with this:</p>
- 
 <pre>GridData gridData = new GridData();
 gridData.horizontalAlignment = GridData.FILL;
 gridData.horizontalSpan = 2;
-button2.setLayoutData(gridData);</pre>
+button2.setLayoutData(gridData);</pre> <img
+	src="images/GridDataSampleSpan02.jpg" />
 
-<img src="images/GridDataSampleSpan02.jpg"/>
-
-<p>Or we could
-make Button 3 span two cells vertically:</p>
+<p>Or we could make &quot;Button 3&quot; span two cells vertically:</p>
 
 <pre>GridData gridData = new GridData();
 gridData.verticalAlignment = GridData.FILL;
 gridData.verticalSpan = 2;
-button3.setLayoutData(gridData);</pre>
+button3.setLayoutData(gridData);</pre> <img
+	src="images/GridDataSampleSpan03.jpg" />
 
-<img src="images/GridDataSampleSpan03.jpg"/>
+<p>The <code>grabExcessHorizontalSpace</code> and <code>grabExcessVerticalSpace</code>
+fields are typically used for larger widgets such as <code>Text,</code>
+<code>List</code> or <code>Canvas</code> to allow them to grow if their
+containing <code>Composite</code> grows. If a <code>Text</code> is
+grabbing excess horizontal space and the user resizes the <code>Shell</code>
+wider, then the <code>Text</code> will get all of the new horizontal
+space and other widgets in the same row will stay their original width.
+Of course, the widget that is grabbing excess space is also the first
+one to shrink when the <code>Shell</code> gets smaller. It is easiest to
+always think of the <b>grabExcessSpace</b> fields in the context of
+resizing. For a simple example, let's reuse the previous example where
+&quot;Button 3&quot; spanned two cells vertically. Here it is again:</p>
 
-<p>The <code>grabExcessHorizontalSpace</code>
-and <code>grabExcessVerticalSpace</code> fields
-are typically used for larger widgets such as <code>Text,</code> <code>List</code> or
-<code>Canvas</code> to allow
-them to grow if their containing <code>Composite</code>
-grows. If a <code>Text</code> is grabbing excess
-horizontal space and the user resizes the <code>Shell</code>
-wider, then the <code>Text</code> will get all of the
-new horizontal space and other widgets in the same row will stay their original
-width. Of course, the widget that is grabbing excess space is also the first
-one to shrink when the <code>Shell</code> gets
-smaller. It is easiest to always think of the <b>grabExcessSpace</b> fields in the context of resizing. For a simple
-example, let's reuse the previous example where Button 3 spanned
-two cells vertically. Here it is again:</p>
+<img src="images/GridDataSampleSpan03.jpg" />
 
-<img src="images/GridDataSampleSpan03.jpg"/>
+<p>If we resize this window, the only thing that happens is that the
+window gets bigger:</p>
 
-<p>If we resize this window, the only thing that happens is that the window gets
-bigger:</p>
+<img src="images/GridDataSampleSpan03Resized.jpg" />
 
-<img src="images/GridDataSampleSpan03Resized.jpg"/>
-
-<p>Now we will tell Button 3 to grab excess horizontal and
-vertical space, and Buttons 1 and 4 to fill vertically (without
-grabbing), and we resize the window again:</p>
+<p>Now we will tell &quot;Button 3&quot; to grab excess horizontal and vertical
+space, and &quot;B1&quot; and &quot;B4&quot; to fill vertically (without grabbing), and we
+resize the window again:</p>
 
 <pre>Button button1 = new Button(shell, SWT.PUSH);
 button1.setText(&quot;B1&quot;);
@@ -623,23 +620,22 @@ gridData = new GridData();
 gridData.verticalAlignment = GridData.FILL;
 button4.setLayoutData(gridData);
 
-new Button(shell, SWT.PUSH).setText(&quot;Button 5&quot;);</pre>
+new Button(shell, SWT.PUSH).setText(&quot;Button 5&quot;);</pre> <img
+	src="images/GridDataSampleGrab01.jpg" />
 
-<img src="images/GridDataSampleGrab01.jpg"/>
+<p>This time, &quot;Button 3&quot; grew in both directions, and &quot;B4&quot; grew
+vertically. The other buttons stayed their original sizes. Because
+&quot;Button 3&quot; was grabbing vertically and it spans two rows, the <i>last</i>
+row that it spans grew taller. Note that &quot;B1&quot; did not
+grow&mdash;although it is filling vertically&mdash;because its row did
+not grow. Since &quot;Button 3&quot; was grabbing horizontally, its column grew
+wider, and since it was filling horizontally, it grew wider to fill the
+column.</p>
 
-<p>This time, Button 3 grew in
-both directions, and Button 4 grew vertically. The other buttons stayed their
-original sizes. Because Button 3 was grabbing vertically and it spans two rows,
-the <i>last</i> row that it spans grew
-taller. Note that Button 1 did not grow&mdash;although it is filling
-vertically&mdash;because its row did not grow. Since Button 3 was
-grabbing horizontally, its column grew wider, and since it was filling
-horizontally, it grew wider to fill the column.</p>
-
-<p>In a
-typical application window, you often want to have at least one widget that is
-grabbing. If more than one widget is trying to grab the same space, then the
-excess space is shared evenly among the grabbing widgets:</p>
+<p>In a typical application window, you often want to have at least
+one widget that is grabbing. If more than one widget is trying to grab
+the same space, then the excess space is shared evenly among the
+grabbing widgets:</p>
 
 <pre>import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -706,78 +702,74 @@ public class SampleGrabExcess {
 				display.sleep();
 		}
 	}
-}</pre>
+}</pre> <img src="images/GridLayoutGrabExcess.jpg" />      
+<p>When resized, the single line (top-most) <code>Text</code> grows
+to consume all available horizontal space, and the second <code>Text</code>
+and the <code>List</code> grow to consume all remaining space (both
+vertically and horizontally):</p>
 
-<img src="images/GridLayoutGrabExcess.jpg"/>
-      
-<p>When resized, the single line (top-most) <code>Text</code> grows to consume all 
-available horizontal space, and the second <code>Text</code> and the <code>List</code> grow
-to consume all remaining space (both vertically and horizontally):</p>
+<img src="images/GridLayoutGrabExcessResized.jpg" />
 
-<img src="images/GridLayoutGrabExcessResized.jpg"/>
+<p>One final point to note about grabbing: if a widget is set to
+grab excess horizontal space and its parent <code>Composite</code> grows
+wider, then the entire <i>column</i> containing that widget grows wider.
+If a widget is grabbing excess vertical space and its parent <code>Composite</code>
+grows taller, then the entire <i>row</i> containing that widget grows
+taller. The implication of this is that if any other widget in the
+affected column or row has <i>fill</i> alignment, then it will stretch
+also. Widgets that have beginning, center, or end alignment will not
+stretch: they will stay at the beginning, center or end of the wider
+column or taller row.</p>
 
-<p>One final
-point to note about grabbing. If a widget is set to grab excess horizontal space
-and its parent <code>Composite</code> grows wider,
-then the entire <i>column</i> containing
-that widget grows wider. If a widget is grabbing excess vertical space and its
-parent <code>Composite</code> grows taller, then
-the entire <i>row</i> containing that widget
-grows taller. The implication of this is that if any other widget in the
-affected column or row has <i>fill</i>
-alignment, then it will stretch also. Widgets that have beginning, center, or
-end alignment will not stretch: they will stay at the beginning, center or end
-of the wider column or taller row.</p>
-
-<p>The <code>widthHint</code> and <code>heightHint</code> fields indicate the number of pixels wide or tall that
-you would like a widget to be, assuming that it does not conflict with other requirements
-in the <code>GridLayout</code>'s constraint
-system. Looking back at the five-button, three-column example, say we want Button 5 to be 70
-pixels wide and 40 pixels tall. We code it as follows:</p>
+<p>The <code>widthHint</code> and <code>heightHint</code> fields
+indicate the number of pixels wide or tall that you would like a widget
+to be, assuming that it does not conflict with other requirements in the
+<code>GridLayout</code>'s constraint system. Looking back at the
+five-button, three-column example, say we want &quot;Button 5&quot; to be 70 pixels
+wide and 40 pixels tall. We code it as follows:</p>
 
 <pre>GridData gridData = new GridData();
 gridData.widthHint = 70;
 gridData.heightHint = 40;
 button5.setLayoutData(gridData);</pre>
 
-<p>The natural
-size of Button 5 is shown in the window on the left, below, and the 70-pixel wide,
-40-pixel tall Button 5 is on the right.</p>
+<p>The natural size of &quot;Button 5&quot; is shown in the window on the left,
+below, and the 70-pixel wide, 40-pixel tall &quot;Button 5&quot; is on the right.</p>
 
- <img src="images/GridLayoutSampleNumColumns3.jpg"/>        
- <img src="images/GridDataSampleSpan04.jpg"/>
+<img src="images/GridLayoutSampleNumColumns3.jpg" /> <img
+	src="images/GridDataSampleSpan04.jpg" />
 
-<p>Note, however, that if the <code>horizontalAlignment</code>
-of Button 5 was FILL, then the <code>GridLayout</code>
-would not have been able to honor the request for a width of 70 pixels.</p>
+<p>Note, however, that if the <code>horizontalAlignment</code> of
+&quot;Button 5&quot; was <code>FILL</code>, then the <code>GridLayout</code> would not have been
+able to honor the request for a width of 70 pixels.</p>
 
-<p>One final comment about using width and height hints. Something that
-looks good on one platform may not look good on another. The variation between
-font sizes and natural widget sizes across platforms means that hard-coding
-pixel values is not usually the best way to lay out windows. So, keep the use of
-size hints to a minimum, if you use them at all.</p>
+<p>One final comment about using width and height hints: something
+that looks good on one platform may not look good on another. The
+variation between font sizes and natural widget sizes across platforms
+means that hard-coding pixel values is not usually the best way to lay
+out windows. So, keep the use of size hints to a minimum, if you use
+them at all.</p>
 
-<h4>A
-Complex GridLayout Example</h4>
+<h3>A Complex GridLayout Example</h3>
 
-<p>So far, the
-<code>GridLayout</code> examples have been fairly
+<p>So far, the <code>GridLayout</code> examples have been fairly
 simple, in order to show how each field works. Now, we will put them all
-together to create a more complicated example. We start by hand-drawing a rough
-sketch of the window we want to create, to determine things like how many
-columns the grid should contain, and whether or not any widgets need to span.</p>
-         
- <img src="images/DogShowHandDrawn.gif"/>
+together to create a more complicated example. We start by hand-drawing
+a rough sketch of the window we want to create, to determine things like
+how many columns the grid should contain, and whether or not any widgets
+need to span.</p>
+<img src="images/DogShowHandDrawn.gif" />
 
-<p>Then we
-start coding the example from the diagram. The code is below. Note that we have
-added a bit of logic to make the code more interesting, for example, &quot;Browse...&quot; opens a <code>FileDialog</code> to read an <code>Image</code> file which the <code>Canvas</code> displays in a paint listener, Delete deletes
-the <code>Image</code>, and Enter prints the
-current dog and owner info. The example has been coded in a
-single <code>main(String[])</code> method to allow us to
-focus on layout code and not get distracted by programming style.</p>
+<p>Then we start coding the example from the diagram. The code is
+below. Note that we have added a bit of logic to make the code more
+interesting, for example, &quot;Browse...&quot; opens a <code>FileDialog</code>
+to read an <code>Image</code> file which the <code>Canvas</code>
+displays in a paint listener, &quot;Delete&quot; deletes the <code>Image</code>, and
+Enter prints the current dog and owner info.</p>
 
 <pre>import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -797,20 +789,27 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-public class ComplexGridLayoutExample {
-	static Display display;
-	static Shell shell;
-	static Text dogName;
-	static Combo dogBreed;
-	static Canvas dogPhoto;
-	static Image dogImage;
-	static List categories;
-	static Text ownerName;
-	static Text ownerPhone;
+public class DogShowRegistrationWindow {
+	Text dogName;
+	Combo dogBreed;
+	Canvas dogPhoto;
+	Image dogImage;
+	List categories;
+	Text ownerName;
+	Text ownerPhone;
 
 	public static void main(String[] args) {
-		display = new Display();
-		shell = new Shell(display);
+		Display display = new Display();
+		Shell shell = new DogShowRegistrationWindow().createShell(display);
+		shell.open();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch())
+				display.sleep();
+		}
+	}
+	
+	public Shell createShell(final Display display) {
+		final Shell shell = new Shell(display);
 		shell.setText("Dog Show Entry");
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 3;
@@ -827,7 +826,7 @@ public class ComplexGridLayoutExample {
 		
 		dogBreed = new Combo(shell, SWT.NONE);
 		dogBreed.setItems(new String[] { "Collie", "Pitbull", "Poodle",
-				"Scottie" });
+				"Scottie", "Black Lab" });
 		dogBreed.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		
 		Label label = new Label(shell, SWT.NONE);
@@ -929,101 +928,108 @@ public class ComplexGridLayoutExample {
 			}
 		});
 		
+		shell.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent arg0) {
+				if (dogImage != null) {
+					dogImage.dispose();
+					dogImage = null;
+				}
+			}			
+		});
+		
 		shell.pack();
-		shell.open();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
-		}
-		if (dogImage != null) {
-			dogImage.dispose();
-		}
+		
+		return shell;
 	}
 }</pre>
 
 
-<p>Here is
-what the window looks like after Mary Smith enters Bifford in the dog show:</p>
-        
- <img src="images/DogShowBiff.jpg"/>
+<p>Here is what the window looks like after Mary Smith enters
+Bifford in the dog show:</p>
+<img src="images/DogShowBiff.jpg" />
 
-<p>If this window is resized larger,
-the layout adjusts as follows:</p>
+<p>If this window is resized larger, the layout adjusts as follows:</p>
 
-    
- <img src="images/DogShowBiffResized.jpg"/>
+<img src="images/DogShowBiffResized.jpg" />
 
 <p>Notice the following:</p>
 <ul>
-<li>There are 3 columns and 7 rows.</li>
-<li>The <code>dogPhoto</code> <code>Canvas</code> grew
-wider and taller because it is filling and grabbing horizontally and vertically
-(we did not resize the <code>Image</code>, but we
-could have).</li>
+	<li>There are three columns and seven rows.</li>
+	<li>The <code>dogPhoto</code> <code>Canvas</code> grew wider and
+	taller because it is filling and grabbing horizontally and vertically
+	(we did not resize the <code>Image</code>, but we could have).</li>
 
-<li>The <code>dogBreed</code> <code>Combo</code> grew wider
-because it is filling horizontally, and it is in the same column as the <code>Canvas</code>.</li>
+	<li>The <code>dogBreed</code> <code>Combo</code> grew wider
+	because it is filling horizontally, and it is in the same column as the
+	<code>Canvas</code>.</li>
 
-<li>The <code>dogName</code> <code>Text</code> grew wider
-because it is filling horizontally, and one of the columns it spans is the
-column containing the <code>Canvas</code>.</li>
+	<li>The <code>dogName</code> <code>Text</code> grew wider because
+	it is filling horizontally, and one of the columns it spans is the
+	column containing the <code>Canvas</code>.</li>
 
-<li>The <code>categories</code> <code>List</code> grew
-taller because it is filling vertically, and it spans the same rows that the <code>Canvas</code> does.</li>
+	<li>The <code>categories</code> <code>List</code> grew taller
+	because it is filling vertically, and it spans the same rows that the <code>Canvas</code>
+	does.</li>
 
-<li>Because the <code>categories</code> <code>List</code> grew taller,
-its vertical scrollbar disappeared (it did not grow wider).</li>
+	<li>Because the <code>categories</code> <code>List</code> grew
+	taller, its vertical scrollbar disappeared (it did not grow wider).</li>
 
-<li>The <code>ownerInfo</code> <code>Group</code> grew
-wider because it is filling horizontally, and one of the columns it spans is
-the column containing the <code>Canvas</code>.</li>
+	<li>The <code>ownerInfo</code> <code>Group</code> grew wider
+	because it is filling horizontally, and one of the columns it spans is
+	the column containing the <code>Canvas</code>.</li>
 
-<li>The <code>ownerInfo</code> <code>Group</code>, as a
-subclass of <code>Composite</code>, has its own <code>GridLayout</code> with 2 columns and 2 rows.</li>
+	<li>The <code>ownerInfo</code> <code>Group</code>, as a subclass
+	of <code>Composite</code>, has its own <code>GridLayout</code> with 2
+	columns and 2 rows.</li>
 
-<li>The <code>ownerName</code> and <code>ownerPhone</code>
-<code>Texts</code> grew wider because the <code>Group</code> grew wider, and they are filling
-and grabbing horizontally in the <code>Group</code>'s
-<code>GridLayout</code>.</li>
+	<li>The <code>ownerName</code> and <code>ownerPhone</code> <code>Texts</code>
+	grew wider because the <code>Group</code> grew wider, and they are
+	filling and grabbing horizontally in the <code>Group</code>'s <code>GridLayout</code>.</li>
 
-<li>The <code>browse</code> and <code>delete</code> <code>Buttons</code> are indented slightly, and because
-they both fill horizontally, they are the same width.</li>
+	<li>The <code>browse</code> and <code>delete</code> <code>Buttons</code>
+	are indented slightly, and because they both fill horizontally, they
+	are the same width.</li>
 
-<li>The <code>delete</code> <code>Button</code> is
-vertically aligned at the top of its row.</li>
+	<li>The <code>delete</code> <code>Button</code> is vertically
+	aligned at the top of its row.</li>
 
-<li>The &quot;Categories&quot; <code>Label</code> is centered over the <code>categories</code> <code>List</code>.</p>
+	<li>The &quot;Categories&quot; <code>Label</code> is centered over
+	the <code>categories</code> <code>List</code>.
+	</p>
+	<li>The <code>enter</code> <code>Button</code> is horizontally
+	aligned to the right of the 3 columns it spans.</li>
 
-<li>The <code>enter</code> <code>Button</code> is
-horizontally aligned to the right of the 3 columns it spans.</li>
+	<li>The <code>dogPhoto</code> <code>Canvas</code> was created with
+	width and height hints because we want the <code>Image</code> to be 80
+	pixels x 80 pixels, if possible.</li>
 
-<li>The <code>dogPhoto</code> <code>Canvas</code> was
-created with width and height hints because we want the <code>Image</code> to be 80 pixels x 80 pixels, if possible.</li>
-
-<li>The <code>categories</code> <code>List</code> was
-created with a height hint that was based on the <code>List</code>'s font times 12, because we want try to get the <code>List</code> to show 12 items initially.</li>
+	<li>The <code>categories</code> <code>List</code> was created with
+	a height hint that was based on the <code>List</code>'s font times 12,
+	because we want try to get the <code>List</code> to show 12 items
+	initially.</li>
 </ul>
 
-<h3>FormLayout</h3>
+<h2>FormLayout</h2>
 
-<p><code>FormLayout</code> works by
-creating <code>FormAttachment</code>s for each side of
-the widget, and storing them in the layout data. An attachment 'attaches' a
-specific side of the widget either to a position in the parent <code>Composite</code> or to another widget within the layout. This
-provides tremendous flexibility when laying out, as it allows you to specify the
-placement of individual widgets within the layout.</p>
+<p><code>FormLayout</code> works by creating <code>FormAttachment</code>s
+for each side of the widget, and storing them in the layout data. An
+attachment 'attaches' a specific side of the widget either to a position
+in the parent <code>Composite</code> or to another widget within the
+layout. This provides tremendous flexibility when laying out, as it
+allows you to specify the placement of individual widgets within the
+layout.</p>
 
-<h4>FormLayout Configuration Fields</h4>
+<h3>FormLayout Configuration Fields</h3>
 
 <p>The <code>marginWidth</code>, and <code>MarginHeight</code>
-fields in <code>FormLayout</code> are similar to those in <code>GridLayout</code>. Left and
-right margins are defined by <code>marginWidth</code>, and top and bottom margins are
-defined by <code>marginHeight</code>. Margins can also be defined on a
-per-widget basis in the attachments. <code>FormLayout</code>
-margins are 0 by default.</p>
+fields in <code>FormLayout</code> are similar to those in <code>GridLayout</code>.
+Left and right margins are defined by <code>marginWidth</code>, and top
+and bottom margins are defined by <code>marginHeight</code>. Margins can
+also be defined on a per-widget basis in the attachments. <code>FormLayout</code>
+margins are zero by default.</p>
 
-<p>To set the margins, we create a <code>FormLayout</code>,
-and set the margin fields. The following code will set a margin of 5 pixels
+<p>To set the margins, we create a <code>FormLayout</code>, and set
+the margin fields. The following code will set a margin of five pixels
 around all four sides of the parent <code>Composite</code>:</p>
 
 <pre>Display display = new Display ();
@@ -1033,192 +1039,163 @@ layout.marginHeight = 5;
 layout.marginWidth = 5;
 shell.setLayout(layout);</pre>
 
-<h4>FormData Object Fields</h4>
+<h3>FormData Object Fields</h3>
 
 <p><code>FormData</code> objects specify how each widget in a <code>FormLayout</code>
-will be laid out. Each <code>FormData</code> object defines the attachments for all
-four sides of the widget. These attachments tell where to position each side of
-the widget. To set a widget's <code>FormData</code> object, you use the <code>setLayoutData</code>
-method, for example:</p>
-
-
+will be laid out. Each <code>FormData</code> object defines the
+attachments for all four sides of the widget. These attachments tell
+where to position each side of the widget. To set a widget's <code>FormData</code>
+object, you use the <code>setLayoutData(Object)</code> method, for example:</p>
 
 <pre>Button button1 = new Button(shell, SWT.PUSH);
 button1.setText(&quot;B1&quot;);
 button1.setLayoutData(new FormData());</pre>
 
-<p>However,
-this code creates a <code>FormData</code> object with no attachments. In this case,
-default attachments are defined, which defeats the whole purpose and utility of <code>FormLayout</code>.
-The default attachments attach the widget to the top and left edges of the
-parent <code>Composite</code>. If every widget in a <code>FormLayout</code> used the default
-attachments, they would all be laid out one on top of another in the top left
-corner of the parent <code>Composite</code>. </p>
+<p>This code creates a <code>FormData</code> object with no
+attachments. In this case, default attachments are defined, which
+defeats the whole purpose and utility of <code>FormLayout</code>. The
+default attachments attach the widget to the top and left edges of the
+parent <code>Composite</code>. If every widget in a <code>FormLayout</code>
+used the default attachments, they would all be laid out one on top of
+another in the top left corner of the parent <code>Composite</code>.</p>
 
-<p>The <code>left</code>,
-<code>right</code>, <code>top</code>, and <code>bottom</code> fields of <code>FormData</code>
-specify the <code>FormAttachment</code> objects
-that are associated with the left, right, top and bottom sides of the widget,
-respectively. These fields are set in the following example:</p>
+<p>The <code>left</code>, <code>right</code>, <code>top</code>, and
+<code>bottom</code> fields of <code>FormData</code> specify the <code>FormAttachment</code>
+objects that are associated with the left, right, top and bottom sides
+of the widget, respectively. These fields are set in the following
+example:</p>
 
 <pre>FormData formData = new FormData();
 formData.top = new FormAttachment(0,60);
 formData.bottom = new FormAttachment(100,-5);
 formData.left = new FormAttachment(20,0);
 formData.right = new FormAttachment(100,-3);
-button1.setLayoutData(formData);</pre>
+button1.setLayoutData(formData);</pre> <img
+	src="images/FormLayoutSample01.jpg" />
 
-<img src="images/FormLayoutSample01.jpg"/>
+<p>A <code>FormAttachment</code> object defines the attachment of a
+specific side of a widget. There are many ways that a side can be
+attached: to a position in the parent <code>Composite</code>, to an edge
+of the <code>Composite</code>, to the adjacent side of another widget,
+to the opposite side of another widget, or centered on another widget.
+Attaching to a position places the side of the widget so that it is
+always at a percentage of the <code>Composite</code>. To attach to an
+edge of the <code>Composite</code>, the percentage is either 0% or 100%.
+Attaching to the adjacent side of another widget ensures that the
+specified side of the widget is always next to the closest side of the
+other widget. Attaching to the opposite side of another widget ensures
+that the specific side of the widget is aligned with the furthest side
+of the other widget. Finally, attaching to the center of another widget
+centers the widget on the other widget. Any of these ways can be done
+with or without an offset.</p>
 
-<p>A <code>FormAttachment</code> object defines the
-attachment of a specific side of a widget. There are many ways that a side can
-be attached: to a position in the parent <code>Composite</code>, to an edge of the <code>Composite</code>,
-to the adjacent side of another widget, to the opposite side of another widget,
-or centered on another widget. Attaching to a position places the side of the
-widget so that it is always at a percentage of the <code>Composite</code>. To attach
-to an edge of the <code>Composite</code>, the percentage is either 0% or 100%.
-Attaching to the adjacent side of another widget ensures that the specified side
-of the widget is always next to the closest side of the other widget. Attaching
-to the opposite side of another widget ensures that the specific side of the
-widget is aligned with the furthest side of the other widget. Finally, attaching
-to the center of another widget centers the widget on the other widget. Any of
-these ways can be done with or without an offset.</p>
-
-<p>If no
-attachments are defined for a <code>FormData</code> object, the default behaviour
-will attach the widget to the top left edges of the parent <code>Composite</code>,
-like this:</p>
-
-<pre>button1.setLayoutData(new FormData());</pre>
-
-<img src="images/FormLayoutSample02.jpg"/>
- 
-<p>Note that if more than one widget is
-defined without any attachments, the widgets will be given the same default
-placement in the window and will be stacked on top of each other. <code>FormAttachment</code>
-objects are described in further detail in the section on <b>FormAttachment
-Objects</b>.</p>
-
-<p>The <code>width</code> and <code>height</code> fields
-of <code>FormData</code> specify the requested width and the height of the widget. If
-a requested width or height conflicts with constraints set by the attachments,
-then that width or height cannot be honored. Although setting attachments can
-also determine width and height, there are some cases when you do not want to
-define attachments for all sides of the widget. In this case, it may be useful
-to set the width and height of the widget as follows:</p>
-
+<p>The <code>width</code> and <code>height</code> fields of <code>FormData</code>
+specify the requested width and the height of the widget. If a requested
+width or height conflicts with constraints set by the attachments, then
+that width or height will not be honored. Although setting attachments can
+also determine width and height, there are some cases when you do not
+want to define attachments for all sides of the widget. In this case, it
+may be useful to set the width and height of the widget as follows:</p>
 
 <pre>FormData formData = new FormData(20,30);
 formData.top = new FormAttachment(0,60);
 formData.left = new FormAttachment(20,0);
-button1.setLayoutData(formData);</pre>
+button1.setLayoutData(formData);</pre> 
 
-<img src="images/FormLayoutSample03.jpg"/>
-
-<p>If you wish
-to set only the width or the height, you can directly set the width or height
-field in the <code>FormData</code> object:</p>
+<p>If you wish to set only the width or the height, you can directly
+set the width or height field in the <code>FormData</code> object:</p>
 
 <pre>FormData formData = new FormData();
 formData.width = 30;
 formData.top = new FormAttachment(0,60);
 formData.bottom = new FormAttachment(100,-5);
 formData.left = new FormAttachment(20,0);
-button1.setLayoutData(formData);</pre>
+button1.setLayoutData(formData);</pre> 
 
-<img src="images/FormLayoutSample04.jpg"/>
+<p>Note that if a button is attached to the parent <code>Composite</code>
+on both sides, when the <code>Composite</code> is resized, the button
+will grow or shrink along with it.</p>
 
-<p>Note that
-if a button is attached to the parent <code>Composite</code> on both sides, when the <code>Composite</code>
-is resized, the button will grow or shrink along with it. </p>
+<h3>FormAttachment Objects</h3>
 
-<h4>FormAttachment Objects</h4>
+<p>A <code>FormAttachment</code> is an object that defines the
+attachment for a specific side of a widget. It is not always necessary
+to set an attachment for all four sides of a widget. Often, specifying
+one or more sides of a widget can fully specify its placement in the
+layout. In order to properly place your widgets, you should define an
+attachment for at least one of <code>left</code> or <code>right</code>
+in the <code>FormData</code>, and at least one of <code>top</code> or <code>bottom</code>.
+If you only wish to attach the left side of a widget and not the right,
+then the widget will be positioned based on its left side, and the
+widget will take its natural size (or its requested size, if one was set
+for it). If you do not attach the left or the right, default positioning
+will attach your widget to the left side of the form. The same logic
+applies for the top and bottom sides.</p>
 
-<p>A <code>FormAttachment</code>
-is an object that defines the attachment for a specific side of a widget. It is
-not always necessary to set an attachment for all four sides of a widget. Often,
-specifying one or more sides of a widget can fully specify its placement in the
-layout. In order to properly place your widgets, you should define an attachment
-for at least one of <code>left</code> or <code>right</code> in the <code>FormData</code>, and at
-least one of <code>top</code> or <code>bottom</code>. If you only wish to attach the
-left side of a widget and not the right, then the widget will be positioned
-based on its left side, and the widget will take its natural size (or its
-requested size, if one was set for it). If you do not attach the left or the
-right, default positioning will attach your widget to the left side of the form.
-The same logic applies for the top and bottom sides.</p>
-
-<h5>Attaching to a Position</h5>
-<p>There are many types of attachment. The
-first is to attach the widget to a position in the parent <code>Composite</code>. This
-can be done by defining a percentage value out of 100, for example:</p>
+<h3>Attaching to a Position</h3>
+<p>There are many types of attachment. The first is to attach the
+widget to a position in the parent <code>Composite</code>. This can be
+done by defining a percentage value out of 100, for example:</p>
 
 <pre>FormData formData = new FormData();
 formData.top = new FormAttachment(50,0);
-button1.setLayoutData(formData);</pre>
+button1.setLayoutData(formData);</pre> <img
+	src="images/FormLayoutSamplePosition50.jpg" />
 
-<img src="images/FormLayoutSamplePosition50.jpg"/>
-
-<p>This sets the top of the <code>Button</code> to
-a position that represents 50% of the height of the parent <code>Composite</code> (a <code>Shell</code>),
+<p>This sets the top of the <code>Button</code> to a position that
+represents 50% of the height of the parent <code>Composite</code> (a <code>Shell</code>),
 with an offset of 0. When the shell is resized, the top side of the <code>Button</code>
 will still be at 50%, like so:</p>
 
- <img src="images/FormLayoutSamplePosition50Resized.jpg"/>
+<img src="images/FormLayoutSamplePosition50Resized.jpg" />
 
-<p>If we chose to set an offset value, the
-top side of the <code>Button</code> would have been set to 50% of the <code>Composite</code>
-plus or minus the number of pixels set for the offset.</p>
+<p>If we chose to set an offset value, the top side of the <code>Button</code>
+would have been set to 50% of the <code>Composite</code> plus or minus
+the number of pixels set for the offset.</p>
 
-<p>We can also
-define the position of the button without using percentages, for example:</p>
+<p>We can also define the position of the button using an arbitrary scale, for example:</p>
 
 <pre>FormData formData = new FormData();
 formData.top = new FormAttachment(30,70,10);
 button1.setLayoutData(formData);</pre>
 
-<p>If
-the height of the <code>Composite</code> is defined as being 70 units, this sets the
-top of the <code>Button</code> to a position representing 30 units down from the top
-of the <code>Composite</code>, plus 10 pixels.</p>
+<p>If the height of the <code>Composite</code> is defined as being
+70 units, this sets the top of the <code>Button</code> to a position
+representing 30 units down from the top of the <code>Composite</code>,
+plus 10 pixels (i.e. 3/7ths of the height of the composite plus 10 pixels).</p>
 
-<h5>Attaching to the Parent</h5>
-
-<p>The second type of attachment is to
-attach a side to the edge of the parent <code>Composite</code>. This is done in much
-the same way as attaching to a position, but the position is either 0% or 100%.
-The 0 position is defined as the top of the <code>Composite</code> when going
-vertically, and the left when going horizontally. The right and bottom edges of
-the <code>Composite</code> are defined as the 100 position. Therefore, if we want to
-attach a widget to the right edge of the <code>Composite</code>, we simply have to
-create an attachment that sets the position to 100:</p>
+<p>To attach a side of a widget to an edge of
+the parent <code>Composite</code>, set the position to either 0% or 100%. The 0
+position is defined as the top of the <code>Composite</code> when going
+vertically, and the left when going horizontally. The right and bottom
+edges of the <code>Composite</code> are defined as the 100 position.
+Therefore, if we want to attach a widget to the right edge of the <code>Composite</code>,
+we simply have to create an attachment that sets the position to 100:</p>
 
 <pre>FormData formData = new FormData();
 formData.right = new FormAttachment(100,-5);
-button1.setLayoutData(formData);</pre>
+button1.setLayoutData(formData);</pre> <img
+	src="images/FormLayoutSampleParent100.jpg" />
 
-<img src="images/FormLayoutSampleParent100.jpg"/>
- 
-<p>This
-attaches the right side of the <code>Button</code> to the right edge of the parent (a <code>Shell</code>),
-with an offset of 5 pixels. Note that the offsets go in one direction only. If
-you want a widget offset down or to the right, the offset should be positive.
-For offsets that shift the widget up or to the left, the offset should be
-negative. Now when the <code>Shell</code> is resized, the <code>Button</code> will always be
-5 pixels away from the right edge:</p>
+<p>This attaches the right side of the <code>Button</code> to the
+right edge of the parent (a <code>Shell</code>), with an offset of five
+pixels. Note that the offsets go in one direction only. If you want a
+widget offset down or to the right, the offset should be positive. For
+offsets that shift the widget up or to the left, the offset should be
+negative. When the <code>Shell</code> is resized, the <code>Button</code>
+will always be five pixels away from the right edge:</p>
 
-<img src="images/FormLayoutSampleParent100Resized.jpg"/>
+<img src="images/FormLayoutSampleParent100Resized.jpg" />
 
-<h5>Attaching to Another Widget</h5>
-<p>The
-third type of attachment is to attach the side of the widget to another control
-within the parent <code>Composite</code>. The side can be attached to the adjacent
-side of the other control (the default), to the opposite side of the other
-control, or the widget can be centered on the other control, all with or without
-and offset.</p>
+<h3>Attaching to Another Widget</h3>
+<p>The third type of attachment is to attach the side of the widget
+to another control within the parent <code>Composite</code>. The side
+can be attached to the adjacent side of the other control (the default),
+to the opposite side of the other control, or the widget can be centered
+on the other control, all with or without and offset.</p>
 
-<p>The
-most common way to attach to another control is to attach to its adjacent side.
-For example, the following code:</p>
+<p>The most common way to attach to another control is to attach to
+its adjacent side. For example, the following code:</p>
 
 <pre>FormData formData = new FormData();
 formData.top = new FormAttachment(20,0);
@@ -1226,38 +1203,34 @@ button1.setLayoutData(formData);
 
 FormData formData2 = new FormData();
 formData2.top = new FormAttachment(button1,10);
-button2.setLayoutData(formData2);</pre>
+button2.setLayoutData(formData2);</pre> <img
+	src="images/FormLayoutSampleAttachWidget01.jpg" />
 
-<img src="images/FormLayoutSampleAttachWidget01.jpg"/>
+<p>This example attaches the top of button2 to the bottom of
+button1. Note that when the window is resized, button1 will move so that
+its top side is always positioned at 20% of the <code>Shell</code>, and
+button2 will move so that its top side is always 10 pixels below the
+adjacent (bottom) side of button1.</p>
 
-<p>This example attaches
-the top of button2 to the bottom of button1. Note
-that when the window is resized, button1
-will move so that its top side is always positioned at 20% of the <code>Shell</code>,
-and button2
-will move so that its top side is always 10 pixels below the adjacent (bottom)
-side of button1.</p>
+<img src="images/FormLayoutSampleAttachWidget01Resized.jpg" />
 
-<img src="images/FormLayoutSampleAttachWidget01Resized.jpg"/>
-
-<p>While
-the default is to attach the side of a widget to the adjacent side of a
-control, <code>FormAttachment</code>s can also be created to attach to the opposite
-side of a control. This is useful when lining up widgets. In this case, you
-create the attachment to the other control using <code>TOP</code>, <code>BOTTOM</code>, 
-<code>LEFT</code> or <code>RIGHT</code>
-alignment, for example:</p>
+<p>While the default is to attach the side of a widget to the
+adjacent side of a control, <code>FormAttachment</code>s can also be
+created to attach to the opposite side of a control. This is useful when
+lining up widgets. In this case, you create the attachment to the other
+control using <code>TOP</code>, <code>BOTTOM</code>, <code>LEFT</code>
+or <code>RIGHT</code> alignment, for example:</p>
 
 <pre>formData2.top = new FormAttachment(button1,0,SWT.TOP);</pre>
 
-<p>In
-the following example, the top side of button1
-is positioned at 20% of the <code>Shell</code>. button2's top side is aligned with button1's
-top side, using TOP alignment. This means that the top side of button2
-is also positioned at 20% of the <code>Shell</code>. Note that when specifying the top
-attachment, only the vertical placement of the widget is being defined. It is
-still necessary to set the left attachment for button2 so that the <code>Buttons</code> are not stacked on top of each
-other.</p>
+<p>In the following example, the top side of <code>button1</code> is positioned
+at 20% of the <code>Shell</code>. <code>button2</code>'s top side is aligned with
+<code>button1</code>'s top side, using <code>TOP</code> alignment. This means that the top side of
+<code>button2</code> is also positioned at 20% of the <code>Shell</code>. Note that
+when specifying the top attachment, only the vertical placement of the
+widget is being defined. It is still necessary to set the left
+attachment for <code>button2</code> so that the <code>Button</code>s are not stacked
+on top of each other.</p>
 
 <pre>FormData formData = new FormData(50,50);
 formData.top = new FormAttachment(20,0);
@@ -1266,23 +1239,22 @@ button1.setLayoutData(formData);
 FormData formData2 = new FormData();
 formData2.left = new FormAttachment(button1,5);
 formData2.top = new FormAttachment(button1,0,SWT.TOP); 
-button2.setLayoutData(formData2);</pre>
+button2.setLayoutData(formData2);</pre> <img
+	src="images/FormLayoutSampleAttachWidget02.jpg" />
 
-<img src="images/FormLayoutSampleAttachWidget02.jpg"/>
-
-<p>The
-final way to attach a widget to another control is to center it on the other
-control. This is useful when the widgets are different sizes. In this case, you
-create the attachment to the other control with CENTER alignment, for example:</p>
+<p>The final way to attach a widget to another control is to center
+it on the other control. This is useful when the widgets are different
+sizes. In this case, you create the attachment to the other control with
+<code>CENTER</code> alignment, for example:</p>
 
 <pre>formData.top = new FormAttachment(button1,0,SWT.CENTER);</pre>
 
-<p>This
-will place the top of the widget in a position that will allow the widget to be
-centered on the other control, with an offset of 0. Setting only the top, or the
-bottom, or both as a center attachment will produce the same result. The top
-side of the widget is not centered, but the entire widget is centered, so this
-only needs to be specified once. Here is an example:</p>
+<p>This will place the top of the widget in a position that will
+allow the widget to be centered on the other control, with an offset of
+0. Setting only the top, or the bottom, or both as a center attachment
+will produce the same result. The top side of the widget is not
+centered, but the entire widget is centered, so this only needs to be
+specified once. Here is an example:</p>
 
 <pre>FormData formData1 = new FormData (50,50);
 button1.setLayoutData(formData1);
@@ -1290,38 +1262,33 @@ button1.setLayoutData(formData1);
 FormData formData2 = new FormData ();
 formData2.left = new FormAttachment (button1,5);
 formData2.top = new FormAttachment (button1,0,SWT.CENTER);
-button2.setLayoutData(formData2);</pre>
+button2.setLayoutData(formData2);</pre> <img
+	src="images/FormLayoutSampleAttachWidget03.jpg" />
 
-<img src="images/FormLayoutSampleAttachWidget03.jpg"/>
-
-<p>Using
-the different types of <code>FormAttachment</code> allows layouts to be defined in
-many different ways. <code>FormLayout</code> covers certain cases that cannot be
-solved using <code>FillLayout</code>, <code>RowLayout</code> or <code>GridLayout</code>, making it a very
+<p>Using the different types of <code>FormAttachment</code> allows
+layouts to be defined in many different ways. <code>FormLayout</code>
+covers certain cases that cannot be solved using <code>FillLayout</code>,
+<code>RowLayout</code> or <code>GridLayout</code>, making it a very
 useful class for defining layouts.</p>
 
-<p><b>Important:
-</b>Do <b>not</b>
-define circular attachments.&nbsp; For
-example, do not attach the right edge of button1
-to the left edge of button2
-and then attach the left edge
-button2
-to the right edge of button1.
-This will over-constrain the layout, causing undefined behavior.&nbsp;
-The algorithm will terminate, but the results are undefined.
-Therefore, make sure that you do not over-constrain your widgets. Only provide
-the attachments necessary to properly lay out the widgets.</p>
+<p><b>Important: </b>Do <b>not</b> define circular
+attachments. For example, do not attach the right edge of button1
+to the left edge of button2 and then attach the left edge button2 to the
+right edge of button1. This will over-constrain the layout, causing
+undefined behavior. The algorithm will terminate, but the results
+are undefined. Therefore, make sure that you do not over-constrain your
+widgets. Only provide the attachments necessary to properly lay out the
+widgets.</p>
 
-<h4>A FormLayout Example</h4>
+<h3>A FormLayout Example</h3>
 
-<p>So far, all the examples using <code>FormLayout</code>
-have involved one or two <code>Button</code>s, to show how <code>FormAttachment</code>s
-work. Next, we will do a simple example using more <code>Button</code>s to show how a
-layout can be arranged using the attachments. We'll start by drawing a basic
-diagram outlining the attachments that we wish to create.</p>
-     
- <img src="images/FormExampleHandDrawn.jpg"/>
+<p>So far, all the examples using <code>FormLayout</code> have
+involved one or two <code>Button</code>s, to show how <code>FormAttachment</code>s
+work. Next, we will do a simple example using more <code>Button</code>s
+to show how a layout can be arranged using the attachments. We'll start
+by drawing a basic diagram outlining the attachments that we wish to
+create.</p>
+     <img src="images/FormExampleHandDrawn.jpg" /> 
 
 <pre>FormData data1 = new FormData();
 data1.left = new FormAttachment(0,5);
@@ -1350,35 +1317,35 @@ data5.bottom = new FormAttachment(100,-5);
 data5.left = new FormAttachment(button4,5);
 button5.setLayoutData(data5);</pre>
 
-<p>In this case, since no top
-attachment was defined for button1 or button2, they are attached to the top of the layout. button3 is centred in the layout
-using percentages and offsets on the left and right sides. button4 and button5 are attached to the
-bottom of the layout with a 5 pixel offset. </p>
+<p>In this case, since no top attachment was defined for <code>button1</code> or
+<code>button2</code>, they are attached to the top of the layout. <code>button3</code> is centred
+in the layout using percentages and offsets on the left and right sides.
+<code>button4</code> and <code>button5</code> are attached to the bottom of the layout with a five
+pixel offset.</p>
 
- <img src="images/FormLayoutSample5Buttons01.jpg"/>
+<img src="images/FormLayoutSample5Buttons01.jpg" />
 
-<p>When we
-resize, the attachments become more visible. button1 is attached on the left and the right side, so when the window is
-resized, it grows. Note that the right side will always be at 25% of the
-window.  The same resize results apply
-for button2, as both sides are attached. The
-left side is attached to button1, so it will always be at 25% plus 5
-pixels. button3 stays in the center of the window,
-horizontally. button4 is attached at the top and the bottom, so it
-grows vertically when the window is resized, but it is only attached on the
-left and not the right, so it does not grow horizontally. button5 will not grow or shrink, but it will always
-stay 5 pixels away from button4 on the left, and 5 pixels away from
-the bottom of the window.</p>
+<p>When we resize, the attachments become more visible. <code>button1</code> is
+attached on the left and the right side, so when the window is resized,
+it grows. Note that the right side will always be at 25% of the window. 
+The same resize results apply for <code>button2</code>, as both sides are attached.
+The left side is attached to <code>button1</code>, so it will always be at 25% plus five
+pixels. <code>button3</code> stays in the center of the window, horizontally. <code>button4</code>
+is attached at the top and the bottom, so it grows vertically when the
+window is resized, but it is only attached on the left and not the
+right, so it does not grow horizontally. <code>button5</code> will not grow or
+shrink, but it will always stay five pixels away from <code>button4</code> on the left,
+and five pixels away from the bottom of the window.</p>
 
-<img src="images/FormLayoutSample5Buttons01Resized.jpg"/>
+<img src="images/FormLayoutSample5Buttons01Resized.jpg" />
 
 <h4>A Complex FormLayout Example</h4>
 
-<p>To
-illustrate how <code>FormLayout</code> can be used for more complicated arrangements,
-the Dog Show Entry example done previously for <code>GridLayout</code> is redone
-using <code>FormLayout</code>. This code produces an identical layout, but uses
-different concepts to achieve it.</p>
+<p>To illustrate how <code>FormLayout</code> can be used for more
+complicated arrangements, the Dog Show Entry example done previously for
+<code>GridLayout</code> is redone using <code>FormLayout</code>. This
+code produces an identical layout, but uses different concepts to
+achieve it.</p>
 
 <pre>import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -1597,175 +1564,171 @@ public class DogShowRegistrationWindowWithFormLayout {
 	}	
 }</pre>
 
-<p>This is what the layout looks like after
-Mary Smith enters Bifford in the dog show:</p>
+<p>This is what the layout looks like after Mary Smith enters
+Bifford in the dog show:</p>
 
-<img src="images/DogShowBiffWithFormLayout.jpg"/>
+<img src="images/DogShowBiffWithFormLayout.jpg" />
 
 </p>
-<p>When the window is resized, the same
-controls are resized as in the <code>GridLayout</code> example.</p>
+<p>When the window is resized, the same controls are resized as in
+the <code>GridLayout</code> example.</p>
 
-<img src="images/DogShowBiffWithFormLayoutResized.jpg"/>
+<img src="images/DogShowBiffWithFormLayoutResized.jpg" />
 
-<h3>Writing Your Own Layout Class</h3>
+<h2>Writing Your Own Layout Class</h2>
 
-<p>Occasionally, you may want to write your own <code>Layout</code> class. Perhaps your layout 
-needs are very complex. Maybe you
-have the same look in many places, and you want to take advantage of code
-reuse. Or you want to leverage domain knowledge to create a very efficient
-layout class. Whatever the reason, there are things to consider before writing
-a new class:</p>
+<p>Occasionally, you may want to write your own <code>Layout</code>
+class. Perhaps your layout needs are very complex. Maybe you have the
+same look in many places, and you want to take advantage of code reuse.
+Or you want to leverage domain knowledge to create a very efficient
+layout class. Whatever the reason, there are things to consider before
+writing a new class:</p>
 
-   <ul>
-      <li>
-        Can
-the layout be done using a <code>GridLayout</code> or <code>FormLayout</code>, with maybe a few nested layouts?</li>
-      <li>
-        Can
-the desired effect be more easily achieved with a resize listener?</li>
-      <li>Are
-you defining a general layout algorithm or just positioning widgets?</li>
-    </ul>
-  </blockquote>
-</blockquote>
+<ul>
+	<li>Can the layout be done using a <code>GridLayout</code> or <code>FormLayout</code>,
+	with maybe a few nested layouts?</li>
+	<li>Can the desired effect be more easily achieved with a resize
+	listener?</li>
+	<li>Are you defining a general layout algorithm or just
+	positioning widgets?</li>
+</ul>
 
-<p>Unless you are writing a very generic <code>Layout</code> type that will be used by several <code>Composite</code> widgets,
-it is often better and easier to simply calculate sizes and position children
-in a resize listener. Many of the SWT custom widgets were written this way.
-Although a new widget can be implemented as a <code>Composite</code>/<code>Layout</code> pair,
-implementing it as a <code>Composite</code> that
-does its layout in a resize listener and computes its preferred size in <code>computeSize</code> is clearer, and does not
-involve writing an extra class.</p>
+<p>Unless you are writing a very generic <code>Layout</code> type
+that will be used by several <code>Composite</code> widgets, it is often
+better and easier to simply calculate sizes and position children in a
+resize listener. Many of the SWT custom widgets were written this way.
+Although a new widget can be implemented as a <code>Composite</code>/<code>Layout</code>
+pair, implementing it as a <code>Composite</code> that does its layout
+in a resize listener and computes its preferred size in <code>computeSize</code>
+is clearer, and does not involve writing an extra class.</p>
 
-<p>First, we will look at how layouts work, and then we will create a new <code>Layout</code> class. Another example of writing
-your own <code>Layout</code> can be found in the <i>Compound Widget Example</i> section of <a href="http://www.eclipse.org/articles/Article-Writing%20Your%20Own%20Widget/Writing%20Your%20Own%20Widget.htm">Creating Your Own Widgets Using SWT</a>,
-which shows how to achieve the same look using either a resize listener or a
-new <code>Layout</code> class.</p>
+<p>First, we will look at how layouts work, and then we will create
+a new <code>Layout</code> class. Another example of writing your own <code>Layout</code>
+can be found in the <i>Compound Widget Example</i> section of <a
+	href="http://www.eclipse.org/articles/Article-Writing%20Your%20Own%20Widget/Writing%20Your%20Own%20Widget.htm">Creating
+Your Own Widgets Using SWT</a>, which shows how to achieve the same look
+using either a resize listener or a new <code>Layout</code> class.</p>
 
-<h4>How Layouts Work</h4>
+<h3>How Layouts Work</h3>
 
-<p><code>Layout</code> is the abstract superclass of all
-layouts. It only has two methods: <code>computeSize</code>
-and <code>layout</code>. The class is defined as
-follows:</p>
+<p><code>Layout</code> is the abstract superclass of all layouts. It
+only has two methods: <code>computeSize</code> and <code>layout</code>.
+The class is defined as follows:</p>
 
 <pre>public abstract class Layout {
     protected abstract Point computeSize(Composite composite, int widthHint, int heightHint, boolean flushCache);
     protected abstract void layout(Composite composite, boolean flushCache);
 }</pre>
 
-<p>The <code>computeSize</code> method calculates the width and height of a
-rectangle that encloses all of the <code>Composite</code>'s children once they have
-been sized and placed according to the layout algorithm encoded in the <code>Layout</code>
-class. The hint parameters allow the width and/or height to be constrained. For
-example, a layout may choose to grow in one dimension if constrained in
-another. A hint of SWT.DEFAULT means to use the preferred size.</p>
+<p>The <code>computeSize</code> method calculates the width and
+height of a rectangle that encloses all of the <code>Composite</code>'s
+children once they have been sized and placed according to the layout
+algorithm encoded in the <code>Layout</code> class. The hint parameters
+allow the width and/or height to be constrained. For example, a layout
+may choose to grow in one dimension if constrained in another. A hint of
+SWT.DEFAULT means to use the preferred size.</p>
 
+<p>The <code>layout</code> method positions and sizes the <code>Composite</code>'s
+children. A <code>Layout</code> can choose to cache layout-related
+information, such as the preferred extent of each of the children. The <code>flushCache</code>
+parameter tells the <code>Layout</code> to flush cached data.</p>
 
-
-<p>The <code>layout</code> method positions and sizes the <code>Composite</code>'s children.
-A <code>Layout</code> can choose to cache layout-related information, such as the
-preferred extent of each of the children. The <code>flushCache</code> parameter tells
-the <code>Layout</code> to flush cached data.</p>
-
-
-
-<p>Since a <code>Layout</code> controls the
-size and placement of widgets in a <code>Composite</code>,
-there are several methods in <code>Composite</code>
+<p>Since a <code>Layout</code> controls the size and placement of
+widgets in a <code>Composite</code>, there are several methods in <code>Composite</code>
 that are used with <code>Layout</code>s.</p>
 
-
-
-<p>The first two methods allow setting and getting a <code>Layout</code> object
-in a <code>Composite</code>.</p>
+<p>The first two methods allow setting and getting a <code>Layout</code>
+object in a <code>Composite</code>.</p>
 
 <pre>public void setLayout(Layout layout);
 public Layout getLayout();</pre>
 
-<p>An application can force a <code>Layout</code> to recalculate the sizes of and
-reposition children by sending <code>layout()</code> to the parent <code>Composite</code>.</p>
+<p>An application can force a <code>Layout</code> to recalculate the
+sizes of and reposition children by sending <code>layout()</code> to the
+parent <code>Composite</code>.</p>
 
 <pre>public void layout(boolean changed);
 public void layout();
     // calls layout(true);</pre>
 
-<p>You would do this after changing anything about the children that might affect
-their size or position, such as changing the font of a child, changing the text
-or image of a child, adding a new child, or adding children to a child. (If the
-child can accommodate the change, then layout may not be necessary – for
-example, changing the font or text of a scrollable multi-line <code>Text</code>).
-Since these changes are done programmatically, they do not cause events to
-happen. Consequently, the parent doesn't know about the changes, and has to be
-told through the <code>layout</code> method. This strategy reduces flash because the
-application can make several changes and then tell the parent to layout, and
-the children are only redrawn once instead of once per change. If <code>layout()</code>
-is not called and changes are made after the shell is opened, then the children
-may not be correctly laid out until the shell is somehow resized. Note that <code>shell.open()</code>
+<p>You would do this after changing anything about the children that
+might affect their size or position, such as changing the font of a
+child, changing the text or image of a child, adding a new child, or
+adding children to a child (If the child can accommodate the change,
+then layout may not be necessary – for example, changing the font or
+text of a scrollable multi-line <code>Text</code>). Since these changes
+are done programmatically, they do not cause events to happen.
+Consequently, the parent doesn't know about the changes, and has to be
+told through the <code>layout</code> method. This strategy reduces flash
+because the application can make several changes and then tell the
+parent to layout, and the children are only redrawn once instead of once
+per change. If <code>layout()</code> is not called and changes are made
+after the shell is opened, then the children may not be correctly laid
+out until the shell is somehow resized. Note that <code>shell.open()</code>
 causes a layout to occur.</p>
 
-<p>The <code>computeSize</code> methods of a <code>Composite</code> calculate the
-Composite's preferred size, which is the size of its client area as determined
-by the <code>Layout</code>, plus its trim.</p>
+<p>The <code>computeSize</code> methods of a <code>Composite</code>
+calculate the Composite's preferred size, which is the size of its
+client area as determined by the <code>Layout</code>, plus its trim.</p>
 
 <pre>public Point computeSize(int widthHint, int heightHint, boolean changed);
 public Point computeSize(int widthHint, int heightHint);
     // calls computeSize(widthHint, heightHint, true);</pre>
 
-<p>The <b>clientArea</b> of a <code>Composite</code> is the rectangle that will
-contain all of the children. A <code>Layout</code> positions the children inside the
-client area.</p>
+<p>The <b>clientArea</b> of a <code>Composite</code> is the
+rectangle that will contain all of the children. A <code>Layout</code>
+positions the children inside the client area.</p>
 
 <pre>public Rectangle getClientArea ();</pre>
 
-<p>The <b>trim</b> of a <code>Composite</code> is the area outside the client
-area. For some composites, the size of the trim is zero. The trim can be
-computed by passing the dimensions of the client area into the method <code>computeTrim</code>.</p>
+<p>The <b>trim</b> of a <code>Composite</code> is the area outside
+the client area. For some composites, the size of the trim is zero. The
+trim can be computed by passing the dimensions of the client area into
+the method <code>computeTrim</code>.</p>
 
 <pre>public Rectangle computeTrim (int x, int y, int width, int height);</pre>
 
-<p>Sending <code>pack</code> to a <code>Composite</code> resizes it to its preferred
-size.</p>
+<p>Sending <code>pack</code> to a <code>Composite</code> resizes it
+to its preferred size.</p>
 
 <pre>public void pack(boolean changed);
     // calls setSize(computeSize(SWT.DEFAULT, SWT.DEFAULT, changed));
 public void pack();
     // calls pack(true);</pre>
 
-<p>The boolean parameter to the <code>layout</code>,
-<code>computeSize</code>, and <code>pack</code> methods is the <code>changed</code> flag. If <code>true</code>, it indicates that the <code>Composite</code>'s contents have
-changed in some way that affects its preferred size, therefore any caches that
-the <code>Layout</code> may have been keeping need
-to be flushed. When a <code>Composite</code> is
-resized, it asks its <code>Layout</code> to lay
-out its children by calling layout(false);
-therefore widget content caches are <i>not</i>
-flushed. This lets the <code>Layout</code> perform
-any expensive calculations only when necessary.</p>
+<p>The boolean parameter to the <code>layout</code>, <code>computeSize</code>,
+and <code>pack</code> methods is the <code>changed</code> flag. If <code>true</code>,
+it indicates that the <code>Composite</code>'s contents have changed in
+some way that affects its preferred size, therefore any caches that the
+<code>Layout</code> may have been keeping need to be flushed. When a <code>Composite</code>
+is resized, it asks its <code>Layout</code> to lay out its children by
+calling layout(false); therefore widget content caches are <i>not</i>
+flushed. This lets the <code>Layout</code> perform any expensive
+calculations only when necessary.</p>
 
-<p>Caching can increase performance, but it can also be tricky. You can
-choose not to cache at all – in fact, it is best not to try caching until your
-code is stable. When considering what to cache, be certain not to store any
-widget state, such as the text of a label, or the number of items in a list. </p>
+<p>Caching can increase performance, but it can also be tricky. You
+can choose not to cache at all: in fact, it is best not to try caching
+until your code is stable. When considering what to cache, be certain
+not to store any widget state, such as the text of a label, or the
+number of items in a list.</p>
 
-<h4>Custom Layout Example</h4>
+<h3>Custom Layout Example</h3>
 
 <p>If you have several vertically oriented <code>Composite</code>
 widgets in your application, you might choose to write <code>ColumnLayout</code>.
-We will show a simple version of a <code>Layout</code>
-class that lays out <code>Composite</code> children
-into a single column. The class has fixed margins and spacing. Children are
-given the same width, but they take their natural height. (Note that 
-<code>RowLayout</code> will have <code>ColumnLayout</code> behaviour if its type
-is set to SWT.VERTICAL. This example is, therefore, just an example. In
-practice, if you need to lay widgets out in a column, you would use <code>RowLayout.</code>)</p>
+We will show a simple version of a <code>Layout</code> class that lays
+out <code>Composite</code> children into a single column. The class has
+fixed margins and spacing. Children are given the same width, but they
+take their natural height. (Note that <code>RowLayout</code> will have <code>ColumnLayout</code>
+behaviour if its type is set to <code>SWT.VERTICAL</code>. This example is,
+therefore, just an example. In practice, if you need to lay widgets out
+in a column, you would use <code>RowLayout.</code>)</p>
 
-<p>The code for the <code>ColumnLayout</code>
-class is below. Note that we cache the width of the widest child, and the sum
-of the child heights (plus spacing), and these values are used to compute the
-size and lie out the children. They are recalculated if <code>flushCache</code> is <code>true</code>.</p>
-
+<p>The code for the <code>ColumnLayout</code> class is below. Note
+that we cache the width of the widest child, and the sum of the child
+heights (plus spacing), and these values are used to compute the size
+and lie out the children. They are recalculated if <code>flushCache</code>
+is <code>true</code>.</p>
 
 <pre>import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -1822,16 +1785,14 @@ public class ColumnLayout extends Layout {
     }
 }</pre>
 
-<p>Here is some simple test code to test the <code>ColumnLayout</code>. The <b>grow</b>
-and <b>shrink</b> <code>Buttons</code> show a call to the <code>Shell</code>'s
-<code>layout()</code> method to force a re-layout
-after changing the width of one of the children. Calling <code>layout()</code> is the same 
-as calling <code>layout(true</code>) which tells the <code>ColumnLayout</code>
-to flush its caches before setting the bounds of the children. The <code>Shell</code> 
+<p>Here is some simple test code to test the <code>ColumnLayout</code>.
+The <b>grow</b> and <b>shrink</b> <code>Buttons</code> show a call to
+the <code>Shell</code>'s <code>layout()</code> method to force a
+re-layout after changing the width of one of the children. Calling <code>layout()</code>
+is the same as calling <code>layout(true</code>) which tells the <code>ColumnLayout</code>
+to flush its caches before setting the bounds of the children. The <code>Shell</code>
 is also told to <code>pack()</code> after laying out the children. This
-forces the <code>Shell</code> to take the new
-size.</p>
-
+forces the <code>Shell</code> to take the new size.</p>
 
 <pre>import org.eclipse.swt.*;
 import org.eclipse.swt.widgets.*;
@@ -1876,63 +1837,58 @@ public class ColumnLayoutTest {
     }
 }</pre>
 
-<p>If we run the test code, the window on the left appears. Pressing the Grow Button 3 button results in the window on the right. Resizing the window with the
-mouse will also make the buttons wider (or narrower) but they do not grow
-taller.</p>
+<p>If we run the test code, the window on the left appears. Pressing
+the Grow Button 3 button results in the window on the right. Resizing
+the window with the mouse will also make the buttons wider (or narrower)
+but they do not grow taller.</p>
 
-<img src="images/CustomLayout.jpg"/> 
- <img src="images/CustomLayoutResized.jpg"/>
+<img src="images/CustomLayout.jpg" /> <img
+	src="images/CustomLayoutResized.jpg" />
 
-<h4>Overriding Composite</h4>
+<h3>Overriding Composite</h3>
 
-<p>If you are writing your own widget, as outlined
-in <a href="http://www.eclipse.org/articles/Article-Writing%20Your%20Own%20Widget/Writing%20Your%20Own%20Widget.htm">Creating Your Own Widgets Using SWT</a>,
-and you subclass Composite, then here are a few points to consider for
-your implementation:</a></p>
-
-<ul>
-<li>If you
-are providing trimmings in your new <code>Composite</code>, make sure to override
-both <code>computeTrim()</code> and <code>getClientArea()</code>.</li>
-<li>Never override <code>layout()</code>, but you may override <code>layout(boolean)</code>.</li>
-</ul>
-
-<p>Sometimes you want your new <code>Composite</code>
-to have a specific look, and you don't want the application to be able to
-specify a layout. Your new <code>Composite</code> would either do its layout in a
-resize handler or using a private custom layout. In either case, you will
-probably want to do the following:</p>
+<p>If you are writing your own widget, as outlined in <a
+	href="http://www.eclipse.org/articles/Article-Writing%20Your%20Own%20Widget/Writing%20Your%20Own%20Widget.htm">Creating
+Your Own Widgets Using SWT</a>, and you subclass Composite, then here are a
+few points to consider for your implementation:</a></p>
 
 <ul>
-<li>Override
-<code>setLayout()</code> to do nothing.</li>
-<li>Override <code>layout(boolean)</code> to call your layout code.</li>
-<li>Override <code>computeSize()</code> to correctly compute the size of your <code>Composite</code>.</li>
+	<li>If you are providing trimmings in your new <code>Composite</code>,
+	make sure to override both <code>computeTrim()</code> and <code>getClientArea()</code>.</li>
+	<li>Never override <code>layout()</code>, but you may override <code>layout(boolean)</code>.</li>
+</ul>
+
+<p>Sometimes you want your new <code>Composite</code> to have a
+specific look, and you don't want the application to be able to specify
+a layout. Your new <code>Composite</code> would either do its layout in
+a resize handler or using a private custom layout. In either case, you
+will probably want to do the following:</p>
+
+<ul>
+	<li>Override <code>setLayout()</code> to do nothing.</li>
+	<li>Override <code>layout(boolean)</code> to call your layout
+	code.</li>
+	<li>Override <code>computeSize()</code> to correctly compute the
+	size of your <code>Composite</code>.</li>
 </ul>
 
 
-<h3>Summary</h3>
+<h2>Summary</h2>
 
-<p>SWT
-provides several different ways to lay out widgets. The simplest method, and
-the one you will typically use, is to use one of the standard <code>Layout</code> classes: <code>FillLayout</code>, 
-<code>RowLayout</code>, <code>GridLayout</code> or <code>FormLayout</code>.</p>
+<p>SWT provides several different ways to lay out widgets. The
+simplest method, and the one you will typically use, is to use one of
+the standard <code>Layout</code> classes: <code>FillLayout</code>, <code>RowLayout</code>,
+<code>GridLayout</code> or <code>FormLayout</code>.</p>
 
 
-
-<p>In certain
-cases you may want to write your own <code>Layout</code>
-class to provide a very specific look or to reuse very similar layout code, but
-often a resize listener on the parent widget will suffice.</p>
+<p>In certain cases you may want to write your own <code>Layout</code>
+class to provide a very specific look or to reuse very similar layout
+code, but often a resize listener on the parent widget will suffice.</p>
 
 
 
-<p>For
-further assistance in understanding the standard SWT <code>Layout</code> classes, see
-the SWT Example in <b>org.eclipse.swt.examples.layoutexample</b>.</p>
-
-
-
+<p>For further assistance in understanding the standard SWT <code>Layout</code>
+classes, see the <a href="http://www.eclipse.org/swt/snippets">SWT Snippets</a>.</p>
 </div>
 
 </body>
