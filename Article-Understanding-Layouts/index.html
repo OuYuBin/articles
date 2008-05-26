@@ -23,6 +23,10 @@ and write your own custom layout class.</p>
 
 <div class="author">Revised by Shantha Ramachandran, OTI</div>
 <div class="date">May 02, 2002</div>
+
+<div class="author">Revised by Wayne Beaton, The Eclipse Foundation</div>
+<div class="copyright">Copyright &copy; 2008 The Eclipse Foundation, Inc.</div>
+<div class="date">May 30, 2008</div>
 </div>
 
 <div class="content">
@@ -245,7 +249,7 @@ the number of pixels between a widget and the side of the parent <code>Composite
 leave 3 pixels for margins and spacing. The margin and spacing fields are shown
 in the following diagram.</p>
 
-<img src="images/margins.png"/>
+<img src="images/RowLayoutMargins.jpg"/>
 
 <h4>RowLayout
 Examples</h4>
@@ -269,7 +273,7 @@ shell.setLayout(rowLayout);</pre>
 
 <pre>shell.setLayout(new RowLayout());</pre
 
-<p>In the table below, the result of setting specific fields is shown.</p>
+<p>The results of setting specific fields is shown below:</p>
 
 <table border=0 cellspacing=0 cellpadding=0 style='border-collapse:collapse'>
  <tr>
@@ -637,12 +641,83 @@ typical application window, you often want to have at least one widget that is
 grabbing. If more than one widget is trying to grab the same space, then the
 excess space is shared evenly among the grabbing widgets:</p>
 
- <img src="images/image067.png"/>
+<pre>import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
+
+public class SampleGrabExcess {
+	public static void main(String[] args) {
+		Display display = new Display();
+		Shell shell = new Shell(display);
+		shell.setLayout(new GridLayout(2, false));
+		
+		Label nameLabel = new Label(shell, SWT.NONE);
+		nameLabel.setText("Name:");
+		
+		Text nameText = new Text(shell, SWT.BORDER);
+		GridData gridData = new GridData();
+		gridData.horizontalAlignment = SWT.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		nameText.setLayoutData(gridData);
+		nameText.setText("Text grows horizontally");
+		
+		Label addressLabel = new Label(shell, SWT.NONE);
+		addressLabel.setText("Address:");
+		gridData = new GridData();
+		gridData.verticalAlignment = SWT.TOP;
+		addressLabel.setLayoutData(gridData);
+		
+		Text addressText = new Text(shell, SWT.BORDER | SWT.WRAP | SWT.MULTI);
+		gridData = new GridData();
+		gridData.horizontalAlignment = SWT.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		gridData.verticalAlignment = SWT.FILL;
+		gridData.grabExcessVerticalSpace = true;
+		addressText.setLayoutData(gridData);
+		addressText.setText("This text field and the List\nbelow share any excess space.");
+
+		Label sportsLabel = new Label(shell, SWT.NONE);
+		sportsLabel.setText("Sports played:");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		sportsLabel.setLayoutData(gridData);
+		
+		List sportsList = new List(shell, SWT.BORDER | SWT.MULTI);
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		gridData.horizontalAlignment = SWT.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		gridData.verticalAlignment = SWT.FILL;
+		gridData.grabExcessVerticalSpace = true;
+		sportsList.setLayoutData(gridData);
+		sportsList.add("Hockey");
+		sportsList.add("Street Hockey");
+				
+		shell.pack();
+		shell.open();
+
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch())
+				display.sleep();
+		}
+	}
+}</pre>
+
+<img src="images/GridLayoutGrabExcess.jpg"/>
       
- <img src="images/image069.png"/>
+<p>When resized, the single line (top-most) <code>Text</code> grows to consume all 
+available horizontal space, and the second <code>Text</code> and the <code>List</code> grow
+to consume all remaining space (both vertically and horizontally):</p>
+
+<img src="images/GridLayoutGrabExcessResized.jpg"/>
 
 <p>One final
-point to note about grabbing. If a widget is grabbing excess horizontal space
+point to note about grabbing. If a widget is set to grab excess horizontal space
 and its parent <code>Composite</code> grows wider,
 then the entire <i>column</i> containing
 that widget grows wider. If a widget is grabbing excess vertical space and its
@@ -655,7 +730,7 @@ end alignment will not stretch: they will stay at the beginning, center or end
 of the wider column or taller row.</p>
 
 <p>The <code>widthHint</code> and <code>heightHint</code> fields indicate the number of pixels wide or tall that
-you would like a widget to be, if it does not conflict with other requirements
+you would like a widget to be, assuming that it does not conflict with other requirements
 in the <code>GridLayout</code>'s constraint
 system. Looking back at the five-button, three-column example, say we want Button 5 to be 70
 pixels wide and 40 pixels tall. We code it as follows:</p>
@@ -669,8 +744,8 @@ button5.setLayoutData(gridData);</pre>
 size of Button 5 is shown in the window on the left, below, and the 70-pixel wide,
 40-pixel tall Button 5 is on the right.</p>
 
- <img src="images/image042.png"/>        
- <img src="images/image072.png"/>
+ <img src="images/GridLayoutSampleNumColumns3.jpg"/>        
+ <img src="images/GridDataSampleSpan04.jpg"/>
 
 <p>Note, however, that if the <code>horizontalAlignment</code>
 of Button 5 was FILL, then the <code>GridLayout</code>
@@ -692,7 +767,7 @@ together to create a more complicated example. We start by hand-drawing a rough
 sketch of the window we want to create, to determine things like how many
 columns the grid should contain, and whether or not any widgets need to span.</p>
          
- <img src="images/image074.gif"/>
+ <img src="images/DogShowHandDrawn.gif"/>
 
 <p>Then we
 start coding the example from the diagram. The code is below. Note that we have
@@ -702,160 +777,181 @@ current dog and owner info. The example has been coded in a
 single <code>main(String[])</code> method to allow us to
 focus on layout code and not get distracted by programming style.</p>
 
-<pre>import org.eclipse.swt.*;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.swt.layout.*;
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
+<pre>import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 public class ComplexGridLayoutExample {
-   static Display display;
-   static Shell shell;
-   static Text dogName;
-   static Combo dogBreed;
-   static Canvas dogPhoto;
-   static Image dogImage;
-   static List categories;
-   static Text ownerName;
-   static Text ownerPhone;
+	static Display display;
+	static Shell shell;
+	static Text dogName;
+	static Combo dogBreed;
+	static Canvas dogPhoto;
+	static Image dogImage;
+	static List categories;
+	static Text ownerName;
+	static Text ownerPhone;
 
-   public static void main(String[] args) {
-       display = new Display();
-       shell = new Shell(display);
-       shell.setText(&quot;Dog Show Entry&quot;);
-       GridLayout gridLayout = new GridLayout();
-       gridLayout.numColumns = 3;
-       shell.setLayout(gridLayout);
-
-       new  Label(shell, SWT.NONE).setText(&quot;Dog's Name:&quot;);
-       dogName = new Text(shell, SWT.SINGLE | SWT.BORDER);
-       GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-       gridData.horizontalSpan = 2;
-       dogName.setLayoutData(gridData);
-       new  Label(shell, SWT.NONE).setText(&quot;Breed:&quot;);
-       dogBreed = new Combo(shell, SWT.NONE);
-       dogBreed.setItems(new String [] {&quot;Collie&quot;, &quot;Pitbull&quot;, &quot;Poodle&quot;, &quot;Scottie&quot;});
-       dogBreed.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
-       Label label = new Label(shell, SWT.NONE);
-       label.setText(&quot;Categories&quot;);
-       label.setLayoutData(newGridData(GridData.HORIZONTAL_ALIGN_CENTER));
-
-       new  Label(shell, SWT.NONE).setText(&quot;Photo:&quot;);
-       dogPhoto = new Canvas(shell, SWT.BORDER);
-       gridData = new GridData(GridData.FILL_BOTH);
-       gridData.widthHint = 80;
-       gridData.heightHint = 80;
-       gridData.verticalSpan = 3;
-       dogPhoto.setLayoutData(gridData);
-       dogPhoto.addPaintListener(new PaintListener() {
-          public void paintControl(final PaintEvent event) {
-              if (dogImage != null) {
-                 event.gc.drawImage(dogImage, 0, 0);
-              }
-          }
-       });
-       categories = new List(shell, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
-       categories.setItems(new String [] {
-          &quot;Best of Breed&quot;, &quot;Prettiest Female&quot;, &quot;Handsomest Male&quot;,
-          &quot;Best Dressed&quot;, &quot;Fluffiest Ears&quot;, &quot;Most Colors&quot;,
-          &quot;Best Performer&quot;, &quot;Loudest Bark&quot;, &quot;Best Behaved&quot;,
-          &quot;Prettiest Eyes&quot;, &quot;Most Hair&quot;, &quot;Longest Tail&quot;,
-          &quot;Cutest Trick&quot;});
-       gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
-       gridData.verticalSpan = 4;
-       int listHeight = categories.getItemHeight() * 12;
-       Rectangle trim = categories.computeTrim(0, 0, 0, listHeight);
-       gridData.heightHint = trim.height;
-       categories.setLayoutData(gridData);
-
-       Button browse = new Button(shell, SWT.PUSH);
-       browse.setText(&quot;Browse...&quot;);
-       gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-       gridData.horizontalIndent = 5;
-       browse.setLayoutData(gridData);
-       browse.addSelectionListener(new SelectionAdapter() {
-          public void widgetSelected(SelectionEvent event) {
-              String fileName = new FileDialog(shell).open();
-              if (fileName != null) {
-                 dogImage = new Image(display, fileName);
-              }
-          }
-       });
-
-       Button delete = new Button(shell, SWT.PUSH);
-       delete.setText(&quot;Delete&quot;);
-       gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
-       gridData.horizontalIndent = 5;
-       delete.setLayoutData(gridData);
-       delete.addSelectionListener(new SelectionAdapter() {
-          public void widgetSelected(SelectionEvent event) {
-              if (dogImage != null) {
-                 dogImage.dispose();
-                 dogImage = null;
-                 dogPhoto.redraw();
-              }
-          }
-       });
-
-       Group ownerInfo = new Group(shell, SWT.NONE);
-       ownerInfo.setText(&quot;Owner Info&quot;);
-       gridLayout = new GridLayout();
-       gridLayout.numColumns = 2;
-       ownerInfo.setLayout(gridLayout);
-       gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-       gridData.horizontalSpan = 2;
-       ownerInfo.setLayoutData(gridData);
-
-       new  Label(ownerInfo, SWT.NONE).setText(&quot;Name:&quot;);
-       ownerName = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
-       ownerName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-       new  Label(ownerInfo, SWT.NONE).setText(&quot;Phone:&quot;);
-       ownerPhone = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
-       ownerPhone.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-       Button enter = new Button(shell, SWT.PUSH);
-       enter.setText(&quot;Enter&quot;);
-       gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
-       gridData.horizontalSpan = 3;
-       enter.setLayoutData(gridData);
-       enter.addSelectionListener(new SelectionAdapter() {
-          public void widgetSelected(SelectionEvent event) {
-              System.out.println(&quot;\nDog Name: &quot; + dogName.getText());
-              System.out.println(&quot;Dog Breed: &quot; + dogBreed.getText());
-              System.out.println(&quot;Owner Name: &quot; + ownerName.getText());
-              System.out.println(&quot;Owner Phone: &quot; + ownerPhone.getText());
-              System.out.println(&quot;Categories:&quot;);
-              String cats[] = categories.getSelection();
-              for (int i = 0; i &lt; cats.length; i++) {
-                 System.out.println(&quot;\t&quot; + cats[i]);
-              }
-          }
-       });
-   
-       shell.pack();
-       shell.open();
-
-       while (!shell.isDisposed()) {
-          if (!display.readAndDispatch()) display.sleep();
-       }
-       if (dogImage != null) {
-          dogImage.dispose();
-       }
-   }
+	public static void main(String[] args) {
+		display = new Display();
+		shell = new Shell(display);
+		shell.setText("Dog Show Entry");
+		GridLayout gridLayout = new GridLayout();
+		gridLayout.numColumns = 3;
+		shell.setLayout(gridLayout);
+		
+		new Label(shell, SWT.NONE).setText("Dog's Name:");
+		
+		dogName = new Text(shell, SWT.SINGLE | SWT.BORDER);
+		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		gridData.horizontalSpan = 2;
+		dogName.setLayoutData(gridData);
+		
+		new Label(shell, SWT.NONE).setText("Breed:");
+		
+		dogBreed = new Combo(shell, SWT.NONE);
+		dogBreed.setItems(new String[] { "Collie", "Pitbull", "Poodle",
+				"Scottie" });
+		dogBreed.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+		
+		Label label = new Label(shell, SWT.NONE);
+		label.setText("Categories");
+		label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+		
+		new Label(shell, SWT.NONE).setText("Photo:");
+		dogPhoto = new Canvas(shell, SWT.BORDER);
+		gridData = new GridData(GridData.FILL_BOTH);
+		gridData.widthHint = 80;
+		gridData.heightHint = 80;
+		gridData.verticalSpan = 3;
+		dogPhoto.setLayoutData(gridData);
+		dogPhoto.addPaintListener(new PaintListener() {
+			public void paintControl(final PaintEvent event) {
+				if (dogImage != null) {
+					event.gc.drawImage(dogImage, 0, 0);
+				}
+			}
+		});
+		
+		categories = new List(shell, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+		categories.setItems(new String[] { "Best of Breed", "Prettiest Female",
+				"Handsomest Male", "Best Dressed", "Fluffiest Ears",
+				"Most Colors", "Best Performer", "Loudest Bark",
+				"Best Behaved", "Prettiest Eyes", "Most Hair", "Longest Tail",
+				"Cutest Trick" });
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL
+				| GridData.VERTICAL_ALIGN_FILL);
+		gridData.verticalSpan = 4;
+		int listHeight = categories.getItemHeight() * 12;
+		Rectangle trim = categories.computeTrim(0, 0, 0, listHeight);
+		gridData.heightHint = trim.height;
+		categories.setLayoutData(gridData);
+		
+		Button browse = new Button(shell, SWT.PUSH);
+		browse.setText("Browse...");
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		gridData.horizontalIndent = 5;
+		browse.setLayoutData(gridData);
+		browse.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				String fileName = new FileDialog(shell).open();
+				if (fileName != null) {
+					dogImage = new Image(display, fileName);
+				}
+			}
+		});
+		
+		Button delete = new Button(shell, SWT.PUSH);
+		delete.setText("Delete");
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL
+				| GridData.VERTICAL_ALIGN_BEGINNING);
+		gridData.horizontalIndent = 5;
+		delete.setLayoutData(gridData);
+		delete.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				if (dogImage != null) {
+					dogImage.dispose();
+					dogImage = null;
+					dogPhoto.redraw();
+				}
+			}
+		});
+		
+		Group ownerInfo = new Group(shell, SWT.NONE);
+		ownerInfo.setText("Owner Info");
+		gridLayout = new GridLayout();
+		gridLayout.numColumns = 2;
+		ownerInfo.setLayout(gridLayout);
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		gridData.horizontalSpan = 2;
+		ownerInfo.setLayoutData(gridData);
+		
+		new Label(ownerInfo, SWT.NONE).setText("Name:");
+		ownerName = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
+		ownerName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		new Label(ownerInfo, SWT.NONE).setText("Phone:");
+		ownerPhone = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
+		ownerPhone.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		Button enter = new Button(shell, SWT.PUSH);
+		enter.setText("Enter");
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
+		gridData.horizontalSpan = 3;
+		enter.setLayoutData(gridData);
+		enter.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				System.out.println("\nDog Name: " + dogName.getText());
+				System.out.println("Dog Breed: " + dogBreed.getText());
+				System.out.println("Owner Name: " + ownerName.getText());
+				System.out.println("Owner Phone: " + ownerPhone.getText());
+				System.out.println("Categories:");
+				String cats[] = categories.getSelection();
+				for (int i = 0; i > cats.length; i++) {
+					System.out.println("\t" + cats[i]);
+				}
+			}
+		});
+		
+		shell.pack();
+		shell.open();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch())
+				display.sleep();
+		}
+		if (dogImage != null) {
+			dogImage.dispose();
+		}
+	}
 }</pre>
 
 
 <p>Here is
-what the window looks like after Mary Smith enters Fifi in the dog show:</p>
+what the window looks like after Mary Smith enters Bifford in the dog show:</p>
         
- <img src="images/image075.png"/>
+ <img src="images/DogShowBiff.jpg"/>
 
 <p>If this window is resized larger,
 the layout adjusts as follows:</p>
 
     
- <img src="images/image077.png"/>
+ <img src="images/DogShowBiffResized.jpg"/>
 
 <p>Notice the following:</p>
 <ul>
@@ -972,6 +1068,8 @@ formData.left = new FormAttachment(20,0);
 formData.right = new FormAttachment(100,-3);
 button1.setLayoutData(formData);</pre>
 
+<img src="images/FormLayoutSample01.jpg"/>
+
 <p>A <code>FormAttachment</code> object defines the
 attachment of a specific side of a widget. There are many ways that a side can
 be attached: to a position in the parent <code>Composite</code>, to an edge of the <code>Composite</code>,
@@ -986,19 +1084,15 @@ widget is aligned with the furthest side of the other widget. Finally, attaching
 to the center of another widget centers the widget on the other widget. Any of
 these ways can be done with or without an offset.</p>
 
-
-
 <p>If no
 attachments are defined for a <code>FormData</code> object, the default behaviour
 will attach the widget to the top left edges of the parent <code>Composite</code>,
 like this:</p>
 
- <img src="images/image079.png"/>
-
-
-
 <pre>button1.setLayoutData(new FormData());</pre>
 
+<img src="images/FormLayoutSample02.jpg"/>
+ 
 <p>Note that if more than one widget is
 defined without any attachments, the widgets will be given the same default
 placement in the window and will be stacked on top of each other. <code>FormAttachment</code>
@@ -1019,6 +1113,8 @@ formData.top = new FormAttachment(0,60);
 formData.left = new FormAttachment(20,0);
 button1.setLayoutData(formData);</pre>
 
+<img src="images/FormLayoutSample03.jpg"/>
+
 <p>If you wish
 to set only the width or the height, you can directly set the width or height
 field in the <code>FormData</code> object:</p>
@@ -1029,6 +1125,8 @@ formData.top = new FormAttachment(0,60);
 formData.bottom = new FormAttachment(100,-5);
 formData.left = new FormAttachment(20,0);
 button1.setLayoutData(formData);</pre>
+
+<img src="images/FormLayoutSample04.jpg"/>
 
 <p>Note that
 if a button is attached to the parent <code>Composite</code> on both sides, when the <code>Composite</code>
@@ -1054,29 +1152,25 @@ The same logic applies for the top and bottom sides.</p>
 first is to attach the widget to a position in the parent <code>Composite</code>. This
 can be done by defining a percentage value out of 100, for example:</p>
 
-<img src="images/image081.png"/>
-
 <pre>FormData formData = new FormData();
 formData.top = new FormAttachment(50,0);
 button1.setLayoutData(formData);</pre>
+
+<img src="images/FormLayoutSamplePosition50.jpg"/>
 
 <p>This sets the top of the <code>Button</code> to
 a position that represents 50% of the height of the parent <code>Composite</code> (a <code>Shell</code>),
 with an offset of 0. When the shell is resized, the top side of the <code>Button</code>
 will still be at 50%, like so:</p>
 
- <img src="images/image083.png"/>
+ <img src="images/FormLayoutSamplePosition50Resized.jpg"/>
 
 <p>If we chose to set an offset value, the
 top side of the <code>Button</code> would have been set to 50% of the <code>Composite</code>
 plus or minus the number of pixels set for the offset.</p>
 
-
-
 <p>We can also
 define the position of the button without using percentages, for example:</p>
-
-
 
 <pre>FormData formData = new FormData();
 formData.top = new FormAttachment(30,70,10);
@@ -1086,8 +1180,6 @@ button1.setLayoutData(formData);</pre>
 the height of the <code>Composite</code> is defined as being 70 units, this sets the
 top of the <code>Button</code> to a position representing 30 units down from the top
 of the <code>Composite</code>, plus 10 pixels.</p>
-
-
 
 <h5>Attaching to the Parent</h5>
 
@@ -1100,12 +1192,12 @@ the <code>Composite</code> are defined as the 100 position. Therefore, if we wan
 attach a widget to the right edge of the <code>Composite</code>, we simply have to
 create an attachment that sets the position to 100:</p>
 
- <img src="images/image085.png"/>
-
 <pre>FormData formData = new FormData();
 formData.right = new FormAttachment(100,-5);
 button1.setLayoutData(formData);</pre>
 
+<img src="images/FormLayoutSampleParent100.jpg"/>
+ 
 <p>This
 attaches the right side of the <code>Button</code> to the right edge of the parent (a <code>Shell</code>),
 with an offset of 5 pixels. Note that the offsets go in one direction only. If
@@ -1113,8 +1205,8 @@ you want a widget offset down or to the right, the offset should be positive.
 For offsets that shift the widget up or to the left, the offset should be
 negative. Now when the <code>Shell</code> is resized, the <code>Button</code> will always be
 5 pixels away from the right edge:</p>
-    
- <img src="images/image087.png"/>
+
+<img src="images/FormLayoutSampleParent100Resized.jpg"/>
 
 <h5>Attaching to Another Widget</h5>
 <p>The
@@ -1128,7 +1220,6 @@ and offset.</p>
 most common way to attach to another control is to attach to its adjacent side.
 For example, the following code:</p>
 
-
 <pre>FormData formData = new FormData();
 formData.top = new FormAttachment(20,0);
 button1.setLayoutData(formData);
@@ -1137,27 +1228,24 @@ FormData formData2 = new FormData();
 formData2.top = new FormAttachment(button1,10);
 button2.setLayoutData(formData2);</pre>
 
-<p>attaches
-the top of button2 to the bottom of button1,
-since the bottom of button1 is adjacent to the top
-of button2.</p>
-   
- <img src="images/image089.png"/>
+<img src="images/FormLayoutSampleAttachWidget01.jpg"/>
 
-<p>Note
+<p>This example attaches
+the top of button2 to the bottom of button1. Note
 that when the window is resized, button1
 will move so that its top side is always positioned at 20% of the <code>Shell</code>,
 and button2
 will move so that its top side is always 10 pixels below the adjacent (bottom)
 side of button1.</p>
-  
- <img src="images/image091.png"/>
+
+<img src="images/FormLayoutSampleAttachWidget01Resized.jpg"/>
 
 <p>While
 the default is to attach the side of a widget to the adjacent side of a
 control, <code>FormAttachment</code>s can also be created to attach to the opposite
 side of a control. This is useful when lining up widgets. In this case, you
-create the attachment to the other control using <code>TOP</code>, <code>BOTTOM</code>, <code>LEFT</code> or <code>RIGHT</code>
+create the attachment to the other control using <code>TOP</code>, <code>BOTTOM</code>, 
+<code>LEFT</code> or <code>RIGHT</code>
 alignment, for example:</p>
 
 <pre>formData2.top = new FormAttachment(button1,0,SWT.TOP);</pre>
@@ -1176,12 +1264,11 @@ formData.top = new FormAttachment(20,0);
 button1.setLayoutData(formData);
 
 FormData formData2 = new FormData();
-FormData2.left = new FormAttachment(button1,5);
+formData2.left = new FormAttachment(button1,5);
 formData2.top = new FormAttachment(button1,0,SWT.TOP); 
 button2.setLayoutData(formData2);</pre>
 
-<p>This
-produces the following:</p>
+<img src="images/FormLayoutSampleAttachWidget02.jpg"/>
 
 <p>The
 final way to attach a widget to another control is to center it on the other
@@ -1204,6 +1291,8 @@ FormData formData2 = new FormData ();
 formData2.left = new FormAttachment (button1,5);
 formData2.top = new FormAttachment (button1,0,SWT.CENTER);
 button2.setLayoutData(formData2);</pre>
+
+<img src="images/FormLayoutSampleAttachWidget03.jpg"/>
 
 <p>Using
 the different types of <code>FormAttachment</code> allows layouts to be defined in
@@ -1232,7 +1321,7 @@ work. Next, we will do a simple example using more <code>Button</code>s to show 
 layout can be arranged using the attachments. We'll start by drawing a basic
 diagram outlining the attachments that we wish to create.</p>
      
- <img src="images/image097.png"/>
+ <img src="images/FormExampleHandDrawn.jpg"/>
 
 <pre>FormData data1 = new FormData();
 data1.left = new FormAttachment(0,5);
@@ -1266,7 +1355,7 @@ attachment was defined for button1 or button2, they are attached to the top of t
 using percentages and offsets on the left and right sides. button4 and button5 are attached to the
 bottom of the layout with a 5 pixel offset. </p>
 
- <img src="images/image099.png"/>
+ <img src="images/FormLayoutSample5Buttons01.jpg"/>
 
 <p>When we
 resize, the attachments become more visible. button1 is attached on the left and the right side, so when the window is
@@ -1281,7 +1370,7 @@ left and not the right, so it does not grow horizontally. button5 will not grow 
 stay 5 pixels away from button4 on the left, and 5 pixels away from
 the bottom of the window.</p>
 
- <img src="images/image101.png"/>
+<img src="images/FormLayoutSample5Buttons01Resized.jpg"/>
 
 <h4>A Complex FormLayout Example</h4>
 
@@ -1291,218 +1380,233 @@ the Dog Show Entry example done previously for <code>GridLayout</code> is redone
 using <code>FormLayout</code>. This code produces an identical layout, but uses
 different concepts to achieve it.</p>
 
-<p>We will
-start by modifying the rough sketch of the design that was done for the grid
-layout. Instead of just drawing what we hope to achieve, we will draw out how
-to do this. This example uses all attachments types.</p>
+<pre>import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
-<pre>import org.eclipse.swt.*;
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.swt.layout.*;
+public class DogShowRegistrationWindowWithFormLayout {
+	Image dogImage;
+	Text dogNameText;
+	Combo dogBreedCombo;
+	Canvas dogPhoto;
+	List categories;
+	Text nameText;
+	Text phoneText;
 
-public class ComplexFormLayoutExample {
-    static Display display;
-    static Shell shell;
-    static Image dogImage;
-    static Text dogNameText;
-    static Combo dogBreedCombo;
-    static Canvas dogPhoto;
-    static List categories;
-    static Text nameText;
-    static Text phoneText;
-
-    public static void main(String[] args) {
-        display = new Display();
-        shell = new Shell(display);
-        FormLayout layout = new FormLayout();
-        layout.marginWidth = 5;
-        layout.marginHeight = 5;
-        shell.setLayout(layout);
-        shell.setText("Dog Show Entry");
-        
-        Group ownerInfo = new Group(shell, SWT.NONE);
-        ownerInfo.setText("Owner Info");
-        FormLayout ownerLayout = new FormLayout();
-        ownerLayout.marginWidth = 5;
-        ownerLayout.marginHeight = 5;
-        ownerInfo.setLayout(ownerLayout);
-        
-        Label dogName = new Label(shell, SWT.NONE);
-        dogName.setText("Dog's Name:");
-        dogNameText = new Text(shell, SWT.SINGLE | SWT.BORDER);
-        
-        Label dogBreed = new Label(shell, SWT.NONE);
-        dogBreed.setText("Breed:");
-        
-        dogBreedCombo = new Combo(shell, SWT.NONE);
-        dogBreedCombo.setItems(new String[] { "Collie", "Pitbull", "Poodle",
-                "Scottie" });
-        
-        Label photo = new Label(shell, SWT.NONE);
-        photo.setText("Photo:");
-        dogPhoto = new Canvas(shell, SWT.BORDER);
-        
-        Button browse = new Button(shell, SWT.PUSH);
-        browse.setText("Browse...");
-        
-        Button delete = new Button(shell, SWT.PUSH);
-        delete.setText("Delete");
-        
-        Label cats = new Label(shell, SWT.NONE);
-        cats.setText("Categories");
-        categories = new List(shell, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL
-                | SWT.H_SCROLL);
-        categories.setItems(new String[] { "Best of Breed", "Prettiest Female",
-                "Handsomest Male", "Best Dressed", "Fluffiest Ears",
-                "Most Colors", "Best Performer", "Loudest Bark",
-                "Best Behaved", "Prettiest Eyes", "Most Hair", "Longest Tail",
-                "Cutest Trick" });
-        
-        Button enter = new Button(shell, SWT.PUSH);
-        enter.setText("Enter");
-        FormData data = new FormData();
-        data.top = new FormAttachment(dogNameText, 0, SWT.CENTER);
-        dogName.setLayoutData(data);
-        data = new FormData();
-        data.left = new FormAttachment(dogName, 5);
-        data.right = new FormAttachment(100, 0);
-        dogNameText.setLayoutData(data);
-        
-        data = new FormData();
-        data.top = new FormAttachment(dogBreedCombo, 0, SWT.CENTER);
-        dogBreed.setLayoutData(data);
-        data = new FormData();
-        data.top = new FormAttachment(dogNameText, 5);
-        data.left = new FormAttachment(dogNameText, 0, SWT.LEFT);
-        data.right = new FormAttachment(categories, -5);
-        dogBreedCombo.setLayoutData(data);
-        
-        data = new FormData(80, 80);
-        data.top = new FormAttachment(dogBreedCombo, 5);
-        data.left = new FormAttachment(dogNameText, 0, SWT.LEFT);
-        data.right = new FormAttachment(categories, -5);
-        data.bottom = new FormAttachment(ownerInfo, -5);
-        dogPhoto.setLayoutData(data);
-        dogPhoto.addPaintListener(new PaintListener() {
-            public void paintControl(final PaintEvent event) {
-                if (dogImage != null) {
-                    event.gc.drawImage(dogImage, 0, 0);
-                }
-            }
-        });
-        data = new FormData();
-        data.top = new FormAttachment(dogPhoto, 0, SWT.TOP);
-        photo.setLayoutData(data);
-        data = new FormData();
-        data.top = new FormAttachment(photo, 5);
-        data.right = new FormAttachment(dogPhoto, -5);
-        browse.setLayoutData(data);
-        browse.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent event) {
-                String fileName = new FileDialog(shell).open();
-                if (fileName != null) {
-                    dogImage = new Image(display, fileName);
-                }
-            }
-        });
-        
-        data = new FormData();
-        data.left = new FormAttachment(browse, 0, SWT.LEFT);
-        data.top = new FormAttachment(browse, 5);
-        data.right = new FormAttachment(dogPhoto, -5);
-        delete.setLayoutData(data);
-        delete.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent event) {
-                if (dogImage != null) {
-                    dogImage.dispose();
-                    dogImage = null;
-                    dogPhoto.redraw();
-                }
-            }
-        });
-        
-        data = new FormData(90, 140);
-        data.top = new FormAttachment(dogPhoto, 0, SWT.TOP);
-        data.right = new FormAttachment(100, 0);
-        data.bottom = new FormAttachment(enter, -5);
-        categories.setLayoutData(data);
-        
-        data = new FormData();
-        data.bottom = new FormAttachment(categories, -5);
-        data.left = new FormAttachment(categories, 0, SWT.CENTER);
-        cats.setLayoutData(data);
-        
-        data = new FormData();
-        data.right = new FormAttachment(100, 0);
-        data.bottom = new FormAttachment(100, 0);
-        enter.setLayoutData(data);
-        enter.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent event) {
-                System.out.println("\nDog Name: " + dogNameText.getText());
-                System.out.println("Dog Breed: " + dogBreedCombo.getText());
-                System.out.println("Owner Name: " + nameText.getText());
-                System.out.println("Owner Phone: " + phoneText.getText());
-                System.out.println("Categories:");
-                String cats[] = categories.getSelection();
-                for (int i = 0; i < cats.length; i++) {
-                    System.out.println("\t" + cats[i]);
-                }
-            }
-        });
-        
-        data = new FormData();
-        data.bottom = new FormAttachment(enter, -5);
-        data.left = new FormAttachment(0, 0);
-        data.right = new FormAttachment(categories, -5);
-        ownerInfo.setLayoutData(data);
-        
-        Label name = new Label(ownerInfo, SWT.NULL);
-        name.setText("Name:");
-        
-        Label phone = new Label(ownerInfo, SWT.PUSH);
-        phone.setText("Phone:");
-        
-        nameText = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
-        phoneText = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
-        
-        data = new FormData();
-        data.top = new FormAttachment(nameText, 0, SWT.CENTER);
-        name.setLayoutData(data);
-        
-        data = new FormData();
-        data.top = new FormAttachment(phoneText, 0, SWT.CENTER);
-        phone.setLayoutData(data);
-        
-        data = new FormData();
-        data.left = new FormAttachment(phone, 5);
-        data.right = new FormAttachment(100, 0);
-        nameText.setLayoutData(data);
-        
-        data = new FormData();
-        data.left = new FormAttachment(nameText, 0, SWT.LEFT);
-        data.right = new FormAttachment(100, 0);
-        data.top = new FormAttachment(55, 0);
-        phoneText.setLayoutData(data);
-        
-        shell.pack();
-        shell.open();
-        
-        while (!shell.isDisposed()) {
-            if (!display.readAndDispatch())
-                display.sleep();
-        }
-        display.dispose();
-    }
+	public static void main(String[] args) {
+		Display display = new Display();
+		Shell shell = new DogShowRegistrationWindow().createShell(display);
+		shell.open();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch())
+				display.sleep();
+		}
+	}
+	
+	public Shell createShell(final Display display) {
+		final Shell shell = new Shell(display);
+		FormLayout layout = new FormLayout();
+		layout.marginWidth = 5;
+		layout.marginHeight = 5;
+		shell.setLayout(layout);
+		shell.setText("Dog Show Entry");
+		
+		Group ownerInfo = new Group(shell, SWT.NONE);
+		ownerInfo.setText("Owner Info");
+		FormLayout ownerLayout = new FormLayout();
+		ownerLayout.marginWidth = 5;
+		ownerLayout.marginHeight = 5;
+		ownerInfo.setLayout(ownerLayout);
+		
+		Label dogName = new Label(shell, SWT.NONE);
+		dogName.setText("Dog's Name:");
+		dogNameText = new Text(shell, SWT.SINGLE | SWT.BORDER);
+		
+		Label dogBreed = new Label(shell, SWT.NONE);
+		dogBreed.setText("Breed:");
+		
+		dogBreedCombo = new Combo(shell, SWT.NONE);
+		dogBreedCombo.setItems(new String[] { "Collie", "Pitbull", "Poodle",
+				"Scottie", "Black Lab" });
+		
+		Label photo = new Label(shell, SWT.NONE);
+		photo.setText("Photo:");
+		dogPhoto = new Canvas(shell, SWT.BORDER);
+		
+		Button browse = new Button(shell, SWT.PUSH);
+		browse.setText("Browse...");
+		
+		Button delete = new Button(shell, SWT.PUSH);
+		delete.setText("Delete");
+		
+		Label cats = new Label(shell, SWT.NONE);
+		cats.setText("Categories");
+		categories = new List(shell, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL
+				| SWT.H_SCROLL);
+		categories.setItems(new String[] { "Best of Breed", "Prettiest Female",
+				"Handsomest Male", "Best Dressed", "Fluffiest Ears",
+				"Most Colors", "Best Performer", "Loudest Bark",
+				"Best Behaved", "Prettiest Eyes", "Most Hair", "Longest Tail",
+				"Cutest Trick" });
+		
+		Button enter = new Button(shell, SWT.PUSH);
+		enter.setText("Enter");
+		FormData data = new FormData();
+		data.top = new FormAttachment(dogNameText, 0, SWT.CENTER);
+		dogName.setLayoutData(data);
+		data = new FormData();
+		data.left = new FormAttachment(dogName, 5);
+		data.right = new FormAttachment(100, 0);
+		dogNameText.setLayoutData(data);
+		
+		data = new FormData();
+		data.top = new FormAttachment(dogBreedCombo, 0, SWT.CENTER);
+		dogBreed.setLayoutData(data);
+		data = new FormData();
+		data.top = new FormAttachment(dogNameText, 5);
+		data.left = new FormAttachment(dogNameText, 0, SWT.LEFT);
+		data.right = new FormAttachment(categories, -5);
+		dogBreedCombo.setLayoutData(data);
+		
+		data = new FormData(80, 80);
+		data.top = new FormAttachment(dogBreedCombo, 5);
+		data.left = new FormAttachment(dogNameText, 0, SWT.LEFT);
+		data.right = new FormAttachment(categories, -5);
+		data.bottom = new FormAttachment(ownerInfo, -5);
+		dogPhoto.setLayoutData(data);
+		dogPhoto.addPaintListener(new PaintListener() {
+			public void paintControl(final PaintEvent event) {
+				if (dogImage != null) {
+					event.gc.drawImage(dogImage, 0, 0);
+				}
+			}
+		});
+		data = new FormData();
+		data.top = new FormAttachment(dogPhoto, 0, SWT.TOP);
+		photo.setLayoutData(data);
+		data = new FormData();
+		data.top = new FormAttachment(photo, 5);
+		data.right = new FormAttachment(dogPhoto, -5);
+		browse.setLayoutData(data);
+		browse.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				String fileName = new FileDialog(shell).open();
+				if (fileName != null) {
+					dogImage = new Image(display, fileName);
+				}
+			}
+		});
+		
+		data = new FormData();
+		data.left = new FormAttachment(browse, 0, SWT.LEFT);
+		data.top = new FormAttachment(browse, 5);
+		data.right = new FormAttachment(dogPhoto, -5);
+		delete.setLayoutData(data);
+		delete.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				if (dogImage != null) {
+					dogImage.dispose();
+					dogImage = null;
+					dogPhoto.redraw();
+				}
+			}
+		});
+		
+		data = new FormData(90, 140);
+		data.top = new FormAttachment(dogPhoto, 0, SWT.TOP);
+		data.right = new FormAttachment(100, 0);
+		data.bottom = new FormAttachment(enter, -5);
+		categories.setLayoutData(data);
+		
+		data = new FormData();
+		data.bottom = new FormAttachment(categories, -5);
+		data.left = new FormAttachment(categories, 0, SWT.CENTER);
+		cats.setLayoutData(data);
+		
+		data = new FormData();
+		data.right = new FormAttachment(100, 0);
+		data.bottom = new FormAttachment(100, 0);
+		enter.setLayoutData(data);
+		enter.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				System.out.println("\nDog Name: " + dogNameText.getText());
+				System.out.println("Dog Breed: " + dogBreedCombo.getText());
+				System.out.println("Owner Name: " + nameText.getText());
+				System.out.println("Owner Phone: " + phoneText.getText());
+				System.out.println("Categories:");
+				String cats[] = categories.getSelection();
+				for (int i = 0; i < cats.length; i++) {
+					System.out.println("\t" + cats[i]);
+				}
+			}
+		});
+		
+		data = new FormData();
+		data.bottom = new FormAttachment(enter, -5);
+		data.left = new FormAttachment(0, 0);
+		data.right = new FormAttachment(categories, -5);
+		ownerInfo.setLayoutData(data);
+		
+		Label name = new Label(ownerInfo, SWT.NULL);
+		name.setText("Name:");
+		
+		Label phone = new Label(ownerInfo, SWT.PUSH);
+		phone.setText("Phone:");
+		
+		nameText = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
+		phoneText = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
+		
+		data = new FormData();
+		data.top = new FormAttachment(nameText, 0, SWT.CENTER);
+		name.setLayoutData(data);
+		
+		data = new FormData();
+		data.top = new FormAttachment(phoneText, 0, SWT.CENTER);
+		phone.setLayoutData(data);
+		
+		data = new FormData();
+		data.left = new FormAttachment(phone, 5);
+		data.right = new FormAttachment(100, 0);
+		nameText.setLayoutData(data);
+		
+		data = new FormData();
+		data.left = new FormAttachment(nameText, 0, SWT.LEFT);
+		data.right = new FormAttachment(100, 0);
+		data.top = new FormAttachment(55, 0);
+		phoneText.setLayoutData(data);
+		
+		shell.pack();
+		
+		return shell;
+	}	
 }</pre>
 
 <p>This is what the layout looks like after
-Mary Smith enters Fifi in the dog show:</p>
+Mary Smith enters Bifford in the dog show:</p>
+
+<img src="images/DogShowBiffWithFormLayout.jpg"/>
 
 </p>
 <p>When the window is resized, the same
 controls are resized as in the <code>GridLayout</code> example.</p>
+
+<img src="images/DogShowBiffWithFormLayoutResized.jpg"/>
 
 <h3>Writing Your Own Layout Class</h3>
 
@@ -1534,8 +1638,6 @@ implementing it as a <code>Composite</code> that
 does its layout in a resize listener and computes its preferred size in <code>computeSize</code> is clearer, and does not
 involve writing an extra class.</p>
 
-
-
 <p>First, we will look at how layouts work, and then we will create a new <code>Layout</code> class. Another example of writing
 your own <code>Layout</code> can be found in the <i>Compound Widget Example</i> section of <a href="http://www.eclipse.org/articles/Article-Writing%20Your%20Own%20Widget/Writing%20Your%20Own%20Widget.htm">Creating Your Own Widgets Using SWT</a>,
 which shows how to achieve the same look using either a resize listener or a
@@ -1552,8 +1654,6 @@ follows:</p>
     protected abstract Point computeSize(Composite composite, int widthHint, int heightHint, boolean flushCache);
     protected abstract void layout(Composite composite, boolean flushCache);
 }</pre>
-
-
 
 <p>The <code>computeSize</code> method calculates the width and height of a
 rectangle that encloses all of the <code>Composite</code>'s children once they have
@@ -1780,8 +1880,8 @@ public class ColumnLayoutTest {
 mouse will also make the buttons wider (or narrower) but they do not grow
 taller.</p>
 
-<img src="images/image109.png"/> 
- <img src="images/image111.png"/>
+<img src="images/CustomLayout.jpg"/> 
+ <img src="images/CustomLayoutResized.jpg"/>
 
 <h4>Overriding Composite</h4>
 
