@@ -1,0 +1,633 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Automating Eclipse PDE Unit Tests using Ant</title>
+<link href="../article.css" rel="stylesheet" type="text/css">
+
+<body>
+<h1>Automating Eclipse PDE Unit Tests using Ant</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>This article outlines how to integrate your PDE unit tests into an Ant
+based automated build, using a simple Eclipse plugin as an example, some
+simple java classes, basic Eclipse plugin techniques and some standard
+Ant tasks.</p>
+<div class="author">By Brian Joyce, <a target="_blank" href="http://www.duolog.com">Duolog Technologies Ltd., Galway, Ireland</a></div>
+<div class="copyright">Copyright &copy; 2008, Brian Joyce</div>
+<div class="date"><span class="date">April 5, 2008<br>
+</span></div>
+</div>
+<div class="content">
+<h2><a name="Introduction"></a>Introduction</h2>
+It's generally accepted that writing tests as part of software
+development is a very good thing indeed. It's also generally accepted
+that automating the running of tests in an automated or nightly build is
+good engineering practice. Let's face it, if tests are not run
+automatically then there's a good chance they won't be run at all, and
+tests that are not run are next to useless.
+<br>
+<br>
+The Eclipse Plugin Development Environment (PDE) provides a excellent
+framework for developing plugins and also provides facilities to write
+and run PDE unit tests for your plugins that can be run from within the
+Eclipse environment.
+<br>
+<br>
+Once you have taken the time and effort to write these valuable PDE unit
+tests, how do you automate the running of these PDE unit tests so that
+you can integrate them into your automated build ?
+<br>
+<br>
+Searching the web provides several options for automating PDE tests such
+as:
+<br>
+<ul>
+	<li>Markus Barchfeld's excellent <a
+		href="http://www.eclipse.org/articles/Article-PDE-Automation/automation.html"
+		target="_blank">Build and Test Automation for plug-ins and
+	features</a> article which details setting up automatic building and
+	testing for an Eclipse plug-in using the Eclipse headless build.</li>
+	<li><a
+		href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.test/testframework.html?view=co"
+		target="_blank">Eclipse Test Framework</a>.</li>
+	<li>Patrick Paulin's RCP Quickstart post on <a
+		href="http://rcpquickstart.wordpress.com/2007/08/06/running-automated-tests-with-pde-build/"
+		target="_blank">Running Automated Tests with PDE Build.</a></li>
+	<li>Some more excellent links can be found at <a
+		href="http://eclipsenuggets.blogspot.com/2007/09/6-great-links-for-eclipse-build.html"
+		target="_blank">6 Great Links for Eclipse Build Automation with
+	PDE Build</a>.</li>
+</ul>
+As you can see writing PDE Tests can be complex, running PDE Tests from
+the command line can be complex too, but running them and collecting the
+results in a format that can be easily interpreted (e.g. Junitreport
+format) is even more difficult.
+<br>
+<br>
+This article provides a detailed example application, the enabling
+technology to collect and format test results (see
+<a href="#PDE_Test_Utilities">PDE Test Utilities</a>
+), and a build system that demonstrates a generic mechanism for running
+PDE Tests using Ant, allowing you to integrate it with any Ant build
+system.
+<br>
+<br>
+This PDE Test technique provides the following benefits:
+<br>
+<ol>
+	<li>Allows you to run your PDE Tests from the command line</li>
+	<li>Allows you to collect the PDE Tests results in a format that
+	can be easily interpreted (i.e. Junitreport format)</li>
+	<li>Allows you to integrate PDE Tests into any Ant-based build
+	system</li>
+</ol>
+<span style="font-weight: bold;">Note:</span>
+all the techniques and examples detailed in this article have been
+tested against Eclipse 3.3 (specifically Eclipse 3.3.2 and 3.3.1.1) on
+Windows XP only and using
+<a href="http://ant.apache.org/bindownload.cgi" target="_blank">ant
+1.7.0</a>
+. There is also an
+<a href="PDETestExampleProjects-3.1.zip">Eclipse 3.1 version</a>
+of the example code.
+<br>
+<br>
+<h2><a name="Overview"></a>Overview</h2>
+PDE unit tests are automated as follows:
+<br>
+<h3>Prerequisites:</h3>
+<ol>
+	<li>A dedicated PDE test Eclipse installation that is only used by
+	the automated build system.</li>
+	<li>For each Eclipse plugin <i style="color: rgb(255, 0, 0);">A</i>
+	that is to be tested, an Eclipse plugin fragment <i
+		style="color: rgb(255, 0, 0);">A-test</i> for <i
+		style="color: rgb(255, 0, 0);">A</i> that only contains the PDE unit
+	tests and their test dependencies for the plugin <i
+		style="color: rgb(255, 0, 0);">A</i>.</li>
+	<li>A pre-defined (or specified) PDE test port.</li>
+	<li>A PDE test listener class to listen on the PDE test port for
+	the results from the PDE test run.</li>
+	<li>A list of PDE test classes to be run as part of the PDE Test
+	run</li>
+</ol>
+<h3>Running the PDE unit tests:</h3>
+See
+<a href="#Figure_1_-_Overview_diagram_of_the_PDE">Figure 1 </a>
+below for a visual representation of the PDE test steps.
+<ol>
+
+	<li>Deploy plugin <i style="color: rgb(255, 0, 0);">A</i> and
+	plugin fragment <i style="color: rgb(255, 0, 0);">A-test</i> into a
+	pristine PDE test Eclipse installation.</li>
+	<li>Select PDE test port (or use predefined reserved port).</li>
+	<li>Start the PDE test listener process that listens on the PDE
+	test port.Startup the PDE test Eclipse installation, specifying the
+	list of unit test classes to be run, and the PDE test port to output
+	test progress and results to.</li>
+	<li>The PDE test Eclipse installation starts up and automatically
+	runs the specified tests and outputs the results to the PDE test port
+	where the PDE test listener process captures the results and outputs
+	them in standard Ant&nbsp;<a target="_blank"
+		href="http://ant.apache.org/manual/OptionalTasks/junit.html">junit</a>
+	task xml format.</li>
+
+	<li>Run the regular Ant&nbsp;<a target="_blank"
+		href="http://ant.apache.org/manual/OptionalTasks/junitreport.html">junitreport</a>
+	task on the generated test results xml files.</li>
+	<li>That's it - you now have a typical Ant Junit html report
+	containing your PDE unit test results.</li>
+</ol>
+<h4><a name="Figure_1_-_Overview_diagram_of_the_PDE"></a>Figure 1 -
+Overview diagram of the PDE Test steps</h4>
+<img src="images/PDETestProcessFlow.jpg"
+	style="border: 2px solid; width: 1121px; height: 610px;"
+	alt="PDE Test process flow diagram"
+	title="PDE Test process flow diagram">
+<br>
+<br>
+<br>
+<h2>Prerequisites</h2>
+This section describes the prerequisites for using this technique in
+more detail.
+<br>
+<h3>Dedicated PDE test Eclipse installation</h3>
+In order to run the PDE Tests you need a separate Eclipse installation
+whose sole purpose is for running the&nbsp;PDE Tests. Having a dedicated
+Eclipse installation provides a pristine and repeatable test environment
+and avoids any possible conflicts or corruption that might occur with a
+typical development Eclipse installation.
+<br>
+<h3>Use an Eclipse plugin fragment for the PDE Unit Tests for a
+plugin</h3>
+This technique promotes the use of&nbsp;
+<a
+	href="http://help.eclipse.org/help33/topic/org.eclipse.platform.doc.isv/guide/product_def_plugins.htm"
+	target="_blank">Eclipse plugin fragments</a>
+to develop PDE Unit tests for&nbsp;plugins, so for each Eclipse plugin
+<i style="color: rgb(255, 0, 0);">A</i>
+that is to be tested, an Eclipse plugin fragment
+<i style="color: rgb(255, 0, 0);">A-test</i>
+for
+<i style="color: rgb(255, 0, 0);">A</i>
+that only contains the PDE unit tests and their test dependencies for
+the plugin
+<i style="color: rgb(255, 0, 0);">A</i>
+.
+<br>
+<br>
+You can of course develop the PDE tests directly in the plugin (in a
+test directory), but this can lead to unwanted dependencies in your
+plugin and involves&nbsp;slightly more complicated packaging for your
+plugin (i.e. without test classes and test dependencies).
+<br>
+<br>
+I believe that the Eclipse plugin fragment approach avoids these
+pitfalls and although it requires a little more setup initially it
+provides a cleaner and clearer mechanism for defining PDE Tests and also
+provides a straightforward way for the build system of identifying which
+plugins&nbsp;have PDE Tests associated with them.
+<br>
+<br>
+For a good description and more general discussion of using Eclipse
+plugin fragments for testing, see Patrick Paulin's RCP Quickstart
+article
+<a
+	href="http://rcpquickstart.wordpress.com/2007/06/20/unit-testing-plug-ins-with-fragments/"
+	target="_blank">Testing Plugins with Fragments</a>
+.
+<br>
+<h3>PDE test port</h3>
+In order for the PDE test runner and the PDE test listener processes to
+communicate, both processes need to use a pre-defined or specified port
+so that the PDE test runner can send the test progress and
+results&nbsp;to the PDE test listener process. In the example code we
+use a utility class
+<a href="#PDETestPortLocator"><code>pde.test.utils.PDETestPortLocator</code></a>
+in the
+<a href="article.html#PDE_Test_Utilities">pde.test.utils</a>
+plugin to find an available port and this is used by the PDE test runner
+and&nbsp;PDE test listener processes to communicate.
+<h3>PDE test listener process</h3>
+In order to be able to monitor and record the progress and&nbsp;results
+of the PDE test run, you need a PDE test listener process that listens
+on the specified port to collect PDE test progress and results from the
+PDE test runner process. Ideally the PDE test listener process should
+provide the results of the PDE test run in a manner that is easy to
+interpret should any of the tests fail.
+<br>
+<br>
+The
+<a href="#PDETestResultsCollector"><code>pde.test.utils.PDETestResultsCollector</code></a>
+class (using the
+<a href="#PDETestListener"><code>pde.test.utils.PDETestListener</code></a>
+class) in the
+<a href="article.html#PDE_Test_Utilities">pde.test.utils</a>
+plugin, provides the PDE test listener process that listens on the
+specifed port for test results from the PDE test runner process and
+handles them using the
+<code>org.apache.tools.ant.taskdefs.optional.junit.JUnitTest</code>
+and
+<code>org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter</code>
+classes (available from Apache Ant API) to provide the results in the
+same xml format that is output by the Ant
+<a target="_blank"
+	href="http://ant.apache.org/manual/OptionalTasks/junit.html">junit</a>
+task. These xml result files can then be used by the Ant
+<a target="_blank"
+	href="http://ant.apache.org/manual/OptionalTasks/junitreport.html">junitreport</a>
+task to provide a
+<a href="reports/test/index.html">html report</a>
+of the PDE test run that is very easily interpreted.
+<br>
+<br>
+For example to run the PDE test listener process from the command line
+for our example PDE tests would similar to:
+<br>
+<br>
+<code>&nbsp;java -classpath ...
+pde.test.utils.PDETestResultsCollector PhoneBookExample-test 1623</code>
+<h3>PDE test runner process</h3>
+Eclipse provides a mechanism for running tests from the command line
+using the main Eclipse launcher class to launch the
+<code>org.eclipse.pde.junit.runtime.uitestapplication</code>
+application, this is the PDE test runner process. The PDE test runner
+process is passed details of the port to publish test progress and
+results to for listeners to analyse, the plugin name being tested and
+the names of the PDE test classes to run.
+<br>
+<br>
+For example to run the PDE test runner process from the command line for
+our example PDE tests would similar to:
+<br>
+<pre> java -classpath&nbsp;...\eclipse\plugins\org.eclipse.equinox.launcher_1.0.1.R33x_v20080118.jar <br> org.eclipse.equinox.launcher.Main <br> -application org.eclipse.pde.junit.runtime.uitestapplication <br> -data&nbsp;...\PhoneBookExample-test\target\reports\test/output/ws <br> -dev&nbsp;bin <br> -clean <br> -port 1623 <br> -testpluginname PhoneBookExample <br> -classnames&nbsp;phonebookexample.dialogs.PhoneBookEntryEditorDialogTest</pre>
+<h3>PDE Tests classes list</h3>
+The PDE test runner process takes as a parameter a comma separated list
+of the test classes to run in a PDE test run. In the example code I have
+hardcoded the name of the single test class to be run i.e.
+<code>phonebookexample.dialogs.PhoneBookEntryEditorDialogTest</code>
+but the generation of the list of PDE test classes could easily be
+automated.
+<span style="font-weight: bold;"><br>
+<br>
+<br>
+</span>
+<h2>Running PDE Unit Tests in Ant</h2>
+This section describes the Ant build file in the example code that runs
+the PDE Tests and explains the key Ant targets involved. See
+<a href="article.html#Figure_1_-_Overview_diagram_of_the_PDE">Figure
+1</a>
+above for a visual representation of the steps involved in running PDE
+tests in Ant.
+<br>
+<br>
+The example code featuring&nbsp;full source and Ant build files for a
+project containing PDE unit tests can be found&nbsp;in the accompanying
+<a href="PDETestExampleProjects-3.3.zip">PDETestExampleProjects-3.3.zip</a>
+zip file.&nbsp;
+<br>
+<br>
+<span style="font-weight: bold;">Note:</span>
+that the&nbsp;
+<a href="PDETestExampleProjects-3.3.zip">PDETestExampleProjects-3.3.zip</a>
+zip file contains a full standalone&nbsp;project complete with an Ant
+build system (see
+<a href="article.html#PDETestExampleProjects.zip_Contents">zip
+contents</a>
+below for more details), so please&nbsp;unzip the contents into a
+directory that is separate from your eclipse installation.
+<br>
+<h3>Ant script that runs PDE Unit tests</h3>
+The following Ant excerpt is from the Ant build file used to run the PDE
+unit tests in the
+<span style="font-style: italic;">PhoneBookExample-test</span>
+plugin fragment for the
+<span style="font-style: italic;">PhoneBookExample</span>
+plugin (see
+<span style="font-style: italic;">projects\PhoneBookExample-test\build.xml</span>
+in the accompanying zip file):
+<br>
+<pre><code>&lt;!-- Build file for the Phonebook Example plugin PDE unit test fragment --&gt;<br>&lt;project name="phonebookexampletest" default="help" basedir="."&gt;<br> ...<br>    &lt;target name="pde_test"&gt;<br><img
+	src="images/tag_1.gif" align="middle" height="13" width="24">     &lt;delete&gt;<br>          &lt;fileset dir="${test.eclipse.dir}/configuration" includes="**/*" excludes="config.ini"/&gt;<br>          &lt;fileset dir="${test.eclipse.dir}/plugins" includes="PhoneBookExample*.jar"/&gt;<br>          &lt;fileset dir="${test.eclipse.dir}/plugins" includes="pde.test.utils*.jar"/&gt;<br>       &lt;/delete&gt;<br><br>       &lt;!-- Load plugin and pde tests plugin fragment into test eclipse installation --&gt;<br><img
+	src="images/tag_2.gif" align="middle" height="13" width="24">    &lt;copy todir="${test.eclipse.dir}/plugins" overwrite="true"&gt;<br>           &lt;fileset dir="${published.plugins.dir}"/&gt;<br>       &lt;/copy&gt;<br><br></code><code>       </code><code>&lt;delete file="pde_test_port.properties"/&gt; &lt;!-- properties file generated by PDETestPortLocator class in pde.test.utils --&gt;<br></code><code><img
+	src="images/tag_3.gif" style="width: 24px; height: 13px;"
+	align="middle"></code><code>    &lt;java classname="pde.test.utils.PDETestPortLocator" fork="yes" classpathref="pde.test.port.locator.class.path"/&gt;<br> </code><code>      </code><code>&lt;waitfor maxwait="10" maxwaitunit="second" checkevery="100" checkeveryunit="millisecond"&gt;<br></code><code>           </code><code>&lt;available file="pde_test_port.properties"/&gt;<br></code><code>       </code><code>&lt;/waitfor&gt;<br> </code><code>      </code><code>&lt;property file="pde_test_port.properties"/&gt;<br> </code><code></code><code>      </code><code>&lt;echo message="Using port ${pde.test.port} for listening to PDE Test run"/&gt;<br><br> </code><code></code><code>      </code><code>&lt;parallel&gt;<br> </code><code></code><code>          </code><code>&lt;daemons&gt;<br><img
+	src="images/tag_4.gif" align="middle" height="13" width="24"> </code><code></code><code>           </code><code>&lt;antcall target="run_pde_test_listener"/&gt;<br> </code><code></code><code>          </code><code>&lt;/daemons&gt;<br> </code><code></code><code>          </code><code>&lt;sequential&gt;<br> </code><code></code><code>              </code><code>&lt;sleep seconds="5"/&gt; &lt;!-- Give the listener a few seconds to start up --&gt;<br><img
+	src="images/tag_5.gif" align="middle" height="13" width="24"> </code><code></code><code>           </code><code>&lt;antcall target="run_pde_tests"/&gt;<br> </code><code></code><code>          </code><code>&lt;/sequential&gt;<br> </code><code></code><code>      </code><code>&lt;/parallel&gt;<br> <br><img
+	src="images/tag_6.gif" align="middle" height="13" width="24">    &lt;delete&gt;<br> </code><code></code><code>          </code><code>&lt;fileset dir="${test.eclipse.dir}/plugins" includes="PhoneBookExample*.jar"/&gt;<br> </code><code></code><code>          </code><code>&lt;fileset dir="${test.eclipse.dir}/plugins" includes="pde.test.utils*.jar"/&gt;<br> </code><code></code><code>      </code><code>&lt;/delete&gt;<br><br> </code><code></code><code>      </code><code>&lt;mkdir dir="${test.reports.dir}"/&gt;<br><img
+	src="images/tag_7.gif" align="middle" height="13" width="24"> </code><code></code><code>   </code><code>&lt;move todir="${test.reports.dir}"&gt;<br> </code><code></code><code>          </code><code>&lt;fileset dir="."&gt;<br> </code><code></code><code>              </code><code>&lt;include name="**/TEST-*.xml"/&gt;<br> </code><code></code><code>          </code><code>&lt;/fileset&gt;<br> </code><code></code><code>      </code><code>&lt;/move&gt;<br></code><code></code><code>  </code><code> &lt;/target&gt;<br><br><img
+	src="images/tag_4.gif" align="middle" height="13" width="24"> &lt;target name="run_pde_test_listener"&gt;<br> </code><code></code><code>      </code><code>&lt;java classname="pde.test.utils.PDETestResultsCollector" fork="yes" classpathref="pde.test.listener.class.path"&gt;<br></code><code></code><code>      </code><code>     &lt;arg line="${plugin.name} ${pde.test.port}"/&gt;<br></code><code></code><code>      </code><code> &lt;/java&gt;<br>    &lt;/target&gt;<br><br><img
+	src="images/tag_5.gif" align="middle" height="13" width="24"> &lt;target name="run_pde_tests"&gt;<br> </code><code></code><code>      </code><code>&lt;property name="test.classes.list" value="phonebookexample.dialogs.PhoneBookEntryEditorDialogTest"/&gt;<br> </code><code></code><code>      </code><code>&lt;mkdir dir="${test.reports.dir}/output/ws"/&gt;<br> </code><code></code><code>      </code><code>&lt;java dir="${plugin.dir}" classname="org.eclipse.equinox.launcher.Main" fork="yes" classpathref="equinox.launcher.class.path"&gt;<br> </code><code></code><code>          </code><code>&lt;arg line="-application org.eclipse.pde.junit.runtime.uitestapplication -data ${test.reports.dir}/output/ws -dev bin -clean -port ${pde.test.port} -testpluginname PhoneBookExample -classnames ${test.classes.list}"/&gt;<br> </code><code></code><code>      </code><code>&lt;/java&gt;<br>    &lt;/target&gt;<br> ...<br>&lt;/project&gt;</code><br></pre>
+The key elements of this Ant build file are identified above:
+<br>
+<br>
+<table style="text-align: left; width: 1045px; height: 400px;"
+	border="1" cellpadding="2" cellspacing="2">
+	<tbody>
+		<tr>
+			<td style="width: 10%;"><img src="images/tag_1.gif"
+				align="middle" height="13" width="24"></td>
+			<td style="width: 90%;">This prepares for the PDE test run by
+			deleting all previously deployed plugins from the plugins directory
+			of the dedicated test installation of Eclipse.</td>
+		</tr>
+		<tr>
+			<td style="width: 10%;"><img src="images/tag_2.gif"
+				align="middle" height="13" width="24"></td>
+			<td style="width: 90%;">This copies the set of plugins under
+			test (including the test fragment) into the plugins directory of the
+			test installation of Eclipse.</td>
+		</tr>
+		<tr>
+			<td style="width: 10%;"><img src="images/tag_3.gif"
+				align="middle" height="13" width="24"></td>
+			<td style="width: 90%;">This discovers an available port for the
+			PDETestListener to listen on - it does it by launching a simple java
+			class (PDETestPortLocator) to detect the next available port and
+			stores it as a property pde.test.port in the pde_test_port.properties
+			file. This property is then loaded from the pde_test_port.properties
+			file and is used in the test run.</td>
+		</tr>
+		<tr>
+			<td style="width: 10%;"><img src="images/tag_4.gif"
+				align="middle" height="13" width="24"></td>
+			<td style="width: 90%;">This step launches the PDETestListener
+			in a separate thread (using the Ant parallel &amp; daemons tasks) to
+			listen for test results on the port identified by the pde.test.port
+			property (see Label 3 above)</td>
+		</tr>
+		<tr>
+			<td style="width: 10%;"><img src="images/tag_5.gif"
+				align="middle" height="13" width="24"></td>
+			<td style="width: 90%;">This is the actual step that runs the
+			PDE Unit tests and specified that the results should be published to
+			a listener using the port identified by the pde.test.port property
+			(see Label 3 above).<br>
+			Note: that the list of test classes needs to be specified for the
+			test run, this can easily be automatically generated.</td>
+		</tr>
+		<tr>
+			<td style="width: 10%;"><img src="images/tag_6.gif"
+				style="width: 24px; height: 13px;" align="middle"></td>
+			<td style="width: 90%;">After the PDE test run the test
+			installation of Eclipse is cleaned up by deleting all the deployed
+			plugins from the plugins directory.</td>
+		</tr>
+		<tr>
+			<td style="width: 10%;"><img src="images/tag_7.gif"
+				align="middle" height="13" width="24"></td>
+			<td style="width: 90%;">Copy the test results to a directory for
+			processing by the Junitreport Ant task.</td>
+		</tr>
+	</tbody>
+</table>
+<br>
+<br>
+<h2><a name="PDETestExampleProjects.zip_Contents"></a>PDETestExampleProjects-3.3.zip
+Contents</h2>
+The zip contains 3 separate plugins (each with their own Ant build.xml
+file) and an overall Ant build.xml file that coordinates the build and
+test of the 3 plugins.
+<br>
+<br>
+<table style="width: 1112px; height: 116px;" border="1" cellpadding="2"
+	cellspacing="2">
+	<tbody>
+		<tr>
+			<td style="font-weight: bold;">Contents</td>
+			<td><span style="font-weight: bold;">Type</span></td>
+			<td style="font-weight: bold;">Description</td>
+		</tr>
+		<tr>
+			<td>pde.test.utils</td>
+			<td>Plugin</td>
+			<td>Provides the PDE test utilities used by Ant to run the PDE
+			unit tests, including the following classes:<br>
+			<ul>
+				<li>pde.test.utils.PDETestListener</li>
+				<li>pde.test.utils.PDETestPortLocator</li>
+				<li>pde.test.utils.PDETestResultsCollector</li>
+			</ul>
+			</td>
+		</tr>
+		<tr>
+			<td>PhoneBookExample</td>
+			<td>Plugin</td>
+			<td>This is the main Eclipse plugin PhoneBook example
+			application, including the following classes:<br>
+			<ul>
+				<li>phonebookexample.PhoneBookExamplePlugin</li>
+				<li>phonebookexample.actions.PhoneBookAction</li>
+				<li>phonebookexample.data.PhoneBook</li>
+				<li>phonebookexample.data.PhoneBookEntry</li>
+				<li>phonebookexample.dialogs.PhoneBookEditorDialog</li>
+				<li>phonebookexample.dialogs.PhoneBookEntryEditorDialog</li>
+			</ul>
+			<br>
+			For further details on the example application see <a
+				href="#Simple_Phonebook_Application">Appendix A</a> below.</td>
+		</tr>
+		<tr>
+			<td>PhoneBookExample-test</td>
+			<td>Plugin Fragment</td>
+			<td>This is the Eclipse plugin fragment for the PhoneBook plugin
+			that contains the PDE unit tests for the PhoneBook GUI, including the
+			following test classes:<br>
+			<ul>
+				<li>phonebookexample.dialogs.PhoneBookEntryEditorDialogTest</li>
+			</ul>
+			<br>
+			For further details on PDE Unit tests for the example application see
+			<a href="#Example_PDE_Unit_Tests">Appendix B</a> below.</td>
+		</tr>
+		<tr>
+			<td>build.xml</td>
+			<td>Ant&nbsp;build file</td>
+			<td>Overall Ant build file, that provides targets that
+			coordinates the building and testing of the 3 plugins</td>
+		</tr>
+		<tr>
+			<td>readme.txt</td>
+			<td>Readme file</td>
+			<td>Provide basic information on how to run the example</td>
+		</tr>
+		<tr>
+			<td>project.properties</td>
+			<td>properties file</td>
+			<td>Specifies the target Eclipse and pde.test.utils versions
+			used in this project.</td>
+		</tr>
+	</tbody>
+</table>
+<br>
+<br>
+<h2><a name="PDE_Test_Utilities"></a>PDE Test Utilities
+(pde.test.utils)</h2>
+This plugin contains a set of utilities that help automate the running
+and monitoring of PDE Unit tests.
+<br>
+<h3><a name="PDETestPortLocator"></a>PDETestPortLocator</h3>
+This class is responsible for discovering the next available port on a
+system, creating a properties file called
+<span style="font-style: italic;">pde_test_port.properties</span>
+and writing a property called
+<span style="font-style: italic;">pde.test.port</span>
+into the file and setting it to the value of the next available port.
+This port is then used by the Eclipse test runner process when
+publishing the progress and results of tests and the PDE test listener
+process listens on the port and processes&nbsp;the test results.
+<br>
+<h3><a name="PDETestListener"></a>PDETestListener</h3>
+This class is responsible for listening on a specified port as an
+Eclipse test listener and&nbsp;outputing the results of the test
+run&nbsp;in the same xml format that is output by the Ant
+<a target="_blank"
+	href="http://ant.apache.org/manual/OptionalTasks/junit.html">junit</a>
+task.&nbsp;The outputted test result xml files&nbsp;can then be
+converted into an easily interpreted html junit report by the&nbsp;Ant
+<a target="_blank"
+	href="http://ant.apache.org/manual/OptionalTasks/junitreport.html">junitreport</a>
+task.
+<br>
+<h3><a name="PDETestResultsCollector"></a>PDETestResultsCollector</h3>
+This class is responsible for starting the PDETestListener on the
+specified port, for a PDE test run. The PDETestResultsCollector
+process&nbsp;takes 2 parameters as follows:
+<br>
+<ol>
+	<li>PDE Test suite name - this is just a string that identifies
+	the PDE test suite name - usually the plugin fragment name, e.g.
+	PhoneBookExample-test in our example code.</li>
+	<li>port number - &nbsp;specifies the port that the PDE test
+	runner process uses to publish PDE test progress and results, the PDE
+	test listener process listens on the port to process the test results.</li>
+</ol>
+<br>
+<h2>Conclusion</h2>
+As I said in the introduction there are&nbsp;several options available
+for automating PDE tests, some more complex than others, the technique
+detailed in this article provides&nbsp;another choice for build system
+engineers and I recommend it because it delivers the following benefits:
+<br>
+<ol>
+	<li>Allows you to run your PDE Tests from the command line</li>
+	<li>Allows you to collect the PDE Tests results in a format that
+	can be easily interpreted (i.e. Junitreport format)</li>
+	<li>Allows you to integrate PDE Tests into any Ant-based build
+	system</li>
+</ol>
+<br>
+<br>
+<h2><a name="Simple_Phonebook_Application"></a>Appendix A: Example
+Application - Simple Phonebook Application (PhoneBookExample)</h2>
+The example application I have created is a simple PhoneBook application
+and some simple GUI PDE Tests. As my aim in this article is showing you
+how to integrate your PDE unit tests into an Ant build, I have
+deliberately kept the example application and it's PDE unit tests as
+simple as possible. I leave it to others to provide more insight into
+writing GUI code or even how to test your GUI code using PDE unit tests.
+<br>
+<br>
+The PhoneBook application is simple tool to store names and their
+associated phone numbers. The application adds a simple "Phone" menu
+item to the main menu as follows:
+<br>
+<br>
+<img src="images/phonebook_menu.gif"
+	style="width: 718px; height: 350px;" alt="Image of phonebook menu item">
+<br>
+<br>
+<br>
+Clicking on "Edit Phone Book" menu item causes the Edit PhoneBook Dialog
+to be displayed:
+<br>
+<br>
+<img src="images/phonebook_editor.gif"
+	style="width: 524px; height: 309px;"
+	alt="Image of PhoneBook editor dialog">
+<br>
+<br>
+Clicking on "New" button causes the Edit PhoneBook Entry Dialog to be
+displayed:
+<br>
+<br>
+<img src="images/phonebook_entry_editor.gif"
+	style="width: 523px; height: 298px;"
+	alt="Image of PhoneBook Entry Editor dialog">
+<br>
+<br>
+<h3><a name="Making_GUI_Classes_testable_using"></a>Making GUI
+Classes testable using package protection</h3>
+<pre><img src="images/tip.gif" alt=""></pre>
+Throughout the simple GUI examples provided here, I have followed a
+deliberate style of making all local variables in GUI classes package
+protected. Making the local variables package protected allows the unit
+tests to access the GUI components during the rest run.
+<br>
+<br>
+For example, the local variables
+<img src="images/tag_1.gif" align="middle" height="13" width="24">
+are all package protected.
+<pre>package phonebookexample.dialogs;<br>...<br>public class PhoneBookEntryEditorDialog extends TitleAreaDialog {<br><img
+	src="images/tag_1.gif" align="middle" height="13" width="24">  PhoneBookEntry phoneBookEntry; <br><img
+	src="images/tag_1.gif" align="middle" height="13" width="24">  Composite phoneBookEntryComposite;<br><img
+	src="images/tag_1.gif" align="middle" height="13" width="24">  Text nameText;<br><img
+	src="images/tag_1.gif" align="middle" height="13" width="24">  Text numberText;<br></pre>
+I do accept that this is not an ideal solution for making your GUI
+classes testable, but it is simple and it works.
+<br>
+<br>
+<br>
+<h2><a name="Example_PDE_Unit_Tests"></a>Appendix B: Example PDE
+Unit Tests (PhoneBookExample-test)</h2>
+There is just a single PDE Junit test class provided in the example
+(PhoneBookEntryEditorDialogTest) and most of the tests there are pretty
+straightforward, but there are a few tricks or techniques that do
+require some further explanation.
+<br>
+<h3>Accessing the active shell</h3>
+<pre><img src="images/tip.gif" alt=""></pre>
+The active shell for your GUI under test can be accessed using the
+following:
+<pre> PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell()</pre>
+
+<h3>Extending the GUI class under test to access protected methods</h3>
+This is a simple technique to allow your test to gain access to
+protected methods in the class under test or one of it's super classes.
+In the example the local class MyPhoneBookEntryEditorDialog extends the
+class under test PhoneBookEntryEditorDialog so that the tests can access
+the, getButton(int id), buttonPressed() and cancellPressed() methods
+these methods can then be used in the tests.
+<br>
+<pre><img src="images/tip.gif" alt=""><br></pre>
+<pre>class MyPhoneBookEntryEditorDialog extends PhoneBookEntryEditorDialog {<br><br>    public MyPhoneBookEntryEditorDialog(Shell parent, PhoneBookEntry phoneBookEntry) {<br>        super(parent, phoneBookEntry);<br>    }<br><br>    @Override<br>    protected void buttonPressed(int buttonId) {<br>        super.buttonPressed(buttonId);<br>    }<br><br>    @Override<br>    protected void cancelPressed() {<br>        super.cancelPressed();<br>    }<br><br>    @Override<br>    protected Button getButton(int id) {<br>        return super.getButton(id);<br>    }<br> }<br></pre>
+<h3>Making GUI Classes testable using package protection</h3>
+Making the local variables package protected allows the unit tests to
+access the GUI components during the rest run (see
+<a href="article.html#Making_GUI_Classes_testable_using">earlier
+section</a>
+for further details). &nbsp;
+<br>
+<br>
+<br>
+<h2>Acknowledgments</h2>
+This technique for automating PDE unit tests was first developed by a
+former colleague of mine, David Bosschaert at IONA Technologies.
+<br>
+<br>
+I'd like to thank Edwin Dankert and Sean Boylan, both of Duolog
+Technologies&nbsp;who helped refine the technique and the article.
+&nbsp;I'd also like to thank the reviewers Edwin Dankert, David
+Bosschaert,&nbsp;Andrew Niefer of IBM and Wayne&nbsp;Beaton of Eclipse
+for taking the time to read the article and provide all the excellent
+feedback.
+</div>
+
+<div class="notices"><h3>Legal Notices</h3>
+<p>Java and all Java-based trademarks and logos are
+trademarks or registered trademarks of Sun Microsystems, Inc. in the
+United States, other countries, or both.</p>
+</div>
+</body>
+</html>
