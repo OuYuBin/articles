@@ -55,7 +55,7 @@
 	$App->ExtraHtmlHeaders = "<link rel=\"stylesheet\" type=\"text/css\" href=\"layout.css\" media=\"screen\" />\n<base href=\"http://$host/articles/$file\"/>\n";
 
 	//$charset = "UTF-8";//$App->getHTTPParameter('charset');
-	if ($charset) header("Content-Type: text/html; charset=$charset");
+	//if ($charset) header("Content-Type: text/html; charset=$charset");
 	
 	ob_start();
 ?>
