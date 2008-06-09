@@ -289,7 +289,7 @@ various fields of the event parameter (like its type or source) and
 respond accordingly. For the PlanePage, we do some special action if the
 priceButton has been selected, informing the user of the flight price.</p>
 
-<pre>public void handleEvent(Event e) { 
+<pre><a href="#getPrice"></a>public void handleEvent(Event e) { 
    if (e.widget == priceButton) { 
       if (flightsList.getSelectionCount() &gt;0) { 
          if (((HolidayWizard)getWizard()).model.discounted) 
@@ -415,7 +415,7 @@ the values chosen by the user. In our example, depending on the choice
 of travel the user will next see either the page with flights or the
 page for travelling by car.</p>
 
-<pre>public IWizardPage getNextPage(){
+<pre><a name="initialize"></a>public IWizardPage getNextPage(){
    saveDataToModel();		
    if (planeButton.getSelection()) {
        PlanePage page = ((HolidayWizard)getWizard()).planePage;
@@ -464,7 +464,7 @@ each case more closely.</p>
 	are not created when the init method is called, but we can initialize
 	them as soon as they are created with the cached value.</p>
 	<p>For wizards which are started by defining a wizard contribution
-	(see <a href="#startWizard">Starting a wizard</a> section), the init
+	(see <a href="#startWizard">Starting a Wizard</a> section), the init
 	method is called by the platform, otherwise we need to call it
 	explicitly.</p>
 	</li>
@@ -541,9 +541,9 @@ create new resources, import or export resources. When you select the
 new, import, or export menu or when you press the new wizard button, the
 workbench uses a wizard selection dialog to display all the wizards that
 have been contributed for that particular extension point.&nbsp;</p>
-<p><a name="NewMenu"></a></p>
+
 <center>
-<p><img border="0" src="wizards_files/newWizard.gif" alt=""></p>
+<p><a name="NewMenu"></a><img border="0" src="wizards_files/newWizard.gif" alt=""></p>
 Figure 5. Starting the wizard from the New</center>
 <p>In our sample, we contribute to the new wizard extension point.
 The relevant fragment from plugin.xml is :</p>
@@ -581,9 +581,8 @@ wizard to be started when the user interacts with these, for example
 when pressing a button or selecting a menu option.</p>
 <p>In our example, we use the popupMenu extension point for a folder
 to start the wizard.</p>
-<p><a name="PopupMenu"></a></p>
 <center>
-<p><img border="0" src="wizards_files/popup.gif" alt=""></p>
+<p><a name="PopupMenu"></a><img border="0" src="wizards_files/popup.gif" alt=""></p>
 <p>Figure 6. Starting the wizard from the popup menu</p>
 </center>
 <p>In the plugin.xml we have:</p>
