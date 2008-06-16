@@ -1,21 +1,22 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-<title>Adapters in Three Parts</title>
+<title>Adapters</title>
 <meta http-equiv="Content-Type"
 	content="text/html; charset=windows-1252">
 <link href="../article.css" type="text/css" rel="stylesheet">
 </head>
 <body>
 
-<h1>Adapters in Three Parts</h1>
+<h1>Adapters</h1>
 <div class="summary">
 <h2>Summary</h2>
-<p>The adapter
-pattern is used extensively in Eclipse. The use of this pattern allows
-plug-ins to be loosely coupled, yet still be tightly integrated in the
-extremely dynamic Eclipse runtime environment. The adapter framework
-allows views to work with object that they don't have prior knowledge of. </p>
+<p>The adapter pattern is used extensively in Eclipse. The use of
+this pattern allows plug-ins to be loosely coupled, yet still be tightly
+integrated in the extremely dynamic Eclipse runtime environment. In this
+article, we show you how to use the adapter framework to make your own
+objects adaptable, and adapt other objects.</p>
+
 <div class="author">By Wayne Beaton, The Eclipse Foundation</div>
 <div class="copyright">Copyright &copy; 2008 The Eclipse
 Foundation.</div>
@@ -23,44 +24,40 @@ Foundation.</div>
 </div>
 
 <div class="content">
-<h2>Introduction</h2>
-
-<p>The <a href="http://c2.com/cgi/wiki?AdapterPattern">adapter
-pattern</a> is used extensively in Eclipse. The use of this pattern allows
-plug-ins to be loosely coupled, yet tightly integrated. As applications
-become larger and more complex, reduced coupling becomes more and more
-important.</p>
-
 <h2>Using the Properties View</h2>
 
 <p>This article is not intended to provide thorough coverage of the
 Properties view. Rather, the Properties view is used a a means for
 demonstrating how adapters can be put to work.</p>
 
-<p>The Properties view displays properies for whatever is selected
+<p>The Properties view displays properties for whatever is selected
 in the workbench. Selections can occur in many places: the Navigator and
 Package Explorer views are two very obvious sources of selection. But
 selections can come from other places, even views created by you and
 your fellow developers. It's easy to see the Properties view in action.
 Just open it and select something in the Package Explorer; the
 Properties view will update to reflect the properties for the selected
-thing.</p>
+thing. Here, we see the Properties view (bottom) showing properties for
+file selected in the Package Explorer:</p>
+
+<div class="figure"><img src="images/properties.png" /></div>
 
 <p>One of the really interesting things about the Properties view is
 that it can display properties for objects that it knows nothing about.
 In fact, the Properties view doesn't really know anything in particular
 about any of the objects it displays.</p>
 
-<p>If you want to leverage the Properties view in from your own
-views, the first step is to make sure that the workbench selection
-service knows about the object selected in your view. If you're using a
-JFace table or tree, then this step is easy (if you're doing something
-else, <a
+<p>You can use the Properties view to show information about the objects
+selected in a view that you've created. The first step is to make sure that the workbench selection
+service knows about the selected in your view. If you're using a
+JFace <code>TableViewer</code> or <code>TreeViewer</code>, then this
+step is easy (if you're doing something else, <a
 	href="http://www.eclipse.org/articles/Article-WorkbenchSelections/article.html">&quot;Eclipse
 Workbench: Using the Selection Service&quot;</a> by Marc R. Hoffmann will
-help you determine how to best contribute the selection). All you need
+help you determine how to best contribute the selection). You need
 to do is invoke the <code>setSelectionProvider</code> method in your
-view's <code>createPartControl</code> method:</p>
+view's <code>createPartControl</code> method (the important part is
+marked in bold):</p>
 <pre>...
 public void createPartControl(Composite parent) {
 	viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
@@ -73,13 +70,14 @@ public void createPartControl(Composite parent) {
 }
 ...</pre>
 
-<p>The important part is marked in bold. Once you have your view
-contributing to the workbench selection, you need to make sure that the
-objects that your view is selecting contribute properties. The easiest
-(but not necessary most correct) way to do this is to have your class
-implement the <code>IPropertySource</code> interface:</p>
+<p>Once you have your view contributing to the workbench selection,
+you need to make sure that the objects that your view is selecting
+contribute properties. The easiest (but not necessary most correct) way
+to do this is to have your class implement the <code>IPropertySource</code>
+interface:</p>
+
 <pre>...
-public class Person implements IPropertySource {
+public class Person  <strong>implements IPropertySource</strong> {
 	private String name;
 	private Object street;
 	private Object city;
@@ -122,24 +120,28 @@ public class Person implements IPropertySource {
 	public void resetPropertyValue(Object id) {
 	}
 }</pre>
-<p>In this example, my object has three properties that are all <em>text</em>
+
+<p>In this example, the object has three properties that are all <em>text</em>
 values (one of the property descriptors that defines the behaviour of
 the property in the Property view is marked in bold). The first
 parameter is the name of the property, and the second one is the label
 for that property in the view. There are other types of property
 descriptors that you can use; you can even make your own if you have a
 special type of property.</p>
+
 <p>This example has been kept deliberately simple. These properties
 cannot be reset, nor does the implementation have any notion of whether
 or not properties have been set. A more sophisticated implementation
 will provide the user with more sophisticated options.</p>
-<p>I indicated earlier that this solution is "not necessarily <em>[the]</em>
-most correct". This is because, for this to work, my domain object needs
-to know about the very view-centric (and Eclipse-centric) notion of
-being a property source; in short, there is a tight-coupling between the
-model and view and this not a good thing. This where adapters come in.</p>
 
-<h2>Part One: Introducing Adapters</h2>
+<p>As indicated earlier, this solution is "not necessarily <em>[the]</em>
+most correct". This is because, for this to work, the domain object
+needs to know about the very view-centric (and Eclipse-centric) notion
+of being a property source; in short, there is a tight-coupling between
+the model and the property viewing framework. This where adapters come
+in.</p>
+
+<h2>Introducing Adapters</h2>
 
 <p>Tight coupling is bad because it tends to make things less
 flexible. Sure, we can look at the properties of our domain object, but
@@ -177,6 +179,7 @@ public class Person implements <strong>IAdaptable</strong> {
 	// Getter and setter methods follow...
 	...
 }</pre>
+
 <p>We move the <code>IPropertySource</code> behaviour to the <code>PersonPropertySource</code>
 class:</p>
 
@@ -221,32 +224,33 @@ public class PersonPropertySource implements IPropertySource {
 	}
 
 }</pre>
-<p>The Property view goes through a few steps to sort out how it's
+
+<p>The Properties view goes through a few steps to sort out how it's
 going to display properties. First, it determines whether or not the
 selected object implements the <code>IPropertySource</code> interface.
 If it does (as it does in our first example), it uses the selected
 object directly (after casting it to <code>IPropertySource</code>). If
 that check fails, the Property view then determines whether or not the
 selected object implements the <code>IAdaptable</code> interface
-(highlighted in the Person class). If the selected object is adaptable,
-it is asked&mdash;via the <code>getAdapter</code> method&mdash;for an
-adapter with the <code>IPropertySource</code> type. The <code>getAdapter</code>
-method either returns an object of the appropriate type or <code>null</code>.
-If the method returns an adapter, it is used by the Property view to
-gather properties. Our implementation of adapter fits this bill and so
-is used.</p>
+(highlighted in the <code>Person</code> class). If the selected object
+is adaptable, it is asked&mdash;via the <code>getAdapter</code>
+method&mdash;for an adapter with the <code>IPropertySource</code> type.
+The <code>getAdapter</code> method either returns an object of the
+appropriate type or <code>null</code> if it cannot be adapted to the requested type. 
+If the method returns an adapter,
+it is used by the Property view to gather properties (if it is <code>null</code>
+the Property view shows nothing).</p>
 
 <p>The astute reader will notice that this really doesn't do very
 much to actually weaken the coupling between the domain class and <code>IPropertySource</code>
-(the IPropertySource type is referenced directly by the <code>getAdapter</code>
+(the <code>IPropertySource</code> type is referenced directly by the <code>getAdapter</code>
 method). In fact, the coupling is just as strong. Even worse, we've
 actually introduced a tight coupling to another type (<code>IAdaptable</code>).</p>
 
-
-<h2>Part Two: Decoupling</h2>
+<h2>Decoupling with Adapters</h2>
 
 <p>The next step is to completely decouple the domain class from <code>IPropertySource</code>.
-To do this, I can change the <code>getAdapter</code> method:</p>
+To do this, we change the <code>getAdapter</code> method:</p>
 
 <pre>public class Person implements IAdaptable {
 	private String name;
@@ -265,13 +269,15 @@ To do this, I can change the <code>getAdapter</code> method:</p>
 
 	...
 }</pre>
+
 <p>Previously, the <code>getAdapter</code> method checked the type
 of the desired adapter and created an appropriate instance (if possible)
 itself. Now, the method makes a call to the <code>AdapterManager</code>,
 which can take care of figuring out how to adapt the instance.</p>
+
 <p>For this to work, the adapter manager needs to be told how to
 adapt the type. This can be done declaratively through the <code>plugin.xml</code>
-file:</p>
+file using the <code>org.eclipse.core.runtime.adapters</code> extension point:</p>
 <pre>&lt;plugin&gt;
    &lt;extension
          point="org.eclipse.core.runtime.adapters"&gt;
@@ -284,10 +290,12 @@ file:</p>
       &lt;/factory&gt;
    &lt;/extension&gt;
 &lt;/plugin&gt;</pre>
+
 <p>This extension defines an adapter for instances of the <code>org.eclipse.example.Person</code>
 class. When asked to adapt to the <code>org.eclipse.ui.views.properties.IPropertySource</code>,
-the <code>PersonPropertiesSourceAdapterFactory</code> should be used.
+the <code>PersonPropertiesSourceAdapterFactory</code> is used.
 This factory class is defined as such:</p>
+
 <pre>public class PersonPropertiesSourceAdapterFactory implements IAdapterFactory {
 	public Object getAdapter(Object adaptableObject, Class adapterType) {
 		if (adapterType == IPropertySource.class)
@@ -299,6 +307,7 @@ This factory class is defined as such:</p>
 		return new Class[] {IPropertySource.class};
 	}
 }</pre>
+
 <p>The <code>getAdapter</code> method does the heavy lifting and
 creates the adapter. The <code>getAdapterList</code> returns a list of
 the types of adapters the factory can create.</p>
@@ -306,19 +315,19 @@ the types of adapters the factory can create.</p>
 <p>Adapter factories can also be registered programmatically using
 APIs on the <code>AdapterManager</code> class.</p>
 
-<p>With the adapters all safely registered, we can make one more
+<p>With the adapters registered, we can make one more
 change to the code. When adapters are used, they are usually used in
 three steps:</p>
 <ol>
 	<li>If the object implements the required interface, use the
 	object</li>
 	<li>If the object implements <code>IAdaptable</code>, call the <code>getAdapter</code>
-	method an use the returned object; if something other than <code>null</code>
+	method and use the returned object; if something other than <code>null</code>
 	is answered, use the returned value</li>
-
 	<li>Get the <code>AdapterManager</code> to try and adapt the
 	object</li>
 </ol>
+
 <p>The final step actually makes the current implementation of <code>getAdapter</code>
 in the <code>Person</code> class redundant. We can simply remove it, and
 remove the reference to the <code>IAdaptable</code> interface from the
@@ -341,40 +350,56 @@ class. That is, the <code>Person</code> class simplifies to:</p>
 type. Instances of the person class, when selected in your favourite
 view will populate the Properties view.</p>
 
-<h2>Part Three: Adapting</h2>
-Over the past week or so, I've been <a
-	href="http://dev.eclipse.org/blogs/wayne/2007/10/23/adapters-part-deux/">discussing</a>
-how you can make your objects adaptable into different forms. This is
-great for getting your objects to tightly integrate with existing parts
+<h2>Adapting</h2>
+
+<p>The adapter framework is great for getting your objects to tightly integrate with existing parts
 of the Eclipse infrastructure, while remaining loosely coupled with the
 actual implementation. Loose coupling with tight integration is pretty
-powerful stuff.
-</p>
-<p>A <a
-	href="http://wbeaton.blogspot.com/2006/07/loosely-coupled-but-tightly-integrated.html">while
-back</a>, I created an <em>"Image Preview" view</em> that displays the image
-(if one is available) for a file selected in the workbench (it works
-best for image files). The best part is that the view is completely
+powerful stuff.</p>
+
+<p>The <em>"Image Preview" view</em>, is example plug-in that displays the image
+(if one is available) for a file selected in the workbench. The best part is that the view is completely
 decoupled from the Resources API. That is, it doesn't know anything
-about files, directories, workspaces, or anything along those lines. By
-implementing the image viewer using adapters, I can "teach" my view to
+about files, directories, workspaces, or anything else in particular. The
+view is shown in action below:</p>
+
+<div class="figure"><img src="images/image-viewer.png"/></div>
+
+<p>The code for the Image Preview view can accessed via the Eclipse Evangelism
+site:</p>
+
+<pre><a href="http://www.eclipse.org/evangelism/samples/imageviewer/">http://www.eclipse.org/evangelism/samples/imageviewer/</a></p></pre>
+
+<p> By
+implementing the image viewer using adapters, it can be easily made to
 display an image for different kinds of selected objects by providing a
-new adapter. A natural extension of this is that I can use my Image
-Preview view in an <a href="http://www.eclipse.org/rcp">RCP</a>
+new adapter. A natural extension of this is that we can use the Image
+Preview view in a <a href="http://www.eclipse.org/rcp">Rich Client Platform</a> (RCP)
 application to display an image for my domain objects (assuming that
 this makes sense, of course).</p>
 
 <p>The Image Preview view listens to the workbench selection
 service. When a selection occurs in a view (such as the Package
 Explorer, or Navigator), the selection service notifies registered
-listeners (see <a
-	href="http://www.eclipse.org/articles/Article-WorkbenchSelections/article.html">here</a>
-for more information on the selection service). When the Image Preview
+listeners. When the Image Preview
 view is notified of the selection change, it attempts to adapt the
 selected object to the <code>ImageProvider</code> interface (which is
-part of my implementation). The <code>ImageProvider</code> is then used
-to obtain an image. The <code>getImageProvider</code> method in the
-Image Preview view looks like this:</p>
+defined in the same bundle as the view). The <code>ImageProvider</code> is then used
+to obtain an image.</p>
+
+<p>Recall the three steps to find an adapter:</p>
+<ol>
+	<li>If the selected object implements the <code>ImageProvider</code> interface, use the
+	object</li>
+	<li>If the object implements <code>IAdaptable</code>, call the <code>getAdapter</code>
+	method asking for an <code>ImageProvider</code>; if something other than <code>null</code>
+	is answered, use the returned value</li>
+	<li>Get the <code>AdapterManager</code> to try and adapt the
+	object</li>
+</ol>
+
+<p>The <code>getImageProvider</code> method in the Image Preview view looks like this:</p>
+
 <pre>private ImageProvider getImageProvider(Object object) {
 	// First, if the object is an ImageProvider, use it.
 	if (ImageProvider.class.isInstance(object)) return (ImageProvider)object;
@@ -398,24 +423,23 @@ it implement the <code>IAdaptable</code> interface). If it does, we use
 that method to attempt to find an adapter. If that method fails (returns
 <code>null</code>), the <code>AdapterManager</code> is used. Ultimately,
 this method may fail to find an appropriate adapter and return <code>null</code>.</p>
+
 <p>The selected object doesn't need to know anything about the Image
 Preview view. Conversely, my Image Preview view knows nothing about
-files. The adapter interface knows about both (it really only knows
+files or any other particular type of object. The adapter implementor knows about both (it really only needs to know
 about the <code>ImageProvider</code> interface).</p>
 
-<p>I'm curious about the history of this little pattern (which is
-repeated many times). It seems that there is an opportunity here to have
-a higher-level API in the <code>AdapterManager</code> that takes all of
-these steps, but I assume that there is a good (or at least historical)
-reason for it being the way that it is.</p>
 <p>Note that there are two different ways to ask the <code>AdapterManager</code>
 to adapt an object: <code>getAdapter</code> or <code>loadAdapter</code>
 (which is highlighted in the snippet). Both methods will find
 programmatically- and declaratively-registered adapters, however the <code>getAdapter</code>
 method will only find declaratively-registered adapters <em>if the
-bundle that contributes them has been activated</em>. The <code>loadAdapter</code>
+bundle that contributes them has already been activated</em>. The <code>loadAdapter</code>
 will load and activate the bundle (if required) as part of the process.</p>
 
+<h2>Conclusion</h2>
+
+<p></p>
 </div>
 </body>
 </html>
