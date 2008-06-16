@@ -29,17 +29,16 @@ Foundation.</div>
 this pattern allows plug-ins to be loosely coupled, yet still be tightly
 integrated in the extremely dynamic Eclipse runtime environment. The
 adapter framework is used extensively by a wide variety of plug-ins,
-including those from the Eclipse platform, other
-Eclipse projects, and by the broader community and eco-system. The
-adapter framework should be considered as one of the essential parts of
-the Eclipse platform that everyone writing Eclipse plug-ins must know
-about.</p>
+including those from the Eclipse platform, other Eclipse projects, and
+by the broader community and eco-system. The adapter framework should be
+considered as one of the essential parts of the Eclipse platform that
+everyone writing Eclipse plug-ins must know about.</p>
 
 <h2>Using the Properties View</h2>
 
-<p><em>This article is not intended to provide thorough coverage of the
-Properties view. Rather, the Properties view is used a a means for
-demonstrating how adapters can be put to work.</em></p>
+<p><em>This article is not intended to provide thorough
+coverage of the Properties view. Rather, the Properties view is used a a
+means for demonstrating how adapters can be put to work.</em></p>
 
 <p>The Properties view displays properties for whatever is selected
 in the workbench. Selections can occur in many places: the Navigator and
@@ -60,9 +59,10 @@ about any of the objects it displays.</p>
 
 <p>You can use the Properties view to show information about the
 objects selected in a view that you've created. The first step is to
-make sure that the workbench selection service knows about the selected
-in your view. If you're using a JFace <code>TableViewer</code> or <code>TreeViewer</code>,
-then this step is easy (if you're doing something else, <a
+make sure that the workbench selection service knows about the object
+selected in your view. If you're using a JFace <code>TableViewer</code>
+or <code>TreeViewer</code>, then this step is easy (if you're doing
+something else, <a
 	href="http://www.eclipse.org/articles/Article-WorkbenchSelections/article.html">&quot;Eclipse
 Workbench: Using the Selection Service&quot;</a> by Marc R. Hoffmann will
 help you determine how to best contribute the selection). You need to do
@@ -132,24 +132,24 @@ public class Person  <strong>implements IPropertySource</strong> {
 }</pre>
 
 <p>In this example, the object has three properties that are all <em>text</em>
-values (one of the property descriptors that defines the behaviour of
-the property in the Property view is marked in bold). The first
-parameter is the name of the property, and the second one is the label
-for that property in the view. There are other types of property
-descriptors that you can use; you can even make your own if you have a
-special type of property.</p>
+values (one of the property descriptors that defines the behaviour of a
+property for the Property view is marked in bold). The first parameter
+is the name of the property, and the second one is the label for that
+property in the view. There are other types of property descriptors that
+you can use; you can even make your own if you have a special type of
+property.</p>
 
 <p>This example has been kept deliberately simple. These properties
 cannot be reset, nor does the implementation have any notion of whether
 or not properties have been set. A more sophisticated implementation
 will provide the user with more sophisticated options.</p>
 
-<p>As indicated earlier, this solution is "not necessarily <em>[the]</em>
-most correct". This is because, for this to work, the domain object
-needs to know about the very view-centric (and Eclipse-centric) notion
-of being a property source; in short, there is a tight-coupling between
-the model and the property viewing framework. This where adapters come
-in.</p>
+<p>As indicated earlier, this solution does not provide the most
+correct implementation possible. With this implementation, the domain
+object needs to know about the very view-centric (and Eclipse-centric)
+notion of being a property source; in short, there is a tight-coupling
+between the model and the property viewing framework. This where
+adapters come in.</p>
 
 <h2>Introducing Adapters</h2>
 
@@ -272,7 +272,7 @@ To do this, we change the <code>getAdapter</code> method:</p>
 	}
 
 	<strong>public Object getAdapter(Class adapter) {
-		return AdapterManager.getDefault().getAdapter(this, adapter);
+		return Platform.getAdapterManager.getAdapter(this, adapter);
 	}</strong>
 
 	...
@@ -287,6 +287,7 @@ which can take care of figuring out how to adapt the instance.</p>
 adapt the type. This can be done declaratively through the <code>plugin.xml</code>
 file using the <code>org.eclipse.core.runtime.adapters</code> extension
 point:</p>
+
 <pre>&lt;plugin&gt;
    &lt;extension
          point="org.eclipse.core.runtime.adapters"&gt;
@@ -371,8 +372,9 @@ have support for the <a href="http://www.eclipse.org/pde">Plug-in
 Development Environment</a> (PDE) included with your Eclipse configuration.
 You can ensure that you have this functionality available by downloading
 either the <em>Eclipse Classic</em>, or the <em>Eclipse for
-Plug-in/RCP Developers</em> package. These bundles were created using version
-3.4 of the Eclipse Platform.</p>
+Plug-in/RCP Developers</em> package. These bundles were created using the
+Ganymede release of Eclipse, which contains version 3.4 of the Eclipse
+Platform.</p>
 
 <p>The example includes three different bundles:</p>
 
@@ -430,20 +432,17 @@ shown in action below:</p>
 
 <div class="figure"><img src="images/image-viewer.png" /></div>
 
-<p>The code for the Image Preview view can accessed via the Eclipse
-Evangelism site:</p>
+<p>The code for the Image Preview view can accessed via the <a
+	href="http://www.eclipse.org/evangelism/samples/imageviewer/">Eclipse
+Evangelism site</a>.</p>
 
-<pre><a
-	href="http://www.eclipse.org/evangelism/samples/imageviewer/">http://www.eclipse.org/evangelism/samples/imageviewer/</a>
-</p>
-</pre>
-
-<p>By implementing the image viewer using adapters, it can be easily
-made to display an image for different kinds of selected objects by
-providing a new adapter. A natural extension of this is that we can use
-the Image Preview view in a <a href="http://www.eclipse.org/rcp">Rich
-Client Platform</a> (RCP) application to display an image for my domain
-objects (assuming that this makes sense, of course).</p>
+<p>By implementing the Image Preview view using adapters, it can be
+easily made to display an image for different kinds of selected objects
+by providing a new adapter. A natural extension of this is that we can
+use the Image Preview view in a <a href="http://www.eclipse.org/rcp">Rich
+Client Platform</a> (RCP) application to display an image for arbitrary
+domain objects (assuming that it makes sense for the objects to provide
+images, of course).</p>
 
 <p>The Image Preview view listens to the workbench selection
 service. When a selection occurs in a view (such as the Package
@@ -483,16 +482,16 @@ view looks like this:</p>
 	return provider;
 }</pre>
 
-<p>The first step, is to see if the selected object already
-implements our interface. If it does, we cast and return it. If we make
-it to the second step, we ask the object if it is adaptable (i.e. does
-it implement the <code>IAdaptable</code> interface). If it does, we use
+<p>The first step, is to see if the selected object implements the
+required interface. If it does, we cast and return it. If we make it to
+the second step, we ask the object if it is adaptable (i.e. does it
+implement the <code>IAdaptable</code> interface?). If it does, we use
 that method to attempt to find an adapter. If that method fails (returns
 <code>null</code>), the <code>AdapterManager</code> is used. Ultimately,
 this method may fail to find an appropriate adapter and return <code>null</code>.</p>
 
 <p>The selected object doesn't need to know anything about the Image
-Preview view. Conversely, my Image Preview view knows nothing about
+Preview view. Conversely, the Image Preview view knows nothing about
 files or any other particular type of object. The adapter implementor
 knows about both (it really only needs to know about the <code>ImageProvider</code>
 interface).</p>
@@ -507,7 +506,12 @@ will load and activate the bundle (if required) as part of the process.</p>
 
 <h2>Conclusion</h2>
 
-<p></p>
+<p>The adapter framework is a important part of every Eclipse plug-in developer's
+arsenal. By using the adapter framework, you can easily create bundles that have no
+explicit coupling to the Eclipse platform. The adapter framework can be used to
+significantly reduce the coupling in an application, encouraging higher-quality code
+and making it generally easier to understand and reuse parts of the application. 
+Tight integration with loose coupling is a powerful concept.</p>
 </div>
 </body>
 </html>
