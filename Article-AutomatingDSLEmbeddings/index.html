@@ -1,0 +1,1516 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+<title>Automating the embedding of Domain Specific Languages in Eclipse JDT</title>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<h1>Automating the embedding of Domain Specific Languages in Eclipse JDT</h1>
+<div class="summary">
+<h2>Summary</h2>
+<p>The Eclipse Java Development Tools (JDT) excels at supporting the editing and navigation of Java code, setting the bar for newer
+IDEs, including those for Domain Specific Languages (DSLs). Although IDE generation keeps making progress, most developers still rely on
+traditional ways to encapsulate new language abstractions: frameworks and XML dialects. We explore an alternative path, <i>Internal DSLs</i>,
+by automating the generation of the required APIs from Ecore models describing the abstract syntax of the DSLs in question. To evaluate the
+approach, we present a case study (statecharts) and discuss the pros and cons with respect to other approaches.</p>
+
+<p>Most embedded DSLs, while offering a user-friendly syntax, are fragile in the sense that the IDE does not flag the embedded
+statements that break the well-formedness rules of the DSL (because the IDE checks only the well-formedness of the <i>host language</i>,
+usually Java). To address this issue, we leverage the extension capability of Eclipse to detect at compile-time malformed DSLs expressions.
+The technique relies on mainstream components only: EMF, OCL, and JDT. We conclude by previewing ongoing work aimed at improving the support
+for embedded DSLs by performing language processing as a background task. The prototype described in this article (<code>DSL2JDT</code>) has
+been contributed to EMFT and is available from CVS as described in the Source Code section below.</p>
+
+<div class="author">By <a href="http://www.sts.tu-harburg.de/~mi.garcia/">Miguel Garcia</a>,<br />
+TUHH (Technische Universität Hamburg-Harburg, Germany)</div>
+<div class="copyright">Copyright &copy; 2008 Miguel Garcia.</div>
+<div class="date">July 24th, 2008</div>
+</div>
+
+<div class="content">
+
+<h2>Table of Contents</h2>
+<ol>
+	<li><a href="#introduction">Introduction</a>
+	<ul>
+		<li><a href="#internal_dsl_approach">The internal DSL approach</a></li>
+		<li><a href="#instructions_for_the_impatient">Instructions for the impatient: how to use <code>DSL2JDT</code> in 10 seconds</a></li>
+		<li><a href="#examples_existing_internal_dsls">Examples of existing internal DSLs</a></li>
+	</ul>
+	</li>
+	<li><a href="#statecharts_case_study">Statecharts example</a>
+	<ul>
+		<li><a href="#details_progressive_interface">More details about the generated progressive interface</a></li>
+	</ul>
+	</li>
+	<li><a href="#junit_for_wfr">Checking DSL well-formedness during editing</a></li>
+	<li><a href="#from_ebnf_to_ecore">Sidenote: from EBNF grammar to Ecore model and back again</a></li>
+	<li><a href="#processing_dsls">Processing DSL statements beyond well-formedness checking</a>
+	<ul>
+		<li><a href="#setting_the_stage">Setting the stage: useful APIs for the task at hand</a></li>
+		<li><a href="#in_place_translation">In-place translation</a></li>
+		<li><a href="#statement_level_annotations">Statement-level annotations</a></li>
+		<li><a href="#dsl_specific_views">DSL-specific views</a></li>
+	</ul>
+	</li>
+	<li><a href="#implementation_in_place">Implementation of in-place translation</a></li>
+	<li><a href="#related_work">Related Work</a>
+	<ul>
+		<li><a href="#dsl_embedding_in_scala_and_ruby">DSL Embedding in Scala and Ruby</a></li>
+		<li><a href="#static_analysis_of_xml_artifacts">Static analysis of XML artifacts</a></li>
+		<li><a href="#inspection_and_manipulation_of_java_asts">Inspection and manipulation of Java ASTs</a></li>
+		<li><a href="#ide_generation">Competing approach: IDE generation</a></li>
+	</ul>
+	</li>
+	<li><a href="#conclusion">Conclusions</a></li>
+	<li><a href="#acknowledgements">Acknowledgements</a></li>
+	<li><a href="#source_code">Source Code</a></li>
+
+</ol>
+
+<h2><a name="introduction">Introduction</a></h2>
+<p>More often than not, software development involves today more than one language: SQL, BPEL, and JSP are popular examples, but other
+notations (not always regarded as languages on their own) also express relevant functionality, for example the notations stating business
+rules, access control, and databinding between GUI forms and underlying model objects, among others.</p>
+
+<p>Providing <i>integrated</i> IDEs for (combinations of) such <i>Domain-Specific Languages</i> (DSLs) has proven hard. A Java IDE aware
+of SQL would for example flag those embedded SQL statements that become invalid after refactoring the database schema. Supporting such
+scenarios is easier if both host and embedded languages are designed with cooperation in mind, as is the case with Microsoft's <a
+	href="http://www.hookedonlinq.com/"
+>LINQ</a> (Language INtegrated Query). Experience has also shown that any complex-enough DSL is doomed to re-invent constructs that are taken
+for granted in general-purpose languages (think of control-flow constructs in Oracle PL/SQL, in XSL, and in QVT-Operational), thus
+strengthening the case for integrated tool support.</p>
+
+<p>The conventional wisdom around DSL tooling is that one may either:
+<ol>
+	<li>provide minimal compile-time checking of DSLs. This is the path followed by XML practice, with errors being discovered at runtime
+	when document instances are parsed and interpreted, <br />
+	or</li>
+	<li>invest effort in developing dedicated plugins for editing DSLs with custom syntax (be it textual or diagram-based), checking at
+	compile time the <i>Abstract-Syntax-Trees</i> (ASTs).</li>
+</ol>
+
+The economics of the two alternatives are clear: the "dedicated IDE" approach is technically better but also justifiable only for DSLs with
+a large user base. Actually, most of the tooling cost for a DSL comes from supporting its concrete syntax. Most of the benefits of a DSL
+however result from the analyses and transformations performed on its abstract syntax. Given that these "back-end ASTs" are necessary for
+any DSL implementation effort, we take their definition as starting point for our generator of internal DSL APIs. Besides allowing for early
+feedback on the DSL being engineered, the resulting risk minimization is useful in another way: if the DSL proves successful enough to
+warrant development of a dedicated IDE or text editor, no development effort is thrown away. With <code>DSL2JDT</code> the <i><a
+	href="http://martinfowler.com/dslwip/InternalOverview.html"
+>Internal DSL</a></i> code can still be used in such IDE, as it depends only on the abstract syntax of the DSL, which is independent from concrete
+syntax.
+
+<h3><a name="internal_dsl_approach">The internal DSL approach</a></h3>
+One of the techniques covered by Martin Fowler in the online draft of his upcoming book on DSLs is <i><a
+	href="http://martinfowler.com/dslwip/InternalOverview.html"
+>Internal DSLs</a></i>, which allow embedding DSL expressions in Java code. For example, the <a href="http://code.google.com/p/google-guice/">Guice</a>
+framework for dependency injection allows writing code like: <pre class="snippet">
+ public class MyModule implements Module {
+    public void configure(Binder binder) {
+      binder.bind(Service.class)
+        .to(ServiceImpl.class)
+        .in(Scopes.SINGLETON);
+    }
+  }
+
+</pre>
+
+<p>The Content Assist feature of the JDT and the type system of Java 5 are leveraged to enforce some of the well-formedness rules of the
+embedded DSL (Guice) when expressing ASTs for it in the host language (Java 5). Additionally, <a
+	href="http://martinfowler.com/dslwip/MethodChaining.html"
+>method chaining</a> facilitates editing when used in conjunction with so called <i>progressive interfaces</i>: whenever the DSL grammar calls
+for a mandatory construct, the preceding method in the chain returns an interface with a single method declared in it (standing for the
+successor in lexical order in the underlying DSL grammar) so that the IDE offers a single choice. Using again the terminology described in
+more detail by Fowler, the resulting API is a <a href="http://martinfowler.com/dslwip/InternalOverview.html#FluentAndPush-buttonApis">Fluent
+Interface</a>. Together with an <a href="http://martinfowler.com/dslwip/ExpressionBuilder.html">Expression Builder</a> they form the building
+blocks of an internal DSL API.</p>
+
+<p>In terms of the familiar EMF Library example, the automatically generated Fluent Interface allows typing code snippets like the one
+depicted below. The example also shows that internal DSLs are useful as shorthand for any Ecore model, although in the rest of this article
+we focus on language metamodels only.</p>
+<table align="center" border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/shorthand-library-3.png" alt="" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 1:</b> Fluent Interface for a (non-DSL) Ecore model: the Library example</caption>
+</table>
+<p></p>
+
+
+<p>Fluent interfaces, by themselves, do not capture all relevant well-formedness rules (WFRs) of any but the simplest DSLs. For example,
+most imperative languages demand that: (a) "each variable usage must appear in scope of its single previous declaration", and (b) "duplicate
+names are to be avoided in the same namespace". As for modeling languages, two representative WFRs can be drawn from UML: (c) in class
+diagrams, cyclic inheritance is not allowed, and (d) in statecharts, a composite state consists of one or more regions, all of whose states
+must be uniquely named.</p>
+
+<p>Our approach towards DSL embedding allows evaluating at compile-time such constraints, provided they can be discovered by the EMF
+Validation Framework using reflection. Christian W. Damus covers in the article <a
+	href="http://www.eclipse.org/articles/article.php?file=Article-EMF-Codegen-with-OCL/index.html"
+>Implementing Model Integrity in EMF with MDT OCL</a> how to annotate an <code>.ecore</code> model with constraints. For simplicity, OCL may
+be left out initially and the validation methods completed manually. Examples are given later showcasing both alternatives for the
+statechart DSL.</p>
+
+
+<p>The combination of Fluent Interface and build-time well-formedness checking surpasses the "DSL in XML" approach in terms of usability
+and safety, moreover relying on mainstream technologies: Eclipse Ecore, Eclipse OCL, and Eclipse JDT. Additional techniques (in-place
+translation, statement-level annotations, and DSL-specific views) may be optionally adopted to further increase the usability of embedded
+DSLs. We report about our progress so far around them in section <a href="#processing_dsls">Processing DSL statements</a>. But first, more
+examples of existing internal DSLs are given.</p>
+
+<h3><a name="instructions_for_the_impatient">Instructions for the impatient: how to use <code>DSL2JDT</code> in 10 seconds</a></h3>
+
+If you just can't wait to start using <code>DSL2JDT</code>, follow these steps:
+
+<blockquote>
+<ol>
+	<li>checkout the two plugin projects that make up <code>DSL2JDT</code> from CVS as explained in the <a href="#source_code">Source
+	Code section</a></li>
+
+	<li>start a second Eclipse instance, launching it with the two plugins above enabled</li>
+
+	<li>create a plugin project, create your <code>.ecore</code> metamodel in it and generate its corresponding <code>.genmodel</code>.</li>
+
+	<li>Open the <code>.genmodel</code> file with its editor (you may want to set the <code>Base Package</code> property of the root
+	package) and generate Model code (at the very least, more if you like).</li>
+
+	<li>right-click on <code>.genmodel</code>, choose "Generate Embedded DSL".</li>
+
+	<li>a text file named <code><i>&lt;rootPackageName&gt;</i>ExprBuilder.java</code> is created in the same folder where the <code>.genmodel</code>
+	is located. Move this Java file to the root Java package generated from the <code>.genmodel</code> .</li>
+
+</ol>
+</blockquote>
+
+
+<table align="center" border=2 frame="box" cellpadding="4" cellspacing="4">
+	<tr>
+		<td><img src="images/instructions-0.png" /> &nbsp;&nbsp;</td>
+		<td>&nbsp;&nbsp; <img src="images/instructions-1.png" /> &nbsp;&nbsp;</td>
+		<td>&nbsp;&nbsp; <img src="images/instructions-2.png" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 2:</b> Steps to generate an Expression Builder</caption>
+</table>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13"> If you followed steps 1-6 above, you'll have a project similar to what <a
+	href="./files/omgministatechart.zip"
+> <code>omgministatechart.zip</code> </a> delivers out of the box!
+</blockquote>
+
+
+<h3><a name="examples_existing_internal_dsls">Examples of existing internal DSLs</a></h3>
+
+<p>As far as we know, the APIs of all existing internal DSLs have been developed manually. The code snippets in this subsection (from
+the Quaere, Jequel, and KodKod projects) illustrate some frequent idioms. Basically, repetition of enclosing lexical contexts is avoided,
+thus reducing syntactic noise.</p>
+
+
+<p>
+<caption align="bottom"><b>Listing 1:</b> <a href="http://quaere.codehaus.org">Quaere</a>, a framework that adds query syntax
+reminiscent of LINQ to Java 5.</caption>
+</p>
+<pre>
+public class GettingStartedWithQuaere {
+    public static void main() {
+        City[] cities=City.ALL_CITIES;
+
+        Iterable&lt;Group&gt; groups =
+            from("city").in(cities).
+            group("city").by("city.getContinent()").into("g").
+            select("g");
+
+        for (Group group : groups) {
+            System.out.println(group.getKey());
+            System.out.println(group.getGroup());
+        }
+    }
+}
+</pre> <br />
+
+<p>
+<caption align="bottom"><b>Listing 2:</b> <a href="http://www.jequel.de">Jequel</a>, embedding of SQL in Java.</caption>
+</p>
+<pre>
+ public class JEQUEL {
+  
+  interface ArticleBean {
+        int getArticleNo();
+        String getName();
+    }
+
+    public void testParameterExample() {
+        final Sql sql = Select(ARTICLE.NAME, ARTICLE.ARTICLE_NO)
+                .from(ARTICLE)
+                .where(ARTICLE.OID.in(named("article_oid"))).toSql();
+
+        final Collection<String> articleDesc = sql.executeOn(dataSource)
+                .withParams("article_oid", Arrays.asList(10, 11, 12))
+                .mapBeans(new BeanRowMapper<ArticleBean , String>() {
+                    public String mapBean(final ArticleBean bean) {
+                        return bean.getArticleNo() + "/" + bean.getName();
+                    }
+                });
+        assertEquals(1, articleDesc.size());
+        assertEquals("12345/Foobar", articleDesc.iterator().next());
+    }
+
+}
+</pre> <br />
+
+
+<p>
+<caption align="bottom"><b>Listing 3:</b> Relational calculus expressions for the <a
+	href="http://web.mit.edu/emina/www/kodkod.html"
+>KodKod</a> relational engine.</caption>
+</p>
+<pre>
+ public class KodKod {
+  
+  /**
+    * Returns a formula stating that all vertices
+    * have at least one color, and that no two adjacent
+    * vertices have intersecting colors.
+    * @return a formula stating that all vertices
+    * have at least one color, and that no two adjacent
+    * vertices have intersecting colors.
+    */
+  public Formula coloring() {
+    final Variable n = Variable.unary("n");
+    final Formula f0 = n.join(color).intersection(Color).some();
+    final Formula f1 = n.join(color).intersection(n.join(graph).join(color)).no();
+    return (f0.and(f1)).forAll(n.oneOf(Node));
+  }
+
+}
+</pre>
+
+
+<p>In case you're craving for more details on how to manually build an embedded DSL, Kabanov and Raudj&auml;rv explain the design
+guidelines to achieve <i>typesafe embeddings</i> (examplified with SQL) in their paper <a
+	href="http://www.ekabanov.net/kabanov-raudjarv-pppj08-preprint.pdf"
+><i>Embedded Typesafe Domain Specific Languages for Java</i></a>. (But you might want to finish reading this article first).</p>
+
+
+<h2><a name="statecharts_case_study">Statecharts example</a></h2>
+
+<p>For better or worse, statecharts have established themselves as the Hello World of model-driven tooling, and this article follows
+that tradition. Being a graphical formalism, any usability goodies that embedding might provide should be welcomed with appreciation: a
+basic statechart metamodel (Figure 3) <i>devoid of any annotation for concrete syntax</i> is given as sole input to <code>DSL2JDT</code>.
+The screen capture in Figure 4 shows the resulting Expression Builder API being used to instantiate the telephone statechart from Figure 5.</p>
+
+
+<table align="center" border="1" cellpadding="8">
+	<tr>
+		<td><img src="images/sc.png" alt="" /></td>
+		<!-- C:\IDE2008-modeling-ganymede-M6\workspace\GettingStarted -->
+	</tr>
+	<caption align="bottom"><b>Figure 3:</b> Metamodel for the Mini Statechart DSL</caption>
+</table>
+<p></p>
+
+
+<p>
+<table align="center" border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/shorthand-mini-statechart.png" alt="" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 4:</b> Embedded DSL statements for our Mini Statechart DSL</caption>
+</table>
+<p></p>
+
+<p>
+<table align="center" border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/telephone.png" alt="" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 5:</b> Statechart of a simple telephone <br />
+	(reproduced from <a href="http://www.omg.org/cgi-bin/doc?formal/07-02-05">OMG UML 2.1.1 Superstructure Specification</a>)</caption>
+</table>
+<p></p>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13"> When using a Fluent Interface, Content Assist suggestions contain by default
+the methods declared in <code>java.lang.Object</code>, which are distracting. They can be filtered away with the <b>Java &gt; Type
+Filters</b> preference page (that will elide them also in the Open Type dialog, quick fix and organize imports, but will not affect the Package
+Explorer and Type Hierarchy views).
+</blockquote>
+
+
+<p>What does the generated expression builder for the statechart DSL look like? Consider for example class <code>Region</code>
+containing zero or more <code>Vertex</code> and zero or more <code>Transition</code>. At edit time, Content Assist should offer first <code>subVertex(...)</code>
+as completion proposal (only). After accepting that suggestion, the next method in the chain should be <code>transition(...)</code> (only).
+And that's just two structural features. Well, the fragment of the expression builder defining such API is reproduced below:</p>
+
+<pre>
+public class MiniSCExprBuilder {
+
+<img src="images/tag_1.gif" height="13" width="24" align="CENTER" alt="">    // start of the method chain for class Region 
+	public static RegionBeingBuilt0 region() {
+		return new RegionBeingBuilt(miniSC.MiniSCFactory.eINSTANCE.createRegion());
+	}
+
+<img src="images/tag_2.gif" height="13" width="24" align="CENTER" alt="">    // steps of the method chain
+	public interface RegionBeingBuilt0 {
+		public RegionBeingBuilt1 subVertex(miniSC.Vertex... items);
+	}
+	public interface RegionBeingBuilt1 {
+		public RegionBeingBuilt2 transition(miniSC.Transition... items);
+	}
+	public interface RegionBeingBuilt2 {
+		public miniSC.Region toAST();
+	}
+
+<img src="images/tag_3.gif" height="13" width="24" align="CENTER" alt="">    // the class holding state between method invocations in a chain
+	public static class RegionBeingBuilt  
+	implements RegionBeingBuilt0, RegionBeingBuilt1, RegionBeingBuilt2 {
+
+		private final miniSC.Region myExpr;
+
+		RegionBeingBuilt(miniSC.Region arg) {
+			this.myExpr = arg;
+		}
+
+		public RegionBeingBuilt1 subVertex(miniSC.Vertex... items) {
+			this.myExpr.getSubVertex().clear();
+			this.myExpr.getSubVertex().addAll(java.util.Arrays.asList(items));
+			return this;
+		}
+
+		public RegionBeingBuilt2 transition(miniSC.Transition... items) {
+			this.myExpr.getTransition().clear();
+			this.myExpr.getTransition().addAll(java.util.Arrays.asList(items));
+			return this;
+		}
+
+<img src="images/tag_4.gif" height="13" width="24" align="CENTER" alt="">             public miniSC.Region toAST() {
+			return this.myExpr;
+		}
+	}
+
+        // ...
+</pre>
+
+<p>As can be seen, three parts are generated for each concrete class: <img src="images/tag_1.gif" height="13" width="24" align="CENTER"
+	alt=""
+> a factory method that simply wallpapers over a factory invocation. The freshly instantiated <code>EObject</code> is not directly
+returned but wrapped first in a decorator (class <img src="images/tag_3.gif" height="13" width="24" align="CENTER" alt=""> <code>RegionBeingBuilt</code>
+in this case) which selectively discloses update methods on the wrapped <code>EObject</code>. Such update methods are grouped into <img
+	src="images/tag_2.gif" height="13" width="24" align="CENTER" alt=""
+> batches (three in this case, from <code>RegionBeingBuilt0</code> to <code>RegionBeingBuilt2</code>). The last invocation in a method
+chain is <img src="images/tag_4.gif" height="13" width="24" align="CENTER" alt=""> <code>toAST()</code>, which unwraps the AST node
+from its expression builder and returns it.</p>
+
+<h3><a name="details_progressive_interface">More details about the generated progressive interface</a></h3>
+
+<p>The choices offered by a progressive interface are not as linear as the example above might suggest. One of the heuristics applied by
+<code>DSL2JDT</code> to improve usability involves optional fields. A contiguous run of optional fields is offered as a single batch of
+options, allowing to spring over any of them. Choosing from Content Assist <i>the</i> mandatory constituent (the one coming up right after
+the run of contiguous options) allows accessing the next batch of options. For example, in class <code>Transition</code> (Figure 6, left)
+two mandatory structural features (<code>source</code> and <code>target</code>) are followed by the <code>kind</code> optional field. In
+terms of <code>Transition</code>'s progressive interface, the right pane of Figure 6 shows that after typing <code>target()</code> one may
+either choose <code>kind...</code> or directly type the (mandatory) <code>eventID()</code>. After choosing one of the <code>kind...</code>
+options the new batch of alternatives offered by Content Assist still contains <code>eventID()</code>, as their return type is <code>TransitionBeingBuilt2</code>.
+Once the mandatory <code>eventID()</code> is chosen however, the offered progressive interface with a new batch of content suggestions will
+be <code>TransitionBeingBuilt3</code>.</p>
+
+<table align="center" cellspacing="6" cellpadding="6">
+	<tr>
+		<td><img src="images/kind_and_eventID.png">&nbsp;&nbsp;</td>
+		<td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="images/TransitionBeingBuilt.png"></td>
+	</tr>
+	<caption align="bottom"><b>Figure 6</b>: Optional fields do not advance the current step of a progressive interface</caption>
+</table>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13"> To have views display the return type of methods as shown above, choose <i>Window
+&gt; Preferences &gt; Java &gt; Appearance</i> and then check <i>Show method return types</i>.
+</blockquote>
+
+<p>Other heuristics applied by <code>DSL2JDT</code> include:</p>
+
+<ul>
+	<li>Classes owned over strong composition and declaring only primitive fields are instantiated with a single method invocation, where
+	the field values are received as arguments.
+	<blockquote>For example, a field <code>xyPos</code> with type <code>Point2D</code> will be set with the method invocation <code>xyPos(-1,1)</code>
+	rather than the more verbose <code>setXYPos(new Point2D(-1,1))</code>.</blockquote>
+	</li>
+</ul>
+
+
+<ul>
+	<li>Alternative items, i.e. those resulting from an enumeration, result in content suggestions being packed in a single batch of
+	options. <br />
+	<blockquote>For example, the alternatives for the <code>kind</code> enumeration resulted in the methods <code>kindLocal()</code>,
+	<code>kindInternal()</code>, and <code>kindExternal()</code> being generated by default (Figure 6). If the number of options becomes
+	unwieldy, one may choose instead to have a single update method generated in the Expression Builder (an update method taking an enum
+	literal as argument). This can be achieved by specifying a (GenModel or Ecore) annotation with source <code>Gymnast</code> and key-value
+	pair <code>("terminal2method", "false")</code><br />
+	</blockquote>
+	</li>
+</ul>
+
+
+
+<ul>
+	<li>For boolean fields so called <i>yes/no methods</i> can be specified . <br />
+	<blockquote>
+	<p>For example, <code>on()</code>/<code>off()</code> are more readable in embedded DSL statements than <code>setOn(true)</code>/<code>setOn(false)</code>.
+	The relevant (Ecore or GenModel) annotation has source <code>Gymnast</code> and two key-value pairs: <code>("yes",
+	"methodNameToSetTrue")</code> and <code>("no", "methodNameToSetFalse")</code>. This idiom also applies to "marker" reference fields, i.e. a field
+	to the sole effect of conveying whether it is <code>null</code> or not (the object pointed by a non-null reference having no fields of its
+	own). This kind of marker field usually appears in Ecore models generated out of a (pure) EBNF grammar. Figure 7 depicts the Ecore and
+	generated API parts to this story.</p>
+
+	<table align="center" cellspacing="6" cellpadding="6">
+		<tr>
+			<td><img src="images/ClassDeclEcore.png">&nbsp;&nbsp;&nbsp;&nbsp;</td>
+			<td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="images/ClassDeclAPI.png"></td>
+		</tr>
+		<caption align="bottom"><b>Figure 7</b></caption>
+	</table>
+
+
+	</blockquote>
+	</li>
+</ul>
+
+
+
+
+<ul>
+	<li>Progressive interfaces can be disabled. <br />
+	<blockquote>
+	<p>Either on a per class or per package basis, so that all update methods are offered in a single batch by Content Assist. For
+	disabling, an annotation with source <code>Gymnast</code> and key-value pair <code>("progressiveInterface", "false")</code> should be
+	specified (this was in fact used way back in Figure 1).</p>
+	</blockquote>
+	</li>
+</ul>
+
+
+
+
+
+<p>Besides relying on JDT Content Assist, another potential venue for speeding up typing of embedded DSL statements are <a
+	href="http://wiki.eclipse.org/FAQ_How_can_templates_make_me_the_fastest_coder_ever%3F"
+>fill-in-the-blanks templates</a>, a capability that <code>DSL2JDT</code> as of now does not exploit (but feel free to extend our source code
+to generate them from <code>.genmodel</code>).</p>
+
+
+
+<h2><a name="junit_for_wfr">Checking DSL well-formedness during editing</a></h2>
+
+<p>As stated in the introduction, we want to engage the IDE in checking the static semantics of DSL expressions. Two ways are feasible,
+which we dub <i>The Pragmatic Way</i> and <i>The Grand Plan Way</i>. We cover the former in this section and leave the latter for section <a
+	href="#processing_dsls"
+>Processing DSL statements</a> (that section is much longer). In a nutshell, the infrastructure required for the second alternative is
+overkill for well-formedness checking, however it enables other use cases (in-place translation, statement-level annotations, and
+DSL-specific views).</p>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13"> The fluent interfaces generated by <code>DSL2JDT</code> do not strictly
+depend on EMF. If your target environment is POJO-only, you may set to <code>true</code> the following <code>.genmodel</code> options:
+Suppress EMF Types, Suppress Meta Data, Suppress Model Tags. The ASTs thus built will be POJOs, and you'll have to devise a custom mechanism 
+to check their well-formedness. We do not discuss this scenario further.  
+</blockquote>
+
+<p>The pragmatic approach simply leverages existing JUnit support in JDT:</p>
+
+<ol>
+	<li>Each group of embedded DSL statements (making up a DSL expression) is encapsulated in a dedicated Java method that returns the
+	self-contained AST, obtained by finishing a method chain with <code>toAST()</code>.</li>
+	<br />
+	<li>a JUnit test is created for each method above, invoking the default EMF validation on the AST root node. That way, the particular
+	WFRs of all the nodes in the tree will be evaluated, without having to enumerate them explicitly (EMF determines all the applicable
+	validators using reflection).</li>
+	<br />
+	<li>The following utility function encapsulates the invocation to EMF validation, from JUnit's <code>assertTrue()</code>. Although not
+	shown here, debugging the unit tests with an exception breakpoint of <code>AssertionError</code> allows inspecting detailed diagnostic
+	messages for each malformed AST node. <br />
+	<code> public class MyEcoreUtil { <br />
+	&nbsp;&nbsp;&nbsp;&nbsp; public static boolean isWellFormed(EObject root) { <br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Diagnostician diagnostician = new Diagnostician(); <br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;final Diagnostic diagnostic = diagnostician.validate(root); <br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;boolean res = diagnostic.getSeverity() == Diagnostic.OK;<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return res; <br />
+	&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;// ... <br />
+	}</code></li>
+</ol>
+
+<p>For example, the static semantics for the telephone example from Figure 5 can be checked with:</p>
+
+<pre>
+public class TestTelephone extends junit.framework.TestCase {
+
+	public void testTelephoneExample() {
+		StateMachine dslExpr = C.telephoneExample();
+		assertTrue(MyEcoreUtil.isWellFormed(dslExpr));
+	}
+
+}
+</pre>
+
+<p>EMF Validation will recursively validate <i>owned parts</i>, i.e. those objects reachable over containment associations (i.e., those
+references having <code>isContainment == true</code> in the Ecore Sample Editor). Most associations in an AST metamodel are containment
+associations, they capture the lexical nesting in a textual syntax for the DSL in question.</p>
+
+<p>The particular WFRs to evaluate for each DSL construct can be given as Java or OCL. In both cases an annotation with source <code>http://www.eclipse.org/emf/2002/Ecore</code>
+should be made on the constrained class, listing the name of the constraint methods (as shown in Figure 9). If no OCL is specified, the
+generated validator method has to be completed manually as shown in Figure 8 for constraint <code>noDuplicates</code> in class <code>Region</code>.</p>
+
+
+<table align="center" border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/manualconstraintA.png" alt="" /></td>
+	</tr>
+	<tr>
+		<td><img src="images/manualconstraintB.png" alt="" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 8:</b> Constraint to complete when no OCL boolean expression was specified</caption>
+</table>
+<p></p>
+
+
+<p>Alternatively, the method body for the validation method above can be generated from OCL as explained in the article <a
+	href="http://www.eclipse.org/articles/article.php?file=Article-EMF-Codegen-with-OCL/index.html"
+>Implementing Model Integrity in EMF with MDT OCL</a>. The constraint "no duplicate names for states within a region" can be expressed in OCL
+as:</p>
+
+
+<pre>
+       self.subVertex-&gt;forAll(s1 : Vertex | 
+           self.subVertex-&gt;forAll(s2 : Vertex | 
+               s1 &lt;&gt; s2 implies s1.name &lt;&gt; s2.name))
+</pre>
+
+<p>For that, an additional annotation with source <code>http://www.eclipse.org/ocl/examples/OCL</code> is made on <code>Region</code>,
+as shown in Figure 9. The code generated in method <code>validateRegion_noDuplicates</code> will parse the OCL constraint and evaluate it
+(not shown).</p>
+
+<table align="center" border="0" cellpadding="8">
+	<tr>
+		<td><img src="images/regionconstraint.png" alt="" /></td>
+		<td><pre>
+@Ecore(constraints="noDuplicates")
+@"http://www.eclipse.org/ocl/examples/OCL"(
+   noDuplicates="
+       self.subVertex-&gt;forAll(s1 : Vertex | 
+           self.subVertex-&gt;forAll(s2 : Vertex | 
+               s1 &lt;&gt; s2 implies s1.name &lt;&gt; s2.name)))
+")
+class Region {
+  ref StateMachine#region stateMachine;
+  ref State#region state;
+  val Vertex[*]#container subVertex;
+  val Transition[*]#container transition;
+}
+</pre></td>
+	</tr>
+	<caption align="bottom"><b>Figure 9:</b> A WFR that <code>Region</code>s should fulfill,<br />
+	as seen in the Ecore editor (left) and in the <a href="http://wiki.eclipse.org/Emfatic">Emfatic</a> editor (right)</caption>
+</table>
+<p></p>
+
+
+<blockquote>
+<p><img src="images/tryit.gif" width="61" height="13"> Armed with this tutorial and with the <code>DSL2JDT</code> generator (from
+the <a href="#source_code">Source Code</a> section), pick your DSL of choice, optionally declare OCL WFRs for it, and start embedding it in
+the Eclipse JDT!</p>
+</blockquote>
+
+
+
+<p>The majority of the language metamodels available out there lack OCL-based WFRs (remember the story about the cobbler's children?).
+Those listed below not only include WFRs but also discuss them in some length:</p>
+<ul>
+	<li>BPEL 1.1, <a href="http://www.cs.kent.ac.uk/pubs/2004/2027/content.pdf">http://www.cs.kent.ac.uk/pubs/2004/2027/content.pdf</a></li>
+	<li>JPQL 1.0, <a href="http://www.sts.tu-harburg.de/~mi.garcia/pubs/atem06/JPQLMM.pdf">http://www.sts.tu-harburg.de/~mi.garcia/pubs/atem06/JPQLMM.pdf
+	</a></li>
+</ul>
+
+
+
+
+
+
+<p>As long as tests are manually coded following the pattern above, all embedded DSL statements will be checked for well-formedness. If
+the developer overlooks testing some embedded expression, its well-formedness will be known only at runtime (potentially remaining as a bug
+waiting for happen). The problem is due to the opaque nature (as far as the JDT is concerned) of the embedded DSLs: there is no
+infrastructure so far to explore the Java code being edited, looking for occurrences of DSL embeddings to check, thus ensuring coverage of
+WFRs. Achieving such coverage automatically is possible with techniques belonging to <i>The Grand Plan Way</i>, the topic of the remaining
+sections of this article. Before delving into abstract syntax in those sections, we figure out where concrete syntax fits in the brave new
+world of internal DSLs.</p>
+
+
+
+<h2><a name="from_ebnf_to_ecore">Sidenote: from EBNF grammar to Ecore model and back again</a></h2>
+
+<p>We have been assuming all along that the input to <code>DSL2JDT</code> is the metamodel of a DSL, the metamodel that captures the
+abstract syntax. After all, at the end of the day we want to process ASTs, right? Alas, there are exceptions to that: sometimes we need to
+process <i>Concrete Syntax Trees</i> (CSTs). Let me explain.</p>
+
+<p>In non greenfield scenarios it is often the case that an existing EBNF grammar is available, most likely with a dedicated text
+editor. Such scenarios have prompted the development of tools to derive an Ecore model from a grammar. The obtained Ecore model <i>can</i>
+be fed as input to <code>DSL2JDT</code> (being an Ecore model as any other, <code>DSL2JDT</code> won't tell the difference between one
+representing abstract syntax vs. another representing concrete syntax) thus making possible their embedding in Java. Even if an existing
+editor is available, embedding may still make sense, for example in the early iterations of porting their AST processing algorithms to EMF.
+It has been our experience that embedding CSTs makes sense only when unparsing of the CSTs is needed (for example, to generate the input to
+a legacy tool, a tool not using internally EMF).</p>
+
+<p>The tools in the <a href="http://wiki.eclipse.org/TMF">Textual Modeling Framework</a> allow obtaining an <code>.ecore</code> model
+out of an EBNF grammar. Those tools also generate parsing and unparsing operations, which are inverses of each other (modulo text layout) so
+that regression tests like the following always pass:</p>
+
+<blockquote>
+<ol>
+	<li>parse file <code>f1</code> into EMF-based tree <code>e1</code></li>
+	<li>unparse <code>e1</code> into file <code>f2</code></li>
+	<li>parse <code>f2</code> into <code>e2</code></li>
+	<li><code>assert org.eclipse.emf.ecore.util.EcoreUtil.equals(e1, e2);</code></li>
+</ol>
+</blockquote>
+
+
+<p>So we get an <code>.ecore</code> model from EBNF. Is it a "language metamodel"? Not really:
+<blockquote>
+<ol>
+
+	<li>when embedded in Java, the CSTs thus built are similar to those prepared by a parser, before the phase where usages are resolved
+	to declarations (i.e. before their conversion to Abstract Syntax Trees)</li>
+
+	<li>an <i><a href="http://martinfowler.com/dslwip/InternalOverview.html">Internal DSL</a></i> purely generated from an EBNF grammar
+	will lack any constraints to capture static semantics, so you'll have to write them down (which is easier done at the AST level rather than
+	at the CST level)</li>
+
+</ol>
+</blockquote>
+
+<p>But, is that a problem? Sometimes it's not. CSTs are ideal for generating structured text (for example, for consumption in a pipes
+and filters architecture). Besides, the <a href="http://wiki.eclipse.org/TMF">Textual Modeling Framework</a> developers have extended EBNF
+with constructs to specify usual patterns of usages-to-declarations resolving. So the obtained <code>.ecore</code> does allow such
+references. Coming back to pure EBNF, an example of the CST vs. AST dichotomy for a non-toy DSL can be seen in the Eclipse OCL plugin, where
+both <code>OCLCST.ecore</code> and <code>OCL.ecore</code> are available.</p>
+
+
+<p>To complicate matters further, unparsing can also be done directly from a (well-formed) AST. Given that no layout information is kept
+there, some pretty-printing mechanism is desirable. Model-to-text proponents suggest dedicated languages (<a
+	href="http://www.eclipse.org/modeling/m2t/"
+>http://www.eclipse.org/modeling/m2t/</a>). There are DSLs for pretty-printing too, for example one being added to <a
+	href="http://www.eclipse.org/imp/"
+>Eclipse IMP</a> (the <a href="http://www.eclipse.org/imp/documents/impFormattingHowto.pdf">Box</a> language).</p>
+
+<p>If faced with the alternatives ASTs vs. CSTs, the best choice may be both: before unparsing from a CST, such tree is computed by AST
+processing. For example, the pseudocode shown left in Figure 10 for a business process can be expanded into the BPEL code shown right. If
+only the "pseudocode" could be formalized into an embeddable DSL, then its AST could be translated into a CST for unparsing.</p>
+
+<p>Continuing with the example, the DSL part (allowing expressing business processes) need not cover the full spectrum of BPEL (for
+that, one can directly embed the BPEL metamodel). Rather, the pseudocode-variant could focus on expressing only best practices, which
+usually amount to subsetting a language. Taking as example another choreography language, the use of XOR-gateways in BPMN programs may
+express arbitrary (control flow) cycles, just like <code>GOTO</code> does in 3GL programs. A "pseudocode" DSL for business processes could
+avoid the use of XOR-gateway constructs. The example in Figure 10 and the XOR-gateway observation are reproduced from the <a
+	href="ftp://ftp.informatik.uni-stuttgart.de/pub/library/medoc.ustuttgart_fi/DIP-2720/DIP-2720.pdf"
+>diploma thesis of David Schumm</a> (in German).</p>
+
+<p>With this, we conclude our sidenotes on concrete syntax. The remaining sections focus on the advanced uses cases around embedded
+ASTs, those beyond compile-time well-formedness checking with JUnit.</p>
+
+<table align="center">
+	<tr>
+
+		<td><pre>
+shipOrder := receive();
+if (shipComplete) then
+  shipNotice := shipRequest;
+  send(shipNotice);
+else
+  itemsShiped := 0;
+  while (itemsShiped &lt; itemsTotal) 
+  do ...
+</pre></td>
+
+		<td><pre>
+&lt;sequence&gt; 
+ &lt;receive partnerLink="customer" operation="shippingRequest" variable="shipRequest"&gt; 
+  &lt;correlations&gt;
+    &lt;correlation set="shipOrder" initiate="yes" /&gt; 
+  &lt;/correlations&gt; 
+ &lt;/receive&gt; 
+ &lt;if&gt; 
+    &lt;condition&gt;
+		bpel:getVariableProperty('shipRequest','props:shipComplete') 
+    &lt;/condition&gt; 
+    &lt;sequence&gt; 
+        &lt;assign&gt; 
+            &lt;copy&gt; 
+            &lt;from variable="shipRequest" property="props:shipOrderID" /&gt; 
+            &lt;to variable="shipNotice" property="props:shipOrderID" /&gt; 
+            &lt;/copy&gt; 
+            &lt;copy&gt; 
+                &lt;from variable="shipRequest" property="props:itemsCount" /&gt;
+                &lt;to variable="shipNotice" property="props:itemsCount" /&gt; 
+            &lt;/copy&gt; 
+        &lt;/assign&gt; 
+        &lt;invoke partnerLink="customer" 
+            operation="shippingNotice" inputVariable="shipNotice"&gt; 
+            &lt;correlations&gt; 
+                &lt;correlation set="shipOrder" pattern="request" /&gt; 
+            &lt;/correlations&gt; 
+		&lt;/invoke&gt; 
+    &lt;/sequence&gt; 
+ &lt;else&gt; 
+    &lt;sequence&gt; 
+        &lt;assign&gt; 
+            &lt;copy&gt; &lt;from&gt;0&lt;/from&gt; 
+            &lt;to&gt;$itemsShipped&lt;/to&gt; &lt;/copy&gt; 
+        &lt;/assign&gt; 
+        &lt;while&gt; 
+            &lt;condition&gt;
+                $itemsShipped &lt; 
+                    bpel:getVariableProperty('shipRequest','props:itemsTotal') 
+            &lt;/condition&gt; 
+            &lt;sequence&gt; ...
+</pre></td>
+
+	</tr>
+	<caption align="bottom"><b>Figure 10:</b> Further evidence on BPEL's verbosity</caption>
+</table>
+
+
+
+
+
+
+<h2><a name="processing_dsls">Processing DSL statements beyond well-formedness checking</a></h2>
+
+<h3><a name="setting_the_stage">Setting the stage: useful APIs for the task at hand</a></h3>
+
+<p>The JDT incrementally checks the static semantics of Java during editing. A similar capability for embedded DSLs can be achieved by
+implementing a <i>compilation participant</i>:</p>
+
+<blockquote>A new extension point [as of 3.2] (<code>org.eclipse.jdt.core.compilationParticipant</code>) allows plugins that
+are dependent on <code>org.eclipse.jdt.core</code> to participate in the Java build process, as well as in the reconciling of Java editors.</blockquote>
+
+<blockquote>By implementing <code>org.eclipse.jdt.core.compiler.CompilationParticipant</code> and extending this extension
+point, one can be notified when a build is starting, when a clean is starting, or when a working copy (in a Java editor) is being
+reconciled. During these notifications, types can be added, changed or removed, build markers can be created, or errors can be reported to
+the Java editor.</blockquote>
+
+<blockquote>Code that participates in the build should in general be implemented with a separate Builder, rather than a
+CompilationParticipant. It is only necessary to use a CompilationParticipant if the build step needs to interact with the Java build, for
+instance by creating additional Java source files that must themselves in turn be compiled.</blockquote>
+
+<blockquote>[Class <code>ReconcileContext</code>] ... A reconcile participant can get the AST for the reconcile-operation using
+<code>getAST3()</code>. If the participant modifies in any way the AST (either by modifying the source of the working copy, or modifying
+another entity that would result in different bindings for the AST), it is expected to reset the AST in the context using <code>resetAST()</code>.
+</blockquote>
+
+<blockquote>A reconcile participant can also create and return problems using <code>putProblems(String,
+CategorizedProblem[])</code>. These problems are then reported to the problem requestor of the reconcile operation.</blockquote>
+
+These excerpts are reproduced from the Javadoc of <a
+	href="http://help.eclipse.org/help33/index.jsp?topic=/org.eclipse.jdt.doc.isv/reference/api/org/eclipse/jdt/core/compiler/CompilationParticipant.html"
+> <code>CompilationParticipant</code> </a> and <a
+	href="http://help.eclipse.org/help33/index.jsp?topic=/org.eclipse.jdt.doc.isv/reference/api/org/eclipse/jdt/core/compiler/ReconcileContext.html"
+><code>ReconcileContext</code> </a>.
+
+<p>What to do with the AST of a Java compilation unit once we have it? Samples answering that question can be found in the reports
+listed in subsection <i>Inspection and manipulation of Java ASTs</i>, under <i>Related Work</i>.</p>
+
+<p>For the record, there are at least two other approaches (besides compilation participants) for performing Java language processing:
+(a) <i>annotation processors</i> and (b) an Eclipse workbench builder. Annotation processors are ruled out as they cannot explore the AST of
+Java method bodies, and thus cannot access the embedded DSL statements. A workbench builder can inspect the AST of the Java compilation
+units being built, and would otherwise be a viable solution were it not for one of the use cases of interest, <i>in-place translation</i>,
+where such Java AST is modified, as will be seen shortly.</p>
+
+<p>Before getting into the discussion of a sample compilation participant, we review first by means of example the additional uses cases
+around DSL embedding (in-place translation, statement-level annotations, and DSL-specific views). We believe that the additional
+implementation effort can be justified if such functionality is encapsulated for reuse across DSLs. Although we're not there yet, this
+section highlights the design decisions involved (you may interpret this as an invitation to contribute to this project). Unlike the <code>DSL2JDT</code>
+generator, in-place translation is still in a prototype phase, and has not been checked into CVS.</p>
+
+
+<h3><a name="in_place_translation">In-place translation</a></h3>
+
+<p>GUI programming using APIs like Swing or JFace can get quite verbose, a situation that has sparked a number of <i>GUI description
+languages</i> (mostly in the form of XML dialects, usually for interpretation at runtime) such as <a
+	href="https://www.mozilla.org/projects/xul/"
+>XUL</a>, <a href="http://www.alphaworks.ibm.com/tech/auiml">AIUML</a>, and <a href="http://www.w3.org/MarkUp/Forms/">XForms</a>, with a
+longer list at <a href="http://en.wikipedia.org/wiki/List_of_user_interface_markup_languages">http://en.wikipedia.org/wiki/List_of_user_interface_markup_languages</a>.
+In terms of Eclipse RCP, the closest examples known to this author are <a
+	href="http://www.eclipse.org/proposals/glimmer/Glimmer%20Project%20Creation%20Review.pdf"
+>Glimmer</a> (which is Ruby-based and embedded) and <a href="http://www.eclipsecon.org/2008/?page=sub/&id=56">StUIML</a> (which is
+Ecore-based).</p>
+
+
+<p>Such languages are prime candidates not only for embedding, but also for in-place translation: we want a JDT extension to expand
+(say) embedded XUL snippets into their verbose Swing (or JFace or ...) formulation. That way, Java code appearing afterwards may refer to
+the GUI widgets implicit in the GUI description snippet (for example, to wire event handlers to the widgets, as many GUI description
+languages only specify the structural and layout aspects of a user interface).</p>
+
+<p>The idea is so compelling that others have already implemented it, which allows us to quote an example from their work and see what
+adaptations are necessary in the context of <code>DSL2JDT</code>. The example we've chosen comes from the <a
+	href="http://www.program-transformation.org/Stratego/JavaSwulExamples"
+>JavaSwul</a> DSL, and is itself based on a Sun <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/menu.html">tutorial
+example</a> on setting up menus using Swing. The resulting GUI widgets are shown left in Figure 11, with the JavaSwul snippet for them shown
+just below. Its Java counterpart (also shown in Figure 11, right) stretches over 63 lines and refers to classes <code>JMenuBar</code>, <code>JMenu</code>,
+<code>JMenuItem</code>, <code>JRadioButtonMenuItem</code>, <code>JCheckBoxMenuItem</code>, and methods <code>setMnemonic()</code>, <code>getAccessibleContext()</code>,
+<code>setAccessibleDescription()</code> (among others) as well as enumeration literals of non-obvious interpretation such as <code>KeyEvent.VK_1</code>
+and <code>ActionEvent.ALT_MASK</code>. If in a hurry, the DSL formulation is easier to read and write than its Swing counterpart.</p>
+
+<p>JavaSwul is accepted by a batch-compiler. The design of this DSL involves (a) extending the Java grammar with additional productions,
+and (b) writing <i>assimilators</i> to desugar JavaSwul snippets into Java ASTs. The resulting embedded syntax looks better (once you've
+managed to get it right without Content Assist ;-) and has more degrees of freedom than <code>DSL2JDT</code>'s bag of tricks (which are
+method chaining, static imports, variable length argument lists, and expression builders). On the plus side, the approach to embedding
+favored by <code>DSL2JDT</code> does not require up-front knowledge of the productions in the Java grammar. Moreover, one <i>could</i> in
+principle use a compilation assistant to behave as an <i>assimilator</i> (i.e., weave information gathered from the surrounding Java AST
+nodes and the embedded snippets into the output).</p>
+
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13">The weaving scenario can be avoided, provided that embeddings are
+self-contained (i.e., they include all the input required for generation). Given that one has control over the metamodel being embedded, one
+can always update it to achieve self-containment for in-place translation purposes.
+</blockquote>
+
+
+<table align="center" border="0" cellpadding="8">
+
+	<tr>
+		<td valign="top">
+		<table border="0">
+			<tr>
+				<td><img src="http://java.sun.com/docs/books/tutorial/figures/uiswing/components/MenuLookDemo.png" alt="" /></td>
+			</tr>
+
+			<tr>
+				<td><pre>
+
+      menubar = {
+        menu {
+          text = "A Menu"
+          mnemonic = a
+          items = {
+            label { 
+              text = "A text-only menu item"
+              mnemonic = t
+              accelerator = alt - 1
+            }
+            label {
+              text = "Both text and icon"
+              icon = "images/middle.gif"
+              mnemonic = b
+            }
+            label {
+              icon = "images/middle.gif"
+              mnemonic = d
+            }     
+            seperator
+            radiobutton {
+              text = "A radio button menu item"
+              group = a
+              selected = true
+              mnemonic = r
+            }
+            radiobutton {
+              text = "Another one"
+              mnemonic = o
+              group = a
+            }
+            seperator
+            checkbox {
+              text = "A check box menu item"
+              mnemonic = c 
+            }
+            checkbox {
+              text = "Another one"
+              mnemonic = h
+            }
+            seperator
+            menu {
+              text = "A submenu"
+              mnemonic = s
+              items = {
+                label {
+                  text = "An item in the submenu"
+                  accelerator = alt - 2 
+                }
+                label {
+                  text = "Another item"
+                }
+              }
+            }            
+          }
+        }
+        menu {
+          text = "Another Menu"
+          mnemonic = n
+        }        
+      }
+      
+      
+</pre></td>
+
+
+			</tr>
+		</table>
+		</td>
+
+
+
+		<td><pre>
+    //Where the GUI is created:
+    JMenuBar menuBar;
+    JMenu menu, submenu;
+    JMenuItem menuItem;
+    JRadioButtonMenuItem rbMenuItem;
+    JCheckBoxMenuItem cbMenuItem;
+
+    //Create the menu bar.
+    menuBar = new JMenuBar();
+
+    //Build the first menu.
+    menu = new JMenu("A Menu");
+    menu.setMnemonic(KeyEvent.VK_A);
+    menu.getAccessibleContext()
+        .setAccessibleDescription(
+         "The only menu in this program that has menu items");
+    menuBar.add(menu);
+
+    //a group of JMenuItems
+    menuItem = new JMenuItem("A text-only menu item", KeyEvent.VK_T);
+    menuItem.setAccelerator(KeyStroke
+            .getKeyStroke( KeyEvent.VK_1, ActionEvent.ALT_MASK));
+    menuItem.getAccessibleContext()
+         .setAccessibleDescription( "This doesn't really do anything");
+    menu.add(menuItem);
+
+    menuItem = new JMenuItem("Both text and icon", 
+                             new ImageIcon("images/middle.gif"));
+    menuItem.setMnemonic(KeyEvent.VK_B);
+    menu.add(menuItem);
+
+    menuItem = new JMenuItem(new ImageIcon("images/middle.gif"));
+    menuItem.setMnemonic(KeyEvent.VK_D);
+    menu.add(menuItem);
+
+    //a group of radio button menu items
+    menu.addSeparator();
+    ButtonGroup group = new ButtonGroup();
+    rbMenuItem = new JRadioButtonMenuItem("A radio button menu item");
+    rbMenuItem.setSelected(true);
+    rbMenuItem.setMnemonic(KeyEvent.VK_R);
+    group.add(rbMenuItem);
+    menu.add(rbMenuItem);
+
+    rbMenuItem = new JRadioButtonMenuItem("Another one");
+    rbMenuItem.setMnemonic(KeyEvent.VK_O);
+    group.add(rbMenuItem);
+    menu.add(rbMenuItem);
+
+    //a group of check box menu items
+    menu.addSeparator();
+    cbMenuItem = new JCheckBoxMenuItem("A check box menu item");
+    cbMenuItem.setMnemonic(KeyEvent.VK_C);
+    menu.add(cbMenuItem);
+
+    cbMenuItem = new JCheckBoxMenuItem("Another one");
+    cbMenuItem.setMnemonic(KeyEvent.VK_H);
+    menu.add(cbMenuItem);
+
+    //a submenu
+    menu.addSeparator();
+    submenu = new JMenu("A submenu");
+    submenu.setMnemonic(KeyEvent.VK_S);
+
+    menuItem = new JMenuItem("An item in the submenu");
+    menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, 
+                                        ActionEvent.ALT_MASK));
+    submenu.add(menuItem);
+
+    menuItem = new JMenuItem("Another item");
+    submenu.add(menuItem);
+    menu.add(submenu);
+
+    //Build second menu in the menu bar.
+    menu = new JMenu("Another Menu");
+    menu.setMnemonic(KeyEvent.VK_N);
+    menu.getAccessibleContext()
+       .setAccessibleDescription( "This menu does nothing");
+    menuBar.add(menu);
+
+    frame.setJMenuBar(theJMenuBar);
+</pre></td>
+	</tr>
+	<caption align="bottom"><b>Figure 11:</b> A menu as seen by the user (top left), its GUI description snippet (bottom left), and
+	its Java Swing counterpart (right)</caption>
+</table>
+
+
+
+<h3><a name="statement_level_annotations">Statement-level annotations</a></h3>
+
+Several language processing applications call for decorating Java programs with additional structured information. A lightweight approach to
+providing such metadata (short of extending Java syntax) involves defining custom annotations. These and other usages of annotations will
+only increase. Two examples can be mentioned:
+
+<ul>
+	<li>As part of the ongoing JSR-308 (Annotations on Java types), extensions to the Java 7 syntax are proposed: <a
+		href="http://groups.csail.mit.edu/pag/jsr308"
+	>http://groups.csail.mit.edu/pag/jsr308</a>. The current prototype patches OpenJDK for parsing and for generating bytecode in an extended
+	class format.</li>
+
+	<li>Similarly, Harmon and Klefstad propose a standard for <a href="http://ieeexplore.ieee.org/search/wrapper.jsp?arnumber=4228074">
+	worst-case execution time</a> annotations at the statement level, metadata that is important for Real-Time Java</li>
+
+</ul>
+
+The projects above require modifications to the Java grammar, parser, and compiler, thus explaining why those efforts take so long in the
+making. This integration burden is unfortunate as it stifles innovation, making more difficult the early adoption of language extensions.
+How many of the following extensions do you regularly use?
+
+<ul>
+	<li>static analyses around references: <code>@NonNull</code>, <code>@Immutable</code>, <code>@ReadOnly</code>. <a
+		href="http://groups.csail.mit.edu/pag/pubs/"
+	>http://groups.csail.mit.edu/pag/pubs/</a></li>
+	<li>bug-finding and verification tools such as JML which extend Java with pre- and postconditions, loop and class invariants, and
+	behavioral interfaces (The JDT vs. non-JDT ways to extend Java syntax for JML are compared <a
+		href="http://www.eecs.ucf.edu/~leavens/tech-reports/UCF/CS-TR-08-05/TR.pdf"
+	>in this report</a>)</li>
+	<li>security-typed languages such as <a href="http://siis.cse.psu.edu/jifclipse/index.html">Jifclipse</a></li>
+
+</ul>
+
+<p>As we have seen, embedded DSLs are a non-intrusive way to enrich a Java program with non-Java information. From the point of view of
+language processing, they lower the cost of proofs of concept. If implemented together with the other use cases described in this section,
+the resulting IDE extensions are also comparable in usability with dedicated IDEs, as the additional language constructs they manipulate are
+just that: syntactic <i>extensions</i> to Java, not completely new grammars.</p>
+
+<h3><a name="dsl_specific_views">DSL-specific views</a></h3>
+
+<p>Some graphical notations are considered standard, with textual counterparts playing a minor role although they convey the same
+information (for example, musical notation vs. MIDI sequences, bond diagrams vs. chemical formulas, etc.) In these cases, the usability of
+an embedded DSL would be increased by displaying alongside the textual formulation a read-only view of its 2D or 3D representation. This may
+be derided as a poor man's WYSIWYG, but as with <code>DSL2JDT</code> in general we see instead a lot of leverage being gained from a
+no-frills architecture. And not to be forgotten, textual notations improve the accessibility of IDE tooling for the visually impaired.</p>
+
+<p>In fact, some Eclipse-based plugins already adopt this "editable text mapped to readonly diagram" metaphor, only that one-way view
+update is triggered by the build process or a user action. This to make sure that the data source has reached a stable state, unlike the
+case during interactive editing. For example, the <a href="http://abstratt.com/textuml/">TextUML</a> plugin follows that metaphor, as shown
+below, with the <a href="http://www.eclipse.org/pde/incubator/dependency-visualization/index.php">PDE Dependency Visualization tool</a>
+being another case in point.</p>
+
+<p>
+<table align="center" border="1" cellpadding="8">
+	<tr>
+		<td><pre>package shopping_cart; 
+
+import dataType;
+import inventory;
+
+class Cart
+end;
+
+class CartItem
+end;
+
+association CartItemProduct
+  navigable role item&nbsp;: CartItem[*];
+  role product&nbsp;: Product[1]; 
+end;
+
+aggregation CartHasItems
+  navigable role cart&nbsp;: Cart[1];
+  navigable role item&nbsp;: CartItem[*];
+end;
+
+end.
+</pre></td>
+		<td><img src="images/Tutorial-operations.png" alt="" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 12:</b> Textual input notation (left) in TextUML, alongside visual (output) notation for
+	feedback <br />
+	(reproduced from <a href="http://abstratt.com/wiki/index.php?title=TextUML_Tutorial">TextUML tutorial</a>)</caption>
+</table>
+
+
+<p>Given that 2D graph layout libraries are available for Eclipse (for example, <a href="http://eclipsegraphviz.wiki.sourceforge.net/">GraphViz</a>
+and <a href="http://www.eclipse.org/gef/zest/">Zest</a>) we believe that <i>a subset of the mapping files created as part of a GMF
+project</i> are enough to realize the embedded-DSL-to-diagram use case in the JDT.</p>
+
+<p>In order to bring the preceived meaning of a program closer to its intended meaning, <a href="http://www.cs.ubc.ca/~ade">Andrew
+Eisenberg</a> proposed as part of his PhD an architecture for Eclipse text editors with <i>presentation extensions</i>, which may be used in
+conjunction with DSL embeddings (as shown in Figures 13 and 14). More details can be found in his paper <i><a
+	href="http://www.cs.ubc.ca/~ade/research/ade-aosd.07.pdf"
+>Expressive Programs Through Presentation Extension</a></i>.</p>
+
+<table align="center" border="1" cellpadding="8">
+	<tr>
+		<td><img src="images/EquationEditor.PNG" alt="" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 13:</b> Equation editing in an expressive editor</caption>
+</table>
+
+<p></p>
+
+<table align="center" border="1" cellpadding="8">
+	<tr>
+		<td><img src="images/democamp-embedded-cal.png" alt="" /></td>
+	</tr>
+	<caption align="bottom"><b>Figure 14:</b> Overlaying <a href="http://labs.businessobjects.com/cal/">CAL</a> in Java</caption>
+</table>
+
+
+<h2><a name="implementation_in_place">Implementation of in-place translation</a></h2>
+
+<p>Of the three advanced use cases, the one we would like to see implemented first is in-place translation. The previous summary of the
+extension point for compilation participants is augmented in this section with an example that shows (a) how to identify Java methods marked
+with the <code>ReturnsEmbeddedDSL</code> annotation, and (b) how to visit the AST of their method bodies. We stop short of translating the
+embedded DSL (because we're working on that, and we couldn't wait to let others know about our progress with <code>DSL2JDT</code> so far).</p>
+
+<blockquote>
+<p><img src="images/tip.gif" width="62" height="13"> Although the example in this section directly builds upon the compilation
+participant API, there are tools and frameworks to simplify the inspection and manipulation of Java 1.5 ASTs. For example, <a
+	href="http://spoon.gforge.inria.fr/TutorialJDT/TutorialJDT"
+>SpoonJDT</a> allows defining <i>spoonlets</i>, Java classes that can be plugged in a pipes and filters architecture to process Java ASTs.
+SpoonJDT also contributes preference pages to configure spoonlets to be active on a per project basis. Interestingly, spoonlets can be
+developed (and debugged) in the same workspace where the target projects reside (with a compilation participant a second Eclipse instance is
+required). Finally, a converter from JDT Core ASTs to EMF-based counterparts is available. The prototype we're working on for DSL-specific
+processing is based on SpoonJDT. We choose however to base our example on the compilation participant API only, as the underlying concepts
+are the same irrespective of the implementation technique.</p>
+</blockquote>
+
+
+<p>
+<caption align="bottom"><b>Listing 4:</b> A compilation participant to add problem markers to methods annotated with <code>ReturnsEmbeddedDSL</code></caption>
+</p>
+<pre>
+public class MyCompilationParticipant extends CompilationParticipant {
+
+  @Override
+  public boolean isActive(IJavaProject project) {
+    return true; // springs into action for all Java projects
+  }
+
+  @Override
+  public void reconcile(ReconcileContext context) {
+    super.reconcile(context);
+    try {
+      org.eclipse.jdt.core.dom.CompilationUnit ast = context.getAST3();
+      org.eclipse.jdt.core.dom.ASTVisitor myVisitor = new MyVisitor(); // see declaration below
+      for (Object oTypeDecl : ast.types()) {
+        if (oTypeDecl instanceof org.eclipse.jdt.core.dom.TypeDeclaration) {
+          TypeDeclaration td = (TypeDeclaration) oTypeDecl;
+          for (MethodDeclaration md : td.getMethods()) {
+            for (Object oModifier : md.modifiers()) {
+              if (oModifier instanceof org.eclipse.jdt.core.dom.Annotation) {
+                Annotation ann = (Annotation) oModifier;
+                String fqn = ann.getTypeName().getFullyQualifiedName();
+                if ("dsl2jdt.annotation.ReturnsEmbeddedDSL".equals(fqn) || 
+                    "ReturnsEmbeddedDSL".equals(fqn)) {
+                    addSampleProblem(ast, md, context);
+                }
+              }
+            }
+          }
+        }
+      }
+      ast.accept(myVisitor);
+    } catch (JavaModelException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void addSampleProblem(CompilationUnit ast, 
+      MethodDeclaration md, ReconcileContext context) {
+
+    char[] originatingFileName = ast.getJavaElement().getPath().toOSString().toCharArray();
+    String message = "default dsl2jdt error message";
+    int severity = ProblemSeverities.Error;
+
+    int startPosition = md.getName().getStartPosition();
+    int endPosition = startPosition + md.getName().getLength();
+
+    int line = -1;
+    int column = -1;
+
+    EmbeddedDSLProblem pro = new EmbeddedDSLProblem(
+      originatingFileName, message, severity, EmbeddedDSLProblem.NO_ARGUMENTS, severity,
+      startPosition, endPosition, line, column);
+      CategorizedProblem[] problems = new EmbeddedDSLProblem[] { pro };
+      context.putProblems(EmbeddedDSLProblem.DSL2JDT_PROBLEM_MARKER, problems);
+      // see also IJavaModelMarker 
+
+  }
+
+  @Override
+  public void buildStarting(BuildContext[] files, boolean isBatch) {
+    // TODO Auto-generated method stub
+    super.buildStarting(files, isBatch);
+  }
+
+}
+</pre>
+
+<p>
+<caption align="bottom"><b>Listing 5:</b> And the accompanying visitor (more examples can be found in <a
+	href="http://kathrin.dagstuhl.de/files/Materials/05/05251/05251.FuhrerRobert1.Slides.ppt"
+><i>Static Analysis for Java in Eclipse</i></a>)</caption>
+</p>
+<pre>
+package compa.basic;
+
+import org.eclipse.jdt.core.dom.SimpleName;
+
+public class MyVisitor extends org.eclipse.jdt.core.dom.ASTVisitor {
+
+  public boolean visit(org.eclipse.jdt.core.dom.MethodInvocation inv) {
+    org.eclipse.jdt.core.dom.Expression rcvr = inv.getExpression();
+    // null if implicit 'this' call
+    System.out.println(inv);
+    if (rcvr == null) { //  skip
+      return false; // don't bother looking at children (actual arguments)
+    } else if (!(rcvr instanceof org.eclipse.jdt.core.dom.SimpleName)) {
+      return true; // examine children (actual arguments)
+    }
+    org.eclipse.jdt.core.dom.SimpleName rcvrNm = (SimpleName) rcvr;
+    org.eclipse.jdt.core.dom.IBinding rcvrBinding = rcvrNm.resolveBinding();
+    System.out.println(rcvrBinding);
+    return true;
+  }
+
+  public boolean visit(org.eclipse.jdt.core.dom.MethodDeclaration node) {
+    return true;
+  }
+
+  public boolean visit(org.eclipse.jdt.core.dom.TypeDeclaration node) {
+    return true;
+  }
+
+}
+</pre>
+
+
+
+
+
+
+
+
+<h2><a name="related_work">Related Work</a></h2>
+
+Language tooling is a vast field. We summarize four areas directly related to DSL embedding: (a) proposed embeddings in other languages
+(Scala and Ruby), (b) well-formedness checking over XML artifacts, (c) inspection and manipulation of Java ASTs, and (d) the competing
+approach of IDE generation.
+
+
+<h3><a name="dsl_embedding_in_scala_and_ruby">DSL Embedding in Scala and Ruby</a></h3>
+
+
+<p>The syntax of Java 5 contributes to the readability of internal DSLs (variable length argument lists, static imports). Still, DSLs
+embedded in Java cannot circumvent the <code>subject.verb(object)</code> bias of the language: no additional infix operators can be defined
+nor existing ones overloaded. In Scala, binary operators can be overloaded. The resulting advantages for DSL embedding are reported by
+Dubochet in <a href="http://phoenix.labri.fr/DSPD/final/dubochet2006zytyg.pdf">this paper</a>. In turn, DSL embedding in functional
+languages has a long tradition; Leijen and Meijer were already reporting in 1999 how to <a href="http://www.haskell.org/haskellDB/doc.html">embed
+SQL in Haskell</a>. Although superficially similar to other embedding efforts like SQL/J, the DSL embeddings we're talking about do not require
+modifying the front-end of a compiler, as is the case with SQL/J.</p>
+
+<p>DSL embedding is also popular with dynamically typed languages. Recent examples in Ruby include:</p>
+
+<ul>
+	<li><a href="http://www.eclipse.org/proposals/glimmer/Glimmer%20Project%20Creation%20Review.pdf">Glimmer</a>, an embedding of a
+	high-level language for JFace/SWT programming</li>
+
+	<li>embedding SVG: <a href="http://www.svgopen.org/2007/papers/SVuGyProceduralDeclarative/index.html">SVuGy</a> and <a
+		href="http://www.simplesystems.org/RMagick/doc/rvgtut.html"
+	>RVG</a></li>
+</ul>
+
+<p>Both Scala and Ruby allow for a more compact notation, and the same techniques reported here can be applied in their respective IDEs
+to take care of well-formedness checking at compile time. That might suggest they are a better choice for DSL embedding. We see it
+differently. To us, what all these examples have in common is the tension between <i>language-level</i> as opposed to <i>IDE-level</i>
+extensibility, a matter that exceeds the particular host-embedded language pair being considered. Our reasoning can be summarized as
+follows: as long as the JDT (including extensions) allows for reasonable solutions, it pays off to stick with it for DSL embedding. Or maybe
+it's just me who don't know how to write auto-morphing code in Scala ("ASTs as first-class citizens"). In any case, the debate will likely
+go on among the language camps.</p>
+
+<p>Besides, any improvements to Content Assist in JDT can be leveraged by all DSL embeddings in Java. For example, ideas around API
+completion as a <i>planning problem</i> have been explored in <a href="http://www.cs.berkeley.edu/~mandelin/Prospector-OSQ-2004-final.ppt">Prospector</a>.
+Unlike with custom generated IDEs, we benefit from all those improvements for free.</p>
+
+
+
+
+<h3><a name="static_analysis_of_xml_artifacts">Static analysis of XML artifacts</a></h3>
+
+<p>The proliferation of XML dialects has prompted the development of tools to check good old static semantics. A tool in this problem
+space is <a href="http://www.itu.dk/people/hessellund/smartemf/index.php">SmartEMF</a>, being developed by Hessellund as part of his PhD. He
+identifies typical kinds of integrity constraints to check across the XML artifacts developed for consumption by some framework (for
+example, referential integrity constraints across configuration files in projects extending the Apache Open for Business (OFBiz) framework).
+Once such constraints have been made explicit, SmartEMF takes charge of checking them. Additionally, those editing operations that are
+feasible for the current editing state are found, much like Content Assist works in the JDT:
+<blockquote><i>Given a portfolio of metamodels specified in SmartEMF, i.e., DSLs conforming to Ecore, we can represent
+languages, domain constraints, and models in a uniform way. All artifacts are mapped into a single constraint system implemented in Prolog
+that facilitates constraint checking and maintenance, and allows us to infer possible editing operations on a set of models.</i></blockquote>
+
+<p align=right>Anders Hessellund. <i> SmartEMF: Guidance in Modeling Tools</i>. Doctoral Symposium, OOPSLA'07, Montreal, Canada, October
+2007. <br />
+<a href="http://www.itu.dk/people/hessellund/work/Hessellund07b.pdf">http://www.itu.dk/people/hessellund/work/Hessellund07b.pdf</a></p>
+
+<p>Proposals are regularly made around non-XML syntaxes for XML dialects, a case in point for XUL (GUI description language) is the
+shorthand syntax <a href="http://xul.sourceforge.net/compact.html">Compact XUL</a>. A once-and-for-all solution to this recurrent problem is
+offered by Dual Syntaxes: <a href="http://www.brics.dk/~amoeller/papers/xsugar/journal.pdf">http://www.brics.dk/~amoeller/papers/xsugar/journal.pdf</a>
+</p>
+
+<p>Other Apache frameworks offer a choice between XML and embedded syntax. For example, the <a href="http://activemq.apache.org/camel/">Apache
+Camel</a> platform supports the patterns for <a href="http://www.enterpriseintegrationpatterns.com"><i>Enterprise Application
+Integration</i></a> (EAI) catalogued by Hohpe and Woolf. An analysis of this approach is <a
+	href="http://elib.uni-stuttgart.de/opus/volltexte/2008/3520/pdf/STUD_2127.pdf"
+>reported</a> by Pascal Kolb. This DSL for EAI is interesting as it has been given a visual notation (in the book by Hohpe and Woolf), and two
+textual notations (XML and Java-embedded, in the Camel project). Yet all these notations share the same abstract syntax.</p>
+
+
+<h3><a name="inspection_and_manipulation_of_java_asts">Inspection and manipulation of Java ASTs</a></h3>
+
+<p>The <a href="http://spoon.gforge.inria.fr/TutorialJDT/TutorialJDT">SpoonJDT tutorial</a> contains examples of in-place code
+modifications (not in-place translations, however) such as adding Javadoc and preconditions to existing methods.</p>
+
+<p>The processing of ASTs is the focus of the following reports:</p>
+
+<ul>
+	<li>Robert M. Fuhrer, <a href="http://kathrin.dagstuhl.de/files/Materials/05/05251/05251.FuhrerRobert1.Slides.ppt"><i>Static
+	Analysis for Java in Eclipse</i></a></li>
+	<li>Thomas Kuhn, Olivier Thomann. <a
+		href="http://www.eclipse.org/articles/article.php?file=Article-JavaCodeManipulation_AST/index.html"
+	><i>Abstract Syntax Tree</i></a>. Eclipse Technical Article,</li>
+	<li>Tobias Widmer. <a href="http://www.eclipse.org/articles/article.php?file=Article-Unleashing-the-Power-of-Refactoring/index.html"><i>Unleashing
+	the Power of Refactoring</i></a>. Eclipse Technical Article,</li>
+	<li>Manoel Marques <a href="http://www-128.ibm.com/developerworks/opensource/library/os-ast/"> <i>Exploring Eclipse's
+	ASTParser: How to use the parser to generate code</i></a>. DeveloperWorks article.</li>
+	<li>ASTView, visualization of AST of Java source file. <a href="http://www.eclipse.org/jdt/ui/astview/index.php">http://www.eclipse.org/jdt/ui/astview/index.php</a>
+	</li>
+	<li>Other plugins involving code management: <a href="http://eclipse-plugins.info/eclipse/ plugins.jsp?category=Code+mngt">http://eclipse-plugins.info/eclipse/
+	plugins.jsp?category=Code+mngt</a></li>
+
+</ul>
+
+
+
+<p>Checking Java source code beyond static semantics is the realm of tools like FindBugs, which operates in a batch manner. Other tools
+however perform background yet non-incremental checks, as implemented by <a href="http://www.fernuni-hagen.de/ps/prjs/EzUnit/">EzUnit</a>
+and by the <a href="http://groups.csail.mit.edu/pag/continuoustesting"><i>Continuous Testing Plug-in for Eclipse</i></a>:
+<blockquote><i>Continuous testing uses excess cycles on a developer's workstation to continuously run regression tests in
+the background, providing rapid feedback about test failures as source code is edited. It reduces the time and energy required to keep code
+well-tested, and prevents regression errors from persisting uncaught for long periods of time.</i></blockquote>
+
+
+
+
+<h3><a name="ide_generation">Competing approach: IDE generation</a></h3>
+
+<blockquote><i>An IDE is part of a language. Error messages are part of a language. Interacting with other systems, written
+in other languages, is part of a language. They're all part of the interface of the language. And the interface is everything.</i></blockquote>
+
+<p align=right>Jonathan Tran, December 2007, <a href="http://plpatterns.blogspot.com/2007/12/1-2-n.html">http://plpatterns.blogspot.com/2007/12/1-2-n.html</a></p>
+
+
+<p>Before getting involved with Internal DSLs and starting the <code>DSL2JDT</code> tool, I spent my fair amount of time with IDE
+generators. So I guess a comparison is in order. Here it goes.</p>
+
+<p>The generation of custom text editors is an active field. The following is a partial list (in alphabetic order) of projects offering
+such capability:
+<ul>
+	<li>MontiCore, <a href="http://www.sse-tubs.de/monticore/">http://www.sse-tubs.de/monticore/</a></li>
+	<li>Sdf2imp, <a href="https://svn.strategoxt.org/repos/WebDSL/imp/trunk/">https://svn.strategoxt.org/repos/WebDSL/imp/trunk/</a></li>
+	<li>TCS, <a href="http://wiki.eclipse.org/index.php/TCS">http://wiki.eclipse.org/index.php/TCS</a>, part of the Eclipse <a
+		href="http://wiki.eclipse.org/TMF"
+	>Textual Modeling Framework (TMF)</a></li>
+	<li>TEF, <a href="http://www2.informatik.hu-berlin.de/sam/meta-tools/tef/index.html">http://www2.informatik.hu-berlin.de/sam/meta-tools/tef/index.html</a></li>
+	<li>xText, <a href="http://wiki.eclipse.org/Xtext">http://wiki.eclipse.org/Xtext</a>, part of the Eclipse <a
+		href="http://wiki.eclipse.org/TMF"
+	>Textual Modeling Framework (TMF)</a></li>
+</ul>
+
+
+<p>The NetBeans camp is also doing some neat work. To make everyone happy, that's listed too:
+<ul>
+	<li>Generic Languages Framework (Project Schliemann), <a href="http://wiki.netbeans.org/Schliemann">http://wiki.netbeans.org/Schliemann</a></li>
+</ul>
+
+<p>By itself, a custom text editor generated from a grammar alone does not enforce the static semantics of the DSL (which by definition,
+are those well-formedness rules that exceed the expressive power of the grammar). So some additional coding is necessary. Those text editors
+internally maintaining an Ecore-based representation of the AST simplify the integration of such additional code.</p>
+
+<p>The Eclipse IDE Meta-Tooling Platform <a href="http://www.eclipse.org/imp/">Eclipse IMP</a> goes beyond the generators above in that
+it aims at generating debugging infrastructure, moreover enabling the integration of complex analyses, such as control or data-flow based.
+The integration of translation capabilities remains however the task of the developer. Eclipse IMP is rather unique in addressing
+user-provided analyses, which can get quite elaborate very quickly. For example, a web search for the phrases "sql injection" and "static
+analysis" will return papers describing such analyses, ready for implementation.</p>
+
+<p>The ASTs we embed with <code>DSL2JDT</code> have all been self-contained: their terminals are compile-time constants. We also skipped
+on providing any kind of refactoring support for the embedded DSL, as they are necessarily DSL-specific. Similarly, staged compilation,
+partial evaluation, and weaving (to account for the surrounding Java AST nodes) are all very interesting yet unsupported use cases from the
+<code>DSL2JDT</code> perspective. Completing the infrastructure put forward in this article is a first step towards supporting those use
+cases for custom DSLs in JDT.</p>
+
+
+
+<h2><a name="conclusion">Conclusions</a></h2>
+
+
+<p>We see many application areas for embedded DSLs, with the discussion about in-place translation and DSL-specific views just showing
+some of the possibilities. All along we've tried to maintain the main value proposition of well-designed DSLs: offering an easily consumable
+form of expert knowledge. We think that a Java embedding makes a DSL only easier to consume.</p>
+
+<p>In particular, the capability to perform in-place translation brings together two seemingly opposite camps: those favoring
+"abstractions in DSLs" and those promoting design patterns. As we have seen, in-place translation keeps side by side the source DSL
+statements and their Java translation (which follows the design patterns captured by the DSL implementation).</p>
+
+<p>Open platforms like Eclipse and EMF (and their communities) make possible the kind of cross-pollination that <code>DSL2JDT</code> has
+benefited from. Now it's your turn to take these techniques to a next level.</p>
+
+
+<h2><a name="acknowledgements">Acknowledgments</a></h2>
+An initial version of the statechart example was developed by <a href="http://www.tu-harburg.de/~sips0478/">Paul Sentosa</a> as part of his
+master thesis on generation of text editors for custom DSLs. The concepts in Martin Fowler's online notes on <i><a
+	href="http://martinfowler.com/dslwip/InternalOverview.html"
+>Internal DSL</a></i> acted as a catalyzer to develop <code>DSL2JDT</code>. The reviewers in <a href="http://bugs.eclipse.org/234003">bug
+234003</a> discovered bugs in early versions of <code>DSL2JDT</code> and provided useful examples and ideas on DSL embeddings.
+
+
+<h2><a name="source_code">Source Code</a></h2>
+
+
+
+<p></p>
+<p></p>
+
+<ul>
+
+	<li><code>DSL2JDT</code> can be downloaded from CVS (user <code>anonymous</code>, host <code>dev.eclipse.org</code> , repository path:
+	<code>/cvsroot/modeling</code> ). And then
+	<blockquote>
+	<ol>
+		<li><code>HEAD</code></li>
+		<li><code>org.eclipse.emf</code></li>
+		<li><code>org.eclipse.emf.emfatic</code></li>
+		<li><code>plugins</code></li>
+		<li>check out <code>org.eclipse.gymnast.generators.embeddeddsl</code></li>
+		<li>check out <code>org.eclipse.gymnast.generators.embeddeddsl.ui</code></li>
+	</ol>
+	</blockquote>
+	</li>
+
+	<li>
+	<p>The Statechart example is available for import into the workspace as a zipped Eclipse project: <a
+		href="./files/omgministatechart.zip"
+	> <code>omgministatechart.zip</code> </a></p>
+	</li>
+
+</ul>
+
+</body>
+</html>
