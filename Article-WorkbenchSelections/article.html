@@ -8,7 +8,7 @@
 
 <body LINK="#0000ff" VLINK="#800080">
 <div align="right">&nbsp; <font face="Times New Roman, Times, serif" size="2">Copyright 
-  &copy; 2006 Marc R. Hoffmann</font> 
+  &copy; 2006, 2008 Marc R. Hoffmann</font> 
   <table border=0 cellspacing=0 cellpadding=2 width="100%">
     <tr> 
       <td align=LEFT valign=TOP colspan="2" bgcolor="#0080C0"><b><font face="Arial,Helvetica"><font color="#FFFFFF">&nbsp;Eclipse 
@@ -32,7 +32,7 @@
   existing selection mechanisms gives your plug-ins a clean design, smoothly
   integrates them into the workbench and opens them for future extensions. 
   <p><b>By Marc R. Hoffmann, Mountainminds GmbH & Co. KG, hoffmann@mountainminds.com</b><br>
-    <font size="-1">April 14, 2006</font>
+    <font size="-1">April 14, 2006, last update August 28, 2008</font>
   </p>
 </blockquote>
 
@@ -124,16 +124,19 @@
   defined by interfaces:
 </p>
 
-<img src="images/diagram2.gif" width="445" height="206" title="Diagram 2">
+<img src="images/diagram2.gif" width="445" height="270" title="Diagram 2">
 
 
 <p>
   The
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a>
-  refers to a set of objects;
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a>
+  refers to a list of objects. A special form of this is the
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ITreeSelection.html"><code>ITreeSelection</code></a>
+  where each object in the list is described by a path. A path is a list of
+  objects, for example the objects from the root to the selected object in a tree view. 
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>
   and
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a>
   describe a piece of selected text.
 </p>
 
@@ -142,15 +145,16 @@
 </p>
 
 <ul>
-  <li><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/StructuredSelection.html"><code>org.eclipse.jface.viewers.StructuredSelection</code></a></li>
-  <li><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/TextSelection.html"><code>org.eclipse.jface.text.TextSelection</code></a></li>
-  <li><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/MarkSelection.html"><code>org.eclipse.jface.text.MarkSelection</code></a></li>
+  <li><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/StructuredSelection.html"><code>org.eclipse.jface.viewers.StructuredSelection</code></a></li>
+  <li><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/TreeSelection.html"><code>org.eclipse.jface.viewers.TreeSelection</code></a></li>
+  <li><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/TextSelection.html"><code>org.eclipse.jface.text.TextSelection</code></a></li>
+  <li><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/MarkSelection.html"><code>org.eclipse.jface.text.MarkSelection</code></a></li>
 </ul>
 
 <p>
   These implementations are used internally within the viewer when transforming
   low-level SWT events to 
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelection.html"><code>ISelection</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelection.html"><code>ISelection</code></a>
   objects. The implementations are also useful when elements should be selected
   programmatically by some application code, for example:
 </p>
@@ -166,7 +170,7 @@
     Install the provided <a href="#example">sample plug-in</a> and check what
     kind of  selections occur in different views. The
     <i>"Workbench Selection"</i> view shows the
-    <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelection.html"><code>ISelection</code></a>
+    <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelection.html"><code>ISelection</code></a>
     implementation class and the selected elements or text itself.
   </p>
 </blockquote>
@@ -178,13 +182,13 @@
 <p>
   All JFace viewers are so called <i>selection providers</i>. A selection
   provider implements the interface
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionProvider.html"><code>ISelectionProvider</code></a>:
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionProvider.html"><code>ISelectionProvider</code></a>:
 </p>
 
 <img src="images/diagram3.gif" width="345" height="108" title="Diagram 3">
 
 <p>
-  The different JFace viewers use and propagate different kind of selections:
+  The different JFace viewers accept and propagate different kind of selections:
 </p>
 
 <table>
@@ -193,40 +197,42 @@
     <td><b>Selection Type</b></td>
   </tr><tr>
     <td><code>ComboViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
   </tr><tr>
     <td><code>ListViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
   </tr><tr>
     <td><code>TreeViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a>,
+        <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ITreeSelection.html"><code>ITreeSelection</code></a></td>
   </tr><tr>
     <td><code>&nbsp;+- CheckboxTreeViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a>,
+        <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ITreeSelection.html"><code>ITreeSelection</code></td>
   </tr><tr>
     <td><code>TableViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
   </tr><tr>
     <td><code>&nbsp;+- CheckboxTableViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/IStructuredSelection.html"><code>IStructuredSelection</code></a></td>
   </tr><tr>
     <td><code>TextViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>,
-        <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>,
+        <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a></td>
   </tr><tr>
     <td><code>&nbsp;+- SourceViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>,
-        <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>,
+        <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a></td>
   </tr><tr>
     <td><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+- ProjectionViewer</code></td>
-    <td><a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>,
-        <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a></td>
+    <td><a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/ITextSelection.html"><code>ITextSelection</code></a>,
+        <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/text/IMarkSelection.html"><code>IMarkSelection</code></a></td>
   </tr>
 </table>
 
 <p>
   Also custom viewers may serve as selection providers and implement the
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionProvider.html"><code>ISelectionProvider</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionProvider.html"><code>ISelectionProvider</code></a>
   interface.
 </p>
 
@@ -269,7 +275,7 @@
 
 <p>
   Each workbench window has an
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionService.html"><code>ISelectionService</code></a> implementation
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionService.html"><code>ISelectionService</code></a> implementation
   which allows tracking the current selection. A view part can obtain a
   reference to it through its site:
 </p>
@@ -291,7 +297,7 @@
 <p>
   Typically views react on selection changes in the workbench window. In this
   case they better register an
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
   to get notified when the window's current selection changes:
 </p>
 
@@ -318,7 +324,7 @@
   part is created its initial selection will be propagated to the listeners
   registered for it. When the part is disposed, the listener is passed a
   <code>null</code> selection if the listener implements
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/INullSelectionListener.html"><code>INullSelectionListener</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/INullSelectionListener.html"><code>INullSelectionListener</code></a>
   (see <a href="#nullselection">section below</a>).
 </p>
 
@@ -326,7 +332,7 @@
 
 <p>
   The 
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
   is a simple interface with just one method. A typical implementation
   looks like this:
 </p>
@@ -366,9 +372,9 @@
   <p>
     <img src="images/tip.gif" width="61" height="13">
     Don't mix the 
-    <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
+    <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
     interface up with 
-    <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionChangedListener.html"><code>ISelectionChangedListener</code></a>
+    <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionChangedListener.html"><code>ISelectionChangedListener</code></a>
     used by JFace viewers to notify about selection changes.
   </p>
 </blockquote> 
@@ -450,7 +456,7 @@
 
 <p>
   The call-back method <code>selectionChanged()</code> defined in 
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
   get the new selection as well as the originating part passed in as parameters:
 </p>
 
@@ -460,9 +466,9 @@
 
 <p>
   The 
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/INullSelectionListener.html"><code>INullSelectionListener</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/INullSelectionListener.html"><code>INullSelectionListener</code></a>
   interface extends
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
   but does not declare any additional methods. It is a pure marker interface to
   indicate that implementers of the <code>selectionChanged()</code> method wants
   to bet notified even with <code>null</code> parameters. This is usefull when
@@ -483,11 +489,11 @@
 <p>
   If you study the workbench API carefully you will find out that there
   are two selection services: The 
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/IWorkbenchPage.html"><code>IWorkbenchPage</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/IWorkbenchPage.html"><code>IWorkbenchPage</code></a>
   is a 
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionService.html"><code>ISelectionService</code></a>.
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionService.html"><code>ISelectionService</code></a>.
   On the other hand the
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/IWorkbenchWindow.html"><code>IWorkbenchWindow</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/IWorkbenchWindow.html"><code>IWorkbenchWindow</code></a>
   has a method <code>getSelectionService()</code>. Therefore e.g. registering
   a listener within a part implementation is possible in two ways:
 </p>
@@ -529,7 +535,7 @@
   Replacing the selection provider during the lifetime of the part is not
   properly supported by the workbench. If a part contains multiple viewers
   providing selections, like the <i>"Java Hierarchy"</i> view does, a intermediate 
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionProvider.html"><code>ISelectionProvider</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelectionProvider.html"><code>ISelectionProvider</code></a>
   implementation has to be provided that allows dynamically delegating to the
   currently active viewer within the part. As a starting point you may look into
   <a href="SelectionProviderIntermediate.java"><code>SelectionProviderIntermediate.java</code></a>
@@ -545,7 +551,7 @@
   views reacting on each others selection. But the view handling a selection
   still needs to deal with the selected objects to provide any useful
   functionality. Check out the 
-  <a href="http://wiki.eclipse.org/index.php/FAQ_How_do_I_use_IAdaptable_and_IAdapterFactory%3F">adapter pattern</a>
+  <a href="http://wiki.eclipse.org/FAQ_How_do_I_use_IAdaptable_and_IAdapterFactory%3F">adapter pattern</a>
   provided by the Eclipse runtime core, which allows attaching new functionality
   to existing model objects or the other way round providing required
   functionality for newly contributed objects.
@@ -554,7 +560,7 @@
 <p>
   Actually our <a href="#example">example plug-in</a> does exactly this by using the workbench label
   provider which in turn relies on the
-  <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/model/IWorkbenchAdapter.html"><code>IWorkbenchAdapter</code></a>
+  <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/model/IWorkbenchAdapter.html"><code>IWorkbenchAdapter</code></a>
   to retrieve icons and text labels for the listed objects. The same mechanism
   is utilized by the <i>"Properties"</i> view, see article
   <a href="http://www.eclipse.org/articles/Article-Properties-View/properties-view.html">"Take control of your properties"</a>
@@ -576,26 +582,27 @@
 <h3>Getting and Running the Example</h3>
 
 <p>
-  Download the plug-in project
-  <a href="com.mountainminds.eclipse.selectionsample.zip"><code>com.mountainminds.eclipse.selectionsample.zip</code></a>
+  Download the plug-in 
+  <a href="com.mountainminds.eclipse.selectionsample_1.1.0.jar"><code>com.mountainminds.eclipse.selectionsample_1.1.0.jar</code></a>
   and import it into your workspace via the <i>"Import..."</i> wizard from the
   <i>"File"</i> menu. Select <i>"Existing Project into Workspace"</i> on the
   first wizard page. On the second page simply use the option
-  <i>"Select archive file"</i> to import the downloaded archive.
+  <i>"Select archive file"</i> to import the downloaded archive. The fastest way
+  to launch the example is right-clicking the plug-in project and select
+  <a>"Run As"</a> &rarr; <a>"Eclipse Application"</a> in the context menu.
+</p>
+
+<p>  
+  If don't want to play with the source code you can also drop the bundle into
+  an Eclipse installation and use it directly. 
 </p>
 
 <p>
-  The fastest way to launch the example is right-clicking the plug-in project
-  and select <a>"Run As"</a> &rarr; <a>"Eclipse Application"</a> in the
-  context menu. From the menu of the launched workbench activate
+  From the menu of the launched workbench activate
   <a>"Window"</a> &rarr; <a>"Show View"</a> &rarr; <a>"Other..."</a> and select
-  our view <i>"Workbench Selection"</i> in the category <a>"Other"</a>.
-</p>
-
-
-<p>
-  Now you can play around with selections in various workbench parts and see how
-  our <i>"Workbench Selection"</i> view reflects these selections:
+  our view <i>"Workbench Selection"</i> in the category <a>"Other"</a>. Now you
+  can play around with selections in various workbench parts and see how our
+  <i>"Workbench Selection"</i> view reflects these selections:
 </p>
 
 <img src="images/screen2.gif" width="344" height="333" title="Screen 2">
@@ -615,19 +622,19 @@
 
 <ul>
   <li>
-    The <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
+    The <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/ISelectionListener.html"><code>ISelectionListener</code></a>
     implementation makes sure that we do not react on our own selections.
   </li>
   <li>
     The title of the source part of the current selection as well as the
     implementation class of
-    <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelection.html"><code>ISelection</code></a>
+    <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/ISelection.html"><code>ISelection</code></a>
     is shown in the view description (the optional grey bar at the top).
   </li>
   <li>
     The view uses two viewers: One for object lists and one for text blocks.
     Switching between the viewers is implemented done with a 
-    <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/part/PageBook.html"><code>PageBook</code></a>.
+    <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/part/PageBook.html"><code>PageBook</code></a>.
   <li>
   </li>
     The viewer for object lists itself registeres as a selection provider.
@@ -674,23 +681,23 @@
   </li>
   <li>
     eclipse.org, JFace Viewer Package, 2005<br>
-    <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/package-summary.html">http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/package-summary.html</a>
+    <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/package-summary.html">http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/jface/viewers/package-summary.html</a>
   </li>
   <li>
     eclipse.org, Workbench UI Package, 2005<br>
-    <a href="http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/package-summary.html">http://help.eclipse.org/help31/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/package-summary.html</a>
+    <a href="http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/package-summary.html">http://help.eclipse.org/ganymede/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/ui/package-summary.html</a>
   </li>
   <li>
     wiki.eclipse.org, FAQ How do I find out what object is selected?, 2006<br>
-    <a href="http://wiki.eclipse.org/index.php/FAQ_How_do_I_find_out_what_object_is_selected%3F">http://wiki.eclipse.org/index.php/FAQ_How_do_I_find_out_what_object_is_selected%3F</a>
+    <a href="http://wiki.eclipse.org/FAQ_How_do_I_find_out_what_object_is_selected%3F">http://wiki.eclipse.org/FAQ_How_do_I_find_out_what_object_is_selected%3F</a>
   </li>
   <li>
     wiki.eclipse.org, FAQ How do I make a view respond to selection changes in another view?, 2006<br>
-    <a href="http://wiki.eclipse.org/index.php/FAQ_How_do_I_make_a_view_respond_to_selection_changes_in_another_view%3F">http://wiki.eclipse.org/index.php/FAQ_How_do_I_make_a_view_respond_to_selection_changes_in_another_view%3F</a>
+    <a href="http://wiki.eclipse.org/FAQ_How_do_I_make_a_view_respond_to_selection_changes_in_another_view%3F">http://wiki.eclipse.org/FAQ_How_do_I_make_a_view_respond_to_selection_changes_in_another_view%3F</a>
   </li>
   <li>
     wiki.eclipse.org, FAQ How do I use IAdaptable and IAdapterFactory?, 2006<br>
-    <a href="http://wiki.eclipse.org/index.php/FAQ_How_do_I_use_IAdaptable_and_IAdapterFactory%3F">http://wiki.eclipse.org/index.php/FAQ_How_do_I_use_IAdaptable_and_IAdapterFactory%3F</a>
+    <a href="http://wiki.eclipse.org/FAQ_How_do_I_use_IAdaptable_and_IAdapterFactory%3F">http://wiki.eclipse.org/FAQ_How_do_I_use_IAdaptable_and_IAdapterFactory%3F</a>
   </li>
   <li>
     Dicky Johan, Take control of your properties, 2003<br>
@@ -712,7 +719,7 @@
 <ul>
   <li>
     Example plug-in providing the <i>"Workbench Selection"</i> view<br>
-    <a href="com.mountainminds.eclipse.selectionsample.zip">com.mountainminds.eclipse.selectionsample.zip</a>
+    <a href="com.mountainminds.eclipse.selectionsample_1.1.0.jar">com.mountainminds.eclipse.selectionsample_1.1.0.jar</a>
   </li>
   <li>
     Selection provider implementation for delegating to multiple other selection providers<br>

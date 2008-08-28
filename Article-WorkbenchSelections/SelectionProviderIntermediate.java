@@ -47,6 +47,9 @@ public class SelectionProviderIntermediate implements IPostSelectionProvider {
 	 * @param newDelegate new selection provider
 	 */
 	public void setSelectionProviderDelegate(ISelectionProvider newDelegate) {
+		if (delegate == newDelegate) {
+			return;
+		}
 		if (delegate != null) {
 			delegate.removeSelectionChangedListener(selectionListener);
 			if (delegate instanceof IPostSelectionProvider) {
@@ -60,6 +63,7 @@ public class SelectionProviderIntermediate implements IPostSelectionProvider {
 				((IPostSelectionProvider)newDelegate).addPostSelectionChangedListener(postSelectionListener);
 			}
 			fireSelectionChanged(newDelegate.getSelection());
+			firePostSelectionChanged(newDelegate.getSelection());
 		}
 	}
 
