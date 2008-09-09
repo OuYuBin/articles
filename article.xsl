@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-	$Id: article.xsl,v 1.5 2008/01/16 03:29:08 wbeaton Exp $
+	$Id: article.xsl,v 1.6 2008/09/09 02:24:07 wbeaton Exp $
 	author: Chris Aniszczyk <zx@us.ibm.com>
 	author: Lawrence Mandel <lmandel@ca.ibm.com>
 -->
@@ -54,6 +54,11 @@
 			<div class="date">
 				<xsl:apply-templates mode="article.titlepage.recto.mode"
 					select="articleinfo/date" />
+			</div>
+			<div class="releaseinfo">
+				<xsl:for-each select="articleinfo/releaseinfo">
+					<xsl:apply-templates select="*"/>
+				</xsl:for-each>
 			</div>
 		</div>
 
@@ -125,4 +130,8 @@
 		</ul>
 	</xsl:template>
 	
+	
+	<xsl:template name="releaseinfo">
+		<xsl:apply-templates select="remark"/>
+	</xsl:template>
 </xsl:stylesheet>

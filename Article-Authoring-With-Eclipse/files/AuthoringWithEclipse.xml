@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="utf-8"?>
+<article id="article" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:noNamespaceSchemaLocation="http://www.docbook.org/xsd/4.5/docbook.xsd">
+   <articleinfo>
+      <title>DocBook Authoring with Eclipse</title>
+      <revhistory>
+         <revision>
+            <revnumber>1.0</revnumber>
+            <date>June 20, 2008</date>
+            <authorinitials>DAC</authorinitials>
+            <revremark>Updated to DocBook 4.5, Web Standard Tools 3.0, and XSL Tooling 0.5M8
+            </revremark>
+         </revision>
+      </revhistory>
+      <authorgroup>
+         <author>
+            <firstname>David</firstname>
+            <surname>Carver</surname>
+            <affiliation>
+               <jobtitle>XML Data Architect</jobtitle>
+               <orgname>Standards for Technology in Automotive Retail</orgname>
+               <address>
+                  <email>dcarver@starstandard.org</email>
+               </address>
+            </affiliation>
+         </author>
+      </authorgroup>
+      <copyright>
+         <year>2008</year>
+         <holder> Standards for Technology in Automotive Retail. All rights reserved.</holder>
+      </copyright>
+      <abstract>
+         <para>
+            Eclipse is not know for it's ability to write documentation, but it is something that
+            every programmer eventually has to do. In today's world it is not uncommon to have to
+            support not only print media, but also online content as well. This article will take a
+            look at the advances of eclipse as an authoring environment. It will revisit concepts
+            original discussed in the
+            <ulink
+            url="http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html">"Authoring with Eclipse"</ulink>
+            article, published in December 2005.
+         </para>
+      </abstract>
+      <legalnotice>
+         <para> Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. in the
+            United States, other countries, or both.</para>
+         <para> Linux is a trademark of Linus Torvalds in the United States, other countries, or
+            both.</para>
+         <para> Microsoft is a trademark of Microsoft Corporation in the United States, other
+            countries, or both.</para>
+         <para> UNIX is a registered trademark of The Open Group in the United States and other
+            countries.</para>
+         <para> Other company, product, or service names may be trademarks or service marks of
+            others.</para>
+      </legalnotice>
+   </articleinfo>
+   <section>
+      <title>Environment</title>
+      <note>
+         <para>
+            The examples in this article were built and tested with:
+            <itemizedlist>
+               <listitem>
+                  <para>
+                     <ulink url="http://www.eclipse.org/download">Eclipse 3.4</ulink>
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     <ulink url="http://www.eclipse.org/webtools"> Eclipse Web Tools Platform (WTP) 3.0</ulink>
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     <ulink url="http://www.eclipse.org/webtools/incubator"> XSL Tooling 0.5M8 - Incubator</ulink>
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     <ulink url="http://www.docbook.org">Docbook 4.5</ulink>
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     <ulink url="http://docbook.sourceforge.net/">The DocBook XSL stylesheets from the DocBook Project
+                     </ulink>
+                  </para>
+               </listitem>
+            </itemizedlist>
+         </para>
+      </note>
+   </section>
+   <section>
+      <title>Preface</title>
+      <para>
+         This article is a revisiting of the original
+         <ulink
+         url="http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html">"Authoring With Eclipse"</ulink>
+         article by Chris Aniszczyk and Lawrence Mandel. The article revisits many of the concepts
+         discussed in the original article, and expands on them where it is necessary. Much has
+         changed since the original article, but much of the information is still relevant to
+         authoring with eclipse today.
+      </para>
+   </section>
+   <section>
+      <title>Introduction</title>
+      <para> Writing documentation is something that almost any programmer or architect is
+         eventually going to have to do. It's not a job that most enjoy, and the fact that the
+         documentation usually has to be available in multiple formats at the same time, makes the
+         job of creating the documentation that much less enjoyable. However, all is not lost. There
+         are many ways to produce content that can be written once and documented in many formats.
+         In the sections that follow we will discuss one of these options, DocBook, and how you can
+         use existing eclipse projects and open source plugins to create and authoring system. This
+         article in fact is entirely written in DocBook and leverages the tools discussed.</para>
+   </section>
+   <section>
+      <title>Technical Documentation</title>
+      <para>According to Chris and Lawrence, "In the open source world, technical
+         documentation is primarily accomplished using two popular formats: DocBook and the Darwin
+         Information Typing Architecture (DITA)." Both of these formats leverage XML. They separate
+         the content from the presentation. Unlike HTML which mixes the two together, and you don't
+         have an easy time of separating them. The advantage to DocBook and DITA formats is that it
+         frees the author to concentrate on the content they are entering and not how it will
+         necessarily look. This is necessary because the same content can be targeted to multiple
+         formats, each with its own unique presentation and requirements. It is not uncommon to have
+         DocBook content appear in PDF, Presentation Slides, HTML, RTF, Man, and many more formats.
+      </para>
+      <para> DocBook itself has it's beginnings with SGML, the precursor to XML. It is widely used
+         in the publishing industry, and the O'Reily publishing house use DocBook for all it's
+         books.</para>
+      <tip>
+         <para>
+            Norman Walsh, has written a book called
+            <ulink url="http://www.docbook.org/tdg/en/html/docbook.html">DocBook: The Definitive Guide</ulink>
+            . The book is available on line as well as at many book resellers. Anything and
+            everything about the DocBook markup can be found in the book.
+         </para>
+      </tip>
+      <para> Writing an article or a book in XML is no different than writing most any other
+         application. You can break the process down into several stages. Chris and Lawrence
+         original had these in the following steps:</para>
+      <itemizedlist>
+         <listitem>
+            <para> Creation - The process of adding your content to the file. This includes such
+               meta data as authors, editors, revision history, chapters, sections, figures, tables,
+               etc.</para>
+         </listitem>
+         <listitem>
+            <para> Review - The process of fixing the inevitable grammar and content mistakes that
+               tend to creep into the document. Regardless of how well the author tries, some no
+               excuse error is going to creep into the document. The nice thing about writing is
+               that during this process one is not concerned as much about how it looks, just that
+               the content is correct.</para>
+         </listitem>
+         <listitem>
+            <para> Publication - The final step is actually publish the document. This is either
+               creating the PDF, the HTML, or the eclipse Help format files. This is where the
+               formatting is reviewed, and for the most part with the help of the DocBook Project's
+               XSL Stylesheets very little has to be done to get a professional looking publication.
+               If errors are found, then repeat the Review process, and republish.</para>
+         </listitem>
+      </itemizedlist>
+      <section>
+         <title>Advantages of an XML format</title>
+         <para> Microsoft Word has the ability to create a master document from multiple word
+            documents. However, anybody that has tried to do this, knows that the process is more
+            brittle than it needs to be. It should be a simple as saying include these three files,
+            and generate me out one complete book that contains everything. With DocBook and XML it
+            is that simple if you leverage a little known specification called XInclude.</para>
+         <section>
+            <title>XInclude</title>
+            <para>
+               XInlcude allows you create the Modularity that Chris and Lawrence original talked
+               about. An example of an XInclude is shown in
+               <xref linkend="Xinclude_Example" />
+            </para>
+            <example id="Xinclude_Example">
+               <title>XInclude</title>
+               <programlisting><![CDATA[
+<book id='Book1' xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="Introduction.xml"/>
+  <xi:include href="WorkbenchLayout.xml"/>
+<book>
+]]>
+               </programlisting>
+            </example>
+            <note>
+               <para>
+                    More information about XInclude can be found in <xref linkend="XSL_Tooling"/>.
+                </para>
+            </note>
+            <para>
+            
+            </para>
+         </section>
+         <section>
+            <title>Version Control</title>
+            <para> Leveraging Eclipse's built-in version control support with CVS or adding a open
+               source or third party plugin for another version control system, makes maintaining
+               and working on the documentation as convenient as working on any source code for a
+               program. The same comparison and merging abilities that are used with source code for
+               programs can be leveraged for the authoring process as well. Compare this to trying
+               to work with formats that are stored in a binary format and the speed advantage
+               becomes clear pretty quickly. When dealing with a binary formatted file, typically a
+               locking mechanism has to be implemented. Working with DocBook since it is a text
+               format, allows one to take advantage of agile development practices as Continuous
+               Integration and automated builds. Documentation doesn't have to become a thing that
+               is put to the end. It should become a part of the standard build process.</para>
+         </section>
+         <section>
+            <title>Formatting</title>
+            <para> As stated earlier. The advantage that an XML format has is that it allows
+               presentation and content to be separated. The formatting of the document is
+               independent of the content. One of the most time consuming parts of creating
+               documentation is making sure the formatting is the same. Traditionally if you move
+               sections or cut and paste content from another source, it messes up the formatting of
+               the document. With DocBook you don't run into this issue, as the formatting is
+               controlled during the publication phase. Thus freeing up time that the author would
+               have to spend trying to make the document legible, to make sure that they have the
+               necessary content correct.</para>
+         </section>
+         <section>
+            <title>One Source, Multiple Targets</title>
+            <para> DocBook, allows for one source content to be generated into multiple formats.
+               Typically DocBook is published in PDF, but it is also widely used for web pages,
+               multi-sectioned HTML pages, Tex, and RTF formats as well. The author doesn't need to
+               worry about any of these formats or how it will necessarily look as that is taken
+               care of by the publishing process. Typically with an XSL stylesheet that already
+               contains the necessary formatting information.</para>
+         </section>
+      </section>
+   </section>
+   <section>
+      <title>Examples</title>
+      <para>
+         To show the authoring tool chain in Eclipse, this article will use the DocBook file that
+         was used to write this article. The XML version of the document can be seen
+         <ulink url="AuthoringWithEclipse.xml">here</ulink>
+      </para>
+      <section>
+         <title>The Right Tool for the Right Job.</title>
+         <para> In order to write an article or a book with DocBook, one needs an editor. Preferably
+            one that understands the XML dialect and it's support tools. The eclipse Web Standard
+            Tools project comes with the necessary tools that are needed. The XML editing support
+            provides the following functionality:</para>
+         <itemizedlist>
+            <listitem>
+               <para> Validation - the ability to check for syntax errors against a specified
+                  grammar. A grammar in this case can be either a DTD or XML Schema for the XML that
+                  is being edited. The XML editor also contains as you type validation to always
+                  keep your XML well formed and valid according the grammar provided.</para>
+            </listitem>
+            <listitem>
+               <para> Syntax Coloring - Working with XML is much easier of the tags can be easily
+                  separated from the content.</para>
+            </listitem>
+            <listitem>
+               <para> Content Assistance - If a grammar is detected for the XML file that has been
+                  loaded, then content assistance is available for the tags and attributes. This is
+                  activated using CTRL+SPACE. Also any templates that may be available from the XML
+                  templates preference page will be displayed as well.</para>
+            </listitem>
+         </itemizedlist>
+         <para> The XML editor provided by Web Standard Tools is just the first tool that you will
+            need, but it will be the one that is used the most. The next will be the DocBook XSL
+            stylesheets provided by the DocBook Project. This is is a set of XSL stylesheets that
+            can transform the DocBook files into something that is actually readable. Output formats
+            include HTML, Tex, RTF, and even PDF via XSL-FO.</para>
+         <para> The examples that are shown here are all built using tools that are available at
+            eclipse. Only when we get to the PDF publication do we need to leverage a plugin that
+            isn't available from eclipse directly, but is available as free software. More when PDF
+            generation is covered later in the article.</para>
+         <section>
+            <title>Creation and Review</title>
+            <note>
+               <para> The following section is taken primarily from the original article. Some
+                  updating has been done to update the content.</para>
+            </note>
+            <para> Although creation and review are two separate parts of the technical
+               documentation process, the same tools are required and therefore will be discussed
+               together.</para>
+            <para>
+               As you may already know, the Eclipse project is composed of several top-level
+               projects including Eclipse itself (known as the Eclipse base) and the WTP project.
+               WTP adds many tools to the Eclipse base including an XML editor with graphical and
+               source representations of the content. Although the graphical editor is useful for
+               viewing the document, the source editor, shown in
+               <xref linkend="xml-source-editor" />
+               , is more useful when authoring in XML.
+            </para>
+            <figure id="xml-source-editor">
+               <title>The XML Source Editor</title>
+               <mediaobject>
+                  <imageobject>
+                     <imagedata fileref="images/xmlsourceeditor.gif" format="GIF" align="center" />
+                  </imageobject>
+               </mediaobject>
+            </figure>
+            <para> In addition to the features discussed previously, Web Standard Tools provides
+               additional XML functionality.</para>
+            <itemizedlist>
+               <listitem>
+                  <para>
+                     <emphasis>Outline View</emphasis>
+                     - Assists you in editing and viewing the content of your document.
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     <emphasis>XML Catalog</emphasis>
+                     - Allows you to register Document Type Definitions (DTD) and XML Schema
+                     grammars associated with your document with your workspace so you can work with
+                     the benefits of validation while disconnected from the Internet.
+                  </para>
+               </listitem>
+            </itemizedlist>
+            <para> Aside from the benefits of the XML editor, working in Eclipse provides other
+               benefits. Eclipse includes integrated version control for CVS. There also exists
+               freely available plugins for Subversion as well. Integrated version control allows
+               you to check your changes into, and view others' changes in, your version control
+               system from within Eclipse. These tools are also useful for your reviewers, who, if
+               you give them permission, can add comments and suggestions to your document and check
+               their changes in. Giving your reviewers permission to make these changes allows you
+               to avoid the need to use e-mail or some other communication mechanism.</para>
+         </section>
+         <section id="XSL_Tooling">
+            <title>XSL Tooling</title>
+            <para>
+            Chris and Lawerence's original article used an open source plugin called Organevolt XSLT, to
+            provide the publication steps that are discussed later in the article.  However, since the
+            publication of the original article, eclipse now has it's own XSL Tooling project.   This is
+            currently incubating under the eclipse Web Tools Project, but it provides the same functionality
+            and more.
+         </para>
+            <para>
+            One such new features is the XML perspective as shown in <xref linkend="XML_Perspective" />
+         </para>
+            <figure id="XML_Perspective">
+               <title>XML Perspective</title>
+               <mediaobject>
+                  <imageobject>
+                     <imagedata align="center" fileref="images/XMLPerspective.png" />
+                  </imageobject>
+               </mediaobject>
+            </figure>
+            <para>
+            The XML perspective provides the basic views that are most important for
+            working with XML related content.   The XPath View allows the user to
+            run XPath Expressions against the data that is in the current XML based editor.
+            It show the xpath expression for the current location with in the editor.
+         </para>
+            <para>
+            In addition to the XML perspective XSL Tooling provides the following additional
+            features and functions.
+         </para>
+            <itemizedlist>
+               <listitem>
+                  <para>
+                    XSL Editor - an XSL 1.0 and XSL 2.0 grammar aware editor.   Providing
+                    content assistance for XSL, as well as XML namespaced content included
+                    within the XSL editor.   Content assistance is also available for XPath
+                    1.0 in select and test attributes.
+                </para>
+                  <para>
+                    XSL Debugging - Developing or working with XSL stylesheets requires the
+                    use of an debugger at times.  The XSL Tooling provides launch configurations
+                    and debugging support for the Xalan 2.7.1 processor.   Extension points
+                    are available for adopters to add additional processors for debugging and
+                    launching.
+                </para>
+                  <para>
+                    XSL File Wizards - Wizards are available for creating new XSL files. Templates
+                    can be provided for a variety of XSL patterns.
+                </para>
+                  <para>
+                    XPath and XSL Preference Settings - Additional configuration is available
+                    through the XSL and XPath prefernce pages.  Templates can be created as well
+                    as choosing the default parser to use during transformations.
+                </para>
+                  <para>
+                    XSL Launch Configurations - The user has the ability to setup launch
+                    configurations for transforming XSL.   ANT launch configurations are
+                    also supported for more complex scenarios.
+                </para>
+                  <para>
+                    XInclude ANT Task - An ant task is available that allows for the use of
+                    XInclude pre-processing of XML files.  XInclude allows for a way to include
+                    XML or text based content into XML file and merge the two files together.
+                    This is one way to provide the Modularity benefit that working with an
+                    XML format provides.
+                </para>
+               </listitem>
+            </itemizedlist>
+         </section>
+         <section>
+            <title>Publication</title>
+            <para>
+               The DocBook XSL
+               <xref linkend="docbookxsl" />
+               project offers numerous transformations, including HTML and PDF formats. The most
+               common transformation technique is to use an Ant file with the appropriate tasks for
+               the various transformations. In this article we use the XSL Tooling set of plugins to
+               simplify this task. XSL Tooling integrates into the familiar Eclipse launcher
+               framework. This integration allows you to select the style sheet and pass in
+               necessary parameters for the transformation.
+            </para>
+            <section>
+               <title>HTML</title>
+               <para> Of all the available transformations, transforming your document into HTML is
+                  the easiest to use. All that you need to do is create a proper transformation
+                  launch configuration and run the transformation. Specifically, you need to specify
+                  the correct style sheet:</para>
+               <itemizedlist>
+                  <listitem>
+                     <para>DocBook</para>
+                     <itemizedlist>
+                        <listitem>
+                           <para>html/docbook.xsl</para>
+                        </listitem>
+                     </itemizedlist>
+                  </listitem>
+               </itemizedlist>
+               <para>
+                  <xref linkend="html-transformation" />
+                  shows a sample transformation configuration that will transform our DocBook sample
+                  <ulink url="files/book.xml">document</ulink>
+                  into HTML.
+               </para>
+               <figure id="html-transformation">
+                  <title>Sample HTML Transformation Configuration for book.xml</title>
+                  <mediaobject>
+                     <imageobject>
+                        <imagedata align="center" width="741" depth="592" fileref="images/html.jpg"
+                           format="JPG" />
+                     </imageobject>
+                  </mediaobject>
+               </figure>
+               <tip>
+                  <para>
+                     You can augment the transformation by passing parameters to the style sheet.
+                     There's a full listing of DocBook XSL parameters that can be used to configure
+                     the transformation located
+                     <ulink url="http://docbook.sourceforge.net/release/xsl/current/doc/html/"> here</ulink>
+                     .
+                  </para>
+                  <para>
+                     Bob Stayton has also written
+                     <ulink url="http://www.sagehill.net/docbookxsl/">Docbook XSL: The Complete Guide</ulink>
+                     which is available on line and in print format. This book describes how to
+                     customize the DocBook stylesheets beyond those that you can do with the
+                     parameters. The XSL Tooling provides an XSL aware XML editor that can be used
+                     to help create and debug the stylesheets.
+                  </para>
+               </tip>
+               <para>
+                    In addition to setting up the Main tab for the stylesheet to use.  You may also want
+                    to change the output location and the processor that will be used.  By default the
+                    transformation output will be placed into the same location as the input file, with the
+                    extensions ".out.xml".
+               </para>
+            </section>
+            <section>
+               <title>PDF</title>
+               <para> Transforming a DocBook XML file to PDF format is more involved than the
+                  transformation to HTML but it is still possible using a style sheet. The
+                  difference lies in a task that must be performed before the actual transformation.
+                  So, the transformation from XML to PDF is a two-step process.</para>
+               <para>
+                  Step one is to generate an XSL formatting objects (XSL-FO) document. This document
+                  will then be transformed into a PDF. In order to generate an XSL-FO document, you
+                  need to use the following stylesheet:
+                  <emphasis>fo/docbook.xsl</emphasis>
+                  .
+                  <xref linkend="xslfo-transformation" />
+                  shows a sample transformation configuration used to generate an XSL-FO document
+                  from book.xml.
+               </para>
+               <figure id="xslfo-transformation">
+                  <title>Sample XSL-FO Transformation Configuration for book.xml</title>
+                  <mediaobject>
+                     <imageobject>
+                        <imagedata align="center" fileref="images/xsl-fo.png"
+                           format="PNG" />
+                     </imageobject>
+                  </mediaobject>
+               </figure>
+               <para>
+                  Step two is to use a Formatting Objects Processor (FOP) to transform your XSL-FO
+                  document into a PDF. One of the more popular open source FOPs is the
+                  <ulink url="http://xmlgraphics.apache.org/fop/"> Apache FOP</ulink>
+                  . We'll use a third-party
+                  <ulink url="http://www.ahmadsoft.org/fopbridge.html"> plug-in from Ahmadsoft</ulink>
+                  that integrates Apache FOP into Eclipse. After installing this plug-in, all that
+                  you need to do to render the XSL-FO document is run the FOP transformation.
+                  <xref linkend="pdf-transformation" />
+                  shows an example of running the FOP transformation.
+               </para>
+               <figure id="pdf-transformation">
+                  <title>Sample FOP Transformation</title>
+                  <mediaobject>
+                     <imageobject>
+                        <imagedata align="center" fileref="images/fop.png"
+                           format="PNG" />
+                     </imageobject>
+                  </mediaobject>
+               </figure>
+               <note>
+                  <para>
+                     The example includes a sample Ant
+                     <ulink url="files/pdf/build.xml"> file</ulink>
+                     that performs the same transformation as running the FOP transformation using
+                     the
+                     <ulink url="http://www.ahmadsoft.org/fopbridge.html"> plug-in from Ahmadsoft</ulink>
+                     . An Ant script is a popular method of performing the publishing stage, and
+                     this example should give you a good starting point if you'd prefer to go this
+                     route.
+                  </para>
+               </note>
+            </section>
+            <section>
+               <title>Eclipse Help</title>
+               <para>
+                  The DocBook Project includes a XSL stylesheet that can be used to create the 
+                  necessary files for the eclipse help system. In order to perform this transformation
+                  in DocBook, you need to specify a few parameters and use the following style sheet:
+                  <emphasis>eclipse/eclipse.xsl</emphasis>
+                  .
+                  <xref linkend="eclipse-transformation" />
+                  shows a sample transformation configuration along with the correct parameters.
+               </para>
+               <note>
+                   <para>
+                        The eclipse help stylesheet included with DocBook creates a plugin.xml
+                        and toc.xml file only.  In addition to the configuration information shown
+                        the xalan.jar extension included with DocBook is required as the transformation
+                        leverages the chunk.xsl file from the html stylesheet directory to output multiple
+                        html files, and build to the necessary toc.xml file.
+                   </para>
+               </note>
+               <figure id="eclipse-transformation">
+                  <title>Sample Eclipse Help Transformation Configuration</title>
+                  <mediaobject>
+                     <imageobject>
+                        <imagedata align="center" fileref="images/eclipse.png"
+                           format="PNG" />
+                     </imageobject>
+                  </mediaobject>
+               </figure>
+               <tip>
+                  <para>
+                     The complete list of DocBook XSL parameters for the Eclipse Infocenter
+                     transformation is located
+                     <ulink url="http://docbook.sourceforge.net/release/xsl/current/doc/html/rn22.html"> here</ulink>
+                     .
+                  </para>
+               </tip>
+            </section>
+         </section>
+         <section>
+            <title>Prior Limitations</title>
+            <para> Chris and Lawrence's original article outline two short comings with eclipse as an authoring
+            environment.
+            </para>
+            <itemizedlist>
+               <listitem>
+                  <para>
+                        No Grammar and Spell Checking.
+                    </para>
+               </listitem>
+               <listitem>
+                  <para>
+                        No preview screen or WSYIWG editor for documentation.
+                    </para>
+               </listitem>
+            </itemizedlist>
+            <para>
+                The first limitation has been addressed since eclipse 3.3.  Eclipse includes a spell checker and 
+                the Web Standard Tools XML editor leverages this support.   Users may add their own custom dictionary or
+                add any of the freely available dictionaries available on the Internet. 
+            </para>
+            <para>
+                The second item may or may not be a limitation depending on the point of view.  The advantage of DocBook is
+                that it separates the content from the presentation.   Worrying about the presentation while creating the
+                content may not be the best thing to do.  The main reason is that how it is formatted is going to greatly
+                depend on the target platforms the documentation is intended.   DocBook authoring is not the same as
+                using a traditional word processor.  A different way of thinking of documentation needs to be approached.  The
+                formatting is not the critical piece, but it is the content of the document that matters the most.
+            </para>
+         </section>
+      </section>
+   </section>
+   <section>
+      <title>Summary</title>
+      <para> 
+        Since the original article was published, many advancements have been made with the XML support for eclipse.  The
+        editors are faster, their is better tooling support, and the docbook grammar it self has advanced.  However, the 
+        overall process that Chris and Lawrence had described is fundamentally unchanged three years later.  Eclipse is a
+        perfectly suitable authoring system for technical documentation.  
+      </para>
+   </section>
+   <section>
+      <title>Acknowledgments</title>
+      <itemizedlist>
+         <listitem>
+            <para> Chris Aniszczyk and Lawrence Mandel for their original article title,
+                  "Authoring With Eclipse".</para>
+         </listitem>
+      </itemizedlist>
+   </section>
+   <section>
+      <title>About the Author</title>
+      <para>
+         David Carver is an XML Data Architect for Standards for Technology in Automotive Retail. He
+         is also a committer on the
+         <ulink url="http://www.eclipse.org/webtools/incubator">XSL Tooling</ulink>
+         project.
+      </para>
+   </section>
+   <bibliography>
+      <title>Resources</title>
+      <biblioentry id="docbook">
+         <bibliosource>
+            <ulink url="http://www.docbook.org">Docbook.org - The Source for Documentation.</ulink>
+         </bibliosource>
+      </biblioentry>
+      <biblioentry id="docbookxsl">
+         <bibliosource>
+            <ulink url="http://docbook.sourceforge.net/projects/xsl/"> DocBook XSL Style Sheets</ulink>
+         </bibliosource>
+      </biblioentry>
+      <biblioentry id="subversion">
+         <bibliosource>
+            <ulink url="http://subversion.tigris.org/"> Subversion</ulink>
+         </bibliosource>
+      </biblioentry>
+   </bibliography>
+</article>

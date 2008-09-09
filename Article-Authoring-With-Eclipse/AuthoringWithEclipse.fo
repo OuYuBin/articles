@@ -1,0 +1,2033 @@
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format" font-family="serif,Symbol,ZapfDingbats"
+   font-size="10pt" text-align="justify" line-height="normal" font-selection-strategy="character-by-character"
+   line-height-shift-adjustment="disregard-shifts" language="en">
+   <fo:layout-master-set>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="blank">
+         <fo:region-body margin-top="0.5in" margin-bottom="0.5in" display-align="center"
+            region-name="blank-body" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-blank" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-blank" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="titlepage-first">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="titlepage-odd">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="titlepage-even">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="lot-first">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="lot-odd">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="lot-even">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="front-first">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="front-odd">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="front-even">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="body-first">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="body-odd">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="body-even">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="back-first">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="back-odd">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="back-even">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="index-first">
+         <fo:region-body column-count="2" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="index-odd">
+         <fo:region-body column-count="2" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="index-even">
+         <fo:region-body column-count="2" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="blank-draft">
+         <fo:region-body margin-top="0.5in" margin-bottom="0.5in"
+            background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-blank" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-blank" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in"
+         master-name="titlepage-first-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in"
+         master-name="titlepage-odd-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in"
+         master-name="titlepage-even-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="lot-first-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="lot-odd-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="lot-even-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="front-first-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="front-odd-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="front-even-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="body-first-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="body-odd-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="body-even-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="back-first-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="back-odd-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in - 0pt"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="back-even-draft">
+         <fo:region-body column-count="1" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="index-first-draft">
+         <fo:region-body column-count="2" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-first" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-first" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-right="1in" margin-left="1in"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="index-odd-draft">
+         <fo:region-body column-count="2" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-odd" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-odd" />
+      </fo:simple-page-master>
+      <fo:simple-page-master margin-left="1in" margin-right="1in"
+         margin-bottom="0.5in" margin-top="0.5in" page-height="11in" page-width="8.5in" master-name="index-even-draft">
+         <fo:region-body column-count="2" column-gap="12pt" margin-top="0.5in"
+            margin-bottom="0.5in" background-image="url(http://docbook.sourceforge.net/release/images/draft.png)"
+            background-attachment="fixed" background-repeat="no-repeat"
+            background-position-horizontal="center" background-position-vertical="center" />
+         <fo:region-before display-align="before" extent="0.4in" region-name="xsl-region-before-even" />
+         <fo:region-after display-align="after" extent="0.4in" region-name="xsl-region-after-even" />
+      </fo:simple-page-master>
+      <fo:page-sequence-master master-name="titlepage">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="titlepage-first" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="titlepage-odd" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="titlepage-odd" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="lot">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="lot-first" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="lot-odd" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="lot-odd" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="front">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="front-first" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="front-odd" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="front-odd" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="body">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="body-first" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="body-odd" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="body-odd" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="back">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="back-first" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="back-odd" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="back-odd" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="index">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="index-first" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="index-odd" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="index-odd" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="titlepage-draft">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank-draft" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="titlepage-first-draft" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="titlepage-odd-draft" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="titlepage-odd-draft" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="lot-draft">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank-draft" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="lot-first-draft" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="lot-odd-draft" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="lot-odd-draft" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="front-draft">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank-draft" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="front-first-draft" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="front-odd-draft" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="front-odd-draft" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="body-draft">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank-draft" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="body-first-draft" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="body-odd-draft" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="body-odd-draft" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="back-draft">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank-draft" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="back-first-draft" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="back-odd-draft" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="back-odd-draft" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+      <fo:page-sequence-master master-name="index-draft">
+         <fo:repeatable-page-master-alternatives>
+            <fo:conditional-page-master-reference
+               blank-or-not-blank="blank" master-reference="blank-draft" />
+            <fo:conditional-page-master-reference
+               page-position="first" master-reference="index-first-draft" />
+            <fo:conditional-page-master-reference odd-or-even="odd"
+               master-reference="index-odd-draft" />
+            <fo:conditional-page-master-reference odd-or-even="even"
+               master-reference="index-odd-draft" />
+         </fo:repeatable-page-master-alternatives>
+      </fo:page-sequence-master>
+   </fo:layout-master-set>
+   <fo:page-sequence xmlns:axf="http://www.antennahouse.com/names/XSL/Extensions"
+      master-reference="body" hyphenate="true" language="en" format="1" initial-page-number="1"
+      force-page-count="no-force" hyphenation-character="-" hyphenation-push-character-count="2"
+      hyphenation-remain-character-count="2">
+      <fo:static-content flow-name="xsl-region-before-first">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-bottom-width="0.5pt"
+               border-bottom-style="solid" border-bottom-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="before" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-region-before-odd">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-bottom-width="0.5pt"
+               border-bottom-style="solid" border-bottom-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="before" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block>DocBook Authoring with Eclipse</fo:block>
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-region-before-even">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-bottom-width="0.5pt"
+               border-bottom-style="solid" border-bottom-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="before" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block>DocBook Authoring with Eclipse</fo:block>
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-region-before-blank">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-bottom-width="0.5pt"
+               border-bottom-style="solid" border-bottom-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="before" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="before" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-footnote-separator">
+         <fo:block>
+            <fo:leader color="black" leader-pattern="rule" leader-length="1in" />
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="blank-body">
+         <fo:block text-align="center" />
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-region-after-first">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-top-width="0.5pt"
+               border-top-style="solid" border-top-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="after" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block>
+                              <fo:page-number />
+                           </fo:block>
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-region-after-odd">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-top-width="0.5pt"
+               border-top-style="solid" border-top-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="after" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block>
+                              <fo:page-number />
+                           </fo:block>
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-region-after-even">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-top-width="0.5pt"
+               border-top-style="solid" border-top-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="after" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block>
+                              <fo:page-number />
+                           </fo:block>
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:static-content flow-name="xsl-region-after-blank">
+         <fo:block font-family="serif,Symbol,ZapfDingbats" margin-left="0pt">
+            <fo:table table-layout="fixed" width="100%" border-top-width="0.5pt"
+               border-top-style="solid" border-top-color="black">
+               <fo:table-column column-number="1" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="2" column-width="proportional-column-width(1)" />
+               <fo:table-column column-number="3" column-width="proportional-column-width(1)" />
+               <fo:table-body>
+                  <fo:table-row block-progression-dimension.minimum="14pt">
+                     <fo:table-cell display-align="after" text-align="left"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="center"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block>
+                              <fo:page-number />
+                           </fo:block>
+                        </fo:block>
+                     </fo:table-cell>
+                     <fo:table-cell display-align="after" text-align="right"
+                        relative-align="baseline">
+                        <fo:block>
+                           <fo:block />
+                        </fo:block>
+                     </fo:table-cell>
+                  </fo:table-row>
+               </fo:table-body>
+            </fo:table>
+         </fo:block>
+      </fo:static-content>
+      <fo:flow flow-name="xsl-region-body" start-indent="4pc" end-indent="0pt">
+         <fo:block id="article">
+            <fo:block font-family="sans-serif,Symbol,ZapfDingbats">
+               <fo:block text-align="center" start-indent="0pt">
+                  <fo:block font-weight="bold" font-size="24.8832pt"
+                     keep-with-next.within-column="always">
+                     <fo:block keep-with-next.within-column="always" space-before.optimum="10pt"
+                        space-before.minimum="10pt * 0.8" space-before.maximum="10pt * 1.2"
+                        hyphenate="false" text-align="center" start-indent="0pt"
+                        hyphenation-character="-" hyphenation-push-character-count="2"
+                        hyphenation-remain-character-count="2">DocBook Authoring with Eclipse
+                     </fo:block>
+                  </fo:block>
+                  <fo:block font-size="14.4pt" space-before="0.5em">
+                     <fo:wrapper>
+                        <fo:block>
+                           David Carver, Standards for Technology in Automotive Retail
+                           <fo:inline font-family="monospace">
+                              <fo:inline hyphenate="false" keep-together.within-line="always">
+                                 dcarver@starstandard.org</fo:inline>
+                           </fo:inline>
+                        </fo:block>
+                     </fo:wrapper>
+                  </fo:block>
+                  <fo:block space-before="0.5em">
+                     Copyright
+                     <fo:inline font-family="serif">©</fo:inline>
+                     2008 Standards for Technology in Automotive Retail. All rights reserved.
+                  </fo:block>
+                  <fo:block font-family="serif,Symbol,ZapfDingbats" margin-right="0.5in"
+                     margin-left="0.5in" text-align="start">
+                     <fo:block id="N10033">
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em"> Java and all Java-based trademarks are trademarks
+                           of Sun Microsystems, Inc. in the United States, other countries, or both.
+                        </fo:block>
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em"> Linux is a trademark of Linus Torvalds in the
+                           United States, other countries, or both.</fo:block>
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em"> Microsoft is a trademark of Microsoft Corporation
+                           in the United States, other countries, or both.</fo:block>
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em"> UNIX is a registered trademark of The Open Group in
+                           the United States and other countries.</fo:block>
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em"> Other company, product, or service names may be
+                           trademarks or service marks of others.</fo:block>
+                     </fo:block>
+                  </fo:block>
+                  <fo:block space-before="0.5em">
+                     <fo:table width="100%" table-layout="fixed">
+                        <fo:table-column column-width="proportional-column-width(1)"
+                           column-number="1" />
+                        <fo:table-column column-width="proportional-column-width(1)"
+                           column-number="2" />
+                        <fo:table-column column-width="proportional-column-width(1)"
+                           column-number="3" />
+                        <fo:table-body end-indent="0pt" start-indent="0pt">
+                           <fo:table-row>
+                              <fo:table-cell number-columns-spanned="3">
+                                 <fo:block>Revision History</fo:block>
+                              </fo:table-cell>
+                           </fo:table-row>
+                           <fo:table-row>
+                              <fo:table-cell>
+                                 <fo:block>Revision 1.0</fo:block>
+                              </fo:table-cell>
+                              <fo:table-cell>
+                                 <fo:block>June 20, 2008</fo:block>
+                              </fo:table-cell>
+                              <fo:table-cell>
+                                 <fo:block>DAC</fo:block>
+                              </fo:table-cell>
+                           </fo:table-row>
+                           <fo:table-row>
+                              <fo:table-cell number-columns-spanned="3">
+                                 <fo:block>Updated to DocBook 4.5, Web Standard Tools 3.0,
+                                    and XSL Tooling 0.5M8</fo:block>
+                              </fo:table-cell>
+                           </fo:table-row>
+                        </fo:table-body>
+                     </fo:table>
+                  </fo:block>
+                  <fo:block font-family="serif,Symbol,ZapfDingbats" margin-right="0.5in"
+                     margin-left="0.5in" text-align="start" space-before="0.5em">
+                     <fo:block>
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em" font-weight="bold" font-size="12pt"
+                           hyphenate="false" space-after.minimum="0.4em" space-after.optimum="0.6em"
+                           space-after.maximum="0.8em" keep-with-next.within-column="always">Abstract
+                        </fo:block>
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em">
+                           Eclipse is not know for it's ability to write documentation, but it is
+                           something that every programmer eventually has to do. In today's world it
+                           is not uncommon to have to support not only print media, but also online
+                           content as well. This article will take a look at the advances of eclipse
+                           as an authoring environment. It will revisit concepts original discussed
+                           in the
+                           <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                              external-destination="url(http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html)">"Authoring with Eclipse"
+                           </fo:basic-link>
+                           <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink"
+                              hyphenate="false">
+                              [
+                              <fo:basic-link
+                                 external-destination="url(http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html)">
+                                 http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html
+                              </fo:basic-link>
+                              ]
+                           </fo:inline>
+                           article, published in December 2005.
+                        </fo:block>
+                     </fo:block>
+                  </fo:block>
+               </fo:block>
+            </fo:block>
+         </fo:block>
+         <fo:block space-before.minimum="0.5em" space-before.optimum="1em"
+            space-before.maximum="2em" space-after.minimum="0.5em" space-after.optimum="1em"
+            space-after.maximum="2em" id="toc...article">
+            <fo:block>
+               <fo:block>
+                  <fo:block font-family="sans-serif,Symbol,ZapfDingbats" font-weight="bold"
+                     font-size="17.28pt" start-indent="0pt" margin-left="0pt" space-after="0.5em"
+                     space-before.maximum="2em" space-before.optimum="1.5em" space-before.minimum="1em">
+                     Table of Contents</fo:block>
+               </fo:block>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N1003F">Environment
+                  </fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N1003F">
+                     <fo:page-number-citation ref-id="N1003F" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N1006A">Preface</fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N1006A">
+                     <fo:page-number-citation ref-id="N1006A" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N10073">Introduction
+                  </fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N10073">
+                     <fo:page-number-citation ref-id="N10073" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N10078">Technical Documentation
+                  </fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N10078">
+                     <fo:page-number-citation ref-id="N10078" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block id="toc.article.N10078" margin-left="24pt">
+               <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+                  last-line-end-indent="-24pt">
+                  <fo:inline keep-with-next.within-line="always">
+                     <fo:basic-link internal-destination="N10092">Advantages of an
+                        XML format</fo:basic-link>
+                  </fo:inline>
+                  <fo:inline keep-together.within-line="always">
+                     <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                        leader-pattern-width="3pt" leader-pattern="dots" />
+                     <fo:basic-link internal-destination="N10092">
+                        <fo:page-number-citation ref-id="N10092" />
+                     </fo:basic-link>
+                  </fo:inline>
+               </fo:block>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N100B9">Examples</fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N100B9">
+                     <fo:page-number-citation ref-id="N100B9" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block id="toc.article.N100B9" margin-left="24pt">
+               <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+                  last-line-end-indent="-24pt">
+                  <fo:inline keep-with-next.within-line="always">
+                     <fo:basic-link internal-destination="N100C6">The Right Tool for the
+                        Right Job.</fo:basic-link>
+                  </fo:inline>
+                  <fo:inline keep-together.within-line="always">
+                     <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                        leader-pattern-width="3pt" leader-pattern="dots" />
+                     <fo:basic-link internal-destination="N100C6">
+                        <fo:page-number-citation ref-id="N100C6" />
+                     </fo:basic-link>
+                  </fo:inline>
+               </fo:block>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N101AB">Summary</fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N101AB">
+                     <fo:page-number-citation ref-id="N101AB" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N101B0">Acknowledgments
+                  </fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N101B0">
+                     <fo:page-number-citation ref-id="N101B0" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N101B7">About the Author
+                  </fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N101B7">
+                     <fo:page-number-citation ref-id="N101B7" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+            <fo:block text-align-last="justify" text-align="start" end-indent="24pt"
+               last-line-end-indent="-24pt">
+               <fo:inline keep-with-next.within-line="always">
+                  <fo:basic-link internal-destination="N101C0">Resources
+                  </fo:basic-link>
+               </fo:inline>
+               <fo:inline keep-together.within-line="always">
+                  <fo:leader keep-with-next.within-line="always" leader-alignment="reference-area"
+                     leader-pattern-width="3pt" leader-pattern="dots" />
+                  <fo:basic-link internal-destination="N101C0">
+                     <fo:page-number-citation ref-id="N101C0" />
+                  </fo:basic-link>
+               </fo:inline>
+            </fo:block>
+         </fo:block>
+         <fo:block id="N1003F">
+            <fo:block>
+               <fo:block>
+                  <fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats"
+                     margin-left="0pt">
+                     <fo:block keep-with-next.within-column="always">
+                        <fo:block font-family="sans-serif" font-weight="bold"
+                           keep-with-next.within-column="always" space-before.minimum="0.8em"
+                           space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left"
+                           start-indent="0pt">
+                           <fo:marker marker-class-name="section.head.marker">Environment</fo:marker>
+                           <fo:block font-size="20.735999999999997pt">Environment</fo:block>
+                        </fo:block>
+                     </fo:block>
+                  </fo:block>
+               </fo:block>
+            </fo:block>
+            <fo:block space-before.minimum="0.8em" space-before.optimum="1em"
+               space-before.maximum="1.2em" margin-left="0.25in" margin-right="0.25in" id="N10042">
+               <fo:block font-size="14pt" font-weight="bold" hyphenate="false"
+                  keep-with-next.within-column="always">Note</fo:block>
+               <fo:block>
+                  <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                     space-before.maximum="1.2em">
+                     The examples in this article were built and tested with:
+                     <fo:list-block space-before.optimum="1em" space-before.minimum="0.8em"
+                        space-before.maximum="1.2em" space-after.optimum="1em" space-after.minimum="0.8em"
+                        space-after.maximum="1.2em" provisional-label-separation="0.2em"
+                        provisional-distance-between-starts="1.0em" id="N10045">
+                        <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em" id="N10046">
+                           <fo:list-item-label end-indent="label-end()">
+                              <fo:block>•</fo:block>
+                           </fo:list-item-label>
+                           <fo:list-item-body start-indent="body-start()">
+                              <fo:block>
+                                 <fo:block>
+                                    <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       external-destination="url(http://www.eclipse.org/download)">Eclipse 3.4</fo:basic-link>
+                                    <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       hyphenate="false">
+                                       [
+                                       <fo:basic-link external-destination="url(http://www.eclipse.org/download)">
+                                          http://www.eclipse.org/download</fo:basic-link>
+                                       ]
+                                    </fo:inline>
+                                 </fo:block>
+                              </fo:block>
+                           </fo:list-item-body>
+                        </fo:list-item>
+                        <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em" id="N1004D">
+                           <fo:list-item-label end-indent="label-end()">
+                              <fo:block>•</fo:block>
+                           </fo:list-item-label>
+                           <fo:list-item-body start-indent="body-start()">
+                              <fo:block>
+                                 <fo:block>
+                                    <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       external-destination="url(http://www.eclipse.org/webtools)"> Eclipse Web Tools Platform (WTP) 3.0
+                                    </fo:basic-link>
+                                    <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       hyphenate="false">
+                                       [
+                                       <fo:basic-link external-destination="url(http://www.eclipse.org/webtools)">
+                                          http://www.eclipse.org/webtools</fo:basic-link>
+                                       ]
+                                    </fo:inline>
+                                 </fo:block>
+                              </fo:block>
+                           </fo:list-item-body>
+                        </fo:list-item>
+                        <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em" id="N10054">
+                           <fo:list-item-label end-indent="label-end()">
+                              <fo:block>•</fo:block>
+                           </fo:list-item-label>
+                           <fo:list-item-body start-indent="body-start()">
+                              <fo:block>
+                                 <fo:block>
+                                    <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       external-destination="url(http://www.eclipse.org/webtools/incubator)"> XSL Tooling 0.5M8 - Incubator
+                                    </fo:basic-link>
+                                    <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       hyphenate="false">
+                                       [
+                                       <fo:basic-link
+                                          external-destination="url(http://www.eclipse.org/webtools/incubator)">
+                                          http://www.eclipse.org/webtools/incubator</fo:basic-link>
+                                       ]
+                                    </fo:inline>
+                                 </fo:block>
+                              </fo:block>
+                           </fo:list-item-body>
+                        </fo:list-item>
+                        <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em" id="N1005B">
+                           <fo:list-item-label end-indent="label-end()">
+                              <fo:block>•</fo:block>
+                           </fo:list-item-label>
+                           <fo:list-item-body start-indent="body-start()">
+                              <fo:block>
+                                 <fo:block>
+                                    <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       external-destination="url(http://www.docbook.org)">Docbook 4.5</fo:basic-link>
+                                    <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       hyphenate="false">
+                                       [
+                                       <fo:basic-link external-destination="url(http://www.docbook.org)">
+                                          http://www.docbook.org</fo:basic-link>
+                                       ]
+                                    </fo:inline>
+                                 </fo:block>
+                              </fo:block>
+                           </fo:list-item-body>
+                        </fo:list-item>
+                        <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em" id="N10062">
+                           <fo:list-item-label end-indent="label-end()">
+                              <fo:block>•</fo:block>
+                           </fo:list-item-label>
+                           <fo:list-item-body start-indent="body-start()">
+                              <fo:block>
+                                 <fo:block>
+                                    <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       external-destination="url(http://docbook.sourceforge.net/)">The DocBook XSL stylesheets from the
+                                       DocBook Project</fo:basic-link>
+                                    <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink"
+                                       hyphenate="false">
+                                       [
+                                       <fo:basic-link external-destination="url(http://docbook.sourceforge.net/)">
+                                          http://docbook.sourceforge.net/</fo:basic-link>
+                                       ]
+                                    </fo:inline>
+                                 </fo:block>
+                              </fo:block>
+                           </fo:list-item-body>
+                        </fo:list-item>
+                     </fo:list-block>
+                  </fo:block>
+               </fo:block>
+            </fo:block>
+         </fo:block>
+         <fo:block id="N1006A">
+            <fo:block>
+               <fo:block>
+                  <fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats"
+                     margin-left="0pt">
+                     <fo:block keep-with-next.within-column="always">
+                        <fo:block font-family="sans-serif" font-weight="bold"
+                           keep-with-next.within-column="always" space-before.minimum="0.8em"
+                           space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left"
+                           start-indent="0pt">
+                           <fo:marker marker-class-name="section.head.marker">Preface</fo:marker>
+                           <fo:block font-size="20.735999999999997pt">Preface</fo:block>
+                        </fo:block>
+                     </fo:block>
+                  </fo:block>
+               </fo:block>
+            </fo:block>
+            <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+               space-before.maximum="1.2em">
+               This article is a revisiting of the original
+               <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                  external-destination="url(http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html)">"Authoring With Eclipse"</fo:basic-link>
+               <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false">
+                  [
+                  <fo:basic-link
+                     external-destination="url(http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html)">
+                     http://www.eclipse.org/articles/article.php?file=Article-Authoring-With-Eclipse/index.html
+                  </fo:basic-link>
+                  ]
+               </fo:inline>
+               article by Chris Aniszczyk and Lawrence Mandel. The article revisits many of the
+               concepts discussed in the original article, and expands on them where it is
+               necessary. Much has changed since the original article, but much of the information
+               is still relevant to authoring with eclipse today.
+            </fo:block>
+         </fo:block>
+         <fo:block id="N10073">
+            <fo:block>
+               <fo:block>
+                  <fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats"
+                     margin-left="0pt">
+                     <fo:block keep-with-next.within-column="always">
+                        <fo:block font-family="sans-serif" font-weight="bold"
+                           keep-with-next.within-column="always" space-before.minimum="0.8em"
+                           space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left"
+                           start-indent="0pt">
+                           <fo:marker marker-class-name="section.head.marker">Introduction
+                           </fo:marker>
+                           <fo:block font-size="20.735999999999997pt">Introduction</fo:block>
+                        </fo:block>
+                     </fo:block>
+                  </fo:block>
+               </fo:block>
+            </fo:block>
+            <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+               space-before.maximum="1.2em"> Writing documentation is something that almost any programmer
+               or architect is eventually going to have to do. It's not a job that most enjoy, and
+               the fact that the documentation usually has to be available in multiple formats at
+               the same time, makes the job of creating the documentation that much less enjoyable.
+               However, all is not lost. There are many ways to produce content that can be written
+               once and documented in many formats. In the sections that follow we will discuss one
+               of these options, DocBook, and how you can use existing eclipse projects and open
+               source plugins to create and authoring system. This article in fact is entirely
+               written in DocBook and leverages the tools discussed.</fo:block>
+         </fo:block>
+         <fo:block id="N10078">
+            <fo:block>
+               <fo:block>
+                  <fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats"
+                     margin-left="0pt">
+                     <fo:block keep-with-next.within-column="always">
+                        <fo:block font-family="sans-serif" font-weight="bold"
+                           keep-with-next.within-column="always" space-before.minimum="0.8em"
+                           space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left"
+                           start-indent="0pt">
+                           <fo:marker marker-class-name="section.head.marker">Technical Documentation
+                           </fo:marker>
+                           <fo:block font-size="20.735999999999997pt">Technical Documentation</fo:block>
+                        </fo:block>
+                     </fo:block>
+                  </fo:block>
+               </fo:block>
+            </fo:block>
+            <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+               space-before.maximum="1.2em">According to Chris and Lawrence, "In the open source
+               world, technical documentation is primarily accomplished using two popular formats:
+               DocBook and the Darwin Information Typing Architecture (DITA)." Both of these formats
+               leverage XML. They separate the content from the presentation. Unlike HTML which
+               mixes the two together, and you don't have an easy time of separating them. The
+               advantage to DocBook and DITA formats is that it frees the author to concentrate on
+               the content they are entering and not how it will necessarily look. This is necessary
+               because the same content can be targeted to multiple formats, each with its own
+               unique presentation and requirements. It is not uncommon to have DocBook content
+               appear in PDF, Presentation Slides, HTML, RTF, Man, and many more formats.</fo:block>
+            <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+               space-before.maximum="1.2em"> DocBook itself has it's beginnings with SGML, the precursor to
+               XML. It is widely used in the publishing industry, and the O'Reily publishing house
+               use DocBook for all it's books.</fo:block>
+            <fo:block space-before.minimum="0.8em" space-before.optimum="1em"
+               space-before.maximum="1.2em" margin-left="0.25in" margin-right="0.25in" id="N1007F">
+               <fo:block font-size="14pt" font-weight="bold" hyphenate="false"
+                  keep-with-next.within-column="always">Tip</fo:block>
+               <fo:block>
+                  <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                     space-before.maximum="1.2em">
+                     Norman Walsh, has written a book called
+                     <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink"
+                        external-destination="url(http://www.docbook.org/tdg/en/html/docbook.html)">DocBook: The Definitive Guide</fo:basic-link>
+                     <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false">
+                        [
+                        <fo:basic-link external-destination="url(http://www.docbook.org/tdg/en/html/docbook.html)">
+                           http://www.docbook.org/tdg/en/html/docbook.html</fo:basic-link>
+                        ]
+                     </fo:inline>
+                     . The book is available on line as well as at many book resellers. Anything and
+                     everything about the DocBook markup can be found in the book.
+                  </fo:block>
+               </fo:block>
+            </fo:block>
+            <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+               space-before.maximum="1.2em"> Writing an article or a book in XML is no different than
+               writing most any other application. You can break the process down into several
+               stages. Chris and Lawrence original had these in the following steps:</fo:block>
+            <fo:list-block space-before.optimum="1em" space-before.minimum="0.8em"
+               space-before.maximum="1.2em" space-after.optimum="1em" space-after.minimum="0.8em"
+               space-after.maximum="1.2em" provisional-label-separation="0.2em"
+               provisional-distance-between-starts="1.0em" id="N10088">
+               <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                  space-before.maximum="1.2em" id="N10089">
+                  <fo:list-item-label end-indent="label-end()">
+                     <fo:block>•</fo:block>
+                  </fo:list-item-label>
+                  <fo:list-item-body start-indent="body-start()">
+                     <fo:block>
+                        <fo:block> Creation - The process of adding your content to the file. This
+                           includes such meta data as authors, editors, revision history, chapters,
+                           sections, figures, tables, etc.</fo:block>
+                     </fo:block>
+                  </fo:list-item-body>
+               </fo:list-item>
+               <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                  space-before.maximum="1.2em" id="N1008C">
+                  <fo:list-item-label end-indent="label-end()">
+                     <fo:block>•</fo:block>
+                  </fo:list-item-label>
+                  <fo:list-item-body start-indent="body-start()">
+                     <fo:block>
+                        <fo:block> Review - The process of fixing the inevitable grammar and content
+                           mistakes that tend to creep into the document. Regardless of how well the
+                           author tries, some no excuse error is going to creep into the document.
+                           The nice thing about writing is that during this process one is not
+                           concerned as much about how it looks, just that the content is correct.
+                        </fo:block>
+                     </fo:block>
+                  </fo:list-item-body>
+               </fo:list-item>
+               <fo:list-item space-before.optimum="1em" space-before.minimum="0.8em"
+                  space-before.maximum="1.2em" id="N1008F">
+                  <fo:list-item-label end-indent="label-end()">
+                     <fo:block>•</fo:block>
+                  </fo:list-item-label>
+                  <fo:list-item-body start-indent="body-start()">
+                     <fo:block>
+                        <fo:block> Publication - The final step is actually publish the document.
+                           This is either creating the PDF, the HTML, or the eclipse Help format
+                           files. This is where the formatting is reviewed, and for the most part
+                           with the help of the DocBook Project's XSL Stylesheets very little has to
+                           be done to get a professional looking publication. If errors are found,
+                           then repeat the Review process, and republish.</fo:block>
+                     </fo:block>
+                  </fo:list-item-body>
+               </fo:list-item>
+            </fo:list-block>
+            <fo:block id="N10092">
+               <fo:block>
+                  <fo:block>
+                     <fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats"
+                        margin-left="0pt">
+                        <fo:block keep-with-next.within-column="always">
+                           <fo:block font-family="sans-serif" font-weight="bold"
+                              keep-with-next.within-column="always" space-before.minimum="0.8em"
+                              space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left"
+                              start-indent="0pt">
+                              <fo:marker marker-class-name="section.head.marker">Advantages of an XML
+                                 format</fo:marker>
+                              <fo:block font-size="17.28pt">Advantages of an XML format
+                              </fo:block>
+                           </fo:block>
+                        </fo:block>
+                     </fo:block>
+                  </fo:block>
+               </fo:block>
+               <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                  space-before.maximum="1.2em"> Microsoft Word has the ability to create a master document
+                  from multiple word documents. However, anybody that has tried to do this, knows
+                  that the process is more brittle than it needs to be. It should be a simple as
+                  saying include these three files, and generate me out one complete book that
+                  contains everything. With DocBook and XML it is that simple if you leverage a
+                  little known specification called XInclude.</fo:block>
+               <fo:block id="N10097">
+                  <fo:block>
+                     <fo:block>
+                        <fo:block keep-together.within-column="always"
+                           font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+                           <fo:block keep-with-next.within-column="always">
+                              <fo:block font-family="sans-serif" font-weight="bold"
+                                 keep-with-next.within-column="always" space-before.minimum="0.8em"
+                                 space-before.optimum="1.0em" space-before.maximum="1.2em"
+                                 text-align="left" start-indent="0pt">
+                                 <fo:block font-size="14.399999999999999pt">XInclude</fo:block>
+                              </fo:block>
+                           </fo:block>
+                        </fo:block>
+                     </fo:block>
+                  </fo:block>
+                  <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                     space-before.maximum="1.2em">
+                     XInlcude allows you create the Modularity that Chris and Lawrence original
+                     talked about. An example of an XInclude is shown in
+                     <fo:basic-link internal-destination="Xinclude_Example">
+                        <fo:inline xmlns:xlink="http://www.w3.org/1999/xlink">Example 1, “XInclude”</fo:inline>
+                     </fo:basic-link>
+                  </fo:block>
+                  <fo:block>
+                     <fo:block space-before.minimum="0.5em" space-before.optimum="1em"
+                        space-before.maximum="2em" space-after.minimum="0.5em" space-after.optimum="1em"
+                        space-after.maximum="2em" keep-together.within-column="auto" id="Xinclude_Example">
+                        <fo:block space-before.optimum="1em" space-before.minimum="0.8em"
+                           space-before.maximum="1.2em" font-weight="bold" font-size="12pt"
+                           hyphenate="false" space-after.minimum="0.4em" space-after.optimum="0.6em"
+                           space-after.maximum="0.8em" keep-with-next.within-column="always">
+                           Example 1. XInclude</fo:block>
+                        <fo:block space-before.minimum="0.8em" space-before.optimum="1em"
+                           space-before.maximum="1.2em" space-after.minimum="0.8em"
+                           space-after.optimum="1em" space-after.maximum="1.2em" hyphenate="false"
+                           wrap-option="no-wrap" white-space-collapse="false" white-space-treatment="preserve"
+                           linefeed-treatment="preserve" text-align="start" font-family="monospace"
+                           id="N100A3"> &amp;lt;book id='Book1' xmlns:xi="http://www.w3.org/2001/XInclude"&gt;
+  &amp;lt;xi:include href="Introduction.xml"/&gt;
+  &amp;lt;xi:include href="WorkbenchLayout.xml"/&gt;
+&amp;lt;book&gt;
+
+               </fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.minimum="0.8em" space-before.optimum="1em" space-before.maximum="1.2em" margin-left="0.25in" margin-right="0.25in" id="N100A5">
+<fo:block font-size="14pt" font-weight="bold" hyphenate="false" keep-with-next.within-column="always">Note</fo:block>
+<fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                    more
+                </fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+            
+            </fo:block>
+</fo:block>
+<fo:block id="N100AA">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="14.399999999999999pt">Version Control</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> Leveraging Eclipse's built-in version control support with CVS or adding a open
+               source or third party plugin for another version control system, makes maintaining
+               and working on the documentation as convenient as working on any source code for a
+               program. The same comparison and merging abilities that are used with source code for
+               programs can be leveraged for the authoring process as well. Compare this to trying
+               to work with formats that are stored in a binary format and the speed advantage
+               becomes clear pretty quickly. When dealing with a binary formatted file, typically a
+               locking mechanism has to be implemented. Working with DocBook since it is a text
+               format, allows one to take advantage of agile development practices as Continuous
+               Integration and automated builds. Documentation doesn't have to become a thing that
+               is put to the end. It should become a part of the standard build process.</fo:block>
+</fo:block>
+<fo:block id="N100AF">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="14.399999999999999pt">Formatting</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> As stated earlier. The advantage that an XML format has is that it allows
+               presentation and content to be separated. The formatting of the document is
+               independent of the content. One of the most time consuming parts of creating
+               documentation is making sure the formatting is the same. Traditionally if you move
+               sections or cut and paste content from another source, it messes up the formatting of
+               the document. With DocBook you don't run into this issue, as the formatting is
+               controlled during the publication phase. Thus freeing up time that the author would
+               have to spend trying to make the document legible, to make sure that they have the
+               necessary content correct.</fo:block>
+</fo:block>
+<fo:block id="N100B4">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="14.399999999999999pt">One Source, Multiple Targets</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> DocBook, allows for one source content to be generated into multiple formats.
+               Typically DocBook is published in PDF, but it is also widely used for web pages,
+               multi-sectioned HTML pages, Tex, and RTF formats as well. The author doesn't need to
+               worry about any of these formats or how it will necessarily look as that is taken
+               care of by the publishing process. Typically with an XSL stylesheet that already
+               contains the necessary formatting information.</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block id="N100B9">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:marker marker-class-name="section.head.marker">Examples</fo:marker>
+<fo:block font-size="20.735999999999997pt">Examples</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+         To show the authoring tool chain in Eclipse, this article will use a sample book document
+         from the DocBook XSL project. The XML version of the document can be seen
+         <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(files/book.xml)">here</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(files/book.xml)">files/book.xml</fo:basic-link>]</fo:inline>
+         . This DocBook source for this article is also available and can be seen
+         <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(AuthoringWithEclipse.xml)">here</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(AuthoringWithEclipse.xml)">AuthoringWithEclipse.xml</fo:basic-link>]</fo:inline>
+         .
+      </fo:block>
+<fo:block id="N100C6">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:marker marker-class-name="section.head.marker">The Right Tool for the Right Job.</fo:marker>
+<fo:block font-size="17.28pt">The Right Tool for the Right Job.</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> In order to write an article or a book with DocBook, one needs an editor. Preferably
+            one that understands the XML dialect and it's support tools. The eclipse Web Standard
+            Tools project comes with the necessary tools that are needed. The XML editing support
+            provides the following functionality:</fo:block>
+<fo:list-block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" space-after.optimum="1em" space-after.minimum="0.8em" space-after.maximum="1.2em" provisional-label-separation="0.2em" provisional-distance-between-starts="1.0em" id="N100CB">
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N100CC">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block> Validation - the ability to check for syntax errors against a specified
+                  grammar. A grammar in this case can be either a DTD or XML Schema for the XML that
+                  is being edited. The XML editor also contains as you type validation to always
+                  keep your XML well formed and valid according the grammar provided.</fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N100CF">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block> Syntax Coloring - Working with XML is much easier of the tags can be easily
+                  separated from the content.</fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N100D2">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block> Content Assistance - If a grammar is detected for the XML file that has been
+                  loaded, then content assistance is available for the tags and attributes. This is
+                  activated using CTRL+SPACE. Also any templates that may be available from the XML
+                  templates preference page will be displayed as well.</fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+</fo:list-block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> The XML editor provided by Web Standard Tools is just the first tool that you will
+            need, but it will be the one that is used the most. The next will be the DocBook XSL
+            stylesheets provided by the DocBook Project. This is is a set of XSL stylesheets that
+            can transform the DocBook files into something that is actually readable. Output formats
+            include HTML, Tex, RTF, and even PDF via XSL-FO.</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> The examples that are shown here are all built using tools that are available at
+            eclipse. Only when we get to the PDF publication do we need to leverage a plugin that
+            isn't available from eclipse directly, but is available as free software. More when PDF
+            generation is covered later in the article.</fo:block>
+<fo:block id="N100D9">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="14.399999999999999pt">Creation and Review</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.minimum="0.8em" space-before.optimum="1em" space-before.maximum="1.2em" margin-left="0.25in" margin-right="0.25in" id="N100DC">
+<fo:block font-size="14pt" font-weight="bold" hyphenate="false" keep-with-next.within-column="always">Note</fo:block>
+<fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> The following section is taken primarily from the original article. Some
+                  updating has been done to update the content.</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> Although creation and review are two separate parts of the technical
+               documentation process, the same tools are required and therefore will be discussed
+               together.</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+               As you may already know, the Eclipse project is composed of several top-level
+               projects including Eclipse itself (known as the Eclipse base) and the WTP project.
+               WTP adds many tools to the Eclipse base including an XML editor with graphical and
+               source representations of the content. Although the graphical editor is useful for
+               viewing the document, the source editor, shown in
+               <fo:basic-link internal-destination="xml-source-editor">
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink">Figure 1, “The XML Source Editor”</fo:inline>
+</fo:basic-link>
+               , is more useful when authoring in XML.
+            </fo:block>
+<fo:block space-before.minimum="0.5em" space-before.optimum="1em" space-before.maximum="2em" space-after.minimum="0.5em" space-after.optimum="1em" space-after.maximum="2em" keep-together.within-column="auto" id="xml-source-editor">
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" font-weight="bold" font-size="12pt" hyphenate="false" space-after.minimum="0.4em" space-after.optimum="0.6em" space-after.maximum="0.8em" keep-with-next.within-column="always">Figure 1. The XML Source Editor</fo:block>
+<fo:block id="N100EA" text-align="center">
+<fo:external-graphic src="url(images/xmlsourceeditor.gif)" width="auto" height="auto" content-width="auto" content-height="auto" content-type="content-type:image/gif" text-align="center"/>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> In addition to the features discussed previously, Web Standard Tools provides
+               additional XML functionality.</fo:block>
+<fo:list-block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" space-after.optimum="1em" space-after.minimum="0.8em" space-after.maximum="1.2em" provisional-label-separation="0.2em" provisional-distance-between-starts="1.0em" id="N100F2">
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N100F3">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block>
+                     <fo:inline font-style="italic">Outline View</fo:inline>
+                     - Assists you in editing and viewing the content of your document.
+                  </fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N100F9">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block>
+                     <fo:inline font-style="italic">XML Catalog</fo:inline>
+                     - Allows you to register Document Type Definitions (DTD) and XML Schema
+                     grammars associated with your document with your workspace so you can work with
+                     the benefits of validation while disconnected from the Internet.
+                  </fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+</fo:list-block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> Aside from the benefits of the XML editor, working in Eclipse provides other
+               benefits. Eclipse includes integrated version control for CVS. There also exists
+               freely available plugins for Subversion as well. Integrated version control allows
+               you to check your changes into, and view others' changes in, your version control
+               system from within Eclipse. These tools are also useful for your reviewers, who, if
+               you give them permission, can add comments and suggestions to your document and check
+               their changes in. Giving your reviewers permission to make these changes allows you
+               to avoid the need to use e-mail or some other communication mechanism.</fo:block>
+</fo:block>
+<fo:block id="N10101">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="14.399999999999999pt">Publication</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+               The DocBook XSL
+               <fo:basic-link internal-destination="docbookxsl">
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink">[docbookxsl]</fo:inline>
+</fo:basic-link>
+               project offers numerous transformations, including HTML and PDF formats. The most
+               common transformation technique is to use an Ant file with the appropriate tasks for
+               the various transformations. In this article we use the XSL Tooling set of plugins to
+               simplify this task. XSL Tooling integrates into the familiar Eclipse launcher
+               framework. This integration allows you to select the style sheet and pass in
+               necessary parameters for the transformation.
+            </fo:block>
+<fo:block id="N10109">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="12pt">HTML</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> Of all the available transformations, transforming your document into HTML is
+                  the easiest to use. All that you need to do is create a proper transformation
+                  launch configuration and run the transformation. Specifically, you need to specify
+                  the correct style sheet:</fo:block>
+<fo:list-block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" space-after.optimum="1em" space-after.minimum="0.8em" space-after.maximum="1.2em" provisional-label-separation="0.2em" provisional-distance-between-starts="1.0em" id="N1010E">
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N1010F">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block>DocBook</fo:block>
+<fo:list-block provisional-label-separation="0.2em" provisional-distance-between-starts="1.0em" id="N10112">
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N10113">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block>html/docbook.xsl</fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+</fo:list-block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+</fo:list-block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                  <fo:basic-link internal-destination="html-transformation">
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink">Figure 2, “Sample HTML Transformation Configuration for book.xml”</fo:inline>
+</fo:basic-link>
+                  shows a sample transformation configuration that will transform our DocBook sample
+                  <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(files/book.xml)">document</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(files/book.xml)">files/book.xml</fo:basic-link>]</fo:inline>
+                  into HTML.
+               </fo:block>
+<fo:block space-before.minimum="0.5em" space-before.optimum="1em" space-before.maximum="2em" space-after.minimum="0.5em" space-after.optimum="1em" space-after.maximum="2em" keep-together.within-column="auto" id="html-transformation">
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" font-weight="bold" font-size="12pt" hyphenate="false" space-after.minimum="0.4em" space-after.optimum="0.6em" space-after.maximum="0.8em" keep-with-next.within-column="always">Figure 2. Sample HTML Transformation Configuration for book.xml</fo:block>
+<fo:block id="N10123" text-align="center">
+<fo:external-graphic src="url(images/html.jpg)" width="741px" height="592px" content-width="scale-to-fit" content-height="scale-to-fit" content-type="content-type:image/jpeg" text-align="center"/>
+</fo:block>
+</fo:block>
+<fo:block space-before.minimum="0.8em" space-before.optimum="1em" space-before.maximum="1.2em" margin-left="0.25in" margin-right="0.25in" id="N1012B">
+<fo:block font-size="14pt" font-weight="bold" hyphenate="false" keep-with-next.within-column="always">Tip</fo:block>
+<fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                     You can augment the transformation by passing parameters to the style sheet.
+                     There's a full listing of DocBook XSL parameters that can be used to configure
+                     the transformation located
+                     <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://docbook.sourceforge.net/release/xsl/current/doc/html/)"> here</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://docbook.sourceforge.net/release/xsl/current/doc/html/)">http://docbook.sourceforge.net/release/xsl/current/doc/html/</fo:basic-link>]</fo:inline>
+                     .
+                  </fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                     Bob Stayton has also written
+                     <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://www.sagehill.net/docbookxsl/)">Docbook XSL: The Complete Guide</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://www.sagehill.net/docbookxsl/)">http://www.sagehill.net/docbookxsl/</fo:basic-link>]</fo:inline>
+                     which is available on line and in print format. This book describes how to
+                     customize the DocBook stylesheets beyond those that you can do with the
+                     parameters. The XSL Tooling provides an XSL aware XML editor that can be used
+                     to help create and debug the stylesheets.
+                  </fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block id="N10138">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="12pt">PDF</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> Transforming a DocBook XML file to PDF format is more involved than the
+                  transformation to HTML but it is still possible using a style sheet. The
+                  difference lies in a task that must be performed before the actual transformation.
+                  So, the transformation from XML to PDF is a two-step process.</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                  Step one is to generate an XSL formatting objects (XSL-FO) document. This document
+                  will then be transformed into a PDF. In order to generate an XSL-FO document, you
+                  need to use the following stylesheet:
+                  <fo:inline font-style="italic">fo/docbook.xsl</fo:inline>
+                  .
+                  <fo:basic-link internal-destination="xslfo-transformation">
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink">Figure 3, “Sample XSL-FO Transformation Configuration for book.xml”</fo:inline>
+</fo:basic-link>
+                  shows a sample transformation configuration used to generate an XSL-FO document
+                  from book.xml.
+               </fo:block>
+<fo:block space-before.minimum="0.5em" space-before.optimum="1em" space-before.maximum="2em" space-after.minimum="0.5em" space-after.optimum="1em" space-after.maximum="2em" keep-together.within-column="auto" id="xslfo-transformation">
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" font-weight="bold" font-size="12pt" hyphenate="false" space-after.minimum="0.4em" space-after.optimum="0.6em" space-after.maximum="0.8em" keep-with-next.within-column="always">Figure 3. Sample XSL-FO Transformation Configuration for book.xml</fo:block>
+<fo:block id="N10149" text-align="center">
+<fo:external-graphic src="url(images/xsl-fo.png)" width="692px" height="517px" content-width="scale-to-fit" content-height="scale-to-fit" content-type="content-type:image/png" text-align="center"/>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                  Step two is to use a Formatting Objects Processor (FOP) to transform your XSL-FO
+                  document into a PDF. One of the more popular open source FOPs is the
+                  <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://xmlgraphics.apache.org/fop/)"> Apache FOP</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://xmlgraphics.apache.org/fop/)">http://xmlgraphics.apache.org/fop/</fo:basic-link>]</fo:inline>
+                  . We'll use a third-party
+                  <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://www.ahmadsoft.org/fopbridge.html)"> plug-in from Ahmadsoft</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://www.ahmadsoft.org/fopbridge.html)">http://www.ahmadsoft.org/fopbridge.html</fo:basic-link>]</fo:inline>
+                  that integrates Apache FOP into Eclipse. After installing this plug-in, all that
+                  you need to do to render the XSL-FO document is run the FOP transformation.
+                  <fo:basic-link internal-destination="pdf-transformation">
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink">Figure 4, “Sample FOP Transformation”</fo:inline>
+</fo:basic-link>
+                  shows an example of running the FOP transformation.
+               </fo:block>
+<fo:block space-before.minimum="0.5em" space-before.optimum="1em" space-before.maximum="2em" space-after.minimum="0.5em" space-after.optimum="1em" space-after.maximum="2em" keep-together.within-column="auto" id="pdf-transformation">
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" font-weight="bold" font-size="12pt" hyphenate="false" space-after.minimum="0.4em" space-after.optimum="0.6em" space-after.maximum="0.8em" keep-with-next.within-column="always">Figure 4. Sample FOP Transformation</fo:block>
+<fo:block id="N10162">
+<fo:external-graphic src="url(images/fop.png)" width="430px" height="447px" content-width="scale-to-fit" content-height="scale-to-fit" content-type="content-type:image/png"/>
+</fo:block>
+</fo:block>
+<fo:block space-before.minimum="0.8em" space-before.optimum="1em" space-before.maximum="1.2em" margin-left="0.25in" margin-right="0.25in" id="N10169">
+<fo:block font-size="14pt" font-weight="bold" hyphenate="false" keep-with-next.within-column="always">Note</fo:block>
+<fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                     The example includes a sample Ant
+                     <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(files/pdf/build.xml)"> file</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(files/pdf/build.xml)">files/pdf/build.xml</fo:basic-link>]</fo:inline>
+                     that performs the same transformation as running the FOP transformation using
+                     the
+                     <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://www.ahmadsoft.org/fopbridge.html)"> plug-in from Ahmadsoft</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://www.ahmadsoft.org/fopbridge.html)">http://www.ahmadsoft.org/fopbridge.html</fo:basic-link>]</fo:inline>
+                     . An Ant script is a popular method of performing the publishing stage, and
+                     this example should give you a good starting point if you'd prefer to go this
+                     route. The DITA project already includes an Ant script (found in
+                     ant/sample_pdf.xml in DITA-OT) to perform this exact task on DITA source files.
+                  </fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                  As before, a Flash movie that shows the transformation is available
+                  <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(files/DocBook-PDF.htm)">here</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(files/DocBook-PDF.htm)">files/DocBook-PDF.htm</fo:basic-link>]</fo:inline>
+                  .
+               </fo:block>
+</fo:block>
+<fo:block id="N1017A">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="12pt">Eclipse Help</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                  The DocBook Project includes a XSL stylesheet that can be used to create the 
+                  necessary files for the eclipse help system. In order to perform this transformation
+                  in DocBook, you need to specify a few parameters and use the following style sheet:
+                  <fo:inline font-style="italic">eclipse/eclipse.xsl</fo:inline>
+                  .
+                  <fo:basic-link internal-destination="eclipse-transformation">
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink">Figure 5, “Sample Eclipse Infocenter Transformation Configuration”</fo:inline>
+</fo:basic-link>
+                  shows a sample transformation configuration along with the correct parameters. To
+                  perform this transformation using a DITA source file, use the
+                  <fo:inline font-style="italic">ant/sample_eclipsehelp.xml</fo:inline>
+                  Ant file.
+               </fo:block>
+<fo:block space-before.minimum="0.5em" space-before.optimum="1em" space-before.maximum="2em" space-after.minimum="0.5em" space-after.optimum="1em" space-after.maximum="2em" keep-together.within-column="auto" id="eclipse-transformation">
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" font-weight="bold" font-size="12pt" hyphenate="false" space-after.minimum="0.4em" space-after.optimum="0.6em" space-after.maximum="0.8em" keep-with-next.within-column="always">Figure 5. Sample Eclipse Infocenter Transformation Configuration</fo:block>
+<fo:block id="N1018C" text-align="center">
+<fo:external-graphic src="url(images/eclipse.png)" width="803px" height="388px" content-width="scale-to-fit" content-height="scale-to-fit" content-type="content-type:image/png" text-align="center"/>
+</fo:block>
+</fo:block>
+<fo:block space-before.minimum="0.8em" space-before.optimum="1em" space-before.maximum="1.2em" margin-left="0.25in" margin-right="0.25in" id="N10194">
+<fo:block font-size="14pt" font-weight="bold" hyphenate="false" keep-with-next.within-column="always">Tip</fo:block>
+<fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                     The complete list of DocBook XSL parameters for the Eclipse Infocenter
+                     transformation is located
+                     <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://docbook.sourceforge.net/release/xsl/current/doc/html/rn22.html)"> here</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://docbook.sourceforge.net/release/xsl/current/doc/html/rn22.html)">http://docbook.sourceforge.net/release/xsl/current/doc/html/rn22.html</fo:basic-link>]</fo:inline>
+                     .
+                  </fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block id="N1019B">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:block font-size="14.399999999999999pt">Prior Limitations</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> Chris and Lawrence's original article outline two short comings with eclipse as an authoring
+            environment.
+            </fo:block>
+<fo:list-block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" space-after.optimum="1em" space-after.minimum="0.8em" space-after.maximum="1.2em" provisional-label-separation="0.2em" provisional-distance-between-starts="1.0em" id="N101A0">
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N101A1">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block>
+                        No Grammar and Spell Checking.
+                    </fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N101A4">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block>
+                        No preview screen or WSYIWG editor for documentation.
+                    </fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+</fo:list-block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                The first limitation has been addressed since eclipse 3.3.  Eclipse includes a spell checker and 
+                the Web Standard Tools XML editor leverages this support.   Users may add their own custom dictionary or
+                add any of the freely available dictionaries available on the Internet. 
+            </fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+                The second item may or may not be a limitation depending on the point of view.  The advantage of DocBook is
+                that it separates the content from the presentation.   Worrying about the presentation while creating the
+                content may not be the best thing to do.  The main reason is that how it is formatted is going to greatly
+                depend on the target platforms the documentation is intended.   DocBook authoring is not the same as
+                using a traditional word processor.  A different way of thinking of documentation needs to be approached.  The
+                formatting is not the critical piece, but it is the content of the document that matters the most.
+            </fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block id="N101AB">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:marker marker-class-name="section.head.marker">Summary</fo:marker>
+<fo:block font-size="20.735999999999997pt">Summary</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em"> 
+        Since the original article was published, many advancements have been made with the XML support for eclipse.  The
+        editors are faster, their is better tooling support, and the docbook grammar it self has advanced.  However, the 
+        overall process that Chris and Lawrence had described is fundamentally unchanged three years later.  Eclipse is a
+        perfectly suitable authoring system for technical documentation.  
+      </fo:block>
+</fo:block>
+<fo:block id="N101B0">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:marker marker-class-name="section.head.marker">Acknowledgments</fo:marker>
+<fo:block font-size="20.735999999999997pt">Acknowledgments</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:list-block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" space-after.optimum="1em" space-after.minimum="0.8em" space-after.maximum="1.2em" provisional-label-separation="0.2em" provisional-distance-between-starts="1.0em" id="N101B3">
+<fo:list-item space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" id="N101B4">
+<fo:list-item-label end-indent="label-end()">
+<fo:block>•</fo:block>
+</fo:list-item-label>
+<fo:list-item-body start-indent="body-start()">
+<fo:block>
+<fo:block> Chris Aniszczyk and Lawrence Mandel for their original article title,
+                  "Authoring With Eclipse".</fo:block>
+</fo:block>
+</fo:list-item-body>
+</fo:list-item>
+</fo:list-block>
+</fo:block>
+<fo:block id="N101B7">
+<fo:block>
+<fo:block>
+<fo:block keep-together.within-column="always" font-family="sans-serif,Symbol,ZapfDingbats" margin-left="0pt">
+<fo:block keep-with-next.within-column="always">
+<fo:block font-family="sans-serif" font-weight="bold" keep-with-next.within-column="always" space-before.minimum="0.8em" space-before.optimum="1.0em" space-before.maximum="1.2em" text-align="left" start-indent="0pt">
+<fo:marker marker-class-name="section.head.marker">About the Author</fo:marker>
+<fo:block font-size="20.735999999999997pt">About the Author</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em">
+         David Carver is an XML Data Architect for Standards for Technology in Automotive Retail. He
+         is also a committer on the
+         <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://www.eclipse.org/webtools/incubator)">XSL Tooling</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://www.eclipse.org/webtools/incubator)">http://www.eclipse.org/webtools/incubator</fo:basic-link>]</fo:inline>
+         project.
+      </fo:block>
+</fo:block>
+<fo:block space-before.maximum="2em" space-before.optimum="1.5em" space-before.minimum="1em" id="N101C0">
+<fo:block>
+<fo:block>
+<fo:block font-weight="bold" font-family="sans-serif,Symbol,ZapfDingbats" font-size="24.8832pt" margin-left="0pt">
+<fo:block keep-with-next.within-column="always" space-before.optimum="10pt" space-before.minimum="10pt * 0.8" space-before.maximum="10pt * 1.2" hyphenate="false" text-align="left" start-indent="0pt" hyphenation-character="-" hyphenation-push-character-count="2" hyphenation-remain-character-count="2">Resources</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" start-indent="0.5in" text-indent="-0.5in" id="docbook">[docbook] <fo:inline>
+            <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://www.docbook.org)">Docbook.org - The Source for Documentation.</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://www.docbook.org)">http://www.docbook.org</fo:basic-link>]</fo:inline>
+         . </fo:inline>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" start-indent="0.5in" text-indent="-0.5in" id="docbookxsl">[docbookxsl] <fo:inline>
+            <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://docbook.sourceforge.net/projects/xsl/)"> DocBook XSL Style Sheets</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://docbook.sourceforge.net/projects/xsl/)">http://docbook.sourceforge.net/projects/xsl/</fo:basic-link>]</fo:inline>
+         . </fo:inline>
+</fo:block>
+<fo:block space-before.optimum="1em" space-before.minimum="0.8em" space-before.maximum="1.2em" start-indent="0.5in" text-indent="-0.5in" id="subversion">[subversion] <fo:inline>
+            <fo:basic-link xmlns:xlink="http://www.w3.org/1999/xlink" external-destination="url(http://subversion.tigris.org/)"> Subversion</fo:basic-link>
+<fo:inline xmlns:xlink="http://www.w3.org/1999/xlink" hyphenate="false"> [<fo:basic-link external-destination="url(http://subversion.tigris.org/)">http://subversion.tigris.org/</fo:basic-link>]</fo:inline>
+         . </fo:inline>
+</fo:block>
+</fo:flow>
+</fo:page-sequence>
+</fo:root>

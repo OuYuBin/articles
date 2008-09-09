@@ -1,0 +1,596 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Authoring with Eclipse</title><link href="../article.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.73.2" name="generator"><meta name="description" content="The topic of technical publishing is relatively new to the world of Eclipse. One can make the argument that technical publishing is just another collaborative development process involving several people with different backgrounds and skills. This article will show that the Eclipse platform is a viable platform for technical publishing by discussing how to write documents such as an article or a book within Eclipse. In fact, this article was written using Eclipse."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><h1>Authoring with Eclipse</h1><div class="summary"><h2>Summary</h2><p>
+				The topic of technical publishing is relatively new to
+				the world of Eclipse. One can make the argument that
+				technical publishing is just another collaborative
+				development process involving several people with
+				different backgrounds and skills. This article will show
+				that the Eclipse platform is a viable platform for technical
+				publishing by discussing how to write documents such as
+				an article or a book within Eclipse. In fact, this
+				article was written using Eclipse.
+			</p><div class="author">
+				By
+				Chris&nbsp;Aniszczyk,
+					IBM Corporation<br>Lawrence&nbsp;Mandel,
+					IBM Corporation<br></div><div class="copyright">
+				Copyright &copy;
+				2005&nbsp;International Business Machines Corporation. All rights reserved.</div><div class="date"><span class="date">December 14, 2005<br></span></div></div><div class="content"><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10049"></a>Environment</h2></div></div></div><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>
+				The examples in this article were built and tested with:
+				<div class="itemizedlist"><ul type="disc"><li>
+							<a class="ulink" href="http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops/R-3.1-200506271435/eclipse-SDK-3.1-win32.zip" target="_new">
+								Eclipse 3.1
+							</a>
+						</li><li>
+							<a class="ulink" href="http://download.eclipse.org/webtools/downloads/drops/R-1.0-/" target="_new">
+								Eclipse Web Tools Platform (WTP) 1.0
+							</a>
+						</li><li>
+							<a class="ulink" href="http://eclipsexslt.sourceforge.net/" target="_new">
+								Orangevolt XSLT 1.0.4
+							</a>
+						</li></ul></div>
+			</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10066"></a>Introduction</h2></div></div></div><p>
+			The authors of this document view technical documentation as
+			another development process that shares the same
+			characteristics as a software process. In technical
+			publishing, you have writers, editors, typesetters, QA
+			reviewers, and so on. Technical publishing is a collaborative
+			process that currently lacks the tools to facilitate
+			collaboration. The goal of this article is two-fold: give an
+			introduction to technical documentation and show, through an
+			example, how Eclipse can help make technical documentation a
+			collaborative process.
+		</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N1006B"></a>Technical Documentation</h2></div></div></div><p>
+			In the open source world, technical documentation is
+			primarily accomplished using two popular formats: DocBook
+			and the Darwin Information Typing Architecture (DITA). These two
+			formats share two important characteristics: they are both
+			systems for creating structured documents using XML and both focus on content that is written
+			in plain text (or in an editor such as OpenOffice). In this
+			article we focus on DocBook because of our familiarity with the
+			format. However, we will also provide complementary DITA
+			information where appropriate.
+		</p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Tip]" src="images/tip.gif"></td><td><p>
+				If you're unfamiliar with DocBook, there's an
+				<a class="ulink" href="http://www-128.ibm.com/developerworks/library/l-docbk.html" target="_new">
+					article
+				</a>
+				on the <span class="trademark">IBM</span>&reg; <span class="trademark">developerWorks</span>&reg; site by Joe Brockmeier that can serve as a
+				gentle introduction. There is also an
+				<a class="ulink" href="http://www-128.ibm.com/developerworks/xml/library/x-dita1/index.html" target="_new">
+					introduction
+				</a>
+				to DITA on developerWorks.
+			</p></td></tr></table></div><p>
+			The technical documentation process can be broken down into
+			three broad stages: creation, review, and publication.
+		</p><p>
+			Creation simply refers to populating a document with
+			content that adheres to whatever format you choose to write
+			against. This document is usually edited using an XML editor
+			of choice, although it can be edited with any text editor as
+			well. In this article we will use WTP's XML editor to edit
+			documents.
+		</p><p>
+			Once an initial version of the content has been written, it
+			is typically handed off to one or more trusted colleagues
+			for review. The role of these reviewers is to ensure
+			technical accuracy and improve the quality of the writing.
+			The comments and suggestions gathered from the review stage
+			are then used by the document's authors to create a final
+			revision of the document.
+		</p><p>
+			The final revision of a document involves making it is ready for
+			publication. When authoring in an XML format, you must eventually transform the document
+			must be transformed from XML to a human-readable format
+			(that is, one that has both style and formatting applied)
+			such as HTML or PDF. Once in a human-readable format, the
+			document is ready to be published by a selected publisher.
+		</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1008B"></a>Advantages of an XML format</h3></div></div></div><p>
+				Before diving into an actual example of the technical
+				documentation process using Eclipse, let's take a look
+				at some of the benefits of authoring in an XML format.
+			</p><p>
+				There are four advantages to authoring in XML that
+				really show the benefit of this format: modularity,
+				version control, consistent formatting, and publishing
+				to multiple formats.
+			</p><p>
+				<span class="emphasis"><em>Modularity</em></span>
+				<div class="itemizedlist"><ul type="disc"><li>
+							XML formats such as DocBook and DITA are
+							modular. This allows you to break up your
+							documents into multiple sections, which can
+							be automatically combined into one document
+							using transformation during the publication
+							stage. Modularizing your documents can be
+							very beneficial when working on large
+							documents, such as a book, or when working
+							with multiple authors. As an example, the 
+							book <span class="emphasis"><em>Java Web
+							Application Development with Eclipse</em></span> (set to
+							be published in time for EclipseCon 2006),
+							was written in DocBook. The book
+							was structured with one table of
+							contents XML file and a separate file for
+							each chapter. Of course, it's up to you to
+							determine the structure that works best for
+							your project. The key is that by using an
+							XML format, you have the freedom to configure
+							your document's structure.
+						</li></ul></div>
+
+				<span class="emphasis"><em>Version Control</em></span>
+				<div class="itemizedlist"><ul type="disc"><li>
+							Version control is very useful and has
+							become a staple in most development
+							processes. Why is it, then, that a system that
+							allows you to maintain the complete history
+							of your files, allowing you to revert to a
+							previous version at any time, is not part of
+							the authoring process? One reason is that many
+							documents are authored using word-processing
+							tools that mix formatting information and
+							content, such as <span class="trademark">Microsoft</span>&reg; Word or Corel
+							WordPerfect. This mix results in files
+							containing many changes between revisions,
+							reducing the usefulness of version control
+							because it is difficult to view the relevant
+							changes between versions of the document.
+							XML formats do not suffer from this problem
+							as they are content-specific. Authoring in
+							an XML format allows you to use a version
+							control system and reap the benefits that
+							go with it.
+						</li></ul></div>
+
+				<span class="emphasis"><em>Consistent Formatting</em></span>
+				<div class="itemizedlist"><ul type="disc"><li>
+							Ensuring that your document is consistently
+							formatted is a time-consuming aspect of the
+							authoring process. This task can be further
+							aggravated when the authoring format
+							mixes content and formatting in one document
+							or when working with multiple authors or
+							files. One of the typical final steps in the
+							authoring process is ensuring that your
+							document uses consistent formatting. Using
+							an XML format solves the consistent
+							formatting problem by separating your
+							document's content from its formatting. In
+							the XML case, formatting can be applied
+							uniformly to your entire document using a
+							style sheet. An XML format saves you time and
+							guarantees consistent formatting.
+						</li></ul></div>
+
+				<span class="emphasis"><em>Publishing to Multiple Formats</em></span>
+				<div class="itemizedlist"><ul type="disc"><li>
+							By separating your document's
+							formatting from its content, you gain
+							 an enormous freedom. Documents authored
+							in the XML format are not bound by one set
+							of formatting rules. This means that you can
+							author an article, such as this one, and
+							create an HTML version, a PDF version, and
+							even an Eclipse help system version simply
+							by transforming your document with different
+							style sheets. In fact, DocBook includes all
+							three of these stylesheets allowing you to
+							easily publish to any of the formats listed
+							above.
+						</li></ul></div>
+			</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N100BB"></a>Examples</h2></div></div></div><p>
+			To show the authoring tool chain in Eclipse, this article
+			will use a sample book document from the DocBook XSL project. The
+			XML version of the document can be seen
+			<a class="ulink" href="files/book.xml" target="_new">here</a>. This DocBook source for this
+			article is also available and can be seen <a class="ulink" href="AuthoringWithEclipse.xml" target="_new">here</a>.
+		</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N100C8"></a>Tool Chain</h3></div></div></div><p>
+				A tool chain is a set of tools that are used to create a
+				more complex tool or product. The tools may be used in a
+				chain, so the output of each tool becomes the input of
+				the next
+				<a class="xref" href="#toolchain" title="???TITLE???">[3]</a>
+				. This concept should be very familiar to those who work
+				on the <span class="trademark">UNIX</span>&reg;, 
+				<span class="trademark">Linux</span>&reg;, and 
+				<span class="trademark">AIX</span>&reg; platforms, 
+				for example, where the output of one command
+				line tool is typically piped to the next tool, allowing
+				complex operations to be performed using several simple
+				tools.
+			</p><p>
+				The beginning of our technical publishing tool chain is
+				the WTP XML editor, which we use to edit our content.
+				After we have finished editing the content, we will feed the
+				output of what we edited into OrangeVolt, an XSLT
+				transformation engine, which will use style sheets to
+				publish the content into a human-readable format.
+			</p><p>
+				The limitation we put on these examples is that our
+				tool chain, including all three stages, creation, review,
+				and publication, will be built with tools available within
+				Eclipse. From our experience, Eclipse has enormous
+				potential as an integrated documentation
+				development environment. In the following sections, we'll
+				discuss how you can make this a reality with current
+				Eclipse tooling and where the tooling falls short.
+			</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N100E0"></a>Creation and Review</h4></div></div></div><p>
+					Although creation and review are two separate parts
+					of the technical documentation process, the same
+					tools are required and therefore will be discussed
+					together.
+				</p><p>
+					As you may already know, the Eclipse project
+					is composed of serveral top-level projects including
+					Eclipse itself (known as the Eclipse base) and the
+					WTP project. WTP adds many tools to the Eclipse base
+					including an XML editor with graphical and source
+					representations of the content. Although the
+					graphical editor is useful for viewing your document,
+					we've found that the source editor, shown in
+					<a class="xref" href="#xml-source-editor" title="Figure&nbsp;1.&nbsp;The XML Source Editor">Figure&nbsp;1, &ldquo;The XML Source Editor&rdquo;</a>
+					, is more useful when authoring in XML.
+				</p><div class="figure"><a name="xml-source-editor"></a><p class="title"><b>Figure&nbsp;1.&nbsp;The XML Source Editor</b></p><div class="figure-contents"><div class="mediaobject"><table cellpadding="0" cellspacing="0" summary="manufactured viewport for HTML img" border="0" width="807"><tr style="height: 598px"><td><img src="images/xmlsourceeditor.gif" width="807" alt="The XML Source Editor"></td></tr></table></div></div></div><br class="figure-break"><p>
+					The XML editor provides many of the Eclipse
+					franchise functions that <span class="trademark">Java</span>&trade; developers have become
+					accustomed to with the Java editor.
+				</p><p>
+					<span class="emphasis"><em>Content Assistance</em></span>
+				</p><div class="itemizedlist"><ul type="disc"><li>
+							Gives you a list of valid XML elements
+							constrained by an associated grammar.
+						</li></ul></div><p>
+					<span class="emphasis"><em>Syntax Highlighting</em></span>
+				</p><div class="itemizedlist"><ul type="disc"><li>
+							Gives you improved code readability by
+							making certain errors instantly visible.
+						</li></ul></div><p>
+					<span class="emphasis"><em>Validation</em></span>
+				</p><div class="itemizedlist"><ul type="disc"><li>
+							Ensures validity of an XML document based
+							on an associated grammar.
+						</li></ul></div><p>
+					<span class="emphasis"><em>Outline View</em></span>
+				</p><div class="itemizedlist"><ul type="disc"><li>
+							Assists you in editing and viewing the
+							content of your document.
+						</li></ul></div><p>
+					<span class="emphasis"><em>XML Catalog</em></span>
+				</p><div class="itemizedlist"><ul type="disc"><li>
+							Allows you to register Document Type
+							Definitions (DTD) and XML Schema grammars
+							associated with your document with your
+							workspace so you can work with the benefits
+							of validation while disconnected from the
+							Internet.
+						</li></ul></div><p>
+					Aside from the benefits of the XML editor, working
+					in Eclipse provides other benefits. Eclipse includes
+					integrated version control for CVS. (There is also a
+					freely available plug-in for subversion
+					<a class="xref" href="#subversion" title="???TITLE???">[6]</a>, another version control 
+					system.) Integrated
+					version control allows you to check your changes
+					into, and view others' changes in, your version
+					control system from within Eclipse. These tools are
+					also useful for your reviewers, who, if you give them
+					permission, can add comments and suggestions to your
+					document and check their changes in. Giving your reviewers
+					permission to make these changes allows you to avoid
+					the need to use e-mail or some other communication
+					mechanism.
+				</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1012E"></a>Publication</h4></div></div></div><p>
+					The DocBook XSL
+					<a class="xref" href="#docbookxsl" title="???TITLE???">[1]</a>
+					and DITA
+					<a class="xref" href="#dita" title="???TITLE???">[2]</a>
+					projects offer numerous transformations, including
+					HTML and PDF formats. The most common
+					transformation technique is to use an Ant file with
+					the appropriate tasks for the various
+					transformations. In this article we use the
+					Orangevolt XSLT tool to simplify this task.
+					Orangevolt XSLT integrates into the familiar Eclipse
+					launcher framework. This integration allows you to
+					select the style sheet and pass in necessary
+					parameters for the transformation.
+				</p><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Tip]" src="images/tip.gif"></td><td><p>
+					The DITA Open Toolkit (DITA-OT) includes a DITA to DocBook
+					<a class="ulink" href="http://dita-ot.sourceforge.net/doc/DITA-antscript.html" target="_new">
+						transformation
+					</a>.
+				</p></td></tr></table></div><p>
+					Along with the description in this article, we have
+					provided Flash movies that demonstrate how to
+					perform each transformation. Transformations for
+					both DocBook and DITA will be provided where
+					appropriate.
+				</p><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N10142"></a>HTML</h5></div></div></div><p>
+						Of all the available transformations,
+						transforming your document into HTML is the
+						easiest to use. All that you need to do is
+						create a proper transformation launch
+						configuration and run the transformation.
+						Specifically, you need to specify the correct
+						style sheet:
+						<div class="itemizedlist"><ul type="disc"><li><p>DocBook</p><div class="itemizedlist"><ul type="circle"><li>html/docbook.xsl</li></ul></div></li><li><p>DITA</p><div class="itemizedlist"><ul type="circle"><li>xsl/dita2html.xsl</li></ul></div></li></ul></div>
+						<a class="xref" href="#html-transformation" title="Figure&nbsp;2.&nbsp;Sample HTML Transformation Configuration for book.xml">Figure&nbsp;2, &ldquo;Sample HTML Transformation Configuration for book.xml&rdquo;</a>
+						shows a sample transformation configuration that
+						will transform our DocBook sample
+						<a class="ulink" href="files/book.xml" target="_new">document</a>
+						into HTML.
+					</p><div class="figure"><a name="html-transformation"></a><p class="title"><b>Figure&nbsp;2.&nbsp;Sample HTML Transformation Configuration for book.xml</b></p><div class="figure-contents"><div class="mediaobject"><table cellpadding="0" cellspacing="0" summary="manufactured viewport for HTML img" border="0" width="692"><tr style="height: 517px"><td><img src="images/html.png" width="692" alt="Sample HTML Transformation Configuration for book.xml"></td></tr></table></div></div></div><br class="figure-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Tip]" src="images/tip.gif"></td><td><p>
+							You can augment the transformation by
+							passing parameters to the style sheet.
+							There's a full listing of DocBook XSL
+							parameters that can be used to configure the
+							transformation located
+							<a class="ulink" href="http://docbook.sourceforge.net/release/xsl/current/doc/html/" target="_new">
+								here
+							</a>.
+						</p></td></tr></table></div><p>
+						A Flash movie that
+						shows how to run the transformation can be seen
+						<a class="ulink" href="files/DocBook-HTML.htm" target="_new">here</a>
+						.
+					</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N10177"></a>PDF</h5></div></div></div><p>
+						Transforming a DocBook XML file to PDF format is
+						more involved than the transformation to HTML
+						but it is still possible using a style sheet. The
+						difference lies in a task that must be performed
+						before the actual transformation. So, the
+						transformation from XML to PDF is a two-step
+						process.
+					</p><p>
+						Step one is to generate an XSL formatting objects
+						(XSL-FO) document. This document will then be
+						transformed into a PDF. In order to generate an
+						XSL-FO document, you need to use the following
+						stylesheet:
+						<span class="emphasis"><em>fo/docbook.xsl</em></span>.
+						<a class="xref" href="#xslfo-transformation" title="Figure&nbsp;3.&nbsp;Sample XSL-FO Transformation Configuration for book.xml">Figure&nbsp;3, &ldquo;Sample XSL-FO Transformation Configuration for book.xml&rdquo;</a>
+						shows a sample transformation configuration used
+						to generate an XSL-FO document from book.xml.
+					</p><div class="figure"><a name="xslfo-transformation"></a><p class="title"><b>Figure&nbsp;3.&nbsp;Sample XSL-FO Transformation Configuration for book.xml</b></p><div class="figure-contents"><div class="mediaobject"><table cellpadding="0" cellspacing="0" summary="manufactured viewport for HTML img" border="0" width="692"><tr style="height: 517px"><td><img src="images/xsl-fo.png" width="692" alt="Sample XSL-FO Transformation Configuration for book.xml"></td></tr></table></div></div></div><br class="figure-break"><p>
+						Step two is to use a Formatting Objects
+						Processor (FOP) to transform your XSL-FO
+						document into a PDF. One of the more popular
+						open source FOPs is the
+						<a class="ulink" href="http://xmlgraphics.apache.org/fop/" target="_new">
+							Apache FOP
+						</a>
+						. We'll use a third-party
+						<a class="ulink" href="http://www.ahmadsoft.org/fopbridge.html" target="_new">
+							plug-in from Ahmadsoft
+						</a>
+						that integrates Apache FOP into Eclipse. After
+						installing this plug-in, all that you need to do
+						to render the XSL-FO document is run the FOP
+						transformation.
+						<a class="xref" href="#pdf-transformation" title="Figure&nbsp;4.&nbsp;Sample FOP Transformation">Figure&nbsp;4, &ldquo;Sample FOP Transformation&rdquo;</a>
+						shows an example of running the FOP
+						transformation.
+					</p><div class="figure"><a name="pdf-transformation"></a><p class="title"><b>Figure&nbsp;4.&nbsp;Sample FOP Transformation</b></p><div class="figure-contents"><div class="mediaobject"><table cellpadding="0" cellspacing="0" summary="manufactured viewport for HTML img" border="0" width="430"><tr style="height: 447px"><td><img src="images/fop.png" width="430" alt="Sample FOP Transformation"></td></tr></table></div></div></div><br class="figure-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>
+							The example includes a sample Ant
+							<a class="ulink" href="files/pdf/build.xml" target="_new">
+								file
+							</a>
+							that performs the same transformation as
+							running the FOP transformation using the
+							<a class="ulink" href="http://www.ahmadsoft.org/fopbridge.html" target="_new">
+								plug-in from Ahmadsoft
+							</a>. An Ant script is a popular method of
+							performing the publishing stage, and this
+							example should give you a good starting
+							point if you'd prefer to go this route. The
+							DITA project already includes an Ant script
+							(found in ant/sample_pdf.xml in DITA-OT) to perform
+							this exact task on DITA source files.
+						</p></td></tr></table></div><p>
+						As before, a Flash movie that shows the
+						transformation is available
+						<a class="ulink" href="files/DocBook-PDF.htm" target="_new">here</a>
+						.
+					</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N101BA"></a>Eclipse Infocenter</h5></div></div></div><p>
+						In our opinion, one of the coolest features of
+						the DocBook and DITA projects is the generation
+						of an Eclipse help plug-in (information center) from
+						your source XML file. In order to perform this
+						transformation in DocBook, you need to specify a
+						few parameters and use the following style sheet:
+						<span class="emphasis"><em>eclipse/eclipse.xsl</em></span>.
+						<a class="xref" href="#eclipse-transformation" title="Figure&nbsp;5.&nbsp;Sample Eclipse Infocenter Transformation Configuration">Figure&nbsp;5, &ldquo;Sample Eclipse Infocenter Transformation Configuration&rdquo;</a>
+						shows a sample transformation configuration
+						along with the correct parameters. To perform
+						this transformation using a DITA source file, use
+						the
+						<span class="emphasis"><em>ant/sample_eclipsehelp.xml</em></span>
+						Ant file.
+					</p><div class="figure"><a name="eclipse-transformation"></a><p class="title"><b>Figure&nbsp;5.&nbsp;Sample Eclipse Infocenter Transformation Configuration</b></p><div class="figure-contents"><div class="mediaobject"><table cellpadding="0" cellspacing="0" summary="manufactured viewport for HTML img" border="0" width="803"><tr style="height: 388px"><td><img src="images/eclipse.png" height="388" alt="Sample Eclipse Infocenter Transformation Configuration"></td></tr></table></div></div></div><br class="figure-break"><div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Tip]" src="images/tip.gif"></td><td><p>
+							The complete list of DocBook XSL parameters
+							for the Eclipse Infocenter transformation
+							is located
+							<a class="ulink" href="http://docbook.sourceforge.net/release/xsl/current/doc/html/rn22.html" target="_new">
+								here
+
+							</a>
+							.
+						</p></td></tr></table></div><p>
+						The Flash movie that shows the Eclipse
+						Infocenter DocBook transformation can be found
+						<a class="ulink" href="files/DocBook-InfoCenter.htm" target="_new">
+							here
+						</a>
+						.
+					</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N101E1"></a>Current Limitations</h4></div></div></div><p>
+					Although we have shown that Eclipse's current XML
+					authoring support is pretty good, there are a two
+					noteworthy limitations.
+				</p><p>
+					The first is grammar and spell-checking. While these
+					tools are commonplace in word-processing software,
+					they do not yet exist for WTP's XML editor.
+				</p><p>
+					The second is a WYSIWYG editor for XML documentation
+					formats such as DITA and DocBook (or a preview
+					window). The lack of a sophisticated editor or a way
+					to preview what you've written requires that you
+					stop authoring and transform your document in order
+					to view the results of your changes.
+				</p><p>
+					While neither of these limitations has been a show-stopper 
+					in our authoring process, our hope is that as
+					Eclipse is recognized as an integrated documentation
+					development environment, these limitations will be
+					addressed.
+				</p></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N101EC"></a>Summary</h2></div></div></div><p>
+			In this article, we introduced the technical documentation
+			process and showed that technical documentation development
+			is possible in Eclipse. We worked through examples showing
+			how to use Eclipse to aid the different phases of the
+			technical documentation process. Although there is still a
+			lot of room for improvement in this area we hope we've
+			convinced you that technical documentation in Eclipse is
+			both possible and already viable. It's now up to you in
+			the technical documentation community to speak up, make it
+			clear that Eclipse is being used for the authoring process,
+			and push to get the current limitations addressed.
+		</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N101F1"></a>Acknowledgements</h2></div></div></div><p>
+			We'd like to thank:
+			<div class="itemizedlist"><ul type="disc"><li>
+						Sushma Patel and Anne James for correcting our horrible
+						grammar.
+					</li></ul></div>
+			<div class="itemizedlist"><ul type="disc"><li>
+						Don Day and Michael Priestly for their DITA
+						expertise.
+					</li></ul></div>
+		</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10200"></a>About the Authors</h2></div></div></div><p>
+			Chris Aniszczyk is a software developer at the IBM Austin
+			Labs and works in Tivoli Security. He's a developer on the
+			<a class="ulink" href="http://www.gentoo.org" target="_new">Gentoo Linux</a>
+			distribution and also a committer on the
+			<a class="ulink" href="http://www.eclipse.org/emft" target="_new">
+				Eclipse Modeling Framework Technology (EMFT)
+			</a>
+			project.
+		</p><p>
+			Lawrence Mandel, a software developer at the IBM Toronto
+			Laboratory, is the documentation lead and a
+			committer for the Eclipse
+			<a class="ulink" href="http://www.eclipse.org/webtools" target="_new">
+				Web Tools Platform (WTP)
+			</a>
+			project. He is also authoring a book with Arthur Ryman and
+			Naci Dai about Java Web application development with
+			Eclipse.
+		</p></div><div class="appendix" lang="en"><h2 class="title" style="clear: both"><a name="N10246"></a>A.&nbsp;Appendix</h2><p>
+			The appendix contains a discussion about how this article
+			was written (including the HTML style sheet so you can write
+			your own eclipse.org article in DocBook). The appendix also
+			reviews a couple of other editors out there for technical
+			documentation in case WTP's XML editor doesn't suit your fancy.
+		</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1024B"></a>The Article</h3></div></div></div><p>
+				This article was written in DocBook using WTP's XML
+				editor. To transform the article into the correct format
+				for eclipse.org, a style sheet was developed that extends
+				the transformation included in the DocBook XSL project.
+				The eclipse.org article style sheet can be downloaded
+				<a class="ulink" href="files/article.xsl" target="_new">here</a>.
+				<div class="note" style="margin-left: 0.38in; margin-right: 0.38in;"><table class="note-table"><tr><td><img alt="[Note]" src="images/note.gif"></td><td><p>
+						Eclipse.org is in the process of moving to a data driven format
+						for articles. You can find more information about this process
+						by following bug <a class="ulink" href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=115473" target="_new">
+						#115473</a>. We will be contributing our stylesheets for DocBook and
+						DITA to this bug.
+					</p></td></tr></table></div>
+			</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1025C"></a>Editors</h3></div></div></div><p>
+				Part of the creation process involves editing the
+				content of your XML document in an editor. The editor
+				you use is a preference that is usually precious to the
+				content creator (think EMACS versus VI). We decided to
+				use the WTP XML editor as the editor for this article
+				because of our familiarity with it and because both of us like working
+				within Eclipse. However, we realize that there are other
+				options for creating and editing content so we'll
+				discuss of a couple of those options in the following
+				sections.
+			</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10261"></a>Vex</h4></div></div></div><p>
+					Vex
+					<a class="xref" href="#vex" title="???TITLE???">[4]</a>
+					is an open source project that lets you edit XML
+					files visually. Vex uses standard Document Type
+					Definition (DTD) files to define document types and
+					Cascading Style Sheets (CSS) to define document
+					layout. In essence, Vex only requires that you have
+					knowledge of CSS and DTDs in order to contribute a
+					visual editor for XML files. The Vex editor can be
+					seen in
+					<a class="xref" href="#vex-editor" title="Figure&nbsp;A.1.&nbsp;Vex DocBook editor screenshot">Figure&nbsp;A.1, &ldquo;Vex DocBook editor screenshot&rdquo;</a>
+					.
+					<div class="figure"><a name="vex-editor"></a><p class="title"><b>Figure&nbsp;A.1.&nbsp;Vex DocBook editor screenshot</b></p><div class="figure-contents"><div class="mediaobject"><table cellpadding="0" cellspacing="0" summary="manufactured viewport for HTML img" border="0" width="652"><tr style="height: 498px"><td><img src="images/vex.png" width="652" alt="Vex DocBook editor screenshot"></td></tr></table></div></div></div><br class="figure-break">
+
+				</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10279"></a>OpenOffice</h4></div></div></div><p>
+					OpenOffice
+					<a class="xref" href="#openoffice" title="???TITLE???">[5]</a>
+					is a multi-platform open source office suite that is
+					capable of visually editing DocBook and various
+					other formats. OpenOffice is a popular editing
+					choice because of its ability to open multiple
+					document formats, including Microsoft Word, and then
+					export the documents to DocBook.
+				</p><p>
+					OpenOffice doesn't fully support DocBook. An
+					updated list of what portions of DocBook OpenOffice
+					supports can be found on the OpenOffice site
+					<a class="ulink" href="http://xml.openoffice.org/xmerge/docbook/DocBookTags.html" target="_new">
+						here
+					</a>
+					. The site also contains a getting started
+					<a class="ulink" href="http://xml.openoffice.org/xmerge/docbook/UserGuide.html" target="_new">
+						guide
+					</a>
+					that will get you started with DocBook in
+					OpenOffice.
+				</p></div></div></div><div class="bibliography"><div class="titlepage"><div><div><h2 class="title"><a name="N10213"></a>Resources</h2></div></div></div><div class="biblioentry"><a name="docbookxsl"></a><p>[1] <span class="bibliosource">
+				<a class="ulink" href="http://docbook.sourceforge.net/projects/xsl/" target="_new">
+					DocBook XSL Style Sheets
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="dita"></a><p>[2] <span class="bibliosource">
+				<a class="ulink" href="http://dita-ot.sourceforge.net/" target="_new">
+					DITA Open Toolkit
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="toolchain"></a><p>[3] <span class="bibliosource">
+				<a class="ulink" href="http://en.wikipedia.org/wiki/Toolchain" target="_new">
+					Wikipedia: Toolchain
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="vex"></a><p>[4] <span class="bibliosource">
+				<a class="ulink" href="http://vex.sf.net" target="_new">
+					Vex
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="openoffice"></a><p>[5] <span class="bibliosource">
+				<a class="ulink" href="http://www.openoffice.org" target="_new">
+					OpenOffice
+				</a>
+			. </span></p></div><div class="biblioentry"><a name="subversion"></a><p>[6] <span class="bibliosource">
+				<a class="ulink" href="http://subversion.tigris.org/" target="_new">
+					Subversion
+				</a>
+			. </span></p></div></div><div class="notices"><h3>Legal Notices</h3><p>
+				IBM, AIX, and developerWorks are registered trademarks of International Business Machines 
+				Corporation in the United States, other countries, or both.
+			</p><p>
+				Java and all Java-based trademarks are trademarks of Sun Microsystems, Inc. in the United 
+				States, other countries, or both.
+			</p><p>
+				Linux is a trademark of Linus Torvalds in the United States, other countries, or both.
+			</p><p>
+				Microsoft is a trademark of Microsoft Corporation in the United States, other countries, or both.
+			</p><p>
+				UNIX is a registered trademark of The Open Group in the United States and other countries.
+			</p><p>
+				Other company, product, or service names may be trademarks or service marks of others.
+			</p></div></div><div class="content"></div></body></html>
