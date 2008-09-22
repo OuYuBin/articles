@@ -1,0 +1,837 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+
+
+  
+
+
+  
+  
+  
+  <title>BIRT Extension Mechanism : Part 1</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+
+
+  
+  
+  <link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+
+
+<body>
+
+
+
+<h1>BIRT Extension Mechanism : Part 1</h1>
+
+
+
+<div class="summary">
+<h2>Abstract</h2>
+
+
+
+<p>This article introduces the extension mechanism of BIRT report
+model, engine and designer, shows how to create custom extended report items
+step by
+step.</p>
+
+
+
+<div class="author">By&nbsp;Zhiqiang
+Qian,&nbsp;Actuate Corporation</div>
+
+
+
+<div class="copyright">Copyright &copy; [2008]
+[Actuate Corporation].</div>
+
+
+
+<div class="date">August 7, 2008</div>
+
+
+
+</div>
+
+
+
+<div class="content">
+<h2>Introduction</h2>
+
+
+
+<p>For many people,&nbsp;<a href="http://eclipse.org/birt">BIRT(Business
+Intelligence and Reporting Tools)</a> may
+only mean a regular reporting tool. But in fact, the real strength of
+BIRT is not only&nbsp;its built-in reporting functionality, but also
+its
+extension capabilities. By&nbsp;extensions, user can easily extend the
+functionality of BIRT, creating custom extended report items, adding custom
+emitters, and even having custom editor pages. The powerfulness of extensions
+enables user to create
+custom reporting features that can meet very specific requirements. In
+this
+article, we will explorer how to leverage the BIRT extension mechanism to
+extend the BIRT&nbsp;capabilities. The given samples will
+cover&nbsp;most of the essential extension points that provided by BIRT report
+model, engine and designer.<br>
+
+
+
+</p>
+
+
+
+<h2>The Basics</h2>
+
+
+
+<p>BIRT already contains the basic Label and Text report items,
+but&nbsp;these items can only show horizontal text. Sometimes, user
+would
+like to show angled text, in this case, alternative solution is needed.
+In following sections, we are introducing how to implement a
+RotatedText
+extended report&nbsp;item through BIRT extensions, and how to enhance
+the functionality step by step by implementing more extension points.</p>
+
+
+
+<p>Note: This example is a modified version based
+on&nbsp;RotatedText&nbsp;sample on BIRT CVS, the original code
+can&nbsp;be retrieved <a href="http://dev.eclipse.org/viewcvs/index.cgi/?root=BIRT_Project">here.</a></p>
+
+
+
+<p>To implement an extended report item, basically we need look at&nbsp;following extension points:</p>
+
+
+
+<ul>
+
+
+
+  <li>org.eclipse.birt.report.model.reportItemModel</li>
+
+
+
+  <li>org.eclipse.birt.report.designer.ui.reportitemUI</li>
+
+
+
+  <li>org.eclipse.birt.report.engine.reportitemPresentation</li>
+
+
+
+</ul>
+
+
+
+<br>
+
+
+
+<img style="width: 514px; height: 156px;" alt="" src="images/extensions.png"><br>
+
+
+
+<p>These three extensions are the basics to implement an extended
+report item. In brief,&nbsp;
+"org.eclipse.birt.report.model.reportItemModel" provides the report
+model extensibility, "org.eclipse.birt.report.designer.ui.reportitemUI"
+provides the report designer extensibility and
+"org.eclipse.birt.report.engine.reportitemPresentation" provides the
+report engine extensibility. Now we will introduce them one by one.</p>
+
+
+
+<h3>1) org.eclipse.birt.report.model.reportItemModel</h3>
+
+
+
+<p>This extension point is provided by BIRT Report Model, normally user
+uses this extension point to define the extended report item model.</p>
+
+
+
+<img style="width: 1036px; height: 224px;" alt="" src="images/model-extension.png">
+<p>First we need define a new extended report item model
+extension&nbsp;as&nbsp;"RotatedText", this name is the&nbsp;identifier
+for the extended item, it's also the only symbol that connects between the report model
+and designer extensions.</p>
+
+
+<p>Then we define the model factory class as
+"org.eclipse.birt.sample.reportitem.rotatedtext.RotatedTextItemFactory".
+This factory class will be used to create and initialize the
+IReportItem instance,&nbsp;usually this class can also implement an
+additional&nbsp;IMessages interface to provide localization support:</p>
+
+
+
+<pre style="font-family: monospace;">public class RotatedTextItemFactory extends ReportItemFactory<br>{<br>	public IReportItem newReportItem( DesignElementHandle modelHanlde )<br>	{<br>		if ( modelHanlde instanceof ExtendedItemHandle &amp;&amp; RotatedTextItem.EXTENSION_NAME.equals( ( (ExtendedItemHandle) modelHanlde ).getExtensionName( ) ) )<br>		{<br>			return new RotatedTextItem( (ExtendedItemHandle) modelHanlde );<br>		}<br>	&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return null;<br>	}<br><br>	public IMessages getMessages( )<br>	{<br>		// TODO implement this to support localization<br>		return null;<br>	}<br>}<br></pre>
+
+
+
+<p>There are some extra properties here that are not used by this example, we just introduce them briefly:</p>
+
+
+
+<ul>
+
+
+
+  <li>defaultStyle</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify the default style name, this will be used by BIRT
+to find and match the default style for this extended report item
+automatically.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+  <li>isNameRequired</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify if the&nbsp;name is required for this extended report item.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+  <li>displayNameID</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify the display name ID for this extended report item, the
+ID will be passed to&nbsp;IMessags interface to get the localized
+extended report item name.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+  <li>extendsFrom</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify the name of the report item that this extended report
+item extends from, if this is not specified, the item will by default extend from
+"ExtendedItem".</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+  <li>hasStyle</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify if this extended report item supports styled properties, for some non-UI report items, it can be set to "false".</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+</ul>
+
+
+
+<p>Now we need define two new properties for the RotatedText extended report item:</p>
+
+
+
+<ul>
+
+
+
+  <li>rotationAngle &nbsp; &nbsp;</li>
+
+
+
+</ul>
+
+
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+the rotation angle, integer type, default&nbsp;as 0.<br>
+
+
+
+<img style="width: 1001px; height: 279px;" alt="" src="images/rotationangle-property.png">
+<ul>
+
+
+
+  <li>text</li>
+
+
+
+</ul>
+
+
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+the text content, string type, default as "Rotated Text".<br>
+
+
+
+<img style="width: 1000px; height: 274px;" alt="" src="images/text-property.png"><br>
+
+
+
+<br>
+
+
+
+<p>We can see a lot of things in the
+property setting page that we haven't used yet, normally they are for more complex property types, we
+just skip them here.<br>
+
+
+
+<br>
+Once we completed the model definition, we need give a basic IReportItem
+implementation. This class is used to encapsulate the extended report
+item model, providing some convenient property accessing APIs:</p>
+
+
+
+<pre>public class RotatedTextItem extends ReportItem<br>{<br>	public static final String EXTENSION_NAME = "RotatedText"; //$NON-NLS-1$<br>	public static final String TEXT_PROP = "text"; //$NON-NLS-1$<br>	public static final String ROTATION_ANGLE_PROP = "rotationAngle"; //$NON-NLS-1$<br><br>	private ExtendedItemHandle modelHandle;<br><br>	RotatedTextItem( ExtendedItemHandle modelHandle )<br>	{<br>		this.modelHandle = modelHandle;<br>	}<br><br>	public String getText( )<br>	{<br>		return modelHandle.getStringProperty( TEXT_PROP );<br>	}<br><br>	public int getRotationAngle( )<br>	{<br>		return modelHandle.getIntProperty( ROTATION_ANGLE_PROP );<br>	}<br><br>	public void setText( String value ) throws SemanticException<br>	{<br>		modelHandle.setProperty( TEXT_PROP, value );<br>	}<br><br>	public void setRotationAngle( int value ) throws SemanticException<br>	{<br>		modelHandle.setProperty( ROTATION_ANGLE_PROP, value );<br>	}<br>}<br></pre>
+
+
+
+<p>We can see&nbsp;most of the methods here are just getter/setters. For
+simple extended report item, this is normally already enough.</p>
+
+
+
+<h3>2) org.eclipse.birt.report.designer.ui.reportitemUI</h3>
+
+
+
+<p>This extension point is provided by BIRT Designer, user uses this
+extension point to define the UI behavior for&nbsp;extended report
+items.<br>
+
+
+
+<br>
+
+
+
+<img style="width: 1001px; height: 233px;" alt="" src="images/ui-extension.png"><br>
+
+
+
+<br>
+
+First we need bind the Designer extension with Model extension, to do
+this,&nbsp;we simply specify the extension name as "RotatedText".</p>
+
+
+
+<p>Next step, we specify some&nbsp;settings for this extended report item:</p>
+
+
+
+<ul>
+
+
+
+  <li>Palette Settings</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify the icon to be shown in Palette view, and the
+palette category as well. If the category is not specified, it will use
+the default "Report Items" category.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+</ul>
+
+
+
+<img style="width: 495px; height: 111px;" alt="" src="images/palette-detail.png"><br>
+
+
+
+<br>
+
+
+
+<ul>
+
+
+
+  <li>Editor Settings</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify the report item visibility in different editor pages, and whether&nbsp;resizing control should be enabled.&nbsp;</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+</ul>
+
+
+
+<img style="width: 495px; height: 133px;" alt="" src="images/editor-detail.png"><br>
+
+
+
+<br>
+
+
+
+<ul>
+
+
+
+  <li>Outline Settings</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>specify the icon to be shown in Outline view, normally this is the same as in Palette view.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+</ul>
+
+
+
+<img style="width: 497px; height: 90px;" alt="" src="images/icon-detail.png"><br>
+<p>
+
+
+The last step, specify the implementation class for UI provider:</p>
+
+
+
+<img style="width: 498px; height: 94px;" alt="" src="images/labelui-detail.png"><br>
+
+
+
+<p>The UI provider&nbsp;defines how to display and interact with the
+extended report item within the editor. BIRT designer support three types of
+basic UI providers:</p>
+
+
+
+<ul>
+
+
+
+  <li>Label UI Provider</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>user implements the&nbsp;IReportItemLabelProvider interface, it simply just requires&nbsp;an text content.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+  <li>Image UI Provider</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>user implements the&nbsp;IReportItemImageProvider interface, it simply just requires&nbsp;an image content.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+  <li>Figure UI Provider</li>
+
+
+
+  
+  
+  <ul>
+
+
+
+    <li>user implements the IRportItemFigureProvider, This provider uses Figure interface from <a href="http://www.eclipse.org/gef/">GEF</a>, providing more flexibility and interactivity support.</li>
+
+
+
+  
+  
+  </ul>
+
+
+
+</ul>
+
+
+<br>
+
+
+<p>In this example,&nbsp;we choose to implement the simplest Label UI
+Provider first, in consequent examples, we may introduce other type of UI providers.</p>
+
+
+<p>
+Our&nbsp;Label UI Provider implementation class is
+"org.eclipse.birt.sample.reportitem.rotatedText.RotatedTextLabelUI",
+the code looks very simple:</p>
+
+
+
+<pre>public class RotatedTextLabelUI implements IReportItemLabelProvider<br>{<br>	public String getLabel( ExtendedItemHandle handle )<br>	{<br>		try<br>		{<br>			IReportItem item = handle.getReportItem( );<br>			if ( item instanceof RotatedTextItem )<br>			{<br>				return ( (RotatedTextItem) item ).getText( );<br>			}<br>		}<br>		catch ( ExtendedElementException e )<br>		{<br>			e.printStackTrace( );<br>		}<br>		return null;<br>	}<br>}</pre>
+
+
+
+<p>You can see what it does is just reading the property from model and returning a text value.<br>
+
+
+
+<br>
+
+
+Once we completed the designer extension, we can run the desginer first and have a glance for&nbsp;what we already have now:<br>
+
+
+
+<br>
+
+
+
+OK, the Palette view already contains the new RotatedText extended report item.</p>
+
+
+
+<img style="width: 341px; height: 408px;" alt="" src="images/palette.png"> <br>
+
+
+
+<p>Right-click in the editor, we can see the RotatedText item is also available in the context menu.</p>
+
+
+
+<img style="width: 487px; height: 395px;" alt="" src="images/layout.png"><br>
+
+
+
+<p>Now&nbsp;try insert one RotatedText item to report, in Outline view, we can see the new RotatedText node.<br>
+
+
+
+</p>
+
+
+
+<img style="width: 347px; height: 438px;" alt="" src="images/outline.png"><br>
+
+
+
+<p>Select the RotatedText item, open the Properties view, it immediately
+lists all the properties that belong to this extended report item. Among
+them, we can see "Rotation Angle" and "Text
+Content" as well as other inherited properties. User can&nbsp;edit the
+property value in this view.
+</p>
+
+
+
+<img style="width: 728px; height: 346px;" alt="" src="images/properties.png"><br>
+
+
+<p>Now designer extension is done, let's step to the Report Engine extension.</p>
+
+
+
+<h3>3) org.eclipse.birt.report.engine.reportitemPresentation</h3>
+
+
+
+<p>This extension point is provided by BIRT Report Engine, user uses
+this extension point to define the presentation behavior of the
+extended report item.<br>
+
+
+
+</p>
+
+
+
+<div style="text-align: left;"><img style="width: 1003px; height: 166px;" alt="" src="images/engine-extension.png"><br>
+
+
+
+<p>First we also need specify the extension name as "RotatedText" to link it
+with&nbsp;Model extension, and specify the presentation implementation
+class
+as
+"org.eclipse.birt.sample.reportitem.rotatedtext.RotatedTextPresentationImpl".
+The presentation implementation class need implement the
+IReportItemPresentation interface.<br>
+
+
+
+<br>
+
+
+Our plan to implement the rotated text effect is to create an image
+dynamically, in this image, we use SWING graphics API to render the
+rotated text.&nbsp;</p>
+
+<p>Here is the code that all we need:</p>
+
+
+
+<pre>public class RotatedTextPresentationImpl extends ReportItemPresentationBase<br>{<br>	private RotatedTextItem textItem;<br><br>	public void setModelObject( ExtendedItemHandle modelHandle )<br>	{<br>		try<br>		{<br>			textItem = (RotatedTextItem) modelHandle.getReportItem( );<br>		}<br>		catch ( ExtendedElementException e )<br>		{<br>			e.printStackTrace( );<br>		}<br>	}<br><br>	public int getOutputType( )<br>	{<br>		return OUTPUT_AS_IMAGE;<br>	}<br><br>	public Object onRowSets( IRowSet[] rowSets ) throws BirtException<br>	{<br>		if ( textItem == null )<br>		{<br>			return null;<br>		}<br><br>		int angle = textItem.getRotationAngle( );<br>		String text = textItem.getText( );<br>		BufferedImage rotatedImage = SwingGraphicsUtil.createRotatedTextImage( text, angle, new Font( "Default", 0, 12 ) ); //$NON-NLS-1$<br>		ByteArrayInputStream bis = null;<br><br>		try<br>		{<br>			ImageIO.setUseCache( false );<br>			ByteArrayOutputStream baos = new ByteArrayOutputStream( );<br>			ImageOutputStream ios = ImageIO.createImageOutputStream( baos );<br>			ImageIO.write( rotatedImage, "png", ios ); //$NON-NLS-1$<br>			ios.flush( );<br>			ios.close( );<br>			bis = new ByteArrayInputStream( baos.toByteArray( ) );<br>		}<br>		catch ( IOException e )<br>		{<br>			e.printStackTrace( );<br>		}<br>		return bis;<br>	}<br>}<br></pre>
+
+
+
+<p>The logic is&nbsp;pretty straightforward, the main part is to
+generate an image dynamically in the&nbsp;onRowSets() method. To return
+the image, we simply create an in-memory stream to hold&nbsp;the image
+content.</p>
+
+
+
+<p>Here is the utility class that implements the key rotation rendering algorithm:</p>
+
+
+
+<pre>public class SwingGraphicsUtil<br>{<br>	public static BufferedImage createRotatedTextImage( String text, int angle, Font ft )<br>	{<br>		Graphics2D g2d = null;<br>		try<br>		{<br>			if ( text == null || text.trim( ).length( ) == 0 )<br>			{<br>				return null;<br>			}<br>			BufferedImage stringImage = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );<br>			g2d = (Graphics2D) stringImage.getGraphics( );<br>			g2d.setFont( ft );<br>			FontMetrics fm = g2d.getFontMetrics( );<br>			Rectangle2D bounds = fm.getStringBounds( text, g2d );<br>			TextLayout tl = new TextLayout( text, ft, g2d.getFontRenderContext( ) );<br>			g2d.dispose( );<br>			g2d = null;<br>			return createRotatedImage( tl, (int) bounds.getWidth( ), (int) bounds.getHeight( ), angle );<br>		}<br>		catch ( Exception e )<br>		{<br>			e.printStackTrace( );<br>			if ( g2d != null )<br>			{<br>				g2d.dispose( );<br>			}<br>		}<br>		return null;<br>	}<br><br>	private static BufferedImage createRotatedImage( Object src, int width, int height, int angle )<br>	{<br>		angle = angle % 360;<br>		if ( angle &lt; 0 )<br>		{<br>			angle += 360;<br>		}<br>		if ( angle == 0 )<br>		{<br>			return renderRotatedObject( src, 0, width, height, 0, 0 );<br>		}<br>		else if ( angle == 90 )<br>		{<br>			return renderRotatedObject( src, -Math.PI / 2, height, width, -width, 0 );<br>		}<br>		else if ( angle == 180 )<br>		{<br>			return renderRotatedObject( src, Math.PI, width, height, -width, -height );<br>		}<br>		else if ( angle == 270 )<br>		{<br>			return renderRotatedObject( src, Math.PI / 2, height, width, 0, -height );<br>		}<br>		else if ( angle &gt; 0 &amp;&amp; angle &lt; 90 )<br>		{<br>			double angleInRadians = ( ( -angle * Math.PI ) / 180.0 );<br>			double cosTheta = Math.abs( Math.cos( angleInRadians ) );<br>			double sineTheta = Math.abs( Math.sin( angleInRadians ) );<br>			int dW = (int) ( width * cosTheta + height * sineTheta );<br>			int dH = (int) ( width * sineTheta + height * cosTheta );<br>			return renderRotatedObject( src, angleInRadians, dW, dH, -width * sineTheta * sineTheta, width * sineTheta * cosTheta );<br>		}<br>		else if ( angle &gt; 90 &amp;&amp; angle &lt; 180 )<br>		{<br>			double angleInRadians = ( ( -angle * Math.PI ) / 180.0 );<br>			double cosTheta = Math.abs( Math.cos( angleInRadians ) );<br>			double sineTheta = Math.abs( Math.sin( angleInRadians ) );<br>			int dW = (int) ( width * cosTheta + height * sineTheta );<br>			int dH = (int) ( width * sineTheta + height * cosTheta );<br>			return renderRotatedObject( src, angleInRadians, dW, dH, -( width + height * sineTheta * cosTheta ), -height / 2 );<br>		}<br>		else if ( angle &gt; 180 &amp;&amp; angle &lt; 270 )<br>		{<br>			double angleInRadians = ( ( -angle * Math.PI ) / 180.0 );<br>			double cosTheta = Math.abs( Math.cos( angleInRadians ) );<br>			double sineTheta = Math.abs( Math.sin( angleInRadians ) );<br>			int dW = (int) ( width * cosTheta + height * sineTheta );<br>			int dH = (int) ( width * sineTheta + height * cosTheta );<br>			return renderRotatedObject( src, angleInRadians, dW, dH, -( width * cosTheta * cosTheta ), -( height + width * cosTheta * sineTheta ) );<br>		}<br>		else if ( angle &gt; 270 &amp;&amp; angle &lt; 360 )<br>		{<br>			double angleInRadians = ( ( -angle * Math.PI ) / 180.0 );<br>			double cosTheta = Math.abs( Math.cos( angleInRadians ) );<br>			double sineTheta = Math.abs( Math.sin( angleInRadians ) );<br>			int dW = (int) ( width * cosTheta + height * sineTheta );<br>			int dH = (int) ( width * sineTheta + height * cosTheta );<br>			return renderRotatedObject( src, angleInRadians, dW, dH, ( height * cosTheta * sineTheta ), -( height * sineTheta * sineTheta ) );<br>		}<br>		return renderRotatedObject( src, 0, width, height, 0, 0 );<br>	}<br><br>	private static BufferedImage renderRotatedObject( Object src, double angle, int width, int height, double tx, double ty )<br>	{<br>		BufferedImage dest = new BufferedImage( width, height, BufferedImage.TYPE_INT_ARGB );<br>		Graphics2D g2d = (Graphics2D) dest.getGraphics( );<br>		g2d.setColor( Color.black );<br>		g2d.setRenderingHint( RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON );<br>		g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );<br>		AffineTransform at = AffineTransform.getRotateInstance( angle );<br>		at.translate( tx, ty );<br>		g2d.setTransform( at );<br>		if ( src instanceof TextLayout )<br>		{<br>			TextLayout tl = (TextLayout) src;<br>			tl.draw( g2d, 0, tl.getAscent( ) );<br>		}<br>		else if ( src instanceof Image )<br>		{<br>			g2d.drawImage( (Image) src, 0, 0, null );<br>		}<br>		g2d.dispose( );<br>		return dest;<br>	}<br>}<br></pre>
+
+
+
+<h2>The Result</h2>
+
+
+
+<p>Now all&nbsp;required extension points are done, let's have a test.<br>
+
+
+
+<br>
+
+
+Create a report that contains some RotatedText items first:<br>
+
+
+
+</p>
+
+
+
+<img style="width: 865px; height: 273px;" alt="" src="images/design-layout.png"><br>
+
+
+
+<p>Here we inserted quite a few RotatedText items&nbsp;with different angle settings.<br>
+
+
+
+<br>
+
+
+Preview the report as HTML, it results like this:<br>
+
+
+
+</p>
+
+
+
+<img style="width: 703px; height: 218px;" alt="" src="images/html-output.png"><br>
+
+
+
+<p>Preview the report as PDF, it results like this:<br>
+
+
+
+</p>
+
+
+
+<img style="width: 757px; height: 482px;" alt="" src="images/pdf-output.png"><br>
+
+
+
+<br>
+
+
+
+<p>Done! So far we've successfully implemented a RotatedText extended
+report item for BIRT, and integrated it with Designer and Report Engine.<br>
+
+
+
+</p>
+
+
+
+</div>
+
+
+
+<h2>Summary</h2>
+
+
+
+<p>BIRT&nbsp;provides very good extension mechanism, which allows user
+to create custom reporting features. This article introduced how to write
+a custom RotatedText extended report item for BIRT.</p>
+
+
+
+<h2>Resources</h2>
+
+
+
+<p>[1] &nbsp;<a href="extension-tutorial-1.zip">The complete source code</a>: you can extract and import it into Eclipse workspace as a plugin project directly</p>
+
+
+
+<p>[2] &nbsp;BIRT Official Site: <a href="http://eclipse.org/birt">http://eclipse.org/birt</a></p>
+
+
+
+<p>[3] &nbsp;How to access Eclipse CVS: <a href="http://wiki.eclipse.org/CVS_Howto">http://wiki.eclipse.org/CVS_Howto</a></p>
+
+
+
+<p><br>
+
+
+
+<br>
+
+
+
+</p>
+
+
+
+<br>
+
+
+
+</div>
+
+
+
+</body>
+</html>
