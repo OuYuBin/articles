@@ -15,15 +15,13 @@
 
 <p>This article introduces the extension mechanism of BIRT report
 model, engine and designer, shows how to create custom extended report items
-step by
-step.</p>
+step-by-step.</p>
 
-<div class="author">By&nbsp;Zhiqiang
-Qian,&nbsp;Actuate Corporation</div>
+<div class="author">By&nbsp;Zhiqiang Qian,&nbsp;Actuate Corporation</div>
 
 <div class="copyright">Copyright &copy; 2008 Actuate Corporation.</div>
 
-<div class="date">August 7, 2008</div>
+<div class="date">December 9, 2008</div>
 
 </div>
 
@@ -44,9 +42,21 @@ this
 article, we explore how to leverage the BIRT extension mechanism to
 extend the BIRT capabilities. The provided samples 
 cover most of the essential extension points that provided by BIRT report
-model, engine and designer.<br>
+model, engine and designer.</p>
 
+<p>
+This article assumes the reader already has the knowledge about the Eclipse extension mechanism. 
+If you are not familiar with that, you can read this article first about the <a href="http://www.eclipse.org/articles/Article-Plug-in-architecture/plugin_architecture.html">
+Eclipse Plug-in Architecture</a> to get some initial concept. 
 </p>
+
+<p>
+This article also uses an Eclipse plug-in project to hold all the source code and demonstrate the extension mechanism. 
+You can either import the project directly from this <a href="extension-tutorial-1.zip">archive</a> or create your 
+own plug-in project through the Eclipse IDE. 
+</p>
+
+<div class="figure"><img style="width: 500px; height: 496px;" alt="" src="images/create-project.png"></div>
 
 <h2>The Basics</h2>
 
@@ -54,14 +64,14 @@ model, engine and designer.<br>
 but these items can only show horizontal text. Sometimes, user
 would
 like to show angled text; in this case, alternative solution is needed.
-In following sections, we introduce how to implement a
+In the following sections, we introduce how to implement a
 RotatedText
 extended report item through BIRT extensions, and how to enhance
-the functionality step by step by implementing more extension points.</p>
+the functionality step-by-step by implementing more extension points.</p>
 
 <p>Note: This example is a modified version based
 on the <code>RotatedText</code> sample on BIRT CVS, the original code
-can be retrieved <a href="http://dev.eclipse.org/viewcvs/index.cgi/?root=BIRT_Project">in Eclipse CVS.</a></p>
+can be retrieved from <a href="http://dev.eclipse.org/viewcvs/index.cgi/?root=BIRT_Project">Eclipse CVS</a>.</p>
 
 <p>To implement an extended report item, we need look at the following extension points:</p>
 
@@ -73,13 +83,12 @@ can be retrieved <a href="http://dev.eclipse.org/viewcvs/index.cgi/?root=BIRT_Pr
 
 <br>
 
-<img style="width: 514px; height: 156px;" alt="" src="images/extensions.png"><br>
+<div class="figure"><img style="width: 514px; height: 156px;" alt="" src="images/extensions.png"></div>
 
 <p>These three extensions provide the basics to implement an extended
 report item. In brief,
 <code>org.eclipse.birt.report.model.reportItemModel</code> provides the report
 model extensibility, <code>org.eclipse.birt.report.designer.ui.reportitemUI</code>
-
 provides the report designer extensibility, and
 <code>org.eclipse.birt.report.engine.reportitemPresentation</code> provides the
 report engine extensibility.</p>
@@ -89,7 +98,8 @@ report engine extensibility.</p>
 <p>This extension point is provided by the BIRT Report Model. Normally the user
 uses this extension point to define the extended report item model.</p>
 
-<img style="width: 1036px; height: 224px;" alt="" src="images/model-extension.png">
+<div class="figure"><img style="width: 1036px; height: 224px;" alt="" src="images/model-extension.png"></div>
+
 <p>First we need define a new report item model
 extension. To achieve this, we create a &quot;reportItem&quot; element under the extension and specify the <code>extensionName</code> property as &quot;RotatedText&quot;. 
 The extension name is the identifier
@@ -130,11 +140,11 @@ we just omit them here.</p>
 
   <li><em>rotationAngle</em>, the rotation angle, integer type, default as 0.</li>
 
-<br><img style="width: 1001px; height: 279px;" alt="" src="images/rotationangle-property.png">
+<div class="figure"><br><img style="width: 1001px; height: 279px;" alt="" src="images/rotationangle-property.png"></div>
 
   <li><em>text</em>, the text content, string type, default as "Rotated Text".</li>
 
-<br><img style="width: 1000px; height: 274px;" alt="" src="images/text-property.png">
+<div class="figure"><img style="width: 1000px; height: 274px;" alt="" src="images/text-property.png"></div>
 
 </ul>
 
@@ -190,11 +200,7 @@ a simple extended report item, this is normally enough.</p>
 extension point to define the UI behavior for extended report
 items.</p>
 
-<img style="width: 1001px; height: 233px;" alt="" src="images/ui-extension.png">
-
-
-<!--  WTB I realize that the image above provides context for the comment below, but 
-I think that I'd like to see some more descriptive text  around this step. -->
+<div class="figure"><img style="width: 1001px; height: 233px;" alt="" src="images/ui-extension.png"></div>
 
 <p>
 First we need create a &quot;model&quot; element under the extension. This is to bind the Designer extension with the Model extension. To do
@@ -203,41 +209,21 @@ this, we specify the <code>extensionName</code> property as &quot;RotatedText&qu
 <p>The next step, we create some other elements like &quot;palette&quot;, &quot;editor&quot; and &quot;outline&quot; under the extension, and specify the detailed settings for this extended report item as following:</p>
 
 <ul>
-  <li>Palette</li>
-  <ul>
-    <li>Specifies the icon to be shown in Palette view, as well as the
+  <li><em>Palette</em> specifies the icon to be shown in Palette view, as well as the
 palette category. If the category is not specified, the default &quot;Report Items&quot; category will be used.</li>
-  </ul>
+ 
+<div class="figure"><img style="width: 495px; height: 111px;" alt="" src="images/palette-detail.png"></div>
+
+  <li><em>Editor</em> specifies the report item visibility in different editor pages, and whether the resizing control is enabled.</li>
+
+<div class="figure"><img style="width: 495px; height: 133px;" alt="" src="images/editor-detail.png"></div>
+
+  <li><em>Outline</em> specifies the icon to be shown in Outline view. Normally this is the same as the one in Palette view.</li>
+
+<div class="figure"><img style="width: 497px; height: 90px;" alt="" src="images/icon-detail.png"></div>
 </ul>
 
-<img style="width: 495px; height: 111px;" alt="" src="images/palette-detail.png"><br>
-
-<br>
-
-<ul>
-  <li>Editor</li>
-  <ul>
-    <li>Specifies the report item visibility in different editor pages, and whether the resizing control is enabled.</li>
-  </ul>
-</ul>
-
-<img style="width: 495px; height: 133px;" alt="" src="images/editor-detail.png"><br>
-
-<br>
-
-<ul>
-  <li>Outline</li>
-
-  <ul>
-    <li>Specifies the icon to be shown in Outline view. Normally this is the same as the one in Palette view.</li>
-  </ul>
-
-</ul>
-
-<img style="width: 497px; height: 90px;" alt="" src="images/icon-detail.png"><br>
-<p>
-
-The last step, we need specify the UI provider for this extended report item.</p>
+<p>The last step, we need specify the UI provider for this extended report item.</p>
 
 <p>The UI provider defines how to display and interact with the
 extended report item within the editor. BIRT designer support three types of
@@ -245,35 +231,22 @@ basic UI providers:</p>
 
 <ul>
 
-  <li>Label UI Provider</li>
-  <ul>
-    <li>The user implements the <code>IReportItemLabelProvider</code> interface, which simply manipulates and displays a text content.</li>
-  </ul>
-
-  <li>Image UI Provider</li>
-  <ul>
-    <li>The user implements the <code>IReportItemImageProvider</code> interface, which simply manipulates and displays an image content.</li>
-  
-  </ul>
-  
-  <li>Figure UI Provider</li>
-  <ul>
-    <li>The user implements the <code>IRportItemFigureProvider</code>, which uses the Figure interface from <a href="http://www.eclipse.org/gef/">GEF</a>, providing more flexibility and interactivity support.</li>
-  </ul>
+  <li>The <em>Label UI Provider</em> implements the <code>IReportItemLabelProvider</code> interface, which simply manipulates and displays a text content.</li>
+  <li>The <em>Image UI Provider</em>  implements the <code>IReportItemImageProvider</code> interface, which simply manipulates and displays an image content.</li>  
+  <li>the <em>Figure UI Provider</em> implements the <code>IRportItemFigureProvider</code>, which uses the Figure interface from <a href="http://www.eclipse.org/gef/">GEF</a>, providing more flexibility and interactivity support.</li>
 
 </ul>
 
-<br>
 
 <p>In this example, we choose to implement the simplest Label UI
 Provider first, in subsequent examples, we will introduce other types of UI providers.</p>
 
 <p>To register the Label UI provider, we create a &quot;reportItemLabelUI&quot; element under the extension, and specify the implementor class, which must implement <code>IReportItemLabelProvider</code> interface.</p>
 
-<img style="width: 498px; height: 94px;" alt="" src="images/labelui-detail.png"><br>
+<div class="figure"><img style="width: 498px; height: 94px;" alt="" src="images/labelui-detail.png"></div>
 
 <p>
-Here our Label UI Provider implementor class is <code>org.eclipse.birt.sample.reportitem.rotatedText.RotatedTextLabelUI</code>,
+Here our Label UI Provider implementor class is <code>org.eclipse.birt.sample.reportitem.rotatedText.RotatedTextLabelUI</code>;
 the code is very simple:</p>
 
 <pre>public class RotatedTextLabelUI implements IReportItemLabelProvider
@@ -296,58 +269,48 @@ the code is very simple:</p>
 	}
 }</pre>
 
-<p>You can see what it really does is just reading the text property value from model and returning as a string.<br>
+<p>You can see that what it does is to read the text property value from the model and return it as a string.</p>
 
-<br>
+<p>After we completed the designer extension, we can run the designer and check what we have: 
+the Palette view now contains the new <code>RotatedText</code> extended report item.</p>
 
-After we completed the designer extension, we can run the desginer first and check what we already have now:<br>
+<div class="figure"><img style="width: 341px; height: 408px;" alt="" src="images/palette.png"> </div>
 
-<br>
+<p>If you right-click anywhere in the editor, you can see the <code>RotatedText</code> item is 
+also available in the &quot;Insert&quot; context menu.</p>
 
-OK, the Palette view now contains the new <code>RotatedText</code> extended report item.</p>
+<div class="figure"><img style="width: 487px; height: 395px;" alt="" src="images/layout.png"></div>
 
-<img style="width: 341px; height: 408px;" alt="" src="images/palette.png"> <br>
+<p>When you insert one RotatedText item into the layout, it appears in the Outline view.</p>
 
-<p>Right-click anywhere in the editor, we can see the <code>RotatedText</code> item is also available in the &quot;Insert&quot; context menu.</p>
+<div class="figure"><img style="width: 347px; height: 438px;" alt="" src="images/outline.png"></div>
 
-<img style="width: 487px; height: 395px;" alt="" src="images/layout.png"><br>
-
-<p>Now try insert one RotatedText item in layout, in Outline view, we can see it also appears.<br>
-
-</p>
-
-<img style="width: 347px; height: 438px;" alt="" src="images/outline.png"><br>
-
-<p>Select the RotatedText item, open the <em>Properties</em> view, it immediately
+<p>Select the RotatedText item, and open the <em>Properties</em> view. It immediately
 lists all the properties that belong to this extended report item. Among
 them, we can see the "Rotation Angle" and "Text
-Content" as well as other inherited properties. By now, the user can edit these
+Content" as well as other inherited properties. The user can edit these
 property values through this view.
 </p>
 
-<img style="width: 728px; height: 346px;" alt="" src="images/properties.png"><br>
+<div class="figure"><img style="width: 728px; height: 346px;" alt="" src="images/properties.png"></div>
 
-<p>Now the designer extension is done, let's continue to the Report Engine extension.</p>
+<p>Now that the designer extension is done, we'll continue to the Report Engine extension.</p>
 
 <h3>org.eclipse.birt.report.engine.reportitemPresentation</h3>
 
 <p>This extension point is provided by BIRT Report Engine, the user uses
 this extension point to define the presentation behavior of the
-extended report item.<br>
+extended report item.</p>
 
-</p>
+<div class="figure"><img style="width: 1003px; height: 166px;" alt="" src="images/engine-extension.png"></div>
 
-<div style="text-align: left;"><img style="width: 1003px; height: 166px;" alt="" src="images/engine-extension.png"><br>
-
-<p>First we also need bind the engine extension with model extension. To achieve this, we create a &quot;reportItem&quot; element under the engine extension and 
+<p>First we bind the engine extension with the model extension. To achieve this, we create a &quot;reportItem&quot; element under the engine extension and 
 specify the <code>name</code> property as "RotatedText", also we specify the presentation implementor class
 as <code>org.eclipse.birt.sample.reportitem.rotatedtext.RotatedTextPresentationImpl</code>.
 The presentation implementor class must implement the
-<code>IReportItemPresentation</code> interface.<br>
+<code>IReportItemPresentation</code> interface.</p>
 
-<br>
-
-Our plan for implementing the rotated text effect is to create an image
+<p>Our plan for implementing the rotated text effect is to create an image
 dynamically, in this image, we use <em>Swing</em> graphics API to render the
 rotated text.</p>
 
@@ -404,9 +367,9 @@ rotated text.</p>
 	}
 }</pre>
 
-<p>The logic is actually pretty straightforward, the main part is to
+<p>This implementation
 generate an <code>Image</code> dynamically in the <code>onRowSets()</code> method. To return
-the image content, we simply create an in-memory stream and put the image content in it.</p>
+the image content, we create an in-memory stream and put the image content into it.</p>
 
 <p>Here is the utility class that implements the key rotation rendering algorithm:</p>
 
@@ -530,38 +493,22 @@ the image content, we simply create an in-memory stream and put the image conten
 
 <h2>The Result</h2>
 
-<p>Now all required extension points are ready, let's have an integrated test.<br>
+<p>Create a report and insert some RotatedText items first:</p>
 
-<br>
+<div class="figure"><img style="width: 865px; height: 273px;" alt="" src="images/design-layout.png"></div>
 
-Create a report and insert some RotatedText items first:<br>
+<p>Here we have inserted quite a few RotatedText items that with different angle settings.</p>
 
-</p>
+<p>When we preview the report as HTML, it looks like this:</p>
 
-<img style="width: 865px; height: 273px;" alt="" src="images/design-layout.png"><br>
+<div class="figure"><img style="width: 703px; height: 218px;" alt="" src="images/html-output.png"></div>
 
-<p>Here we have inserted quite a few RotatedText items that with different angle settings.<br>
+<p>Preview the report as PDF, it results like this:</p>
 
-<br>
+<div class="figure"><img style="width: 757px; height: 482px;" alt="" src="images/pdf-output.png"></div>
 
-Preview the report as HTML, it results like this:<br>
-
-</p>
-
-<img style="width: 703px; height: 218px;" alt="" src="images/html-output.png"><br>
-
-<p>Preview the report as PDF, it results like this:<br>
-
-</p>
-
-<img style="width: 757px; height: 482px;" alt="" src="images/pdf-output.png"><br>
-
-<br>
-
-<p>Done! So far we've successfully implemented a <code>RotatedText</code> extended
-report item for BIRT, and integrated it with Designer and Report Engine.<br>
-
-</p>
+<p>Done! We've successfully implemented a <code>RotatedText</code> extended
+report item for BIRT, and integrated it with Designer and Report Engine.</p>
 
 </div>
 
@@ -573,19 +520,11 @@ a custom RotatedText extended report item for BIRT.</p>
 
 <h2>Resources</h2>
 
-<p>[1]  <a href="extension-tutorial-1.zip">The complete source code</a>: you can extract and import it into Eclipse workspace as a plugin project directly</p>
+<p>[1]  <a href="extension-tutorial-1.zip">The complete source code</a>: you can extract and import it into Eclipse workspace as a plug-in project directly</p>
 
 <p>[2]  BIRT Official Site: <a href="http://eclipse.org/birt">http://eclipse.org/birt</a></p>
 
 <p>[3]  How to access Eclipse CVS: <a href="http://wiki.eclipse.org/CVS_Howto">http://wiki.eclipse.org/CVS_Howto</a></p>
-
-<p><br>
-
-<br>
-
-</p>
-
-<br>
 
 </div>
 
