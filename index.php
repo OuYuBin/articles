@@ -48,7 +48,8 @@
 	$count = count($resources_list);
 	//get_categories_for_filtering_as_html('/articles/index.php', $filter);
 	$rss = "<a href=\"/resources/resources.rss?type=article&title=Eclipse%20Corner%20Articles\"><img src=\"/images/rss2.gif\"></a>";
-	$articles =  $resources->get_resources_table($resources_list, $filter, "$filter_summary ($count articles) $rss");
+		
+	$articles =  $resources->get_resources_table2($resources_list, $filter);
 	//get_articles_as_html($filter);
 	$resources->dispose();
 	
@@ -56,18 +57,7 @@
 	$html = <<<EOHTML
 	
 		<link rel="stylesheet" type="text/css" href="/resources/layout.css" media="screen" />
-		<script language="javascript">
-			function t(i, j) {
-				var e = document.getElementById(i);
-				var f = document.getElementById(j);
-				var t = e.className;
-				if (t.match('invisible')) { t = t.replace(/invisible/gi, 'visible'); }
-				else { t = t.replace(/visible/gi, 'invisible'); }
-				e.className = t;
-				f.className = t;
-			}
-		</script>
-<!--<div id="maincontent">-->
+		
 	<div id="midcolumn">
 		<h1>$pageTitle</h1>
 		<img src="images/articles.gif" align="right">
@@ -98,7 +88,9 @@
   		<input name="sa" value="Search" type="submit">
 		</form>
 		
- 		<hr/>
+ 		<br/>
+ 		
+		$filter_summary ($count articles) $rss
  		$articles
 	</div>
 	<div id="rightcolumn">
@@ -106,8 +98,6 @@
 			<h6>Categories</h6>
 			$category_cloud
 		</div>
-	</div>
-	<div id="rightcolumn">
 		<div class="sideitem">
 			<h6>Eclipse Rich Client Platform Tutorial</h6>
 			<ul>
@@ -116,16 +106,12 @@
 			<li><a href="http://eclipse.org/articles/Article-RCP-3/tutorial3.html">Part 3</a></li>
 			</ul>
 		</div>
-	</div>
-	<div id="rightcolumn">
 		<div class="sideitem">
 			<h6>Other Tutorials</h6>
 			<ul>
 			<li><a href="http://www.eclipse.org/webtools/jst/components/ws/1.5/tutorials/index.html">Web Service Tutorials for WTP 1.5</a></li>
 			</ul>
 		</div>
-	</div>
-	<div id="rightcolumn">
 		<div class="sideitem">
 			<h6>Other Sources of Eclipse Information</h6>
 			<ul>
