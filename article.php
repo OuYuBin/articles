@@ -22,19 +22,17 @@
 	#
 	#****************************************************************************
 	
+	require_once("parts/functions.php");
+	
 	$host = $_SERVER['HTTP_HOST'];
     $root = $_SERVER['DOCUMENT_ROOT'] . '/articles';
 	$file = $_GET['file'];
-	
+		
+	// If the requested article does not exist, redirect to a warning page.
+	if (!is_valid_article_file($file)) $file = "nosucharticle.html";
+		
 	$article_path = "$root/$file";
 	
-	// If the requested article does not exist, redirect to a warning page.
-	if (!file_exists($article_path)) {
-		$file = "nosucharticle.html";
-		$article_path = "$root/$file";
-	}
-	
-	require_once("parts/functions.php");
 	
 	$info_file = dirname($article_path) . '/info.xml';
 	if (file_exists($info_file)) {

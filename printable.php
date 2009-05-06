@@ -26,7 +26,7 @@
 	$file = $_GET['file'];
 	
 	// If the requested article does not exist, redirect to a warning page.
-	if (!file_exists("$root/$file")) $file = 'nosucharticle.html';
+	if (!is_valid_article_file($file)) $file = "nosucharticle.html";
 	
 	$host = $_SERVER['HTTP_HOST'];
 	#
