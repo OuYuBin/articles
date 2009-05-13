@@ -472,21 +472,6 @@ gridData.grabExcessHorizontalSpace = true;
 button1.setLayoutData(gridData);</pre> <img
 	src="images/GridDataSampleHorizontalFill.jpg" />
 
-<p>The second is to take advantage of convenience API: style bits
-defined by <code>GridData</code>:</p>
-
-<pre>button1.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));</pre>
-
-<p>In fact, certain common style bit combinations are provided for
-further convenience:</p>
-
-<pre>button1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));</pre>
-
-<p>Note that <code>FILL_</code> convenience styles set both fill
-alignment <i>and</i> grab. <code>GridData</code> style bits can only be
-used for boolean and enumeration fields. Numeric fields must be set
-directly.</p>
-
 <p>One final note about <code>GridData</code> objects before we get
 into their fields: do not reuse <code>GridData</code> objects. Every
 widget in a <code>Composite</code> that is managed by a <code>GridLayout</code>
@@ -767,7 +752,8 @@ to read an <code>Image</code> file which the <code>Canvas</code>
 displays in a paint listener, &quot;Delete&quot; deletes the <code>Image</code>, and
 Enter prints the current dog and owner info.</p>
 
-<pre>import org.eclipse.swt.SWT;
+<pre>package org.eclipse.articles.layouts.samples;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -818,7 +804,7 @@ public class DogShowRegistrationWindow {
 		new Label(shell, SWT.NONE).setText("Dog's Name:");
 		
 		dogName = new Text(shell, SWT.SINGLE | SWT.BORDER);
-		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		GridData gridData = new GridData(GridData.FILL, GridData.CENTER, true, false);
 		gridData.horizontalSpan = 2;
 		dogName.setLayoutData(gridData);
 		
@@ -827,15 +813,15 @@ public class DogShowRegistrationWindow {
 		dogBreed = new Combo(shell, SWT.NONE);
 		dogBreed.setItems(new String[] { "Collie", "Pitbull", "Poodle",
 				"Scottie", "Black Lab" });
-		dogBreed.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+		dogBreed.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		
 		Label label = new Label(shell, SWT.NONE);
 		label.setText("Categories");
-		label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+		label.setLayoutData(new GridData(GridData.CENTER, GridData.CENTER, true, false));
 		
 		new Label(shell, SWT.NONE).setText("Photo:");
 		dogPhoto = new Canvas(shell, SWT.BORDER);
-		gridData = new GridData(GridData.FILL_BOTH);
+		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		gridData.widthHint = 80;
 		gridData.heightHint = 80;
 		gridData.verticalSpan = 3;
@@ -854,8 +840,7 @@ public class DogShowRegistrationWindow {
 				"Most Colors", "Best Performer", "Loudest Bark",
 				"Best Behaved", "Prettiest Eyes", "Most Hair", "Longest Tail",
 				"Cutest Trick" });
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL
-				| GridData.VERTICAL_ALIGN_FILL);
+		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		gridData.verticalSpan = 4;
 		int listHeight = categories.getItemHeight() * 12;
 		Rectangle trim = categories.computeTrim(0, 0, 0, listHeight);
@@ -864,7 +849,7 @@ public class DogShowRegistrationWindow {
 		
 		Button browse = new Button(shell, SWT.PUSH);
 		browse.setText("Browse...");
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		gridData = new GridData(GridData.FILL, GridData.CENTER, true, false);
 		gridData.horizontalIndent = 5;
 		browse.setLayoutData(gridData);
 		browse.addSelectionListener(new SelectionAdapter() {
@@ -878,8 +863,7 @@ public class DogShowRegistrationWindow {
 		
 		Button delete = new Button(shell, SWT.PUSH);
 		delete.setText("Delete");
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL
-				| GridData.VERTICAL_ALIGN_BEGINNING);
+		gridData = new GridData(GridData.FILL, GridData.BEGINNING, true, false);
 		gridData.horizontalIndent = 5;
 		delete.setLayoutData(gridData);
 		delete.addSelectionListener(new SelectionAdapter() {
@@ -897,21 +881,21 @@ public class DogShowRegistrationWindow {
 		gridLayout = new GridLayout();
 		gridLayout.numColumns = 2;
 		ownerInfo.setLayout(gridLayout);
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		gridData = new GridData(GridData.FILL, GridData.CENTER, true, false);
 		gridData.horizontalSpan = 2;
 		ownerInfo.setLayoutData(gridData);
 		
 		new Label(ownerInfo, SWT.NONE).setText("Name:");
 		ownerName = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
-		ownerName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		ownerName.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		
 		new Label(ownerInfo, SWT.NONE).setText("Phone:");
 		ownerPhone = new Text(ownerInfo, SWT.SINGLE | SWT.BORDER);
-		ownerPhone.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		ownerPhone.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		
 		Button enter = new Button(shell, SWT.PUSH);
 		enter.setText("Enter");
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
+		gridData = new GridData(GridData.END, GridData.CENTER, false, false);
 		gridData.horizontalSpan = 3;
 		enter.setLayoutData(gridData);
 		enter.addSelectionListener(new SelectionAdapter() {
