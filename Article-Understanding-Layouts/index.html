@@ -27,11 +27,13 @@ Technology International, Inc.</div>
 <div class="author">Revised by Shantha Ramachandran, OTI</div>
 <div class="date">May 02, 2002</div>
 
-<div class="author">Revised by Wayne Beaton, The Eclipse
-Foundation</div>
-<div class="copyright">Copyright &copy; 2008 The Eclipse
-Foundation, Inc.</div>
+<div class="author">Revised by Wayne Beaton, The Eclipse Foundation</div>
+<div class="copyright">Copyright &copy; 2008 The Eclipse Foundation, Inc.</div>
 <div class="date">May 30, 2008</div>
+
+<div class="author">Revised by Wayne Beaton, The Eclipse Foundation</div>
+<div class="copyright">Copyright &copy; 2008 The Eclipse Foundation, Inc.</div>
+<div class="date">May 13, 2009</div>
 </div>
 
 <div class="content">
@@ -348,32 +350,35 @@ initial width and height specified by setting its <code>RowData</code>
 object. The following code uses <code>RowData</code> objects to change
 the initial size of the <code>Buttons</code> in a <code>Shell</code>.</p>
 
-<pre>import org.eclipse.swt.*;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.swt.layout.*;
+<pre>package org.eclipse.articles.layouts.samples;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.RowData;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 public class RowDataExample {
-
-   public static void main(String[] args) {
-       Display display = new Display();
-       Shell shell = new Shell(display);
-       shell.setLayout(new RowLayout());
-       Button button1 = new Button(shell, SWT.PUSH);
-       button1.setText(&quot;Button 1&quot;);
-       button1.setLayoutData(new RowData(50, 40));
-       Button button2 = new Button(shell, SWT.PUSH);
-       button2.setText(&quot;Button 2&quot;);
-       button2.setLayoutData(new RowData(50, 30));
-       Button button3 = new Button(shell, SWT.PUSH);
-       button3.setText(&quot;Button 3&quot;);
-       button3.setLayoutData(new RowData(50, 20));
-       shell.pack();
-       shell.open();
-
-       while (!shell.isDisposed()) {
-          if (!display.readAndDispatch()) display.sleep();
-       }
-   }
+	public static void main(String[] args) {
+		Display display = new Display();
+		Shell shell = new Shell(display);
+		shell.setLayout(new RowLayout());
+		Button button1 = new Button(shell, SWT.PUSH);
+		button1.setText("Button 1");
+		button1.setLayoutData(new RowData(50, 40));
+		Button button2 = new Button(shell, SWT.PUSH);
+		button2.setText("Button 2");
+		button2.setLayoutData(new RowData(50, 30));
+		Button button3 = new Button(shell, SWT.PUSH);
+		button3.setText("Button 3");
+		button3.setLayoutData(new RowData(50, 20));
+		shell.pack();
+		shell.open();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch())
+				display.sleep();
+		}
+	}
 }</pre>
 
 <p>Here is what you see when you run this code.</p>
@@ -687,13 +692,16 @@ public class SampleGrabExcess {
 				display.sleep();
 		}
 	}
-}</pre> <img src="images/GridLayoutGrabExcess.jpg" />      
+}</pre> 
+
+<p><img src="images/GridLayoutGrabExcess.jpg" /></p>
+
 <p>When resized, the single line (top-most) <code>Text</code> grows
 to consume all available horizontal space, and the second <code>Text</code>
 and the <code>List</code> grow to consume all remaining space (both
 vertically and horizontally):</p>
 
-<img src="images/GridLayoutGrabExcessResized.jpg" />
+<p><img src="images/GridLayoutGrabExcessResized.jpg" /></p>
 
 <p>One final point to note about grabbing: if a widget is set to
 grab excess horizontal space and its parent <code>Composite</code> grows
@@ -979,7 +987,7 @@ Bifford in the dog show:</p>
 
 	<li>The &quot;Categories&quot; <code>Label</code> is centered over
 	the <code>categories</code> <code>List</code>.
-	</p>
+	
 	<li>The <code>enter</code> <code>Button</code> is horizontally
 	aligned to the right of the 3 columns it spans.</li>
 
@@ -1272,7 +1280,8 @@ work. Next, we will do a simple example using more <code>Button</code>s
 to show how a layout can be arranged using the attachments. We'll start
 by drawing a basic diagram outlining the attachments that we wish to
 create.</p>
-     <img src="images/FormExampleHandDrawn.jpg" /> 
+
+<p><img src="images/FormExampleHandDrawn.jpg" /></p> 
 
 <pre>FormData data1 = new FormData();
 data1.left = new FormAttachment(0,5);
@@ -1311,7 +1320,7 @@ pixel offset.</p>
 
 <p>When we resize, the attachments become more visible. <code>button1</code> is
 attached on the left and the right side, so when the window is resized,
-it grows. Note that the right side will always be at 25% of the window. 
+it grows. Note that the right side will always be at 25% of the window.
 The same resize results apply for <code>button2</code>, as both sides are attached.
 The left side is attached to <code>button1</code>, so it will always be at 25% plus five
 pixels. <code>button3</code> stays in the center of the window, horizontally. <code>button4</code>
@@ -1553,7 +1562,6 @@ Bifford in the dog show:</p>
 
 <img src="images/DogShowBiffWithFormLayout.jpg" />
 
-</p>
 <p>When the window is resized, the same controls are resized as in
 the <code>GridLayout</code> example.</p>
 
@@ -1639,7 +1647,7 @@ public void layout();
 might affect their size or position, such as changing the font of a
 child, changing the text or image of a child, adding a new child, or
 adding children to a child (If the child can accommodate the change,
-then layout may not be necessary – for example, changing the font or
+then layout may not be necessary; for example, changing the font or
 text of a scrollable multi-line <code>Text</code>). Since these changes
 are done programmatically, they do not cause events to happen.
 Consequently, the parent doesn't know about the changes, and has to be
@@ -1834,7 +1842,7 @@ but they do not grow taller.</p>
 <p>If you are writing your own widget, as outlined in <a
 	href="http://www.eclipse.org/articles/Article-Writing%20Your%20Own%20Widget/Writing%20Your%20Own%20Widget.htm">Creating
 Your Own Widgets Using SWT</a>, and you subclass Composite, then here are a
-few points to consider for your implementation:</a></p>
+few points to consider for your implementation:</p>
 
 <ul>
 	<li>If you are providing trimmings in your new <code>Composite</code>,
