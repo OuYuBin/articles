@@ -81,7 +81,7 @@ three-to-five people, including at least one committer from a pertinent
 project, have to believe that the article is appropriate content for
 Eclipse Corner.</p>
 
-<p>The editoral staff, at their discretion, may waive this requirement
+<p>The editorial staff, at their discretion, may waive this requirement
 for articles that they deem to be useful additions to Eclipse Corner
 despite an apparent lack of immediate interest by the committee.</p>
 
@@ -97,7 +97,7 @@ the EPL along with the rest of the content.</p>
 
 <h2>Scheduling</h2>
 
-<p>As a general rule, we endeavor to publish an average of two articles
+<p>As a general rule, we endeavour to publish an average of two articles
 each month. As articles reach an appropriate level of maturity, we will
 schedule a date for publishing by indicating a date in comments to the
 Bugzilla entry. This general rule is more of a guideline, and is more a
@@ -122,7 +122,7 @@ adjusting the focus of your article so they don't overlap.</p>
 <p>Next, write down a short outline of your article and the main topics
 you intend to cover. Open a <a
 	href="https://bugs.eclipse.org/bugs/enter_bug.cgi?product=Community&component=Articles">new
-bugzilla entry</a> for the article if there's not one already and put
+Bugzilla entry</a> for the article if there's not one already and put
 your outline in the comments there. Indicate a rough idea of when you
 expect the article to be completed. Also, explicitly state the Eclipse
 projects that you believe most closely align with your content (don't
@@ -161,14 +161,14 @@ page articles could better be published as paper back novels.</p>
 <h2>After finishing the article</h2>
 
 <p>When you have finished your draft article, zip it up and attach the
-zip to the bugzilla entry.</p>
+zip to the Bugzilla entry.</p>
 
 <p>The Articles Editor and one or more reviewers will work with you (via
-bugzilla comments and/or email) to finalize the article. As you come up
-with new revisions, attach them to the bugzilla entry.</p>
+Bugzilla comments and/or email) to finalise the article. As you come up
+with new revisions, attach them to the Bugzilla entry.</p>
 
 <p>Don't be discouraged if you get lots of feedback. Most articles
-require at least two drafts before they are finalized. Remember, the
+require at least two drafts before they are finalised. Remember, the
 reviewers are trying to help you make the article the best thing since
 the invention of those tiny umbrellas they put in drinks.</p>
 
@@ -183,7 +183,7 @@ cannot certify your content, it cannot be published.</p>
 <h2>Posting the article</h2>
 
 <p>After all of the kinks are worked out and the final draft is in
-bugzilla, the article will be posted on the site and the bugzilla entry
+Bugzilla, the article will be posted on the site and the Bugzilla entry
 marked as closed. Stand back and watch as the masses come running to
 read it.</p>
 
