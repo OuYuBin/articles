@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>How to Fix a Bug in Eclipse</title>
+<meta http-equiv="Content-Type"
+	content="text/html; charset=windows-1252">
+<link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<h1>How to Fix a Bug in Eclipse</h1>
+<div class="summary">
+<h2>Summary</h2>
+
+<p>In this article, the reader will be guided through the entire process of a search for an open bug within one of the Eclipse projects and the steps that may be required in order to implement a fix to be contributed back to the Eclipse community. This article assumes that the reader is familiar with using CVS and Subversion in Eclipse as well as the basics required to develop Eclipse plug-ins.</p>
+
+<div class="author">By Remy Chi Jian Suen, University of Waterloo</div>
+<div class="copyright">Copyright &copy; 2009 Remy Chi Jian Suen.</div>
+<div class="date">June 22, 2009</div>
+</div>
+
+<div class="content">
+
+<h2>Introduction</h2>
+<p>There are a wide variety of ways that someone can contribute to Eclipse. You can open a bug or enhancement request in <a href="https://bugs.eclipse.org/bugs/">Bugzilla</a>, answer some questions on the <a href="http://www.eclipse.org/newsgroups/">newsgroup</a>, or just write a blog entry about it on your blog to increase awareness and generate some interest in Eclipse technology amongst your readers. There's also a <a href="http://wiki.eclipse.org/Category:How_to_Contribute">wiki category</a> of articles related to contributing to the Eclipse community. For those of you that are feeling adventurous, you may wish to venture forth into the Eclipse code base and try to fix a bug or add a feature yourself. If you are one of those individuals, read on.</p>
+
+<h2>Find a Bug</h2>
+<p>The first step to making a code contribution to Eclipse would be to find an itch that you want to scratch. If you don't have one you can think of, you can always run a <a href="https://bugs.eclipse.org/bugs/query.cgi?format=advanced">Bugzilla query</a> and try to look for one. While constructing your query, it would be in your best interests to include the keywords "<tt>bugday, helpwanted</tt>" to help narrow the search down to simpler bugs if this is your first time making a code contribution to Eclipse. So say you wanted to search for open and simple bugs in the Platform/Team component, your query would look something like the following.
+
+</div>
+
+<div class="figure">
+<img src="images/query.gif"/>
+</div>
+
+<div class="content">
+
+<p>For the purpose of this exercise, <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=221652">bug 221652</a> will be used as an example of a simple bug that can be easily fixed by a contributor.</p>
+
+</div>
+
+<div class="content">
+
+<h2>Comment on the Bug</h2>
+<p>Once you have found a bug in Bugzilla that you wish to try your hand at address and you've managed to reproduce it locally, you should speak up on the bug by commenting on it. This will let the developers and other people CC'd on the bug know that there is someone interested on working on it and should help prevent duplication of effort. You should also take this opportunity to comment about the solution you are considering pursuing so that the other people can provide input as to whether they feel this is the correct approach or not.</p>
+
+<h2>Finding the Source of the Problem</h2>
+<p>Normally, if you are unsure as to where the problem occurs in the source code, you would ask the developers about it on the bug so that they can provide you with some pointers. If the bug is with the user interface, like it is with <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=221652">bug 221652</a>, then you can try figuring it out yourself by using <strong>Plug-in Spy</strong> to find the source code based on the results of the introspection operation.</p>
+
+<p>To use Plug-in Spy, you should first bring up the user interface element that the bug occurs in. Now hover your mouse over it and then hit Alt+Shift+F1 (this may be Option+Shift+F1 on a Mac keyboard). Plug-in Spy will analyze the element under your mouse cursor and provide you with a list of information.</p>
+
+</div>
+
+<div class="figure">
+<img src="images/spy.gif"/>
+</div>
+
+<div class="content">
+
+<p>Take note of the class name (in this case it is the "active wizard class") and the contributing plug-in. This will tell you the primary class that constructed this element and the plug-in that this class comes from. Now that you know the name of the plug-in, you can search for it in the <a href="http://dev.eclipse.org/viewcvs/">source code repositories</a> and check it out.</p>
+
+<h2>Fixing the Bug</h2>
+<p>Once you have the source code in your Eclipse workspace, you should startup a second Eclipse instance from your workspace that uses the plug-in you just checked out. You can then verify whether the bug is still reproducible with the latest code in the repository. In your 'Eclipse Application' launch configuration, make sure you have your checked out project selected and the one in your target platform unselected to ensure that PDE picks the right one.</p>
+
+</div>
+
+<div class="figure">
+<img src="images/launch.gif"/>
+</div>
+
+<div class="content">
+<h2>Submitting a Patch</h2>
+<p>Once you've confirmed that the bug still exists and have fixed it, you should synchronize your project with the repository again by performing 'Team > Synchronize with Repository' through the project's context menu. If there aren't any conflicts then you should go over your changes and make sure any print statements you might have added have been removed and all extraneous whitespace changes have been reverted. Once it's all good to go, you should create a patch for submission into the Bugzilla system.</p>
+
+</div>
+
+<div class="figure">
+<img src="images/patch.gif"/>
+</div>
+
+<div class="content">
+<p>When creating a patch, make sure you select the option to set the 'Patch Root' to the 'Workspace' if the option is available. This will make it easier for other people to apply your patch to their workspace. Once the patch creation process has completed, you are now ready to submit it into the Bugzilla. Navigate back to the bug report, click on the 'Add an attachment' link and then fill in the relevant information.</p>
+
+</div>
+
+<div class="figure">
+<img src="images/submit.gif"/>
+</div>
+
+<div class="content">
+When you're done filling in the form, just click the 'Submit' button and your patch will be uploaded to Bugzilla! Don't be discouraged if the developers do not respond to your submission immediately as they may be busy with other things. On the other hand, if the bug stays quiet for an extended period of time, a helpful nudge by commenting on the bug may help remind the developers of your patch once again. Due to the volume of traffic that occurs from Bugzilla emails on any given day, your comment may have slipped off of their radars. Do not despair and keep trying!
+
+<h2>Summary</h2>
+This article has walked you through some simple procedures on how one could find a bug in Bugzilla and subsequently have a fix contributed to the developers. However, as I noted in the introduction, there are many other ways you can contribute to the Eclipse community. You can still help if you don't know how to code through other means such as by filing bugs, answering questions, giving talks, helping with <a href="http://babel.eclipse.org/babel/">translations</a>, writing documentation or a blog entry about Eclipse.
+
+</body>
+</html>
