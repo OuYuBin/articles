@@ -22,6 +22,8 @@
 	#
 	#****************************************************************************
 	
+	require_once("parts/functions.php"); 
+	
 	$root = $_SERVER['DOCUMENT_ROOT'] . '/articles';
 	$file = $_GET['file'];
 	
