@@ -1,0 +1,553 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>Designing Accessible Plug-ins in Eclipse</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <link href="../article.css" type="text/css" rel="stylesheet">
+</head>
+
+	<body>
+
+<h1>Designing Accessible Plug-ins in Eclipse</h1>
+<div class="summary">
+	<h2>Summary</h2>
+  <p>Accessibility for disabled users is now a priority in application development 
+  as advances in techniques and support within operating systems have now made 
+  this possible. This article covers the Eclipse accessibility support, general 
+  tips for creating accessible plug-ins, and the types of disabilities that the 
+  Eclipse accessibility support assists. This is all illustrated using an example 
+  of making a view accessible. </p>
+  <p>For information about accessibility in Eclipse releases prior to 3.5, please see
+  the <a href="/articles/article.php?file=Article-Accessibility/index.html">previous version of this document</a>.</p>
+  
+  <div class="author">By Tod Creasey, IBM</div>
+	<div class="copyright">Copyright &copy; 2003,2009 IBM Corporation.</div>
+    <div class="date">Originally published May 20, 2003</div>
+  <div class="date">Updated for Eclipse 3.5</div>
+ </div>
+
+<div class="content">
+<h2>Introduction</h2>
+<p>A major goal of Eclipse 2.0 was to supply support for the use of Eclipse by 
+  people with disabilities. This article deals with the support provided in Eclipse 
+  for use of accessibility tools in the Microsoft&reg; Windows , Linux GTK and Mac operating 
+  systems as well as general UI design tips for people who want to make accessible 
+  applications. It also covers the US Federal government section 508 accessibility 
+  regulations and the IBM<font size="-2">TM</font> accessibility checklist.</p>
+<h2>Regulations and other Resources</h2>
+<p>Much of the work in the industry in accessibility has been driven by the US 
+  Federal Government <a href="http://www.section508.gov/" target="_blank">Section 
+  508 Regulations</a>. This regulation is a set of criteria that computing applications 
+  must satisfy in order to be sold to the US government.&nbsp;</p>
+<p>The Section 508 regulations are fairly general so IBM has provided a more detailed 
+  checklist for developers of accessible applications - see the <a href="http://www.ibm.com/able/guidelines/index.html" target="_blank">IBM Accessibility 
+  Guidelines</a>. Microsoft&reg; has an accessibility section on their Web site 
+  as well - see <a href="http://www.microsoft.com/enable" target="_blank">Microsoft 
+  Accessibility</a>.</p>
+<h2>Types of Accessibility Support</h2>
+<p>There are several types of disability that can be dealt with in an accessible 
+  application. The main categories are mobility issues, contrast, sound and color 
+  issues and the use of screen readers. Screen readers are used by people with vision and cognitive issues so be aware that the blind are not the only users of these technologies when testing.</p>
+<p>Mobility enablement covers a wide range of issues. The main issue is the mouse. 
+  Initially a mouse was added to a computer as a labor saving option; now many 
+  applications cannot be operated without it. Many people cannot or prefer not 
+  to use the mouse because of problems with repetitive strain injuries or poor 
+  motor control. Other mobility issues deal with being able to hold multiple keys 
+  at once (accelerators), required response time to messages and visual focus 
+  indication.</p>
+<p>Contrast and color is an issue for people who are not blind but cannot see 
+  small fonts or subtle color differences. Some people work in High Contrast mode 
+  where the only colors they use are black, white and colors that contrast well with them such as purple. As a result of this, color 
+  should never be used as the only way of presenting information - there should 
+  be an alternative way as well. The same issue is true for sound because not 
+  only do deaf people require visual stimulus but many people turn off their sound 
+  while working. Windows, dialogs and icons should also avoid using background 
+  and foreground colors that are too close to each other as people who have trouble with contrast will not be able to read them A common example of this is blue selection on black text which makes the text unreadable.</p>
+<p>Screen readers such as the <a href="http://www.nvda-project.org/"> NVDA screen reader</a> make use of the Microsoft 
+  Active Accessibility support (MSAA) to read the contents of windows and dialogs 
+  to the user. SWT supports MSAA so most of the support for screen readers will 
+  come by default. Screen readers infer content from the control that has focus 
+  and its associated widgets (labels and parents). Developers also need to be 
+  careful of tab support for screen readers because this is how someone using 
+  one will navigate your application. An application using screen readers also 
+  should assume that a mouse will not be used - it is very difficult to position 
+  a pointer if you cannot see a fine detailed thing such as a mouse pointer.&nbsp;</p>
+<h2>Showing Accessibility by Building an Accessible View</h2>
+<p>We will illustrate the main accessibility issues and how to solve them in Eclipse 
+  with a simple example of a view. This view will be a simple entry view with 
+  fields for name and password and an OK button. To jazz it up we have an image 
+  instead of text for a title and have set the background to be yellow to blend 
+  in with the image. We have also made the text of our title for the entry fields 
+  bold so that it catches the eye more. Because we are trying to keep good contrast 
+  for readability we are using black text on the background. We have also added 
+  a couple of entries in the drop-down menu to allow the user to reset the view 
+  and to enter the values for an anonymous login.</p>
+<p><strong><img alt="Starting look of view example" src="article.php_files/beforescreen.png" ></strong></p>
+<p><strong>Figure 1. Screen shot of input example</strong></p>
+<p>Here is the code that is interesting for this discussion.</p>
+<pre>
+public void createPartControl(Composite parent) {
+	// We have created a label at the top for our label image with
+	// a welcome label underneath. We have set its font to be a bold
+	// font so it is more visible. We have then defined the titles
+	// for our text entry fields and then the fields. Finally, we add
+	// a button at the bottom of the fields.
+	
+	Composite workArea = new Composite(parent, SWT.BORDER);
+	setBackground(workArea);
+	workArea.setLayout(new GridLayout(2,false));
+	workArea.setLayoutData(new GridData(SWT.FILL,SWT.FILL,true,true));
+
+	manager = new LocalResourceManager(JFaceResources.getResources());
+
+	Label topLabel = new Label(workArea, SWT.NONE);
+	topLabel.setImage(manager.createImage(AccessibilityPlugin
+				.getImageDescriptor(AccessibilityPlugin.LOGIN_IMAGE)));
+
+
+	Label titleLabel = new Label(workArea, SWT.NONE);
+	setBackground(titleLabel);
+	titleLabel.setText("Welcome to our online store!");
+	FontData labelFontData = new FontData("Arial", 10, SWT.BOLD);
+	titleLabel.setFont(new Font(parent.getDisplay(), labelFontData));
+
+	Label passwordTitle = new Label(workArea, SWT.NONE);
+	passwordTitle.setText("Password:");
+	setBackground(passwordTitle);
+		
+	Text passwordEntryField = new Text(workArea, SWT.BORDER);
+
+	Label nameTitle = new Label(workArea, SWT.NONE);
+	nameTitle.setText("Name:");
+	setBackground(nameTitle);
+
+	nameEntryField = new Text(workArea, SWT.BORDER);
+	nameEntryField.setLayoutData(new GridData(SWT.FILL,SWT.NONE,true,false));
+		
+	Button enterButton = new Button(workArea, SWT.PUSH);
+	enterButton.setText("Login");
+	}
+	
+private void setBackground(Control control) {
+		control.setBackground(control.getDisplay().getSystemColor(
+				SWT.COLOR_YELLOW));
+	}</pre>
+<p>So far it looks fine, right? We have a drop-down menu to make some common operations 
+  easier, we have good contrasting colors (black on a yellow background), bold 
+  fonts for our welcome title and our code organized to handle the titles first 
+  and then the fields.</p>
+<h2>Presenting Information Accessibly</h2>
+<p>A common accessibility problem is presenting something that looks great with 
+  your operating system settings but that is unusable with other people's settings. 
+  This generally manifests itself as hard-coded font or color values or images 
+  that are the only source of information.</p>
+<h2>Colors and Images</h2>
+<p>We have a problem image in our example. Our title image contains information 
+that the user must have in order to use our application and if the user cannot 
+read the image they cannot use our application. Users who reverse their colors 
+or who need larger fonts won't be able to read this.</p>
+<p><img alt="Title icon" src="article.php_files/namepassword.gif" width="216" height="36"></p>
+<p><strong>Figure 2. The title icon</strong></p>
+<p>The most common setup for this case is the High Contrast mode in the Windows 
+  environment. In High Contrast text is generally shown as white on a black background 
+  and all of the fonts are increased in size. High Contrast themes and modes are 
+  provided by the Windows operating system for those who cannot easily see subtle 
+  differences in shade. High Contrast comes in both white on black and black on 
+  white and any accessible application should handle both of these. Because of 
+  these settings any application that forces a background or foreground to a hard-coded 
+  color will likely fail accessibility testing. Eclipse is tested using all of 
+  the high contrast modes provided by Microsoft.</p>
+<p>Here is the Eclipse Resource Navigator in both Normal and High Contrast modes.</p>
+<p><img alt="Navigator view in High Contrast" src="article.php_files/navhighcontrast.png"></p>
+<p><strong>Figure 3. The Navigator View in Normal and High Contrast modes</strong></p>
+<p>By contrast here is our view in Normal and High Contrast modes:</p>
+<p><img alt="High contrast comparison" src="article.php_files/highcontraststart.png" ></p>
+<p><strong>Figure 4. The Entrance View in Normal and High Contrast modes</strong></p>
+<p>The first problem we will tackle is in unreadable text and image. The yellow 
+  background makes the white text unreadable in High Contrast Mode and the image 
+  still has black text (because it is an image) despite the text being white everywhere 
+  else.</p>
+<p>First we will fix the image. It conveys information to users that they need 
+  to know in order to proceed. Because it is an image it cannot be changed in 
+  any way to be more readable to someone who cannot read black text on a yellow 
+  background or who needs a larger font than the one we created it with.</p>
+<p>We will replace this in our new design with an image that is decoration only 
+  and with a label that has the important information by switching around the 
+  text in the title and the text in the image because the title information is 
+  currently just a welcome banner. That way when users set their fonts in Eclipse 
+  to something they can read the information they need will be readable too. We 
+  will discuss fonts more in the next section.</p>
+<p><img alt="View with info on dialog" src="article.php_files/welcomesnapshot.png" ></p>
+<p><strong>Figure 5. View with the required information moved to a label</strong></p>
+<p>Now we have replaced the image with something that just adds aesthetic appeal, 
+  and we have made the required text a label so that it can have the same font 
+  as the others.</p>
+<p>The next issue with our view is color. Although the yellow background blends 
+  in nicely with our image, the contrast will not work for all settings as we 
+  can see in Figure 4. People using the High Contrast settings will not be able 
+  to use this view because they are trying to see white on black.</p>
+<p>So clearly our yellow label backgrounds will not work. The easiest solution 
+  is to just leave the colors of their widgets and let SWT do the work using the 
+  operating system settings. This is what we will do in order to stay consistent 
+  with the workbench. Most developers choose this option (as does Eclipse). There 
+  are places such as in banners in dialogs where we use a setting other than the 
+  default (Eclipse uses SWT.COLOR_LIST_FOREGROUND for the title). JFace provides 
+  an API for accessing these color choices in the JFaceColors class.</p>
+<p>For those who want to choose system colors SWT provides a series of colors 
+  that allow us to pick up user settings. They are:</p>
+<ul>
+  <li><font size="2">COLOR_WIDGET_FOREGROUND: system color used to paint 
+  foreground areas</font> 
+  </li><li><font size="2">COLOR_WIDGET_BACKGROUND: system color used to paint 
+  background areas</font> 
+  </li><li><font size="2">COLOR_WIDGET_BORDER:</font> <font size="2">system color used to 
+  paint border areas</font> 
+  </li><li><font size="2">COLOR_WIDGET_DARK_SHADOW : system color used to paint dark 
+  shadow areas</font> 
+  </li><li><font size="2">COLOR_WIDGET_NORMAL_SHADOW : system color used to paint 
+  normal shadow areas&nbsp;</font> 
+  </li><li><font size="2">COLOR_WIDGET_LIGHT_SHADOW: system color used to paint light 
+  shadow areas</font> 
+  </li><li><font size="2">COLOR_WIDGET_HIGHLIGHT_SHADOW: system color used to paint 
+  highlight shadow areas</font> 
+  </li><li><font size="2">COLOR_LIST_FOREGROUND: system color used to paint list 
+  foreground areas</font> 
+  </li><li><font size="2">COLOR_LIST_BACKGROUND : system color used to paint list 
+  background areas&nbsp;</font> 
+  </li><li><font size="2">COLOR_LIST_SELECTION: system color used to paint list 
+  selection background areas&nbsp;</font> 
+  </li><li><font size="2">COLOR_LIST_SELECTION_TEXT: system color used to paint list 
+  selected text</font> 
+  </li><li><font size="2">COLOR_INFO_FOREGROUND : system color used to paint tool tip 
+  text&nbsp;</font> 
+  </li><li><font size="2">COLOR_INFO_BACKGROUND: system color used to paint tool tip 
+  background areas</font> 
+  </li><li><font size="2">COLOR_TITLE_FOREGROUND: system color used to paint title 
+  text</font> 
+  </li><li><font size="2">COLOR_TITLE_BACKGROUND: system color used to paint title 
+  background areas&nbsp;</font> 
+  </li><li><font size="2">COLOR_TITLE_BACKGROUND_GRADIENT : system color used to paint 
+  title background gradient&nbsp;</font> 
+  </li><li><font size="2">COLOR_TITLE_INACTIVE_FOREGROUND: system color used to paint 
+  inactive title text&nbsp;</font> 
+  </li><li><font size="2">COLOR_TITLE_INACTIVE_BACKGROUND: system color used to paint 
+  inactive title background areas&nbsp;</font> 
+  </li><li><font size="2">COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT: system color used 
+  to paint inactive title background gradient&nbsp;</font> </li></ul>
+  <p>If you still want to have a color that you set yourself you must have a way 
+  to adjust it for different color settings. The best way to do this is to define the color
+  in the default theme and then use a system equivalent in the reduced palette (<strong>org.eclipse.ui.ide.systemDefault</strong>) theme (available as of Eclipse 3.2). This theme is the default theme in High Contrast mode and can be selected from the Appearance preference page by users who want to use thier system fonts and colors. By using the theme support there is no further work to do by you - the user can see your color in the Colors an Fonts preferences and will get any alternates if they change themes. Themes are added using the org.eclipse.ui.themes 
+  extension point.</p>
+  
+  <p>
+  If we define our color in a theme we will get a yellow background for the Composites and labels in the Eclipse theme but in the Reduced Paette theme it will be replaced with the system default color (gray on Windows XP).
+  </p>
+  
+  <pre>
+   &lt;extension
+         point="org.eclipse.ui.themes"&gt;
+      &lt;colorDefinition
+            id="accessibility.background"
+            label="Background color for our example view"
+            value="COLOR_YELLOW"&gt;
+      &lt;/colorDefinition&gt;
+      &lt;theme
+            id="org.eclipse.ui.ide.systemDefault"&gt;
+         &lt;colorOverride
+               id="accessibility.background"
+               value="COLOR_WIDGET_BACKGROUND"&gt;
+         &lt;/colorOverride&gt;
+      &lt;/theme&gt;
+   &lt;/extension&gt;
+   </pre>
+<p><img alt="View using a theme" src="article.php_files/viewWithPrefs.png" ></p>
+<p><strong>Figure 6. View using a theme color</strong></p>
+
+<p><img alt="View in Reduced Palette" src="article.php_files/viewReducedPalette.png" ></p>
+<p><strong>Figure 6a. View using a theme color in Reduced Palette</strong></p>
+
+<p>Color is frequently used to liven up the look of an application but remember 
+  the following guidelines:</p>
+<ol>
+  <li>Color must not be used as the only means of conveying information 
+  </li><li>Color must be configurable for people who cannot use a given color option 
+  </li>
+</ol>
+<h2>Fonts</h2>
+<p>Like colors, fonts also need to be configurable for those users who cannot 
+  see small fonts. The Windows operating system offers Large and Extra Large font 
+  size modes (see Properties&gt;Appearance from the Windows desktop) for setting 
+  the fonts to be more readable to those with poor eyesight. All dialogs and windows 
+  should be tested with the fonts set to these sizes to be sure that none of the 
+  text is cut off and that it fits in the visible window. Eclipse is tested for 
+  sizing using the Windows High Contrast Mode in Windows XP at 1152x864 resolution 
+  using the fonts provided by the High Contrast mode. High Contrast mode can be 
+  set by selecting Control Panel-&gt;Accessibility Options -&gt; Display -&gt; 
+  High Contrast Mode.</p>
+<p>As with colors, applications often require more font choice than the OS provides 
+  - the only font SWT can get from the OS is the default font for that widget. 
+  The default font can be found from any Display by calling getSystemFont(). JFace 
+  also defines these fonts which can be referenced in any theme:</p>
+<ul>
+  <li>Banner Font: used in dialogs for the main title 
+  </li><li>Header Font: used for headers in pages like the Welcome Page. 
+  </li><li>Text Font: used for editors like the text editor and is also the default 
+    for the Java<font size="-2">TM</font> editor. 
+  </li><li>Dialog Font: used in all widgets in Dialogs. (Added for Eclipse release 
+  2.1). </li></ul>
+<p>In our example we defined our own font for use in the dialog using the FontData 
+  API provided by SWT because we wanted a bold font.</p>
+<pre>FontData labelFontData = new FontData("Arial", 10, SWT.BOLD);
+Font labelFont = new Font(parent.getDisplay(), labelFontData);
+</pre>
+<p>We currently have no way for the user to change this. For the sake of 
+consistency we will use the banner font for our main title and remove the fonts 
+from elsewhere. Now our font creation code will be:</p><pre>Font labelFont = JFaceResources.getBannerFont();</pre>
+<p>Using the Eclipse banner font we can pick up the setting an Eclipse user has 
+  made for the banner font in Eclipse and apply it to our views. These fonts are 
+  set in General&gt;&gt;Appearance&gt;&gt;Fonts and Colors preference page. Just as in colors we could have defined a fontOverride in the <strong>org.eclipse.ui.themes</strong> extension point if we didn't want any of the Eclipse fonts. As JFace localizes fonts for a wide variety of Locales and operating systems it is generally recommended that you use one of the JFace fonts if at all possible.</p>
+
+<p>Here is the view with the new font and colors in both Normal and High Contrast 
+  modes. </p>
+<p><img alt="View using system fonts" src="article.php_files/fixedfonts.png"></p>
+<p><strong>Figure 7. View Using System Fonts</strong></p>
+<p>As of Eclipse 3.0 it is also possible to get a bold or italic version of any 
+  registered font by calling <code>FontRegistry#getBold(String)</code> or <code>FontRegistry#getItalic(String).</code> 
+</p>
+<p>The only accessibility rule for fonts is that users must be able to change 
+  any font they wish somewhere in the application or the operating system.</p>
+<h2>Keyboard and Mouse</h2>
+<p>The most significant requirement for accessibility is that everything in an 
+  application must be reachable using the keyboard. Without keyboard access people 
+  who do not have the motor control to get a mouse where they want it will 
+  not be able to use your application. Many other people do everything using the 
+  keyboard as a way of preventing repetitive strain injuries.</p>
+<p>Menus on any of the views provided by Eclipse are already accessible. F10 will 
+  give the main window menu focus, Shift+F10 will bring up the context menu for 
+  a view, Ctrl+F10 will activate the pull-down menu for a view if there is one 
+  and Alt+- will bring up the view menu.&nbsp;</p>
+<p>To make a menu more accessible, you can define the label for the menu using 
+  a mnemonic. A mnemonic appears as an underlined letter in a menu entry label. 
+  Selecting that letter will move the menu selection to that entry. This is done 
+  by defining the mnemonic letter in the plugin.xml for a label with an <i><b>&amp;</b></i> 
+  prefix. For instance a label specified as &amp;Copy would show up on a menu 
+  as <u>C</u>opy; popping up the menu that has it and selecting the letter C would 
+  move the menu selection to that entry. If you want to check your mnemonics in 
+  the Windows environment then hold down the Alt key and they will appear in the 
+  active window.</p>
+<p>You can do the same thing with widgets in a view. If you add a mnemonic in 
+  a label that is associated with a widget, selecting Alt+ the letter will move 
+  the focus to that widget. This is especially important where there are a lot 
+  of widgets in a view or dialog because tabbing through all of them can be very 
+  time-consuming.</p>
+<p>The developer of a plug-in normally has to be concerned with mouse access when 
+  designing a view or dialog. Every piece of information within the view or dialog 
+  should be reachable using the keyboard. That means two things:</p>
+<p>1) Every control that the user needs to manipulate (such as combo boxes, text 
+  fields, and buttons) the user should be able to navigate to it with a keystroke 
+  - usually the tab key. You can also supplement this behavior with an action 
+  using a hot key - for instance Eclipse uses Ctrl+F6, Ctrl+ F7, and Ctrl+F8 to 
+  switch between editors, views and perspectives respectively.</p>
+<p>2) Everything that needs scrolling to be seen needs to have that scrolling 
+  accessible to the keyboard. The usual way to do this is to listen for tabs or 
+  the page up and page down keys and to move the viewing area appropriately.</p>
+<p>In the case of our view we did not try to do anything special with tabs or 
+  widget entry so we don't need to worry about keyboard access - the behavior 
+  Eclipse gives us by default is fine. The keyboard-related problem was that our 
+  drop-down menus and widgets did not use mnemonics. All we need to do is add 
+  an &amp; prefix before the letters we want in the mnemonic. Here is an example in our command definition.</p>
+<pre> &lt;extension
+         point="org.eclipse.ui.commands"&gt;
+      &lt;command
+            defaultHandler="accessibiltyarticle.views.ResetHandler"
+            id="accessibility.reset"
+            name="&amp;Reset Fields"&gt;
+      &lt;/command&gt;
+      &lt;command
+            defaultHandler="accessibiltyarticle.views.SettingsHandler"
+            id="AccessibiltyArticle.anonymous"
+            name="&amp;Anonymous Settings"&gt;
+      &lt;/command&gt;
+   &lt;/extension&gt;
+}</pre>
+<p>In the case of text field and combo boxes that have other labels associated 
+  with them, all we have to do is add the mnemonic to the label widget. However 
+  the operating system must know which text widget is associated with which label 
+  widget when the mnemonic is selected. It does this by inferring this association 
+  using the z-order.</p>
+<p>Default Z-ordering is determined by the creation order of widgets. The 
+z-order is by default the order in which the widgets are created but it can be 
+modified using Control.moveAbove() and Control.moveBelow(). A label widget must 
+be immediately before the text widget or combo box that it is labeling in the 
+z-order of its parent for it to be associated with it. This also implies that 
+the two widgets must have the same parent for this behavior to occur. We take 
+care of this by changing our code so that each label widget is created before 
+the text widget we wish to associate it with.</p>
+<p>All we need to do is to create the label and then its associated text rather 
+  than creating both labels first. For the sake of usability we are also going 
+  to put the name before the text horizontally rather than vertically because 
+  this is the way that people are used to reading a computer screen.</p>
+<pre>public void createPartControl(Composite parent) {
+	Composite workArea = new Composite(parent, SWT.BORDER);
+		
+	Label titleLabel = new Label(workArea, SWT.NONE);
+	titleLabel.setText("Enter Name and Password:");
+	titleLabel.setFont(JFaceResources.getBannerFont());
+
+	Label nameTitle = new Label(workArea, SWT.NONE);
+	nameTitle.setText("&amp;Name:");
+
+	nameEntryField = new Text(workArea, SWT.BORDER);
+
+	Label passwordTitle = new Label(workArea, SWT.NONE);
+	passwordTitle.setText("&amp;Password:");
+
+	passwordEntryField = new Text(workArea, SWT.BORDER);
+
+	Button enterButton = new Button(workArea, SWT.PUSH);
+	enterButton.setText("&amp;Login");
+}</pre>
+<p>To see this in action we select Alt+N when our view has focus and you will 
+  see the cursor going to the text field beside Name:.</p>
+<img alt="Menu with mnemonics" src="article.php_files/menumnemonics.png"> 
+<p><strong>Figure 8. View with mnemonics for menus and widgets and corrected label 
+  placement</strong></p>
+<h2>Accommodating Screen Readers</h2>
+<p>There are now numerous screen readers that can read aloud elements of the 
+user interface. One of the most popular screen readers is the JAWS product from 
+Freedom Scientific. Screen readers attempt to infer the relevant information 
+about a widget and those that surround it and present that information to the 
+user. They do this by taking the widget that has focus and inferring which of 
+its siblings and parents has useful information.</p>
+<p>As a text and combo box widgets do not have a label associated with them we 
+have several ways that we can get a screen reader to infer a label for a widget 
+with focus:</p>
+<ol>
+  <li>A label immediately precedes the focus widget in the z-order. 
+  </li><li>The focus widget is the direct child of the shell (in this case the shell 
+  label gets read). 
+  </li><li>It is the parent of a widget that has a label and is labeled itself. For 
+    instance, a labeled text inside of a group box will have both its label and 
+    the label of the group box read. But if there is an unlabeled widget (say 
+    an intermediate Composite) between the label and the group box, the group 
+    box will not be read. </li>
+</ol>
+<p>We would have created the text and labels in the wrong z-order had we created both 
+  the labels and then both of the entry fields which would have prevented screen readers from providing usual information 
+  to users.</p>
+<p>Screen readers  use the z-order to determine labeling for text and combo 
+  box widgets. Had we created both labels first any tool that tries to infer a label for the text fields with our 
+  would assume that "Password:" is the title of the Name: text 
+  widget because the "Name:" text widget was created after the "Password:" 
+  label. It will not find any label for the "Password:" text widget 
+  because it was created right after the "Name:" text widget. With our 
+   implementation, a screen reader will use "Name:" as the label 
+  for the name field and "Password:" for the label of the password field.</p>
+<p>A screen reader will not only read the label of a widget with focus but it 
+  will also read the labels of any parents of that widget that have one (such 
+  as a group) and the title of the dialog or window. A screen reader will generally 
+  stop at the first unlabelled parent so be sure that you have no intermediate 
+  Composites between labels you want read.&nbsp; If you wish to label a group 
+  of widgets, you should contain them in a group box.</p>
+<p>&nbsp;Our example should use a group box instead of a label for the Name and 
+  Password entry field. By adding a group box we would make a screen reader say 
+  "Enter Name and Password: Name:" when the first text widget had focus.</p>
+<p>Here is what the final view looks like with the group box.</p>
+<p align="left"><img alt="Final view" src="article.php_files/finalview.png" \></p>
+<p align="left"><strong>Figure 9. Entrance View with a Group box</strong></p>
+<h2 align="left">Using the SWT Accessibility API</h2>
+<p align="left">We have changed the view so that the entry fields are created directly 
+  after their labels (to ensure z-order) and we have switched the title from a 
+  label to a group box. When one of the entry fields is selected a screen reader 
+  will read the group box title and then the field title.</p>
+<p align="left">Now that everything that we can see is set up, we can do one more 
+  thing we can do to really make this usable. We have no critical information 
+  in our welcome graphic, but we have not provided a way to let a user using a 
+  screen reader know that. A screen reader will associate a random name with the 
+  label widget if we do not provide one, so visually impared users will have to 
+  assume the graphic contains no information that is of use to them.</p>
+<p align="left">SWT provides two interfaces for enabling accessibility in a 
+control.<code>org.eclipse.swt.accessibility.AccessibleListener </code>is the 
+interface that is implemented by existing SWT controls. 
+<code>org.eclipse.swt.accessibility.AccessibleControlListener</code> is an 
+interface for custom widgets so it is not a concern if you are using the widgets 
+provided by SWT.</p>
+<p align="left"><code>org.eclipse.swt.accessibility.AccessibleAdapter</code> is 
+  a class with implementations of all of the methods in AccessibleListener that 
+  do nothing. We want to make it so that our banner graphic has a consistent name 
+  so we add an AccessibleListener to it that implements getName().We will subclass 
+  this in an inner class because we only want to override getName(). Here is how 
+  we implement this: 
+</p><pre>topLabel.getAccessible().addAccessibleListener(
+		new AccessibleAdapter() {			
+			public void getName(AccessibleEvent e) {
+				e.result = "Welcome to our online store!";
+		}});</pre>
+After we have made this change we can verify it on the Windows operating system 
+using the Microsoft Active Accessibility support (see the Bibliography). When 
+we use the Microsoft Inspect Objects tool from that package we can see that when 
+we hover over the label we get a value to use with accessibility tools. 
+<p><img alt="Results using MSAA tools" src="article.php_files/accessibility.png" ></p>
+<p><strong>Figure 10. Verification of the AccessibleControlAdapter on the Welcome 
+  Banner using MSAA tools</strong></p>
+<p>The final version of our Entrance View is in AccessibleEntranceView in the 
+code included in the Appendix.</p>
+<h2><br>Conclusions</h2>
+<p>Accessibility support is an important part of UI development; it not only enables 
+  products for disabled users but also teaches good general UI design techniques. 
+  We showed how to take a simple view and analyze and correct the accessibility 
+  issues with it using the Eclipse accessibility support.</p>
+<h2>Appendix</h2>
+<p><a href="http://www.eclipse.org/articles/Article-Accessibility/org.eclipse.ui.articles.accessibility.zip">The 
+Accessibility Example project</a></p>
+<h2>Windows Accessibility Support&nbsp;</h2>
+<p>Sunce the release of Eclipse 2.0 the accessibility support has focused on the 
+  Windows operating system. Windows 2000 and Windows XP provide a series of built-in 
+  accessibility features that Eclipse is compatible with.&nbsp;The accessibility 
+  settings in Windows XP are found in Control Panel&gt;Accessibility Options.</p>
+<p><img alt="Windows Accessibility Dialog" src="article.php_files/windowsdialog.gif" width="367" height="450"></p>
+<p><strong>Figure 11. Windows XP Accessibility Options Dialog</strong></p>
+<p>Extra large fonts is a setting that enlarges all of the fonts on the desktop. 
+  In Windows XP this is found on the Appearance Page of the Desktop Properties 
+  dialog. In Windows 2000 there are several themes that have extra large fonts 
+  (e.g. Windows Extra Large). Themes can also be shown in High Contrast mode for 
+  people who have difficulty differentiating colors. You should test in both High 
+  Contrast White and High Contrast Black selections.</p>
+<p>Sticky keys is a Windows function for people who have difficulty holding down 
+  two keys at once. Sticky Keys allows the user to select a modifier key (Ctrl, 
+  Alt or Shift), release it and select another key as if they had the modifiers 
+  depressed. Normally this is only an issue if you have some time-dependent functionality 
+  in your application or if you are listening for a key release.</p>
+<p>Filter keys is another function for people who have a slow response time. Generally 
+  holding a key down will result in the keystroke being sent multiple times which 
+  can be very frustrating for someone who cannot lift their finger in time to 
+  avoid the extra keystrokes. Filter keys either ignores duplicate keystrokes 
+  or slows down the repeat rate, or both, according to user preference.</p>
+<p>Mouse keys is a function that allows the user to replace the mouse support 
+  with a keyboard equivalent in order to get mouse functionality without the mouse. 
+  You should not rely on this support in your accessibility plan however because 
+  an application must be fully keyboard-accessible to pass most accessibility 
+  guidelines (including the IBM guidelines).</p>
+<p>Sound support is a function added for the deaf and hard-of-hearing users. It 
+  gives a visual cue when a system sound has occurred. However, it is bad accessibility 
+  design to use sound as the only source of information. If a user needs to use 
+  sound to use your application you should make sure there are alternative ways 
+  to access the information.&nbsp;</p>
+<h2>Bibliography</h2>
+<p><a href="http://www.ibm.com/able/guidelines/index.html" target="_blank">IBM 
+Accessibility Guidelines</a></p>
+<p><a href="http://www.section508.gov/" target="_blank">Section 508 
+Regulations</a></p>
+<p><a href="http://www.microsoft.com/enable" target="_blank">Microsoft 
+Accessibility&nbsp;</a></p>
+</div>
+
+<div class="notices"><p>IBM is a registered trademark of International Business Machines Corporation 
+  in the United States, other countries, or both.</p>
+<p>Java and all Java-based trademarks are trademarks of Sun Microsystems, 
+  Inc. in the United States, other countries, or both.</p>
+<p>Microsoft and Windows are registered trademarks of Microsoft Corporation 
+  in the United States, other countries, or both.</p>
+<p>Other company, product, and service names may be trademarks or service marks of others.</p>
+</div></body></html>
