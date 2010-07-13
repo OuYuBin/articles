@@ -99,29 +99,11 @@
 			$category_cloud
 		</div>
 		<div class="sideitem">
-			<h6>Eclipse Rich Client Platform Tutorial</h6>
-			<ul>
-			<li><a href="http://eclipse.org/articles/Article-RCP-1/tutorial1.html">Part 1</a></li>
-			<li><a href="http://eclipse.org/articles/Article-RCP-2/tutorial2.html">Part 2</a></li>
-			<li><a href="http://eclipse.org/articles/Article-RCP-3/tutorial3.html">Part 3</a></li>
-			</ul>
-		</div>
-		<div class="sideitem">
-			<h6>Other Tutorials</h6>
-			<ul>
-			<li><a href="http://www.eclipse.org/webtools/jst/components/ws/1.5/tutorials/index.html">Web Service Tutorials for WTP 1.5</a></li>
-			</ul>
-		</div>
-		<div class="sideitem">
 			<h6>Other Sources of Eclipse Information</h6>
 			<ul>
-			<li><a href="http://dev2dev.bea.com/eclipse/" target="_blank">dev2dev Online</a></li>
 			<li><a href="http://www.ibm.com/developer" target="_blank">developerWorks</a></li>
 			<li><a href="http://eclipse.sys-con.com/" target="_blank">Eclipse Developer's Journal</a></li>
 			<li><a href="http://www.eclipse-magazin.de/" target="_blank">Eclipse Magazin</a></li>
-			<li><a href="http://www.eclipsemag.net/" target="_blank">Eclipse Magazine</a></li>
-			<li><a href="http://eclipse.techforge.com/" target="_blank">Eclipse TechForge</a></li>
-			<li><a href="http://www.eclipsesource.com/" target="_blank">Eclipse Source</a></li>
 			<li><a href="http://www.eclipsezone.com/" target="_blank">Eclipse Zone</a></li>
 			</ul>
 		</div>
