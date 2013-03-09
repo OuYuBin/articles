@@ -20,6 +20,7 @@
  <div class="info-box">
  
  <?
+ 	if (isset($info->outdated)) $App->setOutDated();
  	if ($info->project) {
 		require_once($_SERVER['DOCUMENT_ROOT'] . "/eclipse.org-common/classes/projects/projectInfoData.class.php");
  		echo "<p>This article is known to apply to the following Eclipse project";
